@@ -1,0 +1,481 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Strawberry MC|Home</title>
+        <link rel="stylesheet" href="global.css">
+    </head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="Strawberry%20minecraft%20wiki%20(1).pdf" target="_blank" rel="noopener">Open PDF</a>
+            </nav>
+        </header>
+        <h1>ComScript</h1>
+        <p><strong>[UNRESOLVED] The source marks the ComScript name as subject to change and contains unresolved technical placeholders; review them before treating this page as final.</strong></p>
+<p>ComScript is a coding language based on Minecraft Commands that eliminates the need for long chains of Command Blocks. ComScript can be natively and directly executed in [read also: lobby] the admin lobby or by typing scripts into the Scripter block.</p>
+<h2>Errors</h2>
+<p>Errors due to syntax or any other reason when the script is run are shown in the native terminal located at the bottom of the UI. All errors are red text, warnings as yellow text, and logs as white text.</p>
+<h3>Error: Undefined data structure(s)</h3>
+<p>This error appears when undefined variables, arrays, lists, or dictionaries are used.</p>
+<p>Error example:</p>
+<h3>Error: No mandatory execution marker found</h3>
+<p>This error appears when a selector requiring an execution marker does not have a global marker to fetch from. This can trigger a domino effect of errors since the invalid selectors output null, which may not be compatible with the data type where the selector is used.</p>
+<h3>Error: Unexpected data type in input</h3>
+<p>This error occurs when an incompatible data type is used in an input.</p>
+<p>Error example:</p>
+<pre class="code-box"><code class="consolas">;</code></pre>
+<p>The semicolon is an operator for integers and floats only.</p>
+<h2>Technical details</h2>
+<h3>Terminology</h3>
+<h4>Relative location selectors</h4>
+<p>Relative location selectors include any selectors that are location or distance based, meaning that they must have a starting point of execution. These include:</p>
+<ul>
+    <li><span class="consolas">@p</span></li>
+    <li><span class="consolas">@n</span></li>
+    <li><span class="consolas">@s</span> (Education Edition only)</li>
+    <li><span class="consolas">@c</span></li>
+</ul>
+<p>If no execution marker is included, then it will error and output null at any use instances.</p>
+<h4>Native console</h4>
+<p>The native console is the built-in executor within the esc menu.</p>
+<h4>Token</h4>
+<p>A token is any symbol, symbolized, or packaged string that can be used in a value type.</p>
+<h3>Command selector standardization</h3>
+<p>All commands with selectors now follow the structure below:</p>
+<pre class="code-box"><code class="consolas">&lt;command namespace&gt; &lt;selector&gt; &lt;action/input&gt; &lt;opt: attributes, booleans, conditions, etc.&gt;</code></pre>
+<h3 id="execution-pattern">Execution pattern</h3>
+<h4 id="selector-fetch-pattern">Selector fetch pattern</h4>
+<p>If a selector is distance based, such @p (closest player), then the code scans in a spiral pattern in 1x1x1 chunks looking for an entity with the valid conditions for the selector.</p>
+<p>Example:</p>
+<p>Assume that an entity with the correct conditions is being searched for with a relative location selector. The block Chunks are labeled by scan order. The scan terminates and returns the result after the entity is found.</p>
+<pre class="code-box"><code class="consolas">                 North
+              9 10 11 12
+           1  2  3  X  13
+              8     4
+          7  6  5
+          X = execution marker location</code></pre>
+<p>[see also: <a href="#custom-execution-pattern">Custom execution pattern</a>]</p>
+<h3>Quotations</h3>
+<p>Quotations in comscript are unidirectional, meaning that they do not directionally encapsulate text.</p>
+<p>Example:</p>
+<p>Serif: <span class="roman">""</span></p>
+<p>ComScript: ""</p>
+<p>*The two quotes above should look identical but different from Serif, if they don't then your browser may not support unidirectional quotations.</p>
+<h3>Execution location auto-assumption key</h3>
+<p>Commands executing without a specified location(specified via the marker keyword)are executed based off of the following rules:</p>
+<p>If the script line is encapsulated by a *{} condition statement with a location specifier, then it is executed there.</p>
+<p>If no specified location is fetched from the previous condition(s), the execution marker (if one was fetched correctly) becomes the native execution location. If no location is fetched, and a script is executing from a Scripter block, valid selectors execute from the Scripter's location:</p>
+<ul>
+    <li><span class="consolas">@p</span> (for locational relative/proportional selectors such as closest player/entity, this is relative to the location of execution) [property P1]</li>
+    <li><span class="consolas">@e</span> [see property P1]</li>
+    <li><span class="consolas">@s</span> [see property P1]</li>
+    <li><span class="consolas">@n</span> [see property P1]</li>
+</ul>
+<p>If the script is executed directly from the native console and no location is defined by the previous rules, the script executes globally, causing a syntax error in any relative location selectors.</p>
+<h3 id="invalid-token-substitution-key">Invalid token substitution key</h3>
+<p>Invalid tokens can still be stored as strings or custom value types by substituting them with Unicode or the special character chart below:</p>
+<p>Characters with UTF-8 charset can be directly typed and are safe.</p>
+<table>
+    <thead>
+        <tr>
+            <th>Character</th>
+            <th>Default ComScript character code</th>
+            <th>Decimal code</th>
+            <th>Can store in normal string?</th>
+            <th>Valid in Unicode?</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>&lt;</td><td><code>&amp;lt;</code></td><td><code>&amp;#60;</code></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>&gt;</td><td><code>&amp;\3C;</code></td><td><code>&amp;#60;</code></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>&amp;</td><td><code>&amp;amp;</code></td><td><code>&amp;#38;</code></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>&quot;</td><td><code>&amp;quot;</code></td><td><code>&amp;#34;</code></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>!</td><td><code>&amp;excl;</code></td><td><code>&amp;#33;</code></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>@</td><td><code>&amp;commat;</code></td><td><code>&amp;#64;</code></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>#</td><td><code>&amp;num;</code></td><td><code>&amp;#35;</code></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>$ (UTF-8)</td><td><code>&amp;dollar;</code></td><td><code>&amp;#36;</code></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>% (UTF-8)</td><td><code>&amp;percent;</code></td><td><code>&amp;#37;</code></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>^</td><td><code>&amp;hat;</code></td><td><code>&amp;#94;</code></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>Standard *</td><td><code>&amp;ast;</code></td><td><code>&amp;#42;</code></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>Operator *</td><td><code>&amp;lowast;</code></td><td><code>&amp;#8727;</code></td><td>No</td><td>Yes</td></tr>
+        <tr><td>Heavy *</td><td>n/a</td><td><code>&amp;#10033;</code></td><td>No</td><td>Yes</td></tr>
+        <tr><td>Circled *</td><td><code>&amp;oast;</code></td><td><code>&amp;#8859;</code></td><td>No</td><td>Yes</td></tr>
+        <tr><td>]</td><td><code>&amp;sp;</code></td><td></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>}</td><td><code>&amp;cp;</code></td><td></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>\</td><td><code>&amp;bs;</code></td><td></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>;</td><td><code>&amp;sc;</code></td><td></td><td>Dependent</td><td>Yes</td></tr>
+    </tbody>
+</table>
+<p>See <a href="#custom-tokens">Charset token (custom substitution)</a>. These tokens are fully customizable.</p>
+<h2 id="syntax">Syntax</h2>
+<h3 id="definers">Definers [unresolved: better name]</h3>
+<h4>local:</h4>
+<p>The local definer causes any modifier keyword to become a local action. Local actions only perform the modifier within said file or, when encapsulated within a flow-control string, only within that segment unless otherwise stated with <code class="consolas">global:</code>.</p>
+<p>Example:</p>
+<pre class="code-box"><code class="consolas">local:mark add @r.cache-once mobile</code></pre>
+<h4>global:</h4>
+<h4>.get-once</h4>
+<p>The .get-once modifier is used on inputs that require a random number generator. .get-once can be used if a event/target entity is randomized, as the .get-once prevents a random number generator from functioning normally.</p>
+<h4>.lock-element</h4>
+<h3 id="custom-execution-pattern">Custom execution pattern</h3>
+<p>Custom execution patterns can be defined using the pattern keyword. For a definition and explanation on execution patterns, see Technical details: Execution pattern.</p>
+<p>Example:</p>
+<pre class="code-box"><code class="consolas">local:pattern set r-spiral; //sets pattern to spiral</code></pre>
+<p>Valid built-in execution patterns:</p>
+<ul>
+    <li>l-spiral: clockwise spiral</li>
+    <li>r-spiral: counterclockwise spiral</li>
+    <li>rand-&lt;radius applier&gt;: randomized</li>
+    <li>top-r-bttmscan: start from top right downwards</li>
+    <li>top-l-bttmscan: start from top left downwards</li>
+    <li>bttm-r-topscan: start from bottom right upwards</li>
+    <li>bttm-l-topscan: start from bottom left upwards</li>
+    <li>odd-checker: first from top left to bottom odd tiles then even tiles</li>
+    <li>even-checker: first from top left to bottom even tiles then odd tiles</li>
+</ul>
+<h3 id="execution-marker-location">Execution marker/location</h3>
+<p>Execution markers mark where the script would start executing if you would like to override the location of where the scripter block is placed or specify the location of where the script is executed if written in the native console. Selectors that are location-based (nearest entity, etc.)scan in a spiral pattern clockwise starting northwest of the marker to search for valid selectors; see <a href="#selector-fetch-pattern">Selector fetch pattern</a>. Execution markers can be defined using the following:</p>
+<pre class="code-box"><code class="consolas">mark add&lt;location (x y z)&gt; &lt;mobility&gt;;</code></pre>
+<h4>Mobile relative execution markers</h4>
+<p>Relative execution markers move depending on the base selector and the spacing. These allow scripts to execute depending on the mobile selector; which means that you can have scripts executed at a specific tagged sheep for example. If a script is a macro-script</p>
+<p>(meaning executed process takes &gt;2 ticks) then the script execution location stays at the</p>
+<p>Syntax:</p>
+<pre class="code-box"><code class="consolas">mark add relative &lt;base selector&gt; &lt;tilde defined relative location&gt;;</code></pre>
+<p>Example:</p>
+<pre class="code-box"><code class="consolas">mark add relative @e[type=sheep, tag=cheese] ~~10~;</code></pre>
+<h3 id="charset">Charset</h3>
+<p>Character sets and character operations can be changed manually by using the charset keyword. Charset acts as the &lt;meta&gt; tag in HTML. Charset has the following valid sub- keywords:</p>
+<h4>Charset store</h4>
+<p>Charset store changes the current charset.</p>
+<p>Example:</p>
+<pre class="code-box"><code class="consolas">charset store UTF-8</code></pre>
+<p>Valid charsets for comscript include</p>
+<ul>
+    <li>UTF-8</li>
+    <li>US-ASCII</li>
+    <li>ComScript-EN (default)</li>
+    <li>ComScript-zh-CN (modified in language settings)</li>
+    <li>Comscript-hi-IN (modified in language settings)</li>
+</ul>
+<p>For more information, see <a href="#custom-tokens">Charset token (custom substitution)</a>.</p>
+<h4 id="custom-tokens">Charset token (custom substitution)</h4>
+<p>For convenience reasons, if you would like to create your own token substitution token then you can use the following. The example below a fatal error will occur if you store it as a pre-existing token.</p>
+<p>Example:</p>
+<pre class="code-box"><code class="consolas">charset token store &amp;dollar; = &amp;s;;</code></pre>
+<p>One token is the abbreviation, and the other closes it.</p>
+<h3 id="input-formatting">Input formatting</h3>
+<p>Inputs in comscript can accept the following formats</p>
+<ul>
+    <li>Unicode — expected formatting: <code>&lt;value&gt;</code></li>
+    <li>String — expected formatting: <code>&lt;value&gt;</code></li>
+    <li>Binary (useful for raw files) — expected formatting: <code>&lt;complex value&gt;</code></li>
+    <li>Boolean — expected formatting: <code>&lt;conditional statement&gt;</code></li>
+    <li>Float — expected formatting: <code>&lt;value&gt;</code></li>
+    <li>Integer — expected formatting: <code>&lt;value&gt;</code></li>
+    <li>Packaged Lists — expected formatting: <code>&lt;complex value&gt;</code></li>
+    <li>Blockstate — expected formatting: <code>&lt;state&gt;</code></li>
+    <li>Entity — expected formatting: <code>&lt;name&gt;</code></li>
+    <li>Item — expected formatting: <code>&lt;item name&gt;</code></li>
+    <li>Coordinate — expected formatting: <code>&lt;x&gt; &lt;y&gt; &lt;z&gt;</code></li>
+    <li>Custom format</li>
+</ul>
+<p>If you want to change/define the format of a variable or value, you can use the following:</p>
+<h4>Convert to string</h4>
+<pre class="code-box"><code class="consolas">string(&lt;value&gt;);
+str(&lt;value&gt;);</code></pre>
+<h4>Convert to entityrange</h4>
+<p>Entityrange is used for entity iterators.</p>
+<pre class="code-box"><code class="consolas">
+    entityrange(&lt;entity list&gt;)
+</code></pre>
+<h4>Convert to boolean</h4>
+<p>Only 1-digit binary integers, and strings with boolean names can be converted.</p>
+<pre class="code-box"><code class="consolas">boolean(&lt;value&gt;);
+bool(&lt;value&gt;);
+booleanState(&lt;int0-1&gt;)</code></pre>
+<h4>Convert to binary</h4>
+<p>Anything can be converted into binary, as it is the raw data type.</p>
+<pre class="code-box"><code class="consolas">bin(&lt;value&gt;)
+createBin(&lt;value&gt;)</code></pre>
+<p>Example:</p>
+<pre class="code-box"><code class="consolas">bin(0101011100110101)</code></pre>
+<h4>Convert to float</h4>
+<pre class="code-box"><code class="consolas">float(&lt;value&gt;)
+flt(&lt;value&gt;);</code></pre>
+<h4>Convert to integer</h4>
+<pre class="code-box"><code class="consolas">integer(&lt;value&gt;)
+int(&lt;value&gt;);</code></pre>
+<h4>Package a list</h4>
+<p>Packaging a list allows for mixed values to be combined and still be able to be extracted from a different source.</p>
+<p>Syntax:</p>
+<pre class="code-box"><code class="consolas">pack.push(&lt;listname&gt;);</code></pre>
+<p>Example:</p>
+<pre class="code-box"><code class="consolas">store set myVar= int(String);</code></pre>
+<h4>Custom type</h4>
+<p>Custom types can be stored as a list with all valid strings and/or characters listed within the built-in list.</p>
+<p>Example[UTF-8]:</p>
+<pre class="code-box"><code class="consolas">};</code></pre>
+<p>The statement above would declare all strings or characters within the parentheses to be the only valid tokens in that data format.</p>
+<h3>Function block</h3>
+<p>Function blocks are a new block that creates global functions applicable across all command blocks. When opened, the player assigns a function name and can be assessed with the keyword.</p>
+<pre class="code-box"><code class="consolas">&lt;function name&gt;(&lt;function variables, Booleans, etc.&gt;){
+    &lt;function contents&gt;
+}</code></pre>
+<p>Variables, lists, arrays, and dictionaries created within a function are all stored locally, meaning that you cannot acsess them unless you make them global via</p>
+<pre class="code-box"><code class="consolas">global(&lt;namespace&gt;);</code></pre>
+<p>If you would like to turn a global data structure back to local and change all outside instances of the data structure to null, then you can use the following:</p>
+<pre class="code-box"><code class="consolas">local(&lt;namespace&gt;);</code></pre>
+<h3>Entity Range Iterators</h3>
+<p>Entity range iterators are used to iterate over a range of entities that can be defined using the syntax below:</p>
+<pre class="code-box"><code class="consolas">for @client.entityiterator in &lt;entity range selector&gt;{
+    &lt;repeat script&gt;
+}</code></pre>
+<p>Example:</p>
+<pre class="code-box"><code class="consolas">
+    global(return @getcubeentities(5, 5, 5) as @entities.cube);
+    global(return filter.insubtypeof(minecraft:players) as (playerlist{}));
+    for @client.entityiterator in entityrange(playerlist{}){
+        // script contents
+    }</code></pre>
+<h3>Data structure creation</h3>
+<h4>Variables</h4>
+<h5>Creation</h5>
+<p>Variables are created using <code class="consolas">store new &lt;varname&gt;=&lt;init_value&gt;;</code>. Multiple variables can be created with the same value using <code class="consolas">store new &lt;varname&gt;, &lt;varname&gt;=&lt;init_value&gt;;</code>. Global variables (which are built in) can be fetched with <code class="consolas">return.global&lt;varname&gt;;</code> or <code class="consolas">return.global &lt;varname&gt; as &lt;varname temp&gt;;</code>.</p>
+<h6>Formatting</h6>
+<p>Variables can be created with a preset format (see <a href="#input-formatting">Input formatting</a>) by using the following:</p>
+<pre class="code-box"><code class="consolas">store set &lt;varname&gt; as &lt;format code&gt;;</code></pre>
+<p>Example:</p>
+<pre class="code-box"><code class="consolas">store set cheese as);</code></pre>
+<p>Note that variables made with a preset format can still be modified using input formatting syntax.</p>
+<h5>Modification</h5>
+<p>Existing variables are modified with the command store set &lt;varname&gt;=&lt;float/int/bool/str_value&gt; Variable values can be manipulated by using alter commands below. Note that once a [read: Input formatting] variable is created, a modifier command must be used to change the data set type, e.g., float, boolean, string... A space must be used between variables and operator keywords.</p>
+<h6>Change by -1</h6>
+<pre class="code-box"><code class="consolas">store set&lt;varname&gt;++;</code></pre>
+<h6>Change by 1</h6>
+<p>And they can also be modified using augmented expressions:</p>
+<pre class="code-box"><code class="consolas">store set&lt;varname&gt;--;</code></pre>
+<h6>Addition</h6>
+<pre class="code-box"><code class="consolas">store set&lt;varname&gt;+&lt;val&gt;;</code></pre>
+<h6>Subtraction</h6>
+<pre class="code-box"><code class="consolas">store set&lt;varname&gt;-&lt;val&gt;;</code></pre>
+<h6>Multiplication</h6>
+<pre class="code-box"><code class="consolas">store set&lt;varname&gt;*&lt;val&gt;;</code></pre>
+<h6>Division</h6>
+<pre class="code-box"><code class="consolas">store set&lt;varname&gt;/&lt;val&gt;;</code></pre>
+<p>If you would like to retrieve the remainder of the division statement you can use</p>
+<pre class="code-box"><code class="consolas">store set&lt;varname&gt;/%&lt;val&gt;;</code></pre>
+<p>Special operators like sqrt and cosine section.</p>
+<h3>Execution range</h3>
+<p>Execution range is a variable that determines the area that the script applies to and executes as. For example, if a script with an execution range of a circle with a radius of 5</p>
+<p>foot is outside of the circle, then the script will return null.</p>
+<h3>Mathematical operators</h3>
+<p>Mathematical operators can be used to add, subtract, multiply, divide, square root, power, -1-1-1-1 factorial, sin, cos, tan, sin, cos, tan, log, and log valid format variables, floats, and integers.</p>
+<h4>Addition</h4>
+<pre class="code-box"><code class="consolas">&lt;val1&gt; + &lt;val2&gt;</code></pre>
+<h4>Subtraction</h4>
+<pre class="code-box"><code class="consolas">&lt;val1&gt; - &lt;val2&gt;</code></pre>
+<h4>Multiplication</h4>
+<pre class="code-box"><code class="consolas">&lt;val1&gt; * &lt;val2&gt;</code></pre>
+<h4>Remainderless division</h4>
+<pre class="code-box"><code class="consolas">&lt;val1&gt; / &lt;val2&gt;</code></pre>
+<p>Division by 0 results in a output of 0.</p>
+<h4>Remainder fetch</h4>
+<pre class="code-box"><code class="consolas">&lt;val1&gt; /% &lt;val2&gt;
+&lt;val1&gt; mod &lt;val2&gt;</code></pre>
+<h4>Logarithmic operations</h4>
+<p>Invalid operator syntax or inputs result in null.</p>
+<h5>Log</h5>
+<pre class="code-box"><code class="consolas">log(&lt;val&gt;)</code></pre>
+<h5>Negative log</h5>
+<pre class="code-box"><code class="consolas">log^(&lt;val&gt;)</code></pre>
+<h5>Cosine</h5>
+<pre class="code-box"><code class="consolas">cos(&lt;val&gt;) //shorthand
+cosine(&lt;val&gt;)</code></pre>
+<h5>Negative cosine</h5>
+<pre class="code-box"><code class="consolas">cos^(&lt;val&gt;) //shorthand
+cosine^(&lt;val&gt;)</code></pre>
+<h5>Sine</h5>
+<pre class="code-box"><code class="consolas">sin(&lt;val&gt;) //shorthand
+sine(&lt;val&gt;)</code></pre>
+<h5>Negative sine</h5>
+<pre class="code-box"><code class="consolas">sin^(&lt;val&gt;) //shorthand
+sine^(&lt;val&gt;)</code></pre>
+<h5>Tangent</h5>
+<pre class="code-box"><code class="consolas">tan(&lt;val&gt;) //shorthand
+tangent(&lt;val&gt;)</code></pre>
+<h5>Negative tangent</h5>
+<pre class="code-box"><code class="consolas">tan^(&lt;val&gt;) //shorthand
+tangent^(&lt;val&gt;)</code></pre>
+<h5>Square root</h5>
+<pre class="code-box"><code class="consolas">sqrt(&lt;val&gt;) //shorthand
+sqaureroot(&lt;val&gt;)</code></pre>
+<h3>Random value</h3>
+<p>Random inclusive values can be generated in ComScript with the following syntax.</p>
+<p>Integer example:</p>
+<pre class="code-box"><code class="consolas">random.randint(&lt;min&gt;, &lt;max&gt;)</code></pre>
+<p>Non-inclusive values can be generated using:</p>
+<pre class="code-box"><code class="consolas">random.n.randint(&lt;min&gt;, &lt;max&gt;)</code></pre>
+<p>Random floats with a determined fix/round can be generated using:</p>
+<pre class="code-box"><code class="consolas">random.&lt;fix length&gt;.rand(&lt;min&gt;, &lt;max&gt;)</code></pre>
+<h3>Comments</h3>
+<p>Single-line comments use <code class="consolas">//</code>. Multiline comments use <code class="consolas">//[text]</code>.</p>
+<pre class="code-box"><code class="consolas">// this is a single-line comment</code></pre>
+<pre class="code-box"><code class="consolas">//[this is a multi
+line comment]</code></pre>
+<h4>Chain commands</h4>
+<p>Commands can be chained with a newline:</p>
+<pre class="code-box"><code class="consolas">fill ~~~~3~3~3 Stone
+fill ~-3~-3~-3~~~ Stone</code></pre>
+<p>They can also be chained with a semicolon:</p>
+<pre class="code-box"><code class="consolas">fill ~~~~3~3~3 Stone; fill ~-3~-3~-3~~~ Stone</code></pre>
+<p>Fig 1. MEME</p>
+<h4 id="flow-control">Execute commands</h4>
+<p>For execute commands, the <code class="consolas">execute</code> part is erased, and the <code class="consolas">as</code>, <code class="consolas">at</code>, <code class="consolas">in</code>, <code class="consolas">align</code>, <code class="consolas">anchored</code>, <code class="consolas">positioned</code>, <code class="consolas">rotated</code>, <code class="consolas">facing</code>, <code class="consolas">if</code>, <code class="consolas">unless</code>, <code class="consolas">run</code>, and <code class="consolas">store</code> become the command itself. Example:</p>
+<pre class="code-box"><code class="consolas">execute at @p run summon pig
+at @p run summon minecraft:pig</code></pre>
+<h5>Subcommands</h5>
+<h6>As</h6>
+<p>The "as" subcommand is a sub argument used to execute a script as a certain entity.</p>
+<p>Example:</p>
+<pre class="code-box"><code class="consolas">as &lt;entity selector&gt; run {
+&lt;script&gt;    
+}</code></pre>
+<p>The "as" subcommand comes with certain selectors that are given, including:</p>
+<ul>
+    <li><b>Event/Target Entity:</b> the current entity executed as.</li>
+    <li><b>Source Entity:</b> the trigger entity, for projectiles and items only.</li>
+    <li><b>Immediate Source Entity:</b> the immediate trigger entity [for example, the projectile that just impacted a entity selector]</li>
+</ul>
+<h6>If</h6>
+<p>The "if" subcommand has a new sub argument: comp. Comp is used to compare values.</p>
+<pre class="code-box"><code class="consolas">if comp &lt;value1&gt; &lt;operator&gt; &lt;value2&gt;</code></pre>
+<h5>Run subcommand</h5>
+<p>Instead of running one command, the <code class="consolas">run</code> subcommand can run a chain, notated by parentheses. It can also run a single command normally.</p>
+<pre class="code-box"><code class="consolas">at @p run (
+    // Run a chain of commands
+    summon zombie ~~2~
+    at @e[type=zombie] run summon lightning_bolt
+)
+// Run one command</code></pre>
+<h3>Event sensing</h3>
+<p>Scripts executing conditionally during an event or every tick can be started with *{&lt;script&gt;} to execute every tick and *&lt;event namespace&gt;{&lt;script&gt;}.</p>
+<p>Example:</p>
+<pre class="code-box"><code class="consolas">*worldEvent.blockBreak{
+    at @a run summon minecraft:lightning_bolt;
+}</code></pre>
+<h3 id="keywords">Keywords</h3>
+<h4>Selectors</h4>
+<pre class="code-box"><code class="consolas">@server.player.last // last player that joined and is still online
+@server.player.first // first player to join and still online
+@server.player.id(&lt;id&gt;) // local player ID specified
+@server.player.chat // last player to send a message in chat
+@server.player.chat(&lt;&gt;) // last player to send a specific message in chat
+@server.player.rel(&lt;x, y, z&gt;) // closest player to specified position
+@server.e.rel(&lt;x, y, z&gt;) // closest entity to specified position, if position is not specified, then execution marker is used
+@server.player.rel.(&lt;username&gt;) // closest other player to specified username
+@server.e.rel.(&lt;entity id or type&gt;) // closest entity type originating
+@server.player.rand // random player online
+@server.player.op // highest-ranking member online or server owner
+@server.player.spawndist // player closest to world spawn
+@server.e.a // all entities
+@server.player.a // all players
+@server.item // all items
+@server.item.&lt;item name&gt; // all specified items
+@server.item.(&lt;item id&gt;) // item with specified spawn ID
+@server.e.a.nat // all natural entities
+@client.entityiterator // all entities that apply to a for i in &lt;entity range selector&gt;</code></pre>
+<h4>List Filters</h4>
+<p>List filters filter items from a list based off of a set of conditions and saves the new list locally.</p>
+<pre class="code-box"><code class="consolas">return filter.insubtypeof(&lt;subtype&gt;) as &lt;list (does not need to be declared)&gt;; </code></pre>
+<h4>Variables</h4>
+<pre class="code-box"><code class="consolas">return server.player.cord(username) // coordinates of specified username
+return server.count // number of players online
+return server.fps // current global FPS average
+return server.&lt;username&gt;.ping // ping of specified username
+return client.player // closest player to execution marker
+return client.e // closest entity to execution coordinates
+store.global set excrd = &lt;value&gt; // stores execution coordinates</code></pre>
+<h4>Lists</h4>
+<pre class="code-box"><code class="consolas">return server.players // list of online players
+    return @getcubeentities(&lt;extends x&gt;,&lt;extends y&gt;,&lt;extends z&gt;) // list of entities in a cube
+</code></pre>
+<h4>Arrays</h4>
+<pre class="code-box"><code class="consolas">return server.chunk.loaded // array of loaded chunks in username, chunkx, chunky format
+return server.players.ping // players and ping
+return client.&lt;username&gt;.xyz // coordinates of the provided username</code></pre>
+<h4>Dictionaries</h4>
+<pre class="code-box"><code class="consolas">return&lt;username&gt;location</code></pre>
+<h4>Boolean</h4>
+<pre class="code-box"><code class="consolas">LoadChunk(x,y,z)? // check if the chunk is loaded
+Online(&lt;playername&gt;)? // check if the player is online</code></pre>
+        <h2>Additional syntax and execution</h2>
+        <h3 id="header-files">Header</h3>
+        <p>The header file in a ComScript file is essential for linking all of the projects together. Header files declare execution details globally unless stated otherwise in a file. Header files support the following keywords:</p>
+        <ul>
+            <li><code class="consolas">mark</code></li>
+            <li><code class="consolas">return</code></li>
+            <li><code class="consolas">void</code></li>
+            <li><code class="consolas">queue</code></li>
+            <li><code class="consolas">provide</code></li>
+            <li>Global functions</li>
+            <li>Global objects</li>
+        </ul>
+        <h3 id="execution-priority">Execution Priority</h3>
+        <p>Execution priority is an integer ranging from 0 to the number of ComScript files in a project that determines when a file should be executed while in queue.</p>
+        <h3 id="queue-priority">Queue (execution priority)</h3>
+        <p>The <code class="consolas">queue</code> keyword is a header-file-only keyword used to determine the right-of-way when two files are executed simultaneously. Queue provides an index for each file, ranging from 0 to the number of files in the project, ranking the priority of the files. A lower queue index means higher priority.</p>
+        <p>Auto queue is a built-in queue configuration that uses the following to determine a file's priority:</p>
+        <ul>
+            <li>If a file has runtime keywords that take longer than 1 tick to execute: Priority 1</li>
+            <li>If a file fetches from another source and the opposing file does not need external help: Priority 2</li>
+            <li>If a file is executed first: Priority 3</li>
+            <li>If the file has a name higher in the alphabet when in alphabetical order: Priority 4</li>
+        </ul>
+        <p>If any conditions above are met, <code class="consolas">return(execute);</code>.</p>
+        <p>Queue syntax:</p>
+        <pre class="code-box"><code class="consolas">
+store new queueList = {};
+private class queue {
+    queue add &lt;highest priority file href&gt;;
+    queue add &lt;mid priority file href&gt;;
+    queue add &lt;low priority file href&gt;;
+    return(getqueue) as queueList;
+}</code></pre>
+        <h3 id="void-functions">Void functions</h3>
+        <p>If the function being created does not return a value, use this syntax:</p>
+        <pre class="code-box"><code class="consolas">void &lt;function name&gt;(&lt;function variables, booleans, etc.&gt;){
+    &lt;function contents&gt;
+}</code></pre>
+        <h3 id="classes">Classes</h3>
+        <p>Classes are an important part of ComScript and object-oriented programming in general. Classes can be named and specified in a header file for script execution modifiers such as execution location and priority. Classes can be created with the following syntax:</p>
+        <pre class="code-box"><code class="consolas">public &lt;class name&gt; {
+    &lt;class contents&gt;
+}</code></pre>
+        <h4 id="subclasses">Subclasses</h4>
+        <p>Subclasses can be created within a larger scope class to apply a modifier to a specific section within the scope class. Subclasses can be created with the following syntax:</p>
+        <pre class="code-box"><code class="consolas">public class &lt;subclass name&gt; extends &lt;scope class&gt; implements &lt;greater scope class (optional)&gt; {
+    &lt;subclass contents&gt;
+}</code></pre>
+        <h3 id="grant-private-fetch-access">Grant Private Fetch Access</h3>
+        <p>If you have a private element that you would like to give another file permission to fetch from, use the following syntax to allow localized fetching:</p>
+        <pre class="code-box"><code class="consolas">override private(&lt;private object namespace&gt;, &lt;href of file grant permission&gt;, &lt;optional: this file&gt;);</code></pre>
+        <p>This must be implemented before the line where the other file fetches, and the granting file must have a higher priority value in the header file.</p>
+        <h2>Appendix: Related topics</h2>
+        <a href="#header-files">Header</a>
+        <a href="#execution-priority">Execution Priority</a>
+        <a href="#queue-priority">Queue</a>
+        <a href="#classes">Classes</a>
+        <a href="#subclasses">Subclasses</a>
+        <a href="#grant-private-fetch-access">Grant Private Fetch Access</a>
+        <a href="#custom-execution-pattern">Custom Execution Pattern</a>
+        <a href="#definers">Modifier Keywords</a>
+        <a href="#keywords">Technical Keyword List</a>
+        <a href="#flow-control">Flow Control</a>
+        <a href="#selector-fetch-pattern">Selector Fetch Pattern</a>
+        <a href="#custom-tokens">Token Substitution</a>
+        <a href="#input-formatting">Input Formatting</a>
+        <script src="wiki-editor.js" defer></script>
+    </body>
+</html>

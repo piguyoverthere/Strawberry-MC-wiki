@@ -1,0 +1,211 @@
+body{
+    margin:0;
+    padding:0 20px
+}
+.site-header{
+    height:80px;
+    margin:0 -20px;
+    background-color:lightblue
+}
+.site-header nav{
+    box-sizing:border-box;
+    height:100%;
+    padding:20px
+}
+.site-header nav .nav-button{
+    display:inline-block;
+    margin-left:12px;
+    padding:8px 12px;
+    border:1px solid #5b8792;
+    border-radius:4px;
+    background-color:white
+}
+.wiki-editor-toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px;
+    padding:10px 0
+}
+.wiki-editor-toolbar button{
+    padding:7px 10px;
+    border:1px solid #4d7884;
+    border-radius:5px;
+    background-color:#ffffff;
+    color:#173b45;
+    cursor:pointer;
+    font:600 14px/1.2 Arial, Helvetica, sans-serif;
+    transition:background-color .15s ease, border-color .15s ease, box-shadow .15s ease
+}
+.wiki-editor-toolbar button:hover:not(:disabled){
+    border-color:#245a68;
+    background-color:#e4f4f8
+}
+.wiki-editor-toolbar button:focus-visible{
+    outline:3px solid #247a91;
+    outline-offset:2px
+}
+.wiki-editor-toolbar button[data-action="edit"],
+.wiki-editor-toolbar button[data-action="save"]{
+    border-color:#0056b3;
+    background-color:#0056b3;
+    color:#ffffff
+}
+.wiki-editor-toolbar button[data-action="edit"]:hover:not(:disabled),
+.wiki-editor-toolbar button[data-action="save"]:hover:not(:disabled){
+    border-color:#003f85;
+    background-color:#003f85
+}
+.wiki-editor-toolbar button[data-action="reset"]{
+    border-color:#a44c4c;
+    color:#7a2929
+}
+.wiki-editor-toolbar button[data-action="reset"]:hover:not(:disabled){
+    border-color:#8c3535;
+    background-color:#fff0f0
+}
+.wiki-editor-toolbar button:disabled{
+    cursor:default;
+    opacity:.5
+}
+.wiki-bookmark-button[aria-pressed="true"]{
+    border-color:#9a7516;
+    background-color:#fff4c2;
+    color:#4e3b00
+}
+.wiki-bookmark-status{
+    font-family:Arial, Helvetica, sans-serif;
+    font-size:.9em
+}
+.wiki-editor-status{
+    font-family:Arial, Helvetica, sans-serif;
+    font-size:.9em
+}
+.wiki-editing [data-wiki-editor-id]{
+    outline:1px dashed #5b8792;
+    outline-offset:2px
+}
+.main{
+    padding:20px
+}
+.site-search{
+    position:relative;
+    width:min(100%, 420px)
+}
+.site-search input{
+    box-sizing:border-box;
+    width:75%;
+    padding:8px
+}
+.site-search button{
+    padding:8px
+}
+.search-suggestions{
+    position:absolute;
+    z-index:1;
+    top:100%;
+    left:0;
+    box-sizing:border-box;
+    width:100%;
+    margin:0;
+    padding:0;
+    list-style:none;
+    background:white;
+    border:1px solid #8aabb4
+}
+.search-suggestions li a{
+    display:block;
+    padding:8px 10px
+}
+.search-suggestions li a:hover,
+.search-suggestions li a:focus{
+    background:#e4f4f8
+}
+.search-status{
+    margin:4px 0 0
+}
+.visually-hidden{
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:-1px;
+    overflow:hidden;
+    clip:rect(0, 0, 0, 0);
+    white-space:nowrap;
+    border:0
+}
+.roman{
+    font-family:'Times New Roman', Times, serif
+}
+.consolas{
+    font-family:Consolas, monospace
+}
+.code-box{
+    overflow-x:auto;
+    margin:12px 0;
+    padding:12px;
+    border:1px solid #8aabb4;
+    border-radius:4px;
+    background:#f3f7f8;
+    white-space:pre-wrap
+}
+p, h1, h2, h3, h4, h5, ul, li{
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    color-scheme:inherit
+}
+h2{
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    color:rgb(31, 75, 90)
+}
+a{
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    text-decoration:none;
+    color:rgb(29, 32, 61)
+}
+nav{
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    text-decoration:none;
+    color:rgb(29, 32, 61);
+    font-size:1.1em
+}
+h2 + a,
+h2 + a ~ a{
+    display:block;
+    margin-bottom:8px
+}
+table {
+    width: 100%;
+    border: 1px solid #777777;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.table-disclosure > summary {
+    color: rgb(31, 75, 90);
+    cursor: pointer;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+thead {
+    background-color: #0056b3;
+    color: #ffffff;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border: 1px solid #dddddd;
+}
+/* Zebra Striping for Readability */
+tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+/* Footer Styling */
+tfoot {
+    font-weight: bold;
+    background-color: #eaeaea;
+}

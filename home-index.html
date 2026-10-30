@@ -1,0 +1,30 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Strawberry MC|Home</title>
+        <link rel="stylesheet" href="global.css">
+    </head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="Strawberry%20minecraft%20wiki%20(1).pdf" target="_blank" rel="noopener">Open PDF</a>
+            </nav>
+        </header>
+        <div class="main">
+            <h1>Strawberry MC Wiki</h1>
+            <form class="site-search" role="search">
+                <label class="visually-hidden" for="site-search-input">Search site content</label>
+                <input id="site-search-input" type="search" name="q" placeholder="Search..." autocomplete="off" aria-autocomplete="list" aria-controls="search-suggestions">
+                <button type="submit">Search</button>
+                <ul id="search-suggestions" class="search-suggestions" aria-label="Search suggestions" hidden></ul>
+                <p id="search-status" class="search-status" aria-live="polite"></p>
+            </form>
+            <p>Search Strawberry MC wiki pages</p>
+            <button id="random-page-button" type="button">Random Page</button>
+        </div>
+        <script src="search.js" defer></script>
+            <script src="wiki-editor.js" defer></script>
+    </body>
+</html>
