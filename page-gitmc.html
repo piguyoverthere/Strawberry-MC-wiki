@@ -1,0 +1,93 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Strawberry MC|Home</title>
+        <link rel="stylesheet" href="global.css">
+    </head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="Strawberry%20minecraft%20wiki%20(1).pdf" target="_blank" rel="noopener">Open PDF</a>
+            </nav>
+        </header>
+        <h1>GitMC</h1>
+        <h2 id="remixing">Remixing the mod</h2>
+        <p>For non-commercial remixes, credit must be placed in an obvious location. Commercial distribution of remixes is prohibited. Read the terms and conditions for more details; remixes are subject to the same terms.</p>
+        <p>To customize the mod, install MCreator. Avoid fake download buttons, and select the 2026.2 version compatible with the mod.</p>
+        <p>While the apps are installing, install Git for Windows.</p>
+        <p>Create a GitHub account if you do not already have one. The source identifies the mod repository as <code class="consolas">Uncraftable-strawberry-pickax</code> (without the final “e”) and says to use the repository owned by <code class="consolas">i-am-also-coder-314159</code>, not the similarly named repository owned by <code class="consolas">i-am-a-coder-314159</code>.</p>
+        <p>Make a folder for the remix, open it in VS Code, and open a new terminal from the Terminal menu. Clone the repository by running:</p>
+        <pre class="code-box"><code class="consolas">git clone &lt;repo URL&gt;</code></pre>
+        <p>The repository files should appear in the folder after cloning.</p>
+        <h2 id="committing-changes">Committing changes</h2>
+        <p>If there are no staged changes, first stage them with:</p>
+        <pre class="code-box"><code class="consolas">git add .</code></pre>
+        <p>After staging changes, merge the checkout into <code class="consolas">main</code> with <code class="consolas">git merge main</code>, or use <code class="consolas">git commit</code> to keep the changes on a separate branch.</p>
+        <h2 id="gitmc">GitMC version tracking</h2>
+        <p>GitMC is a native Git-like version tracker that tracks changes in a specified world using a Git chart diagram, as seen in Git Bash. It makes it easier to track and modify changes in a world when collaborating or building solo. GitMC interfaces can be accessed through the GitMC button in the Esc menu.</p>
+        <h3 id="attributes">Attributes</h3>
+        <p>GitMC attributes have shorthand codes listed below the relevant commands. An attribute is valid only for the commands that list its code.</p>
+        <h4>A1: <code class="consolas">--f</code></h4>
+        <p>Forces the given command before overriding all warnings.</p>
+        <h4>A2: <code class="consolas">--abort</code></h4>
+        <p>When using the built-in merge conflict resolver, use this attribute to cancel the merge and revert to the last unconflicting commit on the current branch:</p>
+        <pre class="code-box"><code class="consolas">git merge --abort</code></pre>
+        <p>This automatically reverts to the last change on the native branch, so no pull request is needed.</p>
+        <h4>A3: <code class="consolas">--squash</code> (computationally expensive)</h4>
+        <p>Git merge squash can make the two instances (main/origin) overwrite all air blocks within the branch. This method is extremely unstable because block states stored natively on the other instance are not transferred, which can lead to fatal errors.</p>
+        <p>Example:</p>
+        <pre class="code-box"><code class="consolas">git merge eric_branch --squash</code></pre>
+        <h4>A4: <code class="consolas">--clear</code></h4>
+        <p>Clears all data in the provided text column.</p>
+        <h3 id="gitmc-syntax">Syntax</h3>
+        <h4><code class="consolas">:wq</code></h4>
+        <p>Write and quit is used to close a native text box opened by Git.</p>
+        <p>Syntax:</p>
+        <pre class="code-box"><code class="consolas">:wq</code></pre>
+        <h4>Commit</h4>
+        <p>Committing changes to the Git graph requires a commit message.</p>
+        <p>Example:</p>
+        <pre class="code-box"><code class="consolas">git commit</code></pre>
+        <p>If no <code class="consolas">-m</code> attribute is given in the console, GitMC generates a temporary <code class="consolas">.gitignore</code> text file where the commit message can be typed and closed.</p>
+        <p>Valid attributes: A1, A2 (only during a transaction).</p>
+        <h4>Pull</h4>
+        <p>Git pull fetches changes that others may have made to the global repository. It cannot be used when the branch is too many commits ahead of or behind <code class="consolas">main</code>, or while still in the Git merge menu.</p>
+        <p>Example:</p>
+        <pre class="code-box"><code class="consolas">git pull</code></pre>
+        <h4>Push</h4>
+        <p>After changes are committed, Git push can add them to <code class="consolas">main</code> in a solo world. If conflicts are detected between branches, choose to keep the incoming changes, keep the current branch's changes, or attempt to merge them. If a conflict is too complex to merge, resolve it manually in VS Code or revert to a previous unconflicting commit.</p>
+        <p>Example:</p>
+        <pre class="code-box"><code class="consolas">git push main</code></pre>
+        <p>Valid attributes: A1, A2 (only during a transaction).</p>
+        <h4>Log</h4>
+        <p>Git log provides a chronological list of all commits in the specified branch.</p>
+        <p>Example:</p>
+        <pre class="code-box"><code class="consolas">git log</code></pre>
+        <p>Valid attributes: A2 (only during a transaction), A4.</p>
+        <h4>Reload</h4>
+        <p>Git reload pulls local changes and updates them into the world. If the process takes too long, use A2.</p>
+        <p>Example:</p>
+        <pre class="code-box"><code class="consolas">git reload &lt;opt: instance name&gt;</code></pre>
+        <h4>Merge</h4>
+        <p>Git merge in GitMC combines two instances of a world with changes you want to keep, without overwriting one with the other. The changes are combined into a single automatic commit.</p>
+        <p>Example:</p>
+        <pre class="code-box"><code class="consolas">git merge &lt;branch name&gt;</code></pre>
+        <p>If someone changes the main branch after you check out your branch, conflicts may occur. GitMC should usually resolve them automatically. For worlds with changes larger than 5 MB, Git merge cannot automatically merge; accept all current or incoming changes (overwriting the other instance), or merge them manually in VS Code or the built-in GitMC conflict resolver.</p>
+        <p>Valid attributes: A1, A2, A3.</p>
+        <h4>Revert</h4>
+        <p>To revert a world to a previous version of its save data, use:</p>
+        <pre class="code-box"><code class="consolas">git revert &lt;commit name/message&gt;</code></pre>
+        <p>When working on a world with multiple contributors, create a pull request (PR) that the other contributors must approve. The revert occurs after approval, which is reported in the GitMC UI. To view the delta log for debugging, use:</p>
+        <pre class="code-box"><code class="consolas">git revert --delta-log</code></pre>
+        <p>Valid attributes: A1, A2 (only during a pull request).</p>
+        <h4>Build</h4>
+        <p>Git build emulates the code to check for corrupted values, undefined variables, and other errors that could crash the computer if the code were run immediately. The source text ends before completing its explanation of the build result.</p>
+        <p>Syntax:</p>
+        <pre class="code-box"><code class="consolas">git build</code></pre>
+        <h2>Appendix: Related topics</h2>
+        <a href="page-comscript.html">ComScript</a>
+        <script src="wiki-editor.js" defer></script>
+    </body>
+</html>
