@@ -64,6 +64,23 @@
         element.dataset.wikiIsland = String(index);
     });
 
+    /**
+     * Hashes a given string using SHA-256
+     * @param {string} text - The input text to convert
+     * @returns {Promise<string>} The hex-encoded SHA-256 hash
+     */
+    async function convertToSha256(text) {
+        const msgBuffer = new TextEncoder().encode(text);                    
+        const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));                     
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function hashToBigInt(hashHex) {
+        // Prefixing with '0x' tells JavaScript this is a hex string
+        return BigInt("0x" + hashHex);
+    }
+
     function isSafeUrl(value) {
         try {
             const { protocol } = new URL(value, document.baseURI);
