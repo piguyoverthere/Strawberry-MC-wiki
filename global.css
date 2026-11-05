@@ -100,6 +100,10 @@ body{
 .wiki-content img{
     max-width:100%
 }
+li.wiki-plain{
+    list-style:none;
+    counter-increment:list-item 0
+}
 .wiki-textbox{
     margin:12px 0;
     padding:4px 16px;

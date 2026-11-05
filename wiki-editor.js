@@ -754,6 +754,83 @@
         fontSelect.value = "";
     });
 
+    function placeCaret(container, offset) {
+        const range = document.createRange();
+        range.setStart(container, offset);
+        range.collapse(true);
+        const selection = document.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
+    function lastListItemIn(item) {
+        let nested = item.lastElementChild;
+        while (nested && /^(UL|OL)$/.test(nested.tagName) && nested.lastElementChild) {
+            item = nested.lastElementChild;
+            nested = item.lastElementChild;
+        }
+        return item;
+    }
+
+    // Backspace at the start of a list item: the first press removes its bullet (or number),
+    // the second joins the line onto the end of the previous item.
+    root.addEventListener("keydown", (event) => {
+        if (!editing || event.key !== "Backspace" || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) {
+            return;
+        }
+        const selection = document.getSelection();
+        if (selection.rangeCount === 0 || !selection.isCollapsed) {
+            return;
+        }
+        const caret = selection.getRangeAt(0);
+        const start = caret.startContainer.nodeType === Node.ELEMENT_NODE ? caret.startContainer : caret.startContainer.parentElement;
+        const item = start.closest("li");
+        if (!item || !root.contains(item)) {
+            return;
+        }
+        const before = document.createRange();
+        before.setStart(item, 0);
+        before.setEnd(caret.startContainer, caret.startOffset);
+        if (before.toString() !== "" || before.cloneContents().querySelector("img")) {
+            return;
+        }
+
+        event.preventDefault();
+        if (!item.classList.contains("wiki-plain")) {
+            item.classList.add("wiki-plain");
+            return;
+        }
+
+        const ownContent = [...item.childNodes].filter((node) => !/^(UL|OL)$/.test(node.nodeName));
+        const hasText = ownContent.some((node) => node.textContent.trim() || node.nodeName === "IMG");
+        const previous = item.previousElementSibling && lastListItemIn(item.previousElementSibling);
+
+        if (!previous) {
+            // First item in the list: move the line out above the list as a normal paragraph.
+            const paragraph = document.createElement("p");
+            paragraph.append(...(hasText ? ownContent : [document.createElement("br")]));
+            item.parentElement.before(paragraph);
+            item.replaceWith(...item.childNodes);
+            if (!paragraph.nextElementSibling?.children.length) {
+                paragraph.nextElementSibling?.remove();
+            }
+            placeCaret(paragraph, 0);
+            return;
+        }
+
+        if (hasText && previous.lastChild?.nodeName === "BR") {
+            previous.lastChild.remove();
+        }
+        const joinPoint = previous.childNodes.length;
+        if (hasText) {
+            previous.append(...ownContent);
+        }
+        const nestedLists = [...item.children].filter((child) => /^(UL|OL)$/.test(child.tagName));
+        previous.append(...nestedLists);
+        item.remove();
+        placeCaret(previous, joinPoint);
+    });
+
     root.addEventListener("paste", (event) => {
         if (!editing) {
             return;
