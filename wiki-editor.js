@@ -940,9 +940,69 @@
         return true;
     }
 
+    function isOwnResource(element, attribute) {
+        try {
+            return new URL(element.getAttribute(attribute), document.baseURI).origin === location.origin;
+        } catch {
+            return false;
+        }
+    }
+
+    function isOwnHeadElement(element) {
+        switch (element.tagName) {
+            case "META":
+                return element.hasAttribute("charset") || ["viewport", "description"].includes(element.getAttribute("name"));
+            case "TITLE":
+                return true;
+            case "LINK":
+                return element.getAttribute("rel") === "stylesheet" && isOwnResource(element, "href");
+            case "SCRIPT":
+                return element.hasAttribute("src") && isOwnResource(element, "src");
+            default:
+                return false;
+        }
+    }
+
+    // Browser extensions add their own elements, styles and attributes to pages, so the saved file keeps
+    // only the wiki's own parts: page metadata, the site header, the content and the wiki's scripts.
+    function removeForeignParts(copy) {
+        for (const child of [...copy.children]) {
+            if (child.tagName !== "HEAD" && child.tagName !== "BODY") {
+                child.remove();
+            }
+        }
+        const head = copy.querySelector("head");
+        const body = copy.querySelector("body");
+        for (const child of [...head.children]) {
+            if (!isOwnHeadElement(child)) {
+                child.remove();
+            }
+        }
+        for (const child of [...body.children]) {
+            const isOwn = child.matches(".site-header, .wiki-content") ||
+                (child.tagName === "SCRIPT" && child.hasAttribute("src") && isOwnResource(child, "src"));
+            if (!isOwn) {
+                child.remove();
+            }
+        }
+        for (const child of [...(body.querySelector(".site-header")?.children || [])]) {
+            if (child.tagName !== "NAV") {
+                child.remove();
+            }
+        }
+        body.querySelectorAll("[data-wiki-injected]").forEach((element) => element.remove());
+        for (const element of [copy, head, body]) {
+            for (const { name } of [...element.attributes]) {
+                if (!(element === copy && name === "lang")) {
+                    element.removeAttribute(name);
+                }
+            }
+        }
+    }
+
     function buildPageHtml() {
         const copy = document.documentElement.cloneNode(true);
-        copy.querySelectorAll(".wiki-editor-toolbar, .wiki-format-bar, .wiki-dialog, [data-wiki-injected]").forEach((element) => element.remove());
+        removeForeignParts(copy);
 
         const template = document.createElement("template");
         template.innerHTML = savedContent;
@@ -952,12 +1012,6 @@
             placeholder.replaceWith(original.content);
         }
         copy.querySelector(".wiki-content").replaceWith(template.content);
-
-        const body = copy.querySelector("body");
-        body.classList.remove("wiki-editing");
-        if (!body.classList.length) {
-            body.removeAttribute("class");
-        }
 
         const doctype = document.doctype
             ? `<!DOCTYPE ${document.doctype.name}>`
