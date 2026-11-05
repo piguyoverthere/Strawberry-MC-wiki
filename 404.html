@@ -1,0 +1,136 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Page not ready | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    </head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a> |
+                <a href="news.html">News</a> |
+                <a href="page-bookmarked-pages.html">Bookmarked Pages</a>
+                <a class="nav-button" href="Strawberry%20minecraft%20wiki%20(1).pdf" target="_blank" rel="noopener">Open PDF</a>
+            </nav>
+        </header>
+        <div class="main">
+            <section id="checking" class="wiki-notice" role="status" aria-live="polite">
+                <h1>Checking this page…</h1>
+                <p>One moment while we look for it.</p>
+            </section>
+
+            <section id="publishing" class="wiki-notice wiki-notice-publishing" role="status" aria-live="polite" hidden>
+                <h1>This page is still being published</h1>
+                <p>It was just saved to GitHub, but the live site hasn't finished updating yet. This usually takes one to two minutes.</p>
+                <p><strong>You don't need to do anything.</strong> This page will open automatically as soon as it is ready.</p>
+                <p class="wiki-notice-progress">Waiting <span id="publishing-elapsed">0 seconds</span>…</p>
+                <p id="publishing-slow" hidden>This is taking longer than usual. You can
+                    <a href="https://github.com/piguyoverthere/Strawberry-MC-wiki/actions" target="_blank" rel="noopener">check the site update on GitHub</a>,
+                    or keep this tab open.</p>
+            </section>
+
+            <section id="not-found" class="wiki-notice" hidden>
+                <h1>Page not found</h1>
+                <p>There is no wiki page at this address. It may have been renamed or never existed.</p>
+                <p>Try <a href="index.html">searching the wiki</a> or go back to the <a href="home-index.html">home page</a>.</p>
+                <p class="wiki-dialog-hint">If you just created this page, it may still be publishing. Refresh in a minute or two.</p>
+            </section>
+        </div>
+        <script>
+            (() => {
+                const repository = "piguyoverthere/Strawberry-MC-wiki";
+                const branch = "main";
+                const pollSeconds = 10;
+                const slowAfterSeconds = 5 * 60;
+                const giveUpAfterSeconds = 15 * 60;
+                const file = decodeURIComponent(location.pathname.split("/").pop() || "");
+                const show = (id) => {
+                    for (const section of document.querySelectorAll(".wiki-notice")) {
+                        section.hidden = section.id !== id;
+                    }
+                };
+
+                function showNotFound() {
+                    document.title = "Page not found | Strawberry MC";
+                    show("not-found");
+                }
+
+                function wasCommittedInThisBrowser() {
+                    try {
+                        const path = decodeURIComponent(location.pathname);
+                        const pages = JSON.parse(localStorage.getItem(`strawberry-wiki-local-pages:${path.slice(0, path.lastIndexOf("/") + 1)}`) || "[]");
+                        return Array.isArray(pages) && pages.some((page) => page && page.file === file && page.href === file);
+                    } catch {
+                        return false;
+                    }
+                }
+
+                // Does the file exist in the repository even though the live site doesn't serve it yet?
+                async function existsInRepository() {
+                    const response = await fetch(`https://api.github.com/repos/${repository}/contents/${encodeURIComponent(file)}?ref=${branch}`, {
+                        method: "HEAD",
+                        cache: "no-store",
+                        headers: { Accept: "application/vnd.github+json" }
+                    });
+                    if (response.status === 404) {
+                        return false;
+                    }
+                    if (!response.ok) {
+                        throw new Error(`GitHub returned ${response.status}`);
+                    }
+                    return true;
+                }
+
+                function formatElapsed(seconds) {
+                    const unit = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
+                    return seconds < 60
+                        ? unit(seconds, "second")
+                        : `${unit(Math.floor(seconds / 60), "minute")} ${unit(seconds % 60, "second")}`;
+                }
+
+                function waitForPublish() {
+                    document.title = "Publishing… | Strawberry MC";
+                    show("publishing");
+                    const started = Date.now();
+                    const elapsedLabel = document.querySelector("#publishing-elapsed");
+                    const slowNote = document.querySelector("#publishing-slow");
+
+                    const tick = window.setInterval(() => {
+                        const seconds = Math.round((Date.now() - started) / 1000);
+                        elapsedLabel.textContent = formatElapsed(seconds);
+                        slowNote.hidden = seconds < slowAfterSeconds;
+                    }, 1000);
+
+                    const poll = window.setInterval(async () => {
+                        if ((Date.now() - started) / 1000 > giveUpAfterSeconds) {
+                            window.clearInterval(poll);
+                            window.clearInterval(tick);
+                            document.querySelector(".wiki-notice-progress").textContent = "Stopped checking. Refresh this page to try again.";
+                            return;
+                        }
+                        try {
+                            const response = await fetch(location.href, { method: "HEAD", cache: "no-store" });
+                            if (response.ok) {
+                                window.clearInterval(poll);
+                                window.clearInterval(tick);
+                                location.reload();
+                            }
+                        } catch {
+                            // Offline for a moment; try again on the next poll.
+                        }
+                    }, pollSeconds * 1000);
+                }
+
+                if (!/^[\w.-]+\.html$/.test(file) || file === "404.html") {
+                    showNotFound();
+                    return;
+                }
+
+                existsInRepository()
+                    .then((exists) => (exists ? waitForPublish() : showNotFound()))
+                    .catch(() => (wasCommittedInThisBrowser() ? waitForPublish() : showNotFound()));
+            })();
+        </script>
+    </body>
+</html>

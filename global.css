@@ -134,6 +134,26 @@ li.wiki-plain{
     cursor:pointer;
     font:600 14px/1.2 Arial, Helvetica, sans-serif
 }
+.wiki-notice{
+    max-width:640px;
+    margin:24px 0;
+    padding:4px 24px 12px;
+    border:1px solid #8aabb4;
+    border-radius:8px;
+    background:#f7fbfc;
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif
+}
+.wiki-notice[hidden]{
+    display:none
+}
+.wiki-notice-publishing{
+    border-color:#9a7516;
+    background:#fff9e0
+}
+.wiki-notice-progress{
+    color:#4e3b00;
+    font-weight:600
+}
 .wiki-textbox{
     margin:12px 0;
     padding:4px 16px;
