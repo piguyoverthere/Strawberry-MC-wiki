@@ -14,6 +14,7 @@
     const localPagesStorageKey = `strawberry-wiki-local-pages:${deploymentPath}`;
     const tokenStorageKey = "strawberry-wiki-github-token";
     const authorStorageKey = "strawberry-wiki-author";
+    const sharedTokenFile = "wiki-token.json";
     const legacyEditableSelector = "h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, figcaption, summary";
     const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list";
     const allowedTags = new Set([
@@ -1151,12 +1152,20 @@
                 <textarea id="wiki-commit-keywords" name="keywords" rows="3" autocomplete="off"></textarea>
                 <p class="wiki-dialog-hint">Every word that should lead to this page in search, separated by spaces or commas.</p>
             </div>
+            <div class="wiki-password-field" hidden>
+                <label for="wiki-commit-password">Wiki password</label>
+                <input id="wiki-commit-password" name="password" type="password" autocomplete="current-password">
+                <p class="wiki-dialog-hint">Ask the wiki owner for the editing password.
+                    <button type="button" class="wiki-link-button" data-action="use-own-token">Use my own GitHub token instead</button></p>
+                <label class="wiki-checkbox"><input type="checkbox" name="rememberPassword" checked> Stay unlocked until this tab is closed</label>
+            </div>
             <div class="wiki-token-field">
                 <label for="wiki-commit-token">GitHub token</label>
                 <input id="wiki-commit-token" name="token" type="password" autocomplete="off" spellcheck="false">
                 <p class="wiki-dialog-hint">Create a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a>
                     for only this repository with <strong>Contents: Read and write</strong> permission.</p>
                 <label class="wiki-checkbox"><input type="checkbox" name="remember" checked> Remember until this tab is closed</label>
+                <p class="wiki-dialog-hint"><button type="button" class="wiki-link-button" data-action="setup-shared-token">Set up a wiki password so editors don't need their own token</button></p>
             </div>
             <p class="wiki-token-saved" hidden>Using the GitHub token saved for this tab.
                 <button type="button" class="wiki-link-button" data-action="forget-token">Forget token</button></p>
@@ -1184,11 +1193,100 @@
         }
     }
 
+    const passwordField = commitDialog.querySelector(".wiki-password-field");
+    const passwordInput = commitDialog.querySelector("#wiki-commit-password");
+    let sharedToken = null;
+    let useOwnToken = false;
+
     function showTokenState() {
         const hasToken = Boolean(readToken());
-        tokenField.hidden = hasToken;
-        tokenInput.required = !hasToken;
+        const usePassword = !hasToken && Boolean(sharedToken) && !useOwnToken;
+        passwordField.hidden = !usePassword;
+        passwordInput.required = usePassword;
+        tokenField.hidden = hasToken || usePassword;
+        tokenInput.required = !hasToken && !usePassword;
         tokenSaved.hidden = !hasToken;
+    }
+
+    // Shared token --------------------------------------------------------------
+    // The owner's token is stored in the repository encrypted with AES-GCM, using a key derived from
+    // the wiki password with PBKDF2. Anyone can download the encrypted file, so the password must be long.
+
+    const kdfIterations = 600000;
+
+    function bytesToBase64(bytes) {
+        return btoa(String.fromCharCode(...bytes));
+    }
+
+    function base64ToBytes(text) {
+        return Uint8Array.from(atob(text), (character) => character.charCodeAt(0));
+    }
+
+    async function deriveKey(password, salt, iterations) {
+        const material = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
+        return crypto.subtle.deriveKey(
+            { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
+            material,
+            { name: "AES-GCM", length: 256 },
+            false,
+            ["encrypt", "decrypt"]
+        );
+    }
+
+    async function encryptToken(token, password) {
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const key = await deriveKey(password, salt, kdfIterations);
+        const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(token)));
+        return {
+            version: 1,
+            cipher: "AES-GCM-256",
+            kdf: "PBKDF2-SHA256",
+            iterations: kdfIterations,
+            salt: bytesToBase64(salt),
+            iv: bytesToBase64(iv),
+            ciphertext: bytesToBase64(ciphertext)
+        };
+    }
+
+    async function decryptToken(stored, password) {
+        const key = await deriveKey(password, base64ToBytes(stored.salt), stored.iterations);
+        try {
+            const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv: base64ToBytes(stored.iv) }, key, base64ToBytes(stored.ciphertext));
+            return new TextDecoder().decode(plaintext);
+        } catch {
+            throw new Error("That wiki password is not correct.");
+        }
+    }
+
+    function isSharedToken(value) {
+        return Boolean(value) && value.version === 1 && Number.isInteger(value.iterations) &&
+            ["salt", "iv", "ciphertext"].every((field) => typeof value[field] === "string");
+    }
+
+    async function loadSharedToken() {
+        try {
+            const response = await fetch(sharedTokenFile, { cache: "no-store" });
+            if (response.ok) {
+                const parsed = await response.json();
+                return isSharedToken(parsed) ? parsed : null;
+            }
+        } catch {
+            // Fall through to the repository, which has it before the live site finishes updating.
+        }
+        try {
+            const response = await fetch(`https://api.github.com/repos/${repository.owner}/${repository.name}/contents/${sharedTokenFile}?ref=${repository.branch}`, {
+                cache: "no-store",
+                headers: { Accept: "application/vnd.github.raw+json" }
+            });
+            if (response.ok) {
+                const parsed = await response.json();
+                return isSharedToken(parsed) ? parsed : null;
+            }
+        } catch {
+            // No shared token available; editors use their own token.
+        }
+        return null;
     }
 
     commitDialog.querySelector('[data-action="forget-token"]').addEventListener("click", () => {
@@ -1198,7 +1296,81 @@
             // Nothing stored.
         }
         showTokenState();
+        (passwordField.hidden ? tokenInput : passwordInput).focus();
+    });
+
+    commitDialog.querySelector('[data-action="use-own-token"]').addEventListener("click", () => {
+        useOwnToken = true;
+        showTokenState();
         tokenInput.focus();
+    });
+
+    const setupDialog = createDialog(`
+        <form method="dialog">
+            <h2>Set up a wiki password</h2>
+            <p class="wiki-dialog-hint">Your GitHub token is encrypted with this password and saved in the repository as
+                <code class="consolas">${sharedTokenFile}</code>. Editors then type the password instead of a token.</p>
+            <label for="wiki-setup-token">Your GitHub token</label>
+            <input id="wiki-setup-token" name="token" type="password" required autocomplete="off" spellcheck="false">
+            <label for="wiki-setup-password">New wiki password</label>
+            <input id="wiki-setup-password" name="password" type="password" required minlength="12" autocomplete="new-password">
+            <label for="wiki-setup-confirm">Type the password again</label>
+            <input id="wiki-setup-confirm" name="confirm" type="password" required minlength="12" autocomplete="new-password">
+            <p class="wiki-dialog-hint"><strong>Use a long password</strong>: at least 12 characters, ideally four or more random words.
+                The encrypted file is public, so a short password can be guessed. Anyone who knows it can change the wiki.</p>
+            <p class="wiki-dialog-error" role="alert"></p>
+            <div class="wiki-dialog-actions">
+                <button type="button" value="cancel">Cancel</button>
+                <button type="submit" class="wiki-primary">Save wiki password</button>
+            </div>
+        </form>
+    `);
+    const setupForm = setupDialog.querySelector("form");
+    const setupError = setupDialog.querySelector(".wiki-dialog-error");
+    const setupSubmit = setupDialog.querySelector('button[type="submit"]');
+
+    commitDialog.querySelector('[data-action="setup-shared-token"]').addEventListener("click", () => {
+        setupForm.reset();
+        setupDialog.querySelector("#wiki-setup-token").value = tokenInput.value;
+        setupError.textContent = "";
+        commitDialog.close();
+        setupDialog.showModal();
+    });
+
+    setupForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const formData = new FormData(setupForm);
+        const token = String(formData.get("token")).trim();
+        const password = String(formData.get("password"));
+        if (password !== formData.get("confirm")) {
+            setupError.textContent = "The two passwords don't match.";
+            return;
+        }
+
+        setupSubmit.disabled = true;
+        setupSubmit.textContent = "Saving…";
+        setupError.textContent = "";
+        try {
+            // Reading the file first also checks that the token works.
+            const existing = await getRepositoryFile(token, sharedTokenFile);
+            const encrypted = await encryptToken(token, password);
+            await putRepositoryFile(token, sharedTokenFile, `${JSON.stringify(encrypted, null, 2)}\n`,
+                existing ? "Update encrypted wiki token" : "Add encrypted wiki token", existing?.sha);
+            sharedToken = encrypted;
+            try {
+                sessionStorage.setItem(tokenStorageKey, token);
+            } catch {
+                // This tab will ask for the password next time.
+            }
+            setupDialog.close();
+            openCommitDialog();
+            status.textContent = "Wiki password saved. Editors can now commit with the password.";
+        } catch (error) {
+            setupError.textContent = error.message;
+        } finally {
+            setupSubmit.disabled = false;
+            setupSubmit.textContent = "Save wiki password";
+        }
     });
 
     function openCommitDialog() {
@@ -1216,10 +1388,16 @@
             commitKeywordsInput.value = getNewPageKeywords();
         }
         tokenInput.value = "";
+        passwordInput.value = "";
+        useOwnToken = false;
         commitError.textContent = "";
         commitSubmit.disabled = false;
         showTokenState();
         commitDialog.showModal();
+        loadSharedToken().then((stored) => {
+            sharedToken = stored;
+            showTokenState();
+        });
     }
 
     class GitHubError extends Error {
@@ -1333,14 +1511,26 @@
         event.preventDefault();
         const formData = new FormData(commitForm);
         const message = String(formData.get("message")).trim();
-        const token = readToken() || String(formData.get("token")).trim();
-        if (!token) {
-            commitError.textContent = "Enter a GitHub token.";
+        const usingPassword = !passwordField.hidden;
+        if (usingPassword ? !formData.get("password") : !readToken() && !String(formData.get("token")).trim()) {
+            commitError.textContent = usingPassword ? "Enter the wiki password." : "Enter a GitHub token.";
             return;
         }
 
         commitSubmit.disabled = true;
         commitError.textContent = "";
+        commitSubmit.textContent = usingPassword ? "Unlocking…" : "Committing…";
+        let token;
+        try {
+            token = readToken() || (usingPassword
+                ? await decryptToken(sharedToken, String(formData.get("password")))
+                : String(formData.get("token")).trim());
+        } catch (error) {
+            commitError.textContent = error.message;
+            commitSubmit.disabled = false;
+            commitSubmit.textContent = "Commit";
+            return;
+        }
         commitSubmit.textContent = "Committing…";
         const title = getCurrentTitle();
         const keywords = normalizeKeywords(String(formData.get("keywords") || "")) || normalizeKeywords(title);
@@ -1355,7 +1545,7 @@
             // The repository stores pages with Windows (CRLF) line endings; match it so diffs only show real changes.
             const pageHtml = buildPageHtml().replace(/\r?\n/g, !existing || existing.text.includes("\r\n") ? "\r\n" : "\n");
             await putRepositoryFile(token, targetFile, pageHtml, message, existing?.sha);
-            if (!readToken() && formData.get("remember")) {
+            if (!readToken() && formData.get(usingPassword ? "rememberPassword" : "remember")) {
                 try {
                     sessionStorage.setItem(tokenStorageKey, token);
                 } catch {
@@ -1410,7 +1600,9 @@
                 }
                 showTokenState();
             }
-            commitError.textContent = error.message;
+            commitError.textContent = usingPassword && error instanceof GitHubError && [401, 403].includes(error.status)
+                ? "The wiki password worked, but the saved GitHub token has expired or lost access. The wiki owner needs to set up the wiki password again with a new token."
+                : error.message;
         } finally {
             commitSubmit.disabled = false;
             commitSubmit.textContent = "Commit";
