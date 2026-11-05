@@ -81,9 +81,164 @@ body{
     font-family:Arial, Helvetica, sans-serif;
     font-size:.9em
 }
-.wiki-editing [data-wiki-editor-id]{
+.site-header nav button.nav-button{
+    color:rgb(29, 32, 61);
+    cursor:pointer;
+    font:inherit
+}
+.site-header nav button.nav-button:hover{
+    background-color:#e4f4f8
+}
+.wiki-editing .wiki-content{
+    min-height:200px;
     outline:1px dashed #5b8792;
+    outline-offset:6px
+}
+.wiki-editing{
+    padding-bottom:140px
+}
+.wiki-content img{
+    max-width:100%
+}
+.wiki-textbox{
+    margin:12px 0;
+    padding:4px 16px;
+    border:1px solid #8aabb4;
+    border-radius:6px;
+    background:#f7fbfc
+}
+.wiki-format-bar{
+    position:fixed;
+    z-index:10;
+    right:0;
+    bottom:0;
+    left:0;
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 14px;
+    padding:8px 20px;
+    border-top:1px solid #5b8792;
+    background-color:lightblue;
+    box-shadow:0 -3px 8px rgba(0,0,0,0.12)
+}
+.wiki-format-bar[hidden]{
+    display:none
+}
+.wiki-format-group{
+    display:flex;
+    align-items:center;
+    gap:4px
+}
+.wiki-format-bar button,
+.wiki-format-bar select,
+.wiki-color-control{
+    box-sizing:border-box;
+    min-width:32px;
+    height:32px;
+    padding:4px 8px;
+    border:1px solid #4d7884;
+    border-radius:5px;
+    background-color:#ffffff;
+    color:#173b45;
+    cursor:pointer;
+    font:600 14px/1.2 Arial, Helvetica, sans-serif
+}
+.wiki-format-bar button:hover,
+.wiki-format-bar select:hover,
+.wiki-color-control:hover{
+    border-color:#245a68;
+    background-color:#e4f4f8
+}
+.wiki-format-bar button:focus-visible,
+.wiki-format-bar select:focus-visible{
+    outline:3px solid #247a91;
     outline-offset:2px
+}
+.wiki-color-control{
+    display:inline-flex;
+    align-items:center;
+    gap:4px
+}
+.wiki-color-control input{
+    width:22px;
+    height:20px;
+    padding:0;
+    border:0;
+    background:none;
+    cursor:pointer
+}
+.wiki-dialog{
+    box-sizing:border-box;
+    width:min(92vw, 440px);
+    padding:20px 24px;
+    border:1px solid #5b8792;
+    border-radius:8px;
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif
+}
+.wiki-dialog::backdrop{
+    background:rgba(23, 59, 69, 0.35)
+}
+.wiki-dialog h2{
+    margin-top:0
+}
+.wiki-dialog label{
+    display:block;
+    margin:12px 0 4px;
+    font-weight:600
+}
+.wiki-dialog input[type="text"],
+.wiki-dialog input:not([type]),
+.wiki-dialog input[type="password"],
+.wiki-dialog textarea{
+    box-sizing:border-box;
+    width:100%;
+    padding:8px;
+    font:inherit
+}
+.wiki-dialog .wiki-checkbox{
+    font-weight:normal
+}
+.wiki-dialog-hint{
+    margin:6px 0;
+    font-size:.9em
+}
+.wiki-dialog-error{
+    color:#7a2929
+}
+.wiki-dialog-error:empty{
+    display:none
+}
+.wiki-dialog-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:16px
+}
+.wiki-dialog-actions button{
+    padding:8px 14px;
+    border:1px solid #4d7884;
+    border-radius:5px;
+    background:#ffffff;
+    cursor:pointer;
+    font:600 14px/1.2 Arial, Helvetica, sans-serif
+}
+.wiki-dialog-actions .wiki-primary{
+    border-color:#0056b3;
+    background-color:#0056b3;
+    color:#ffffff
+}
+.wiki-dialog-actions button:disabled{
+    cursor:default;
+    opacity:.6
+}
+.wiki-link-button{
+    padding:0;
+    border:0;
+    background:none;
+    color:#0056b3;
+    cursor:pointer;
+    font:inherit;
+    text-decoration:underline
 }
 .main{
     padding:20px
@@ -140,6 +295,12 @@ body{
 }
 .consolas{
     font-family:Consolas, monospace
+}
+.georgia{
+    font-family:Georgia, serif
+}
+.comic{
+    font-family:'Comic Sans MS', 'Comic Sans', cursive
 }
 .code-box{
     overflow-x:auto;

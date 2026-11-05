@@ -503,6 +503,25 @@ const pages = [
     { title: "Warped Crimson Snatcher Grappling Hook", href: "page-warped-crimson-snatcher-grappling-hook.html", keywords: "warped crimson snatcher grappling hook" },
 ];
 
+// Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
+try {
+    const path = decodeURIComponent(location.pathname);
+    const localPages = JSON.parse(localStorage.getItem(`strawberry-wiki-local-pages:${path.slice(0, path.lastIndexOf("/") + 1)}`) || "[]");
+    for (const page of Array.isArray(localPages) ? localPages : []) {
+        if (
+            page &&
+            typeof page.title === "string" &&
+            typeof page.href === "string" &&
+            /^(?:new-page\.html\?[\w=&%.+-]*|page-[\w.-]+\.html)$/.test(page.href) &&
+            !pages.some((existing) => existing.href === page.href || existing.href === page.file)
+        ) {
+            pages.push({ title: page.title, href: page.href, keywords: typeof page.keywords === "string" ? page.keywords : "" });
+        }
+    }
+} catch {
+    // Search still works with just the built-in page list.
+}
+
 const form = document.querySelector(".site-search");
 const input = document.querySelector("#site-search-input");
 const suggestions = document.querySelector("#search-suggestions");
