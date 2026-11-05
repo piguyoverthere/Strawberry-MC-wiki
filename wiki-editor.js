@@ -405,6 +405,7 @@
         </div>
         <div class="wiki-format-group">
             <button type="button" data-command="clearFormatting" title="Clear formatting">Clear</button>
+            <button type="button" data-command="removeAllStyles" title="Remove every style, including inline code, from the selection (or the whole page if nothing is selected)">Remove all styles</button>
             <button type="button" data-command="undo" title="Undo (Ctrl+Z)" aria-label="Undo">Undo</button>
             <button type="button" data-command="redo" title="Redo (Ctrl+Shift+Z)" aria-label="Redo">Redo</button>
         </div>
@@ -498,6 +499,88 @@
             span.className = className;
             return span;
         });
+    }
+
+    const styleTags = new Set([
+        "ABBR", "B", "CODE", "DEL", "EM", "FONT", "I", "INS", "KBD", "MARK", "S", "SMALL", "SPAN", "STRIKE", "STRONG", "SUB", "SUP", "U"
+    ]);
+
+    function isStyleElement(element) {
+        return styleTags.has(element.tagName) && !element.hasAttribute("data-wiki-island");
+    }
+
+    function stripStyles(container) {
+        for (const element of [...container.querySelectorAll("*")]) {
+            if (element.closest("[data-wiki-island]")) {
+                continue;
+            }
+            if (isStyleElement(element)) {
+                element.replaceWith(...element.childNodes);
+            } else {
+                element.removeAttribute("style");
+            }
+        }
+    }
+
+    // Move `node` out of every styled ancestor in its block, splitting those ancestors so text
+    // before and after the node keeps its formatting.
+    function liftOutOfStyles(node) {
+        for (let ancestor = node.parentElement; ancestor && root.contains(ancestor) && ancestor !== root; ancestor = node.parentElement) {
+            if (!isStyleElement(ancestor)) {
+                break;
+            }
+            for (const [start, end, insert] of [
+                [(range) => range.setStart(ancestor, 0), (range) => range.setEndBefore(node), (clone) => ancestor.before(clone)],
+                [(range) => range.setStartAfter(node), (range) => range.setEnd(ancestor, ancestor.childNodes.length), (clone) => ancestor.after(clone)]
+            ]) {
+                const range = document.createRange();
+                start(range);
+                end(range);
+                const piece = range.extractContents();
+                if (piece.textContent) {
+                    const clone = ancestor.cloneNode(false);
+                    clone.append(piece);
+                    insert(clone);
+                }
+            }
+            ancestor.replaceWith(...ancestor.childNodes);
+        }
+    }
+
+    function removeAllStyles() {
+        if (!hasTextSelected()) {
+            if (!window.confirm("Nothing is selected. Remove all styles from the whole page?")) {
+                return;
+            }
+            stripStyles(root);
+            status.textContent = "Removed all styles from the page.";
+            return;
+        }
+
+        const marker = "wiki-selection-marker";
+        document.execCommand("styleWithCSS", false, false);
+        document.execCommand("fontName", false, marker);
+        const markers = [...root.querySelectorAll(`font[face="${marker}"]`)];
+        for (const font of markers) {
+            liftOutOfStyles(font);
+            stripStyles(font);
+            font.closest("h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, pre, div")?.removeAttribute("style");
+        }
+        const selection = document.getSelection();
+        if (markers.length > 0) {
+            const first = markers[0].firstChild;
+            const last = markers.at(-1).lastChild;
+            for (const font of markers) {
+                font.replaceWith(...font.childNodes);
+            }
+            const range = document.createRange();
+            range.setStartBefore(first);
+            range.setEndAfter(last);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+        root.normalize();
+        status.textContent = "Removed all styles from the selection.";
     }
 
     // insertHTML flattens blocks that land inside a paragraph, so place new blocks after the current one instead.
@@ -635,6 +718,9 @@
                 if (hasTextSelected()) {
                     applyFont("default");
                 }
+                break;
+            case "removeAllStyles":
+                removeAllStyles();
                 break;
             case "insertUnorderedList":
             case "insertOrderedList":
