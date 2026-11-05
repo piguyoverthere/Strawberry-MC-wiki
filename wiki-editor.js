@@ -3,17 +3,19 @@
     const pagePath = decodeURIComponent(location.pathname);
     const deploymentPath = pagePath.slice(0, pagePath.lastIndexOf("/") + 1);
     const currentPage = pagePath.split("/").pop() || "index.html";
-    const pageFilePattern = /^page-[a-z0-9]+(?:-[a-z0-9]+)*\.html$/;
+    const pageFilePattern = /^(?:page|news)-[a-z0-9]+(?:-[a-z0-9]+)*\.html$/;
     const params = new URLSearchParams(location.search);
     const isNewPage = currentPage === "new-page.html";
     const newPageFile = isNewPage && pageFilePattern.test(params.get("file") || "") ? params.get("file") : null;
     const targetFile = newPageFile || currentPage;
+    const isNewsArticle = Boolean(newPageFile && newPageFile.startsWith("news-"));
     const storageKey = `strawberry-wiki-draft:${newPageFile ? deploymentPath + newPageFile : pagePath}`;
     const bookmarkStorageKey = `strawberry-wiki-bookmarks:${deploymentPath}`;
     const localPagesStorageKey = `strawberry-wiki-local-pages:${deploymentPath}`;
     const tokenStorageKey = "strawberry-wiki-github-token";
+    const authorStorageKey = "strawberry-wiki-author";
     const legacyEditableSelector = "h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, figcaption, summary";
-    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list";
+    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list";
     const allowedTags = new Set([
         "A", "ABBR", "B", "BLOCKQUOTE", "BR", "CAPTION", "CODE", "DEL", "DETAILS", "DIV", "EM", "FIGCAPTION",
         "FIGURE", "FOOTER", "H1", "H2", "H3", "H4", "H5", "H6", "HR", "I", "IMG", "INS", "KBD", "LI", "MARK",
@@ -178,8 +180,10 @@
     }
 
     function saveLocalPage(entry) {
+        const existing = readLocalPages().find((page) => page.file === entry.file);
         const pages = readLocalPages().filter((page) => page.file !== entry.file);
-        pages.push(entry);
+        // Merge so later saves keep fields like the article author and summary.
+        pages.push({ ...existing, ...entry });
         try {
             localStorage.setItem(localPagesStorageKey, JSON.stringify(pages));
         } catch {
@@ -195,13 +199,35 @@
         return `new-page.html?${new URLSearchParams({ file, title })}`;
     }
 
+    function todayString() {
+        return new Date().toLocaleDateString("en-CA");
+    }
+
+    function formatNewsDate(date) {
+        const parsed = new Date(`${date}T00:00:00`);
+        return Number.isNaN(parsed.getTime())
+            ? date
+            : parsed.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    }
+
     if (newPageFile) {
-        const title = params.get("title")?.trim() || newPageFile.replace(/^page-|\.html$/g, "").replace(/-/g, " ");
+        const title = params.get("title")?.trim() || newPageFile.replace(/^(?:page|news)-|\.html$/g, "").replace(/-/g, " ");
         const heading = root.querySelector("h1");
         if (heading) {
             heading.textContent = title;
         }
         document.title = `${title} | Strawberry MC`;
+
+        if (isNewsArticle) {
+            const article = readLocalPages().find((page) => page.file === newPageFile);
+            const byline = document.createElement("p");
+            byline.className = "news-byline";
+            byline.textContent = `By ${article?.author || "Unknown author"} · ${formatNewsDate(article?.date || todayString())}`;
+            (heading || root.firstElementChild)?.after(byline);
+            const backLink = document.createElement("p");
+            backLink.innerHTML = '<a href="news.html">← Back to News</a>';
+            root.append(backLink);
+        }
     }
 
     const originalContent = serializeContent();
@@ -225,6 +251,12 @@
         const nav = header.querySelector("nav");
         if (nav) {
             const pdfLink = nav.querySelector('a[href$=".pdf"]');
+            if (!nav.querySelector('a[href="news.html"]')) {
+                const newsItem = document.createElement("span");
+                newsItem.dataset.wikiInjected = "";
+                newsItem.innerHTML = ' | <a href="news.html">News</a>';
+                nav.insertBefore(newsItem, pdfLink);
+            }
             if (!nav.querySelector('a[href="page-bookmarked-pages.html"]')) {
                 const bookmarksItem = document.createElement("span");
                 bookmarksItem.dataset.wikiInjected = "";
@@ -236,7 +268,7 @@
             newPageButton.className = "nav-button wiki-new-page-button";
             newPageButton.dataset.wikiInjected = "";
             newPageButton.textContent = "+ New page";
-            newPageButton.addEventListener("click", openNewPageDialog);
+            newPageButton.addEventListener("click", () => openNewPageDialog());
             nav.append(newPageButton);
         }
     } else {
@@ -952,22 +984,40 @@
         return dialog;
     }
 
-    function slugify(title) {
-        const slug = title
+    function slugPart(text) {
+        return text
             .toLowerCase()
             .normalize("NFKD")
             .replace(/[̀-ͯ]/g, "")
             .replace(/['’]/g, "")
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/^-+|-+$/g, "");
+    }
+
+    function slugify(title) {
+        const slug = slugPart(title);
         return slug ? `page-${slug}.html` : "";
+    }
+
+    // Articles are namespaced by author: news-<author>-<title>.html
+    function newsFileName(author, title) {
+        const authorSlug = slugPart(author);
+        const titleSlug = slugPart(title);
+        return authorSlug && titleSlug ? `news-${authorSlug}-${titleSlug}.html` : "";
     }
 
     const newPageDialog = createDialog(`
         <form method="dialog">
-            <h2>Create a new page</h2>
-            <label for="wiki-new-page-title">Page title</label>
+            <h2 class="wiki-new-page-heading">Create a new page</h2>
+            <label for="wiki-new-page-title" class="wiki-new-page-title-label">Page title</label>
             <input id="wiki-new-page-title" name="title" required maxlength="80" autocomplete="off">
+            <div class="wiki-article-fields" hidden>
+                <label for="wiki-new-page-author">Author</label>
+                <input id="wiki-new-page-author" name="author" maxlength="60" autocomplete="name">
+                <label for="wiki-new-page-summary">Summary</label>
+                <textarea id="wiki-new-page-summary" name="summary" rows="2" maxlength="300"></textarea>
+                <p class="wiki-dialog-hint">One or two sentences shown on the News page.</p>
+            </div>
             <p class="wiki-dialog-hint">File name: <code class="consolas wiki-new-page-file">—</code></p>
             <label for="wiki-new-page-keywords">Search keywords</label>
             <textarea id="wiki-new-page-keywords" name="keywords" rows="3" autocomplete="off"></textarea>
@@ -979,14 +1029,37 @@
             </div>
         </form>
     `);
-    const newPageTitleInput = newPageDialog.querySelector("input");
-    const newPageKeywordsInput = newPageDialog.querySelector("textarea");
+    const newPageTitleInput = newPageDialog.querySelector("#wiki-new-page-title");
+    const newPageAuthorInput = newPageDialog.querySelector("#wiki-new-page-author");
+    const newPageSummaryInput = newPageDialog.querySelector("#wiki-new-page-summary");
+    const newPageKeywordsInput = newPageDialog.querySelector("#wiki-new-page-keywords");
+    const articleFields = newPageDialog.querySelector(".wiki-article-fields");
     let keywordsEdited = false;
+    let newPageKind = "page";
     const newPageFileLabel = newPageDialog.querySelector(".wiki-new-page-file");
     const newPageError = newPageDialog.querySelector(".wiki-dialog-error");
 
-    function openNewPageDialog() {
+    function dialogFileName() {
+        return newPageKind === "news"
+            ? newsFileName(newPageAuthorInput.value, newPageTitleInput.value)
+            : slugify(newPageTitleInput.value);
+    }
+
+    function openNewPageDialog(kind = "page") {
+        newPageKind = kind;
+        const isArticle = kind === "news";
+        newPageDialog.querySelector(".wiki-new-page-heading").textContent = isArticle ? "Write a news article" : "Create a new page";
+        newPageDialog.querySelector(".wiki-new-page-title-label").textContent = isArticle ? "Article title" : "Page title";
+        newPageDialog.querySelector('button[type="submit"]').textContent = isArticle ? "Start writing" : "Create page";
+        articleFields.hidden = !isArticle;
+        newPageAuthorInput.required = isArticle;
+        try {
+            newPageAuthorInput.value = localStorage.getItem(authorStorageKey) || "";
+        } catch {
+            newPageAuthorInput.value = "";
+        }
         newPageTitleInput.value = "";
+        newPageSummaryInput.value = "";
         newPageKeywordsInput.value = "";
         keywordsEdited = false;
         newPageFileLabel.textContent = "—";
@@ -995,9 +1068,14 @@
         newPageTitleInput.focus();
     }
 
+    for (const input of [newPageTitleInput, newPageAuthorInput]) {
+        input.addEventListener("input", () => {
+            newPageFileLabel.textContent = dialogFileName() || "—";
+            newPageError.textContent = "";
+        });
+    }
+
     newPageTitleInput.addEventListener("input", () => {
-        newPageFileLabel.textContent = slugify(newPageTitleInput.value) || "—";
-        newPageError.textContent = "";
         // Keywords start as the page name and follow the title until they are edited by hand.
         if (!keywordsEdited) {
             newPageKeywordsInput.value = normalizeKeywords(newPageTitleInput.value);
@@ -1011,9 +1089,12 @@
     newPageDialog.querySelector("form").addEventListener("submit", async (event) => {
         event.preventDefault();
         const title = newPageTitleInput.value.trim();
-        const file = slugify(title);
+        const author = newPageAuthorInput.value.trim();
+        const file = dialogFileName();
         if (!file) {
-            newPageError.textContent = "Use at least one letter or number in the title.";
+            newPageError.textContent = newPageKind === "news"
+                ? "Use at least one letter or number in both the title and the author name."
+                : "Use at least one letter or number in the title.";
             return;
         }
         if (!readLocalPages().some((page) => page.file === file)) {
@@ -1028,7 +1109,16 @@
             }
         }
         const keywords = normalizeKeywords(newPageKeywordsInput.value) || normalizeKeywords(title);
-        saveLocalPage({ title, file, href: getDraftPageHref(file, title), keywords });
+        const entry = { title, file, href: getDraftPageHref(file, title), keywords };
+        if (newPageKind === "news") {
+            Object.assign(entry, { kind: "news", author, date: todayString(), summary: newPageSummaryInput.value.trim() });
+            try {
+                localStorage.setItem(authorStorageKey, author);
+            } catch {
+                // The author name just won't be prefilled next time.
+            }
+        }
+        saveLocalPage(entry);
         location.href = getDraftPageHref(file, title);
     });
 
@@ -1099,9 +1189,11 @@
             return;
         }
         commitDialog.querySelector(".wiki-commit-file").textContent = targetFile;
-        commitDialog.querySelector("#wiki-commit-message").value = newPageFile
-            ? `Create ${getCurrentTitle()} page`
-            : `Update ${getCurrentTitle()} page`;
+        commitDialog.querySelector("#wiki-commit-message").value = isNewsArticle
+            ? `Publish news article: ${getCurrentTitle()}`
+            : newPageFile
+                ? `Create ${getCurrentTitle()} page`
+                : `Update ${getCurrentTitle()} page`;
         commitKeywordsField.hidden = !newPageFile;
         if (newPageFile) {
             commitKeywordsInput.value = getNewPageKeywords();
@@ -1199,6 +1291,27 @@
         await putRepositoryFile(token, "search.js", updated, `Add ${title} to search`, searchFile.sha);
     }
 
+    async function addToNewsIndex(token, article) {
+        const newsFile = await getRepositoryFile(token, "news.js");
+        if (!newsFile) {
+            throw new Error("news.js was not found in the repository.");
+        }
+        if (newsFile.text.includes(`href: ${JSON.stringify(article.href)}`)) {
+            return;
+        }
+        const marker = "const newsArticles = [";
+        const listStart = newsFile.text.indexOf(marker);
+        if (listStart === -1) {
+            throw new Error("Could not find the article list in news.js.");
+        }
+        // Newest articles go first.
+        const newline = newsFile.text.includes("\r\n") ? "\r\n" : "\n";
+        const insertAt = listStart + marker.length;
+        const fields = ["title", "author", "date", "href", "summary"].map((field) => `${field}: ${JSON.stringify(article[field])}`).join(", ");
+        const updated = `${newsFile.text.slice(0, insertAt)}${newline}    { ${fields} },${newsFile.text.slice(insertAt)}`;
+        await putRepositoryFile(token, "news.js", updated, `Add ${article.title} to news`, newsFile.sha);
+    }
+
     commitForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         const formData = new FormData(commitForm);
@@ -1240,6 +1353,20 @@
                 } catch (error) {
                     searchNote = ` The page was committed, but adding it to search failed: ${error.message}`;
                 }
+                if (isNewsArticle) {
+                    const article = readLocalPages().find((page) => page.file === newPageFile);
+                    try {
+                        await addToNewsIndex(token, {
+                            title,
+                            author: article?.author || "",
+                            date: article?.date || todayString(),
+                            href: newPageFile,
+                            summary: article?.summary || ""
+                        });
+                    } catch (error) {
+                        searchNote += ` The article was committed, but adding it to the News page failed: ${error.message}`;
+                    }
+                }
                 saveLocalPage({ title, file: newPageFile, href: newPageFile, keywords });
             }
             try {
@@ -1254,7 +1381,7 @@
             if (newPageFile) {
                 const link = document.createElement("a");
                 link.href = newPageFile;
-                link.textContent = "Open the new page";
+                link.textContent = isNewsArticle ? "Open the article" : "Open the new page";
                 status.append(link);
             }
         } catch (error) {
@@ -1352,6 +1479,10 @@
             document.title = `${title} | Strawberry MC`;
         }
         setEditing(true);
-        status.textContent = `New page ${newPageFile}: write your content, then save and commit it to GitHub.`;
+        status.textContent = isNewsArticle
+            ? `New article ${newPageFile}: write it, then save and commit it to GitHub to publish it on the News page.`
+            : `New page ${newPageFile}: write your content, then save and commit it to GitHub.`;
     }
+
+    document.querySelector("#new-article-button")?.addEventListener("click", () => openNewPageDialog("news"));
 })();

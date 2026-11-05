@@ -513,7 +513,7 @@ try {
             page &&
             typeof page.title === "string" &&
             typeof page.href === "string" &&
-            /^(?:new-page\.html\?[\w=&%.+-]*|page-[\w.-]+\.html)$/.test(page.href) &&
+            /^(?:new-page\.html\?[\w=&%.+-]*|(?:page|news)-[\w.-]+\.html)$/.test(page.href) &&
             !pages.some((existing) => existing.href === page.href || existing.href === page.file)
         ) {
             pages.push({ title: page.title, href: page.href, keywords: typeof page.keywords === "string" ? page.keywords : "" });
