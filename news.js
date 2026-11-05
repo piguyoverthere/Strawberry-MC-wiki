@@ -1,4 +1,5 @@
 const newsArticles = [
+    { title: "Monthly Update on Development: November", author: "Eric", date: "2026-11-04", href: "news-eric-monthly-update-on-development-november.html", summary: "" },
 ];
 
 (() => {
