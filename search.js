@@ -501,6 +501,7 @@ const pages = [
     { title: "Input Formatting", href: "page-comscript.html#input-formatting", keywords: "input formatting unicode string binary boolean float integer packaged lists blockstate entity item coordinate custom format" },
     { title: "Ocean Monument", href: "page-ocean-monument.html", keywords: "ocean monument" },
     { title: "Warped Crimson Snatcher Grappling Hook", href: "page-warped-crimson-snatcher-grappling-hook.html", keywords: "warped crimson snatcher grappling hook" },
+    { title: "Test Page", href: "page-test-page.html", keywords: "test page" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
