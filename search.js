@@ -502,6 +502,7 @@ const pages = [
     { title: "Ocean Monument", href: "page-ocean-monument.html", keywords: "ocean monument" },
     { title: "Warped Crimson Snatcher Grappling Hook", href: "page-warped-crimson-snatcher-grappling-hook.html", keywords: "warped crimson snatcher grappling hook" },
     { title: "Test Page", href: "page-test-page.html", keywords: "test page" },
+    { title: "Monthly Update on Development: November", href: "news-eric-monthly-update-on-development-november.html", keywords: "monthly update on development: november" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
