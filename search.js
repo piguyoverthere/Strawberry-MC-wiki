@@ -171,6 +171,7 @@ const pages = [
     { title: "Clovers [technical]", href: "page-clovers-technical.html", keywords: "clovers [technical]" },
     { title: "Teargrass [technical]", href: "page-teargrass-technical.html", keywords: "teargrass [technical]" },
     { title: "Fir [technical]", href: "page-fir-technical.html", keywords: "fir [technical]" },
+    { title: "MC Controversy", href: "page-mc-controversy.html", keywords: "mc controversy" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
