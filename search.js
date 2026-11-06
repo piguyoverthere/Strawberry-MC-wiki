@@ -167,6 +167,7 @@ const pages = [
     { title: "Test Page", href: "page-test-page.html", keywords: "test page" },
     { title: "Monthly Update on Development: November", href: "news-eric-monthly-update-on-development-november.html", keywords: "monthly update on development: november" },
     { title: "Official: License", href: "page-official-license.html", keywords: "official: license copyright information terms of service use eula privacy policy" },
+    { title: "Poor and Fertile Farmland [technical]", href: "page-poor-and-fertile-farmland-technical.html", keywords: "soil dirt poor and fertile farmland [technical]" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
