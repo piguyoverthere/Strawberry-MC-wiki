@@ -491,7 +491,7 @@ li.wiki-plain{
     min-width:0;
     padding:10px 14px;
     border:1px solid #8aabb4;
-    border-radius:22px;
+    border-radius:4px;
     font:16px 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif
 }
 .site-search input:focus{
@@ -501,7 +501,7 @@ li.wiki-plain{
 .site-search button{
     padding:10px 16px;
     border:1px solid #0056b3;
-    border-radius:22px;
+    border-radius:4px;
     background:#0056b3;
     color:#ffffff;
     cursor:pointer;
@@ -515,7 +515,7 @@ li.wiki-plain{
     margin-top:8px;
     padding:8px 16px;
     border:1px solid #4d7884;
-    border-radius:22px;
+    border-radius:4px;
     background:#ffffff;
     color:#173b45;
     cursor:pointer;
@@ -538,7 +538,7 @@ li.wiki-plain{
     list-style:none;
     background:white;
     border:1px solid #8aabb4;
-    border-radius:10px;
+    border-radius:4px;
     box-shadow:0 6px 16px rgba(0,0,0,0.15)
 }
 .search-suggestions li a{
