@@ -1833,6 +1833,30 @@
             : `New page ${newPageFile}: write your content, then save and commit it to GitHub.`;
     }
 
+    // GitHub Pages lets browsers reuse files for 10 minutes, so after a site update readers can see an old copy.
+    // Ask the server whether this page or its styles and scripts changed, and reload once with the new copies.
+    async function refreshIfSiteUpdated() {
+        const reloadKey = "strawberry-wiki-refreshed-at";
+        if (Date.now() - Number(sessionStorage.getItem(reloadKey) || 0) < 60000) {
+            return;
+        }
+        const urls = [location.href.split("#")[0], ...[...document.querySelectorAll('link[rel="stylesheet"][href], script[src]')].map((element) => element.href || element.src)]
+            .filter((url) => new URL(url).origin === location.origin);
+        const readText = (url, cache) => fetch(url, { cache }).then((response) => response.ok ? response.text() : null);
+        const changed = await Promise.all([...new Set(urls)].map(async (url) => {
+            const cached = await readText(url, "force-cache");
+            const fresh = await readText(url, "no-cache");
+            return cached !== null && fresh !== null && cached !== fresh;
+        }));
+        if (changed.some(Boolean) && !editing && !document.querySelector("dialog[open]")) {
+            sessionStorage.setItem(reloadKey, String(Date.now()));
+            location.reload();
+        }
+    }
+    refreshIfSiteUpdated().catch(() => {
+        // Keep showing the copy we have if the check fails (for example when offline).
+    });
+
     // Ctrl+S / Cmd+S saves while editing instead of downloading the page.
     document.addEventListener("keydown", (event) => {
         if (editing && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
