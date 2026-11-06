@@ -126,7 +126,7 @@
                 // Pages that were merged into a main topic page move to where their content now lives.
                 const movedTo = window.wikiRedirects && Object.hasOwn(window.wikiRedirects, file) ? window.wikiRedirects[file] : null;
                 if (movedTo) {
-                    location.replace(movedTo + location.hash);
+                    location.replace(movedTo.includes("#") ? movedTo : movedTo + location.hash);
                     return;
                 }
 

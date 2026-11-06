@@ -713,3 +713,38 @@ tfoot {
     font-weight: bold;
     background-color: #eaeaea;
 }
+.site-header nav{
+    position:relative
+}
+.wiki-pdf-menu{
+    position:absolute;
+    z-index:30;
+    display:flex;
+    flex-direction:column;
+    min-width:240px;
+    padding:4px 0;
+    border:1px solid #a2a9b1;
+    border-radius:4px;
+    background:#ffffff;
+    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+    text-shadow:none
+}
+.wiki-pdf-menu[hidden]{
+    display:none
+}
+.site-header nav .wiki-pdf-menu a{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    padding:8px 14px;
+    color:#202122
+}
+.site-header nav .wiki-pdf-menu a:hover,
+.site-header nav .wiki-pdf-menu a:focus{
+    background:#eaecf0;
+    text-decoration:none
+}
+.wiki-pdf-menu span{
+    color:#54595d;
+    font-size:.85em
+}

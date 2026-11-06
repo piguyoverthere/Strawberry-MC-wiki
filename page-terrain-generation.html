@@ -13,15 +13,15 @@
             </nav>
         </header>
         <h1>Terrain Generation</h1>
-<h2>Segmented Generation Method</h2>
+<h2 id="segmented-generation-method">Segmented Generation Method</h2>
 <p>Even though vanilla Minecraft uses a refined Perlin Noise biome generation, Strawberry uses a different terrain generation method. The new method will first segment the entire world into adjacent superbiomes; which is an area that will eventually encompass many biomes of a similar temperature noise and humidity noise. The superbiome containing spawn is given a random temperature noise ranging from- 1(coldest) to 1(hottest). Then, when superbiomes adjacent to spawn are loaded in by the player, the adjacent superbiomes are given a temperature value like the temperature value of the spawn superbiome determined by the seed of the world. After superbiome temperature noise values have been determined, Strawberry Minecraft will proceed to fragment the superbiome into normal biomes of that or similar temperature noises.</p>
 <p>be adjusted for larger oceans, although to a point in which land is still abundant, yet smaller and more fragmented. Smaller bodies of fresh or brackish water may generate inside of larger bodies of land.</p>
 <p>Fig 1. Map example from Chunkbase</p>
-<h2>Strongholds Of The W Noise</h2>
+<h2 id="strongholds-of-the-w-noise">Strongholds Of The W Noise</h2>
 <p>Areas with a weirdness noise consistently higher than 0 over 50 blocks will turn into W noise strongholds, where W noise is then amplified in that area and allows for extreme and variable terrain generation. Weirdness noise strongholds typically generate near or on superbiome borders.</p>
-<h2>Block Layers</h2>
-<h3>Soil</h3>
-<p>Most to all generation of Dirt on the first 1-2 blocks under a grass block have been replaced to soil, with the same properties as Dirt, but darker in color. Dirt still naturally generates, [read but is far less abundant; only generating in small patches near exposed Stone features also: exposed Stone][read also: talus slopes] , talus slopes, rocky beaches, and below soil. The new layout for layers is: 1. Grass blocks (1 block thick) 2. Soil (1-3 blocks thick) 3. Dirt (1-2 blocks thick) 4. Gravel (1-2 blocks thick) 5. Exposed Stone (possible generation in some biomes; in which it is 1 block thick) 6. Stone (variable across terrain) 7. Deepslate (variable across terrain) 8. Bedrock (1-5 blocks thick)</p>
+<h2 id="block-layers">Block Layers</h2>
+<h3 id="soil">Soil</h3>
+<p>Most to all generation of Dirt on the first 1-2 blocks under a grass block have been replaced to soil, with the same properties as Dirt, but darker in color. Dirt still naturally generates, but is far less abundant; only generating in small patches near exposed Stone features [see also: <a href="page-forests.html#exposed-stone-features">exposed Stone</a>], talus slopes [see also: <a href="page-forests.html#sloped-stone-talus">talus slopes</a>], rocky beaches, and below soil. The new layout for layers is: 1. Grass blocks (1 block thick) 2. Soil (1-3 blocks thick) 3. Dirt (1-2 blocks thick) 4. Gravel (1-2 blocks thick) 5. Exposed Stone (possible generation in some biomes; in which it is 1 block thick) 6. Stone (variable across terrain) 7. Deepslate (variable across terrain) 8. Bedrock (1-5 blocks thick)</p>
         <h2>Appendix: Related topics</h2>
         <a href="page-other-features.html">Other Features</a>
         <script src="wiki-editor.js" defer></script>

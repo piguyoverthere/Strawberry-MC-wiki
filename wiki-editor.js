@@ -15,6 +15,11 @@
     const tokenStorageKey = "strawberry-wiki-github-token";
     const authorStorageKey = "strawberry-wiki-author";
     const sharedTokenFile = "wiki-token.json";
+    // Source documents offered by "Open PDF". Update the date whenever a PDF is replaced.
+    const pdfDocuments = [
+        { title: "Strawberry MC Wiki", href: "Strawberry%20minecraft%20wiki%20(1).pdf", updated: "2026-10-29" },
+        { title: "MC Controversy Resolver", href: "mc-controversy-resolver.pdf", updated: "2026-11-05" }
+    ];
     const legacyEditableSelector = "h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, figcaption, summary";
     const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list";
     const allowedTags = new Set([
@@ -347,6 +352,55 @@
             newPageButton.textContent = "+ New page";
             newPageButton.addEventListener("click", () => openNewPageDialog());
             nav.append(newPageButton);
+
+            // "Open PDF" lets readers pick which source document to open.
+            if (pdfLink) {
+                const pdfMenu = document.createElement("div");
+                pdfMenu.className = "wiki-pdf-menu";
+                pdfMenu.dataset.wikiInjected = "";
+                pdfMenu.setAttribute("role", "menu");
+                pdfMenu.hidden = true;
+                for (const pdf of pdfDocuments) {
+                    const item = document.createElement("a");
+                    item.href = pdf.href;
+                    item.target = "_blank";
+                    item.rel = "noopener";
+                    item.setAttribute("role", "menuitem");
+                    const name = document.createElement("strong");
+                    name.textContent = pdf.title;
+                    const updated = document.createElement("span");
+                    updated.textContent = `Last updated ${formatNewsDate(pdf.updated)}`;
+                    item.append(name, updated);
+                    pdfMenu.append(item);
+                }
+                pdfLink.after(pdfMenu);
+                pdfLink.setAttribute("aria-haspopup", "menu");
+                pdfLink.setAttribute("aria-expanded", "false");
+                const showPdfMenu = (open) => {
+                    pdfMenu.hidden = !open;
+                    pdfLink.setAttribute("aria-expanded", String(open));
+                    if (open) {
+                        pdfMenu.style.left = `${Math.max(0, Math.min(pdfLink.offsetLeft, nav.clientWidth - pdfMenu.offsetWidth - 8))}px`;
+                        pdfMenu.style.top = `${pdfLink.offsetTop + pdfLink.offsetHeight + 6}px`;
+                    }
+                };
+                pdfLink.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    showPdfMenu(pdfMenu.hidden);
+                });
+                pdfMenu.addEventListener("click", () => showPdfMenu(false));
+                document.addEventListener("click", (event) => {
+                    if (!pdfMenu.hidden && event.target !== pdfLink && !pdfMenu.contains(event.target)) {
+                        showPdfMenu(false);
+                    }
+                });
+                document.addEventListener("keydown", (event) => {
+                    if (event.key === "Escape" && !pdfMenu.hidden) {
+                        showPdfMenu(false);
+                        pdfLink.focus();
+                    }
+                });
+            }
         }
     }
 

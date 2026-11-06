@@ -14,22 +14,22 @@
         </header>
         <h1>ComScript</h1>
         <p><strong>[UNRESOLVED] The source marks the ComScript name as subject to change and contains unresolved technical placeholders; review them before treating this page as final.</strong></p>
-<p>ComScript is a coding language based on Minecraft Commands that eliminates the need for long chains of Command Blocks. ComScript can be natively and directly executed in [read also: lobby] the admin lobby or by typing scripts into the Scripter block.</p>
-<h2>Errors</h2>
+<p>ComScript is a coding language based on Minecraft Commands that eliminates the need for long chains of Command Blocks. ComScript can be natively and directly executed in [see also: <a href="page-lobby.html">lobby</a>] the admin lobby or by typing scripts into the Scripter block.</p>
+<h2 id="errors">Errors</h2>
 <p>Errors due to syntax or any other reason when the script is run are shown in the native terminal located at the bottom of the UI. All errors are red text, warnings as yellow text, and logs as white text.</p>
-<h3>Error: Undefined data structure(s)</h3>
+<h3 id="error-undefined-data-structure-s">Error: Undefined data structure(s)</h3>
 <p>This error appears when undefined variables, arrays, lists, or dictionaries are used.</p>
 <p>Error example:</p>
-<h3>Error: No mandatory execution marker found</h3>
+<h3 id="error-no-mandatory-execution-marker-found">Error: No mandatory execution marker found</h3>
 <p>This error appears when a selector requiring an execution marker does not have a global marker to fetch from. This can trigger a domino effect of errors since the invalid selectors output null, which may not be compatible with the data type where the selector is used.</p>
-<h3>Error: Unexpected data type in input</h3>
+<h3 id="error-unexpected-data-type-in-input">Error: Unexpected data type in input</h3>
 <p>This error occurs when an incompatible data type is used in an input.</p>
 <p>Error example:</p>
 <pre class="code-box"><code class="consolas">;</code></pre>
 <p>The semicolon is an operator for integers and floats only.</p>
-<h2>Technical details</h2>
-<h3>Terminology</h3>
-<h4>Relative location selectors</h4>
+<h2 id="technical-details">Technical details</h2>
+<h3 id="terminology">Terminology</h3>
+<h4 id="relative-location-selectors">Relative location selectors</h4>
 <p>Relative location selectors include any selectors that are location or distance based, meaning that they must have a starting point of execution. These include:</p>
 <ul>
     <li><span class="consolas">@p</span></li>
@@ -38,11 +38,11 @@
     <li><span class="consolas">@c</span></li>
 </ul>
 <p>If no execution marker is included, then it will error and output null at any use instances.</p>
-<h4>Native console</h4>
+<h4 id="native-console">Native console</h4>
 <p>The native console is the built-in executor within the esc menu.</p>
-<h4>Token</h4>
+<h4 id="token">Token</h4>
 <p>A token is any symbol, symbolized, or packaged string that can be used in a value type.</p>
-<h3>Command selector standardization</h3>
+<h3 id="command-selector-standardization">Command selector standardization</h3>
 <p>All commands with selectors now follow the structure below:</p>
 <pre class="code-box"><code class="consolas">&lt;command namespace&gt; &lt;selector&gt; &lt;action/input&gt; &lt;opt: attributes, booleans, conditions, etc.&gt;</code></pre>
 <h3 id="execution-pattern">Execution pattern</h3>
@@ -57,13 +57,13 @@
           7  6  5
           X = execution marker location</code></pre>
 <p>[see also: <a href="#custom-execution-pattern">Custom execution pattern</a>]</p>
-<h3>Quotations</h3>
+<h3 id="quotations">Quotations</h3>
 <p>Quotations in comscript are unidirectional, meaning that they do not directionally encapsulate text.</p>
 <p>Example:</p>
 <p>Serif: <span class="roman">""</span></p>
 <p>ComScript: ""</p>
 <p>*The two quotes above should look identical but different from Serif, if they don't then your browser may not support unidirectional quotations.</p>
-<h3>Execution location auto-assumption key</h3>
+<h3 id="execution-location-auto-assumption-key">Execution location auto-assumption key</h3>
 <p>Commands executing without a specified location(specified via the marker keyword)are executed based off of the following rules:</p>
 <p>If the script line is encapsulated by a *{} condition statement with a location specifier, then it is executed there.</p>
 <p>If no specified location is fetched from the previous condition(s), the execution marker (if one was fetched correctly) becomes the native execution location. If no location is fetched, and a script is executing from a Scripter block, valid selectors execute from the Scripter's location:</p>
@@ -118,19 +118,19 @@
     <li>One run (or one tick of a timer, or one event) can run at most 10000 statements, so a script can't freeze the server.</li>
     <li>Command output appears in the terminal: errors in red, warnings in yellow, everything else in white, each with the time and line number.</li>
 </ul>
-<h4>Definers in the Scripter</h4>
+<h4 id="definers-in-the-scripter">Definers in the Scripter</h4>
 <p>The Scripter accepts <code class="consolas">local:</code> and <code class="consolas">global:</code> in front of any statement, but they don't change anything yet because every script is a single file. <code class="consolas">.get-once</code> and <code class="consolas">.lock-element</code> aren't supported.</p>
 <p><strong>Planned:</strong> <code class="consolas">local:</code> in front of <code class="consolas">pattern</code> or <code class="consolas">range</code> will limit it to the block it's in (a class, a <code class="consolas">run { }</code> or an event block). Without a definer it lasts for the rest of the file. <code class="consolas">global:</code> will apply it to every file in the header's project.</p>
 <h2 id="syntax">Syntax</h2>
 <h3 id="definers">Definers [unresolved: better name]</h3>
-<h4>local:</h4>
+<h4 id="local">local:</h4>
 <p>The local definer causes any modifier keyword to become a local action. Local actions only perform the modifier within said file or, when encapsulated within a flow-control string, only within that segment unless otherwise stated with <code class="consolas">global:</code>.</p>
 <p>Example:</p>
 <pre class="code-box"><code class="consolas">local:mark add @r.cache-once mobile</code></pre>
-<h4>global:</h4>
-<h4>.get-once</h4>
+<h4 id="global">global:</h4>
+<h4 id="get-once">.get-once</h4>
 <p>The .get-once modifier is used on inputs that require a random number generator. .get-once can be used if a event/target entity is randomized, as the .get-once prevents a random number generator from functioning normally.</p>
-<h4>.lock-element</h4>
+<h4 id="lock-element">.lock-element</h4>
 
 <h3 id="custom-execution-pattern">Custom execution pattern</h3>
 <p>Custom execution patterns can be defined using the pattern keyword. For a definition and explanation on execution patterns, see Technical details: Execution pattern.</p>
@@ -148,7 +148,7 @@
     <li>odd-checker: first from top left to bottom odd tiles then even tiles</li>
     <li>even-checker: first from top left to bottom even tiles then odd tiles</li>
 </ul>
-<h4>Built-in patterns (planned)</h4>
+<h4 id="built-in-patterns-planned">Built-in patterns (planned)</h4>
 <p><strong>Not in the Scripter yet.</strong> Without a pattern, selectors use Minecraft's own order (nearest first for <code class="consolas">@p</code> and <code class="consolas">@n</code>). The planned version supports these patterns, which differ from the list above:</p>
 <pre class="code-box"><code class="consolas">pattern set spiral; // 1x1x1 cells, clockwise outward from northwest of the marker
 pattern set nearest; // closest first
@@ -158,14 +158,14 @@ pattern set random; // random order</code></pre>
 <h3 id="execution-marker-location">Execution marker/location</h3>
 <p>Execution markers mark where the script would start executing if you would like to override the location of where the scripter block is placed or specify the location of where the script is executed if written in the native console. Selectors that are location-based (nearest entity, etc.)scan in a spiral pattern clockwise starting northwest of the marker to search for valid selectors; see <a href="#selector-fetch-pattern">Selector fetch pattern</a>. Execution markers can be defined using the following:</p>
 <pre class="code-box"><code class="consolas">mark add&lt;location (x y z)&gt; &lt;mobility&gt;;</code></pre>
-<h4>Mobile relative execution markers</h4>
+<h4 id="mobile-relative-execution-markers">Mobile relative execution markers</h4>
 <p>Relative execution markers move depending on the base selector and the spacing. These allow scripts to execute depending on the mobile selector; which means that you can have scripts executed at a specific tagged sheep for example. If a script is a macro-script</p>
 <p>(meaning executed process takes &gt;2 ticks) then the script execution location stays at the</p>
 <p>Syntax:</p>
 <pre class="code-box"><code class="consolas">mark add relative &lt;base selector&gt; &lt;tilde defined relative location&gt;;</code></pre>
 <p>Example:</p>
 <pre class="code-box"><code class="consolas">mark add relative @e[type=sheep, tag=cheese] ~~10~;</code></pre>
-<h4>Setting the marker</h4>
+<h4 id="setting-the-marker">Setting the marker</h4>
 <ul>
     <li><code class="consolas">mark add &lt;x y z&gt;;</code> takes absolute or <code class="consolas">~</code> coordinates. The mobility word (<code class="consolas">static</code> or <code class="consolas">mobile</code>) is optional and doesn't change anything for a fixed position.</li>
     <li><code class="consolas">mark add relative &lt;selector&gt; &lt;~ ~ ~&gt;;</code> finds the entity once, at that line. If the offset is left out, it marks the entity's own position.</li>
@@ -175,7 +175,7 @@ pattern set random; // random order</code></pre>
 </ul>
 <h3 id="charset">Charset</h3>
 <p>Character sets and character operations can be changed manually by using the charset keyword. Charset acts as the &lt;meta&gt; tag in HTML. Charset has the following valid sub- keywords:</p>
-<h4>Charset store</h4>
+<h4 id="charset-store">Charset store</h4>
 <p>Charset store changes the current charset.</p>
 <p>Example:</p>
 <pre class="code-box"><code class="consolas">charset store UTF-8</code></pre>
@@ -193,7 +193,7 @@ pattern set random; // random order</code></pre>
 <p>Example:</p>
 <pre class="code-box"><code class="consolas">charset token store &amp;dollar; = &amp;s;;</code></pre>
 <p>One token is the abbreviation, and the other closes it.</p>
-<h4>Using tokens</h4>
+<h4 id="using-tokens">Using tokens</h4>
 <p>Every token in the <a href="#invalid-token-substitution-key">substitution key</a> works in strings and commands, and so does any decimal code like <code class="consolas">&amp;#36;</code>. They are replaced after <code class="consolas">$variables</code> are filled in, so <code class="consolas">&amp;dollar;</code> puts a real <code class="consolas">$</code> in a command. The semicolon that closes a token never ends the statement.</p>
 <p><strong>Planned, not in the Scripter yet:</strong></p>
 <ul>
@@ -218,43 +218,43 @@ pattern set random; // random order</code></pre>
     <li>Custom format</li>
 </ul>
 <p>If you want to change/define the format of a variable or value, you can use the following:</p>
-<h4>Convert to string</h4>
+<h4 id="convert-to-string">Convert to string</h4>
 <pre class="code-box"><code class="consolas">string(&lt;value&gt;);
 str(&lt;value&gt;);</code></pre>
-<h4>Convert to entityrange</h4>
+<h4 id="convert-to-entityrange">Convert to entityrange</h4>
 <p>Entityrange is used for entity iterators.</p>
 <pre class="code-box"><code class="consolas">
     entityrange(&lt;entity list&gt;)
 </code></pre>
-<h4>Convert to boolean</h4>
+<h4 id="convert-to-boolean">Convert to boolean</h4>
 <p>Only 1-digit binary integers, and strings with boolean names can be converted.</p>
 <pre class="code-box"><code class="consolas">boolean(&lt;value&gt;);
 bool(&lt;value&gt;);
 booleanState(&lt;int0-1&gt;)</code></pre>
-<h4>Convert to binary</h4>
+<h4 id="convert-to-binary">Convert to binary</h4>
 <p>Anything can be converted into binary, as it is the raw data type.</p>
 <pre class="code-box"><code class="consolas">bin(&lt;value&gt;)
 createBin(&lt;value&gt;)</code></pre>
 <p>Example:</p>
 <pre class="code-box"><code class="consolas">bin(0101011100110101)</code></pre>
-<h4>Convert to float</h4>
+<h4 id="convert-to-float">Convert to float</h4>
 <pre class="code-box"><code class="consolas">float(&lt;value&gt;)
 flt(&lt;value&gt;);</code></pre>
-<h4>Convert to integer</h4>
+<h4 id="convert-to-integer">Convert to integer</h4>
 <pre class="code-box"><code class="consolas">integer(&lt;value&gt;)
 int(&lt;value&gt;);</code></pre>
-<h4>Package a list</h4>
+<h4 id="package-a-list">Package a list</h4>
 <p>Packaging a list allows for mixed values to be combined and still be able to be extracted from a different source.</p>
 <p>Syntax:</p>
 <pre class="code-box"><code class="consolas">pack.push(&lt;listname&gt;);</code></pre>
 <p>Example:</p>
 <pre class="code-box"><code class="consolas">store set myVar= int(String);</code></pre>
-<h4>Custom type</h4>
+<h4 id="custom-type">Custom type</h4>
 <p>Custom types can be stored as a list with all valid strings and/or characters listed within the built-in list.</p>
 <p>Example[UTF-8]:</p>
 <pre class="code-box"><code class="consolas">};</code></pre>
 <p>The statement above would declare all strings or characters within the parentheses to be the only valid tokens in that data format.</p>
-<h4>Value types and conversions</h4>
+<h4 id="value-types-and-conversions">Value types and conversions</h4>
 <p>Scripter values are integers, floats, strings, booleans, selectors (like <code class="consolas">@e[type=pig]</code>) and text styles. Integers stay integers until a float is involved.</p>
 <ul>
     <li>Strings can use <code class="consolas">"..."</code> or <code class="consolas">'...'</code>.</li>
@@ -269,7 +269,7 @@ int(&lt;value&gt;);</code></pre>
 <p>In the Scripter, plain true and false values are written <code class="consolas">&lt;true;&gt;</code> and <code class="consolas">&lt;false;&gt;</code>. The semicolon inside them doesn't end the statement. Writing a bare <code class="consolas">true</code> or <code class="consolas">false</code> is an error.</p>
 <pre class="code-box"><code class="consolas">store new open = &lt;false;&gt;;
 store set open = &lt;true;&gt;;</code></pre>
-<h3>Function block</h3>
+<h3 id="function-block">Function block</h3>
 <p>Function blocks are a new block that creates global functions applicable across all command blocks. When opened, the player assigns a function name and can be assessed with the keyword.</p>
 <pre class="code-box"><code class="consolas">&lt;function name&gt;(&lt;function variables, Booleans, etc.&gt;){
     &lt;function contents&gt;
@@ -278,7 +278,7 @@ store set open = &lt;true;&gt;;</code></pre>
 <pre class="code-box"><code class="consolas">global(&lt;namespace&gt;);</code></pre>
 <p>If you would like to turn a global data structure back to local and change all outside instances of the data structure to null, then you can use the following:</p>
 <pre class="code-box"><code class="consolas">local(&lt;namespace&gt;);</code></pre>
-<h4>Writing functions (planned)</h4>
+<h4 id="writing-functions-planned">Writing functions (planned)</h4>
 <p><strong>Not in the game yet.</strong> The Function block will be a new operator block next to the Scripter, with the same editor plus a name box. One Function block can hold one or more functions:</p>
 <pre class="code-box"><code class="consolas">double(n){
     return($n * 2);
@@ -295,7 +295,7 @@ void greet(name){
     <li>Functions are saved with the world, so they keep working when the Function block's chunk isn't loaded.</li>
     <li>Functions can only be written in a Function block or a header, not in a normal Scripter.</li>
 </ul>
-<h3>Entity Range Iterators</h3>
+<h3 id="entity-range-iterators">Entity Range Iterators</h3>
 <p>Entity range iterators are used to iterate over a range of entities that can be defined using the syntax below:</p>
 <pre class="code-box"><code class="consolas">for @client.entityiterator in &lt;entity range selector&gt;{
     &lt;repeat script&gt;
@@ -307,10 +307,10 @@ void greet(name){
     for @client.entityiterator in entityrange(playerlist{}){
         // script contents
     }</code></pre>
-<h4>Repeating for each entity</h4>
+<h4 id="repeating-for-each-entity">Repeating for each entity</h4>
 <p>Entity range iterators, <code class="consolas">@client.entityiterator</code>, <code class="consolas">@getcubeentities</code> and list filters aren't in the Scripter yet. To repeat a script for each entity, use <code class="consolas">execute as &lt;selector&gt; run { }</code>, which runs the block once for every entity matched.</p>
-<h3>Data structure creation</h3>
-<h4>Variables</h4>
+<h3 id="data-structure-creation">Data structure creation</h3>
+<h4 id="variables">Variables</h4>
 <h5>Creation</h5>
 <p>Variables are created using <code class="consolas">store new &lt;varname&gt;=&lt;init_value&gt;;</code>. Multiple variables can be created with the same value using <code class="consolas">store new &lt;varname&gt;, &lt;varname&gt;=&lt;init_value&gt;;</code>. Global variables (which are built in) can be fetched with <code class="consolas">return.global&lt;varname&gt;;</code> or <code class="consolas">return.global &lt;varname&gt; as &lt;varname temp&gt;;</code>.</p>
 <h6>Formatting</h6>
@@ -320,7 +320,7 @@ void greet(name){
 <pre class="code-box"><code class="consolas">store set cheese as);</code></pre>
 <p>Note that variables made with a preset format can still be modified using input formatting syntax.</p>
 <h5>Modification</h5>
-<p>Existing variables are modified with the command store set &lt;varname&gt;=&lt;float/int/bool/str_value&gt; Variable values can be manipulated by using alter commands below. Note that once a [read: Input formatting] variable is created, a modifier command must be used to change the data set type, e.g., float, boolean, string... A space must be used between variables and operator keywords.</p>
+<p>Existing variables are modified with the command store set &lt;varname&gt;=&lt;float/int/bool/str_value&gt; Variable values can be manipulated by using alter commands below. Note that once a [see also: <a href="#input-formatting">Input formatting</a>] variable is created, a modifier command must be used to change the data set type, e.g., float, boolean, string... A space must be used between variables and operator keywords.</p>
 <h6>Change by -1</h6>
 <pre class="code-box"><code class="consolas">store set&lt;varname&gt;++;</code></pre>
 <h6>Change by 1</h6>
@@ -354,30 +354,30 @@ void greet(name){
 tellraw @a $warning;
 tellraw @a font($warning, "Run!"); // same style, different text</code></pre>
 <p>The JSON is checked when it's stored, and an invalid text component is an error. <code class="consolas">store set font(&lt;name&gt;) as {...};</code> changes an existing style.</p>
-<h3>Execution range</h3>
+<h3 id="execution-range">Execution range</h3>
 <p>Execution range is a variable that determines the area that the script applies to and executes as. For example, if a script with an execution range of a circle with a radius of 5</p>
 <p>foot is outside of the circle, then the script will return null.</p>
-<h4>Setting the range (planned)</h4>
+<h4 id="setting-the-range-planned">Setting the range (planned)</h4>
 <p><strong>Not in the Scripter yet.</strong> The range is measured around the execution marker (or the Scripter if there is no marker):</p>
 <pre class="code-box"><code class="consolas">range set 5; // a sphere with a radius of 5 blocks
 range set box 10 5 10; // a 10 x 5 x 10 box centred on the marker
 range clear; // no range</code></pre>
 <p>Selectors (except <code class="consolas">@s</code>) then only find entities inside the range. A selector with nothing inside the range finds nothing, so the command or fetcher using it fails. <code class="consolas">local:</code> and <code class="consolas">global:</code> work as described under <a href="#definers">Definers</a>.</p>
-<h3>Mathematical operators</h3>
+<h3 id="mathematical-operators">Mathematical operators</h3>
 <p>Mathematical operators can be used to add, subtract, multiply, divide, square root, power, -1-1-1-1 factorial, sin, cos, tan, sin, cos, tan, log, and log valid format variables, floats, and integers.</p>
-<h4>Addition</h4>
+<h4 id="addition">Addition</h4>
 <pre class="code-box"><code class="consolas">&lt;val1&gt; + &lt;val2&gt;</code></pre>
-<h4>Subtraction</h4>
+<h4 id="subtraction">Subtraction</h4>
 <pre class="code-box"><code class="consolas">&lt;val1&gt; - &lt;val2&gt;</code></pre>
-<h4>Multiplication</h4>
+<h4 id="multiplication">Multiplication</h4>
 <pre class="code-box"><code class="consolas">&lt;val1&gt; * &lt;val2&gt;</code></pre>
-<h4>Remainderless division</h4>
+<h4 id="remainderless-division">Remainderless division</h4>
 <pre class="code-box"><code class="consolas">&lt;val1&gt; / &lt;val2&gt;</code></pre>
 <p>Division by 0 results in a output of 0.</p>
-<h4>Remainder fetch</h4>
+<h4 id="remainder-fetch">Remainder fetch</h4>
 <pre class="code-box"><code class="consolas">&lt;val1&gt; /% &lt;val2&gt;
 &lt;val1&gt; mod &lt;val2&gt;</code></pre>
-<h4>Logarithmic operations</h4>
+<h4 id="logarithmic-operations">Logarithmic operations</h4>
 <p>Invalid operator syntax or inputs result in null.</p>
 <h5>Log</h5>
 <pre class="code-box"><code class="consolas">log(&lt;val&gt;)</code></pre>
@@ -404,7 +404,7 @@ tangent^(&lt;val&gt;)</code></pre>
 <h5>Square root</h5>
 <pre class="code-box"><code class="consolas">sqrt(&lt;val&gt;) //shorthand
 sqaureroot(&lt;val&gt;)</code></pre>
-<h4>Extra math functions</h4>
+<h4 id="extra-math-functions">Extra math functions</h4>
 <ul>
     <li><code class="consolas">squareroot()</code> also works, as well as the spelling above.</li>
     <li>Powers use <code class="consolas">^</code>: <code class="consolas">2 ^ 10</code>. Factorials use <code class="consolas">fact(&lt;val&gt;)</code> or <code class="consolas">factorial(&lt;val&gt;)</code>, for whole numbers from 0 to 20.</li>
@@ -413,7 +413,7 @@ sqaureroot(&lt;val&gt;)</code></pre>
     <li>Order: brackets, then <code class="consolas">^</code>, then <code class="consolas">*</code> <code class="consolas">/</code> <code class="consolas">/%</code> <code class="consolas">mod</code>, then <code class="consolas">+</code> <code class="consolas">-</code>, then comparisons.</li>
     <li>Dividing two integers gives an integer with no remainder. Dividing by 0, including <code class="consolas">/%</code> and <code class="consolas">mod</code> by 0, gives 0.</li>
 </ul>
-<h3>Random value</h3>
+<h3 id="random-value">Random value</h3>
 <p>Random inclusive values can be generated in ComScript with the following syntax.</p>
 <p>Integer example:</p>
 <pre class="code-box"><code class="consolas">random.randint(&lt;min&gt;, &lt;max&gt;)</code></pre>
@@ -421,18 +421,18 @@ sqaureroot(&lt;val&gt;)</code></pre>
 <pre class="code-box"><code class="consolas">random.n.randint(&lt;min&gt;, &lt;max&gt;)</code></pre>
 <p>Random floats with a determined fix/round can be generated using:</p>
 <pre class="code-box"><code class="consolas">random.&lt;fix length&gt;.rand(&lt;min&gt;, &lt;max&gt;)</code></pre>
-<h4>Random value ranges</h4>
+<h4 id="random-value-ranges">Random value ranges</h4>
 <p><code class="consolas">random.n.randint(1, 6)</code> leaves out the maximum, so it gives 1 to 5. <code class="consolas">random.2.rand(0, 1)</code> gives a float rounded to 2 decimal places.</p>
-<h3>Comments</h3>
+<h3 id="comments">Comments</h3>
 <p>Single-line comments use <code class="consolas">//</code>. Multiline comments use <code class="consolas">//[text]</code>.</p>
 <pre class="code-box"><code class="consolas">// this is a single-line comment</code></pre>
 <pre class="code-box"><code class="consolas">//[this is a multi
 line comment]</code></pre>
-<h4>Multi-line comments in the Scripter</h4>
+<h4 id="multi-line-comments-in-the-scripter">Multi-line comments in the Scripter</h4>
 <p>The Scripter uses the older multi-line form, <code class="consolas">// "text"</code>, which continues until the closing quote. <code class="consolas">//[text]</code> isn't supported yet and is read as a single-line comment.</p>
 <pre class="code-box"><code class="consolas">// "this is a multi
 line comment"</code></pre>
-<h4>Chain commands</h4>
+<h4 id="chain-commands">Chain commands</h4>
 <p>Commands can be chained with a newline:</p>
 <pre class="code-box"><code class="consolas">fill ~~~~3~3~3 Stone
 fill ~-3~-3~-3~~~ Stone</code></pre>
@@ -484,13 +484,13 @@ execute as @a at @s if comp getHealth(@s) &lt; 5 run {
     effect give @s regeneration 5;
     say low health;
 }</code></pre>
-<h3>Event sensing</h3>
+<h3 id="event-sensing">Event sensing</h3>
 <p>Scripts executing conditionally during an event or every tick can be started with *{&lt;script&gt;} to execute every tick and *&lt;event namespace&gt;{&lt;script&gt;}.</p>
 <p>Example:</p>
 <pre class="code-box"><code class="consolas">*worldEvent.blockBreak{
     at @a run summon minecraft:lightning_bolt;
 }</code></pre>
-<h4>Supported events</h4>
+<h4 id="supported-events">Supported events</h4>
 <p>The Scripter's event names differ from the example above. It supports:</p>
 <pre class="code-box"><code class="consolas">*blockEvent.blockBreak{ } // a block is broken
 *blockEvent.blockPlace{ } // a block is placed
@@ -506,7 +506,7 @@ execute as @a at @s if comp getHealth(@s) &lt; 5 run {
 }</code></pre>
 <p>Timers and event blocks keep running until the script is run again, Stop is pressed, or the Scripter is broken or unloaded. The terminal shows what the script is listening for.</p>
 <h3 id="keywords">Keywords</h3>
-<h4>Selectors</h4>
+<h4 id="selectors">Selectors</h4>
 <pre class="code-box"><code class="consolas">@server.player.last // last player that joined and is still online
 @server.player.first // first player to join and still online
 @server.player.id(&lt;id&gt;) // local player ID specified
@@ -528,10 +528,10 @@ execute as @a at @s if comp getHealth(@s) &lt; 5 run {
 @client.entityiterator // all entities that apply to a for i in &lt;entity range selector&gt;</code></pre>
 <h5>Server selectors (planned)</h5>
 <p><strong>Not in the Scripter yet.</strong> The <code class="consolas">@server</code> selectors will work in commands and in fetchers. <code class="consolas">@server.player.id.&lt;id&gt;</code> will be the order players joined since the server started (1 is the first). The last-chat selectors will be written <code class="consolas">@server.player.last.chat</code> and <code class="consolas">@server.player.last.chat('&lt;msg&gt;')</code>. <code class="consolas">@client.entityiterator</code> isn't planned yet. For now, use Minecraft's selectors (<code class="consolas">@p</code>, <code class="consolas">@a</code>, <code class="consolas">@e</code>, <code class="consolas">@n</code>, <code class="consolas">@r</code>, <code class="consolas">@s</code>), which work everywhere.</p>
-<h4>List Filters</h4>
+<h4 id="list-filters">List Filters</h4>
 <p>List filters filter items from a list based off of a set of conditions and saves the new list locally.</p>
 <pre class="code-box"><code class="consolas">return filter.insubtypeof(&lt;subtype&gt;) as &lt;list (does not need to be declared)&gt;; </code></pre>
-<h4>Variables</h4>
+<h4 id="variables-2">Variables</h4>
 <pre class="code-box"><code class="consolas">return server.player.cord(username) // coordinates of specified username
 return server.count // number of players online
 return server.fps // current global FPS average
@@ -539,17 +539,17 @@ return server.&lt;username&gt;.ping // ping of specified username
 return client.player // closest player to execution marker
 return client.e // closest entity to execution coordinates
 store.global set excrd = &lt;value&gt; // stores execution coordinates</code></pre>
-<h4>Lists</h4>
+<h4 id="lists">Lists</h4>
 <pre class="code-box"><code class="consolas">return server.players // list of online players
     return @getcubeentities(&lt;extends x&gt;,&lt;extends y&gt;,&lt;extends z&gt;) // list of entities in a cube
 </code></pre>
-<h4>Arrays</h4>
+<h4 id="arrays">Arrays</h4>
 <pre class="code-box"><code class="consolas">return server.chunk.loaded // array of loaded chunks in username, chunkx, chunky format
 return server.players.ping // players and ping
 return client.&lt;username&gt;.xyz // coordinates of the provided username</code></pre>
-<h4>Dictionaries</h4>
+<h4 id="dictionaries">Dictionaries</h4>
 <pre class="code-box"><code class="consolas">return&lt;username&gt;location</code></pre>
-<h4>Boolean</h4>
+<h4 id="boolean">Boolean</h4>
 <pre class="code-box"><code class="consolas">LoadChunk(x,y,z)? // check if the chunk is loaded
 Online(&lt;playername&gt;)? // check if the player is online</code></pre>
 <h5>Checking chunks and players</h5>
@@ -591,7 +591,7 @@ getTime getDay getGameTime getPlayerCount getDimension
 isDownfall isThundering isDay isNight</code></pre>
 <p>Example:</p>
 <pre class="code-box"><code class="consolas">if comp isDownfall == &lt;true;&gt; run say It is raining;</code></pre>
-        <h2>Additional syntax and execution</h2>
+        <h2 id="additional-syntax-and-execution">Additional syntax and execution</h2>
         <h3 id="header-files">Header</h3>
         <p>The header file in a ComScript file is essential for linking all of the projects together. Header files declare execution details globally unless stated otherwise in a file. Header files support the following keywords:</p>
         <ul>
@@ -603,7 +603,7 @@ isDownfall isThundering isDay isNight</code></pre>
             <li>Global functions</li>
             <li>Global objects</li>
         </ul>
-        <h4>Setting up a project (planned)</h4>
+        <h4 id="setting-up-a-project-planned">Setting up a project (planned)</h4>
         <p><strong>Not in the Scripter yet.</strong> Every Scripter will get a name box in its editor, and that name is the file's href. A header is a Scripter whose script starts with <code class="consolas">header;</code>. The files its queue lists form its project.</p>
         <pre class="code-box"><code class="consolas">header;
 mark add 0 64 0; // every file in the project starts here
@@ -637,7 +637,7 @@ private class queue {
     queue add &lt;low priority file href&gt;;
     return(getqueue) as queueList;
 }</code></pre>
-        <h4>Running files in order (planned)</h4>
+        <h4 id="running-files-in-order-planned">Running files in order (planned)</h4>
         <p><strong>Not in the Scripter yet.</strong> <code class="consolas">queue add &lt;file&gt;;</code> can be written straight in the header, or inside <code class="consolas">private class queue { }</code> as above, where <code class="consolas">return(getqueue) as queueList;</code> is allowed but changes nothing.</p>
         <ul>
             <li>When several project files are started in the same tick, by redstone or the Run button, they run in queue order.</li>
@@ -649,14 +649,14 @@ private class queue {
         <pre class="code-box"><code class="consolas">void &lt;function name&gt;(&lt;function variables, booleans, etc.&gt;){
     &lt;function contents&gt;
 }</code></pre>
-        <h4>Where void functions go (planned)</h4>
+        <h4 id="where-void-functions-go-planned">Where void functions go (planned)</h4>
         <p><strong>Not in the Scripter yet.</strong> See the planned changes under Function block. Void functions are written in a Function block or a header.</p>
         <h3 id="classes">Classes</h3>
         <p>Classes are an important part of ComScript and object-oriented programming in general. Classes can be named and specified in a header file for script execution modifiers such as execution location and priority. Classes can be created with the following syntax:</p>
         <pre class="code-box"><code class="consolas">public &lt;class name&gt; {
     &lt;class contents&gt;
 }</code></pre>
-        <h4>Defining and calling classes (planned)</h4>
+        <h4 id="defining-and-calling-classes-planned">Defining and calling classes (planned)</h4>
         <p><strong>Not in the Scripter yet.</strong> A class is a named section of script. It doesn't run where it's written; it runs each time it's called:</p>
         <pre class="code-box"><code class="consolas">public Door {
     store new opened = 0;
@@ -696,7 +696,7 @@ Gate;</code></pre>
         <p>If you have a private element that you would like to give another file permission to fetch from, use the following syntax to allow localized fetching:</p>
         <pre class="code-box"><code class="consolas">override private(&lt;private object namespace&gt;, &lt;href of file grant permission&gt;, &lt;optional: this file&gt;);</code></pre>
         <p>This must be implemented before the line where the other file fetches, and the granting file must have a higher priority value in the header file.</p>
-        <h4>Sharing private classes (planned)</h4>
+        <h4 id="sharing-private-classes-planned">Sharing private classes (planned)</h4>
         <p><strong>Not in the Scripter yet.</strong> The private elements are private classes. <code class="consolas">override private(Door, lights);</code> lets the project file named <code class="consolas">lights</code> call this file's private <code class="consolas">Door</code> class with <code class="consolas">&lt;this file&gt;.Door;</code>. The third value (this file) is optional and only for readability. Variables in project files can always be read by other project files.</p>
         <h2>Appendix: Related topics</h2>
         <a href="#header-files">Header</a>

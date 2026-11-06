@@ -13,37 +13,37 @@
             </nav>
         </header>
         <h1>Rendering Changes</h1>
-<h2>UI</h2>
-<h3>Crafting Tables</h3>
-<h4>Tabs</h4>
+<h2 id="ui">UI</h2>
+<h3 id="crafting-tables">Crafting Tables</h3>
+<h4 id="tabs">Tabs</h4>
         <p>To compensate and keep the Crafting Table organized while still allowing it to retain many uses in this mod, the Crafting Table now has static tabs located on a bar. <strong>[UNRESOLVED]</strong> The source text is truncated after “at”.</p>
         <p>These tabs group the different things that can be crafted, such as blocks and items. The Forging tab remains locked when a Crafting Table is crafted. It must be unlocked by putting the Crafting Table in another Crafting Table and combining it with 3 Cobblestones in any of the cardinal directions of the crafting grid, a Forging Hammer filling the last cardinal direction, and 4 Metal Ingots [source text truncated].</p>
         <p>The Forging tab allows players to forge weapons or equipment from any Metal they have, or combine Metals to form alloys with special properties, using the Crucible tool. The Forging section of the Crafting Table requires a temperature of 1,300 degrees, and all tools require this heat. In Forging mode, the recipe book in Java Edition or the sidebar in Bedrock Edition displays forgeable recipes and alloys in 2 subtabs. The player can select an option and provide a fuel source to create the alloy or equipment. Each recipe takes 15 seconds to forge.</p>
-<h3>Brewing Stand</h3>
+<h3 id="brewing-stand">Brewing Stand</h3>
 <p>[Bedrock Changed the UI for brewing stand on bedrock edition to the original UI on Java edition edition mod only] [Java edition mod coming soon]</p>
-<h3>Furnace</h3>
+<h3 id="furnace">Furnace</h3>
 <p>The furnace UI for all gamemodes has been changed for 2 output slots, a slot for any slag in realism mode and a slot for the product item. The furnace UI also now allows for the selection of output products, such as choosing to smelt Sand into charred Sand or Glass. The recipe book that tells the player what they can smelt is now turned into a sidebar allowing the player to click a recipe instead of dragging the items into the top slot of the furnace</p>
-<h2>Rendering Of Non-Collidable Objects Or Entities Disputed</h2>
-<h3>Flora</h3>
-<h3>Cloudcover</h3>
+<h2 id="rendering-of-non-collidable-objects-or-entities-disputed">Rendering Of Non-Collidable Objects Or Entities Disputed</h2>
+<h3 id="flora">Flora</h3>
+<h3 id="cloudcover">Cloudcover</h3>
 <p>Cloudcover now determines weather, with a new way to render clouds. Clouds are now more 3d, floating in the direction of the wind. Clouds are rendered via block models of pure white that are 32x32 pixels, so 2 blocks wide and 2 blocks tall.</p>
-<h3>Precipitation</h3>
-<p>Clouds are always in the sky before any precipitation, at the edge of the air front containing precipitation, are darker and thicker in color, with less light reaching the terrain below. Note overcast weather can still occur independently when an air mass with precipitation dies.</p><p>Precipitation is also now locally determined, meaning different superbiomes [read also: Terrain Generation changes] can vary in precipitation.</p>
+<h3 id="precipitation">Precipitation</h3>
+<p>Clouds are always in the sky before any precipitation, at the edge of the air front containing precipitation, are darker and thicker in color, with less light reaching the terrain below. Note overcast weather can still occur independently when an air mass with precipitation dies.</p><p>Precipitation is also now locally determined, meaning different superbiomes [see also: <a href="page-terrain-generation.html">Terrain Generation changes</a>] can vary in precipitation.</p>
 <p>Fig 1. 3D cloud demonstration with player flying Elytra [credit:&lt;unknown&gt;]</p>
-<h3>Wind</h3>
-<p>Wind now has 3 levels: Breeze Gust Cyclone These 3 levels of wind will trigger different effects in rendering in the game. At wind level 1, grass and other flora as well as leaf falling particles will start to move in the direction of the [see wind particles] wind (land breeze or sea breeze). At wind level 2, wind particles will start to dot the lower atmosphere, and c smoke will start to drift in the direction of the wind. Torches may flicker from the strong gust. Rain starts to fall diagonally, which is more dramatic as the wind level increases. At wind level 3, torches become unusable(as they will blow out), and dust particles will form near the ground. If Sand, barren soil, or Dirt is next to a grass block or other vegetation, it will die and turn into a soil block. Standing down wind of snow will give the player frostbite and not wearing wool armor in areas colder than 7 will slowly drain health.</p>
+<h3 id="wind">Wind</h3>
+<p>Wind now has 3 levels: Breeze Gust Cyclone These 3 levels of wind will trigger different effects in rendering in the game. At wind level 1, grass and other flora as well as leaf falling particles will start to move in the direction of the [see also: <a href="#wind-particle">wind particles</a>] wind (land breeze or sea breeze). At wind level 2, wind particles will start to dot the lower atmosphere, and c smoke will start to drift in the direction of the wind. Torches may flicker from the strong gust. Rain starts to fall diagonally, which is more dramatic as the wind level increases. At wind level 3, torches become unusable(as they will blow out), and dust particles will form near the ground. If Sand, barren soil, or Dirt is next to a grass block or other vegetation, it will die and turn into a soil block. Standing down wind of snow will give the player frostbite and not wearing wool armor in areas colder than 7 will slowly drain health.</p>
 <p>Note that the player takes more hunger moving against the wind, but less hunger than usual moving in the same direction as the wind.</p>
-<h2>Particles</h2>
-<h3>Wind Particle</h3>
+<h2 id="particles">Particles</h2>
+<h3 id="wind-particle">Wind Particle</h3>
 <p>Wind particles render when wind levels are &gt;1.</p>
 <p>Fig 1. Wind particle demonstration</p>
-<h3>Ping Particle (Not Natural)</h3>
+<h3 id="ping-particle-not-natural">Ping Particle (Not Natural)</h3>
 <p>The ping particle is a new particle with unique properties. The ping particle will render</p>
 <p>color of the particle and the particle can be summoned using (comscript): Summoning: particle.color.ping(&lt;hex color code&gt;) particle.summon.ping Color group: particle.color(&lt;hex color code&gt;) particle.summon.ping</p>
 <p>Fig 1. Ping particle example Credit: Doctor4t</p>
-<h2>Cauldron With Water</h2>
-<h3>Heating Bubbles</h3>
-<p>Heating bubbles in cauldrons occur when a cauldron is placed on top of a heat source such as a fire, campfire, magma block, or lava. Items placed inside will become boiled, [read also: stoneshroom] such as hydrated stoneshrooms, boiled eggs, boiled chicken, and more. Water boiling in a cauldron will slowly evaporate, leaving behind less water. A trick the player can use is by putting a dripstone that will slowly refill the cauldron as the water evaporates. Bubble particles occur when the water is heated to full after a heat source is placed (ranges from 1-3 real life minutes).</p>
+<h2 id="cauldron-with-water">Cauldron With Water</h2>
+<h3 id="heating-bubbles">Heating Bubbles</h3>
+<p>Heating bubbles in cauldrons occur when a cauldron is placed on top of a heat source such as a fire, campfire, magma block, or lava. Items placed inside will become boiled, [see also: <a href="page-forests.html#stoneshrooms">stoneshroom</a>] such as hydrated stoneshrooms, boiled eggs, boiled chicken, and more. Water boiling in a cauldron will slowly evaporate, leaving behind less water. A trick the player can use is by putting a dripstone that will slowly refill the cauldron as the water evaporates. Bubble particles occur when the water is heated to full after a heat source is placed (ranges from 1-3 real life minutes).</p>
         <script src="wiki-editor.js" defer></script>
     </body>
 </html>
