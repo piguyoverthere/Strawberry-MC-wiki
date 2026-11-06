@@ -166,6 +166,7 @@ const pages = [
     { title: "Input Formatting", href: "page-comscript.html#input-formatting", keywords: "input formatting unicode string binary boolean float integer packaged lists blockstate entity item coordinate custom format" },
     { title: "Test Page", href: "page-test-page.html", keywords: "test page" },
     { title: "Monthly Update on Development: November", href: "news-eric-monthly-update-on-development-november.html", keywords: "monthly update on development: november" },
+    { title: "Official: License", href: "page-official-license.html", keywords: "official: license copyright information terms of service use eula privacy policy" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
