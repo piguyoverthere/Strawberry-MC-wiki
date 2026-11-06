@@ -169,6 +169,7 @@ const pages = [
     { title: "Official: License", href: "page-official-license.html", keywords: "official: license copyright information terms of service use eula privacy policy" },
     { title: "Poor and Fertile Farmland [technical]", href: "page-poor-and-fertile-farmland-technical.html", keywords: "soil dirt poor and fertile farmland [technical]" },
     { title: "Clovers [technical]", href: "page-clovers-technical.html", keywords: "clovers [technical]" },
+    { title: "Teargrass [technical]", href: "page-teargrass-technical.html", keywords: "teargrass [technical]" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
