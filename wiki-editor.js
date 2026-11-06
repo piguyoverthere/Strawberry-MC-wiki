@@ -1001,7 +1001,7 @@
             list.append(item);
         }
         const summary = document.createElement("summary");
-        summary.textContent = "On this page";
+        summary.textContent = "Contents";
         toc.replaceChildren(summary, list);
     }
 
