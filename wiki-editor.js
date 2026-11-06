@@ -41,6 +41,14 @@
     let editing = false;
     let savedRange = null;
 
+    // Let phones lay the page out at their own width instead of a zoomed-out desktop view.
+    if (!document.querySelector('meta[name="viewport"]')) {
+        const viewport = document.createElement("meta");
+        viewport.name = "viewport";
+        viewport.content = "width=device-width, initial-scale=1";
+        document.head.append(viewport);
+    }
+
     // Wrap the page body (everything between the header and the scripts) so it can be edited as one region.
     const header = document.querySelector(".site-header");
     const root = document.createElement("div");
@@ -251,6 +259,7 @@
     const originalContent = serializeContent();
     let savedContent = originalContent;
 
+    // Page tools float in the corner while reading and join the formatting bar while editing.
     const toolbar = document.createElement("section");
     toolbar.className = "wiki-editor-toolbar";
     toolbar.setAttribute("aria-label", "Page editing tools");
@@ -259,13 +268,42 @@
         <button type="button" data-action="save" disabled>Save edits</button>
         <button type="button" data-action="cancel" disabled>Cancel</button>
         <button type="button" data-action="commit">Commit to GitHub</button>
-        <button type="button" data-action="download">Download HTML</button>
-        <button type="button" data-action="reset">Reset saved edits</button>
-        <span class="wiki-editor-status" role="status" aria-live="polite"></span>
+        <details class="wiki-more-menu">
+            <summary title="More page tools">More</summary>
+            <div class="wiki-more-items">
+                <button type="button" data-action="download">Download HTML</button>
+                <button type="button" data-action="reset">Reset saved edits</button>
+            </div>
+        </details>
     `;
+    document.body.append(toolbar);
+
+    const moreMenu = toolbar.querySelector(".wiki-more-menu");
+    moreMenu.addEventListener("click", (event) => {
+        if (event.target.closest("button")) {
+            moreMenu.open = false;
+        }
+    });
+    document.addEventListener("click", (event) => {
+        if (moreMenu.open && !moreMenu.contains(event.target)) {
+            moreMenu.open = false;
+        }
+    });
+
+    // Messages appear briefly under the header instead of pushing the page down.
+    const status = document.createElement("div");
+    status.className = "wiki-editor-status";
+    status.setAttribute("role", "status");
+    status.setAttribute("aria-live", "polite");
+    document.body.append(status);
+    let statusTimer = null;
+    new MutationObserver(() => {
+        clearTimeout(statusTimer);
+        status.classList.toggle("wiki-status-visible", status.textContent.trim() !== "");
+        statusTimer = setTimeout(() => status.classList.remove("wiki-status-visible"), 8000);
+    }).observe(status, { childList: true, characterData: true, subtree: true });
 
     if (header) {
-        header.insertAdjacentElement("afterend", toolbar);
         const nav = header.querySelector("nav");
         if (nav) {
             const pdfLink = nav.querySelector('a[href$=".pdf"]');
@@ -281,6 +319,27 @@
                 bookmarksItem.innerHTML = ' | <a href="page-bookmarked-pages.html">Bookmarked Pages</a>';
                 nav.insertBefore(bookmarksItem, pdfLink);
             }
+            // Every page except the home page gets a search box in the middle of the header.
+            if (!document.querySelector(".site-search")) {
+                const headerSearch = document.createElement("form");
+                headerSearch.className = "site-search wiki-header-search";
+                headerSearch.setAttribute("role", "search");
+                headerSearch.dataset.wikiInjected = "";
+                headerSearch.innerHTML = `
+                    <label class="visually-hidden" for="site-search-input">Search site content</label>
+                    <input id="site-search-input" type="search" name="q" placeholder="Search the wiki..." autocomplete="off" aria-autocomplete="list" aria-controls="search-suggestions">
+                    <button type="submit">Search</button>
+                    <ul id="search-suggestions" class="search-suggestions" aria-label="Search suggestions" hidden></ul>
+                    <p id="search-status" class="search-status" aria-live="polite"></p>
+                `;
+                nav.insertBefore(headerSearch, pdfLink);
+                if (!document.querySelector('script[src$="search.js"]')) {
+                    const searchScript = document.createElement("script");
+                    searchScript.src = "search.js";
+                    searchScript.dataset.wikiInjected = "";
+                    document.body.append(searchScript);
+                }
+            }
             const newPageButton = document.createElement("button");
             newPageButton.type = "button";
             newPageButton.className = "nav-button wiki-new-page-button";
@@ -289,8 +348,6 @@
             newPageButton.addEventListener("click", () => openNewPageDialog());
             nav.append(newPageButton);
         }
-    } else {
-        document.body.prepend(toolbar);
     }
 
     const editButton = toolbar.querySelector('[data-action="edit"]');
@@ -299,18 +356,13 @@
     const commitButton = toolbar.querySelector('[data-action="commit"]');
     const downloadButton = toolbar.querySelector('[data-action="download"]');
     const resetButton = toolbar.querySelector('[data-action="reset"]');
-    const status = toolbar.querySelector(".wiki-editor-status");
     const bookmarkButton = document.createElement("button");
     bookmarkButton.type = "button";
     bookmarkButton.className = "wiki-bookmark-button";
     bookmarkButton.setAttribute("aria-pressed", "false");
-    const bookmarkStatus = document.createElement("span");
-    bookmarkStatus.className = "wiki-bookmark-status";
-    bookmarkStatus.setAttribute("role", "status");
-    bookmarkStatus.setAttribute("aria-live", "polite");
+    const bookmarkStatus = status;
     if (!isNewPage) {
-        toolbar.insertBefore(bookmarkButton, status);
-        toolbar.insertBefore(bookmarkStatus, status);
+        toolbar.insertBefore(bookmarkButton, commitButton);
     }
 
     const bookmarkedPagesList = document.querySelector("#bookmarked-pages-list");
@@ -356,7 +408,8 @@
 
         const isBookmarked = pages.some((page) => page.href === currentPage);
         bookmarkButton.setAttribute("aria-pressed", String(isBookmarked));
-        bookmarkButton.textContent = isBookmarked ? "★ Remove bookmark" : "☆ Bookmark page";
+        bookmarkButton.textContent = isBookmarked ? "★ Bookmarked" : "☆ Bookmark";
+        bookmarkButton.title = isBookmarked ? "Remove this page from your bookmarks" : "Bookmark this page";
     }
 
     bookmarkButton.addEventListener("click", () => {
@@ -909,14 +962,47 @@
             root.removeAttribute("spellcheck");
             islands.forEach((island) => island.removeAttribute("contenteditable"));
             savedRange = null;
+            buildTableOfContents();
         }
         formatBar.hidden = !value;
+        (value ? formatBar : document.body).append(toolbar);
         editButton.disabled = value;
         saveButton.disabled = !value;
         cancelButton.disabled = !value;
         status.textContent = value
             ? "Edit the page, use the bar at the bottom for formatting, then save or cancel."
             : "";
+    }
+
+    // Long pages get an "On this page" list built from their headings.
+    let toc = null;
+    function buildTableOfContents() {
+        const headings = [...root.querySelectorAll("h2, h3")].filter((heading) => heading.textContent.trim());
+        if (headings.length < 3) {
+            toc?.remove();
+            toc = null;
+            return;
+        }
+        if (!toc) {
+            toc = document.createElement("details");
+            toc.className = "wiki-toc";
+            toc.open = window.innerWidth > 700;
+            root.before(toc);
+        }
+        const list = document.createElement("ol");
+        for (const heading of headings) {
+            const item = document.createElement("li");
+            item.className = heading.tagName === "H3" ? "wiki-toc-sub" : "";
+            const link = document.createElement("button");
+            link.type = "button";
+            link.textContent = heading.textContent.trim();
+            link.addEventListener("click", () => heading.scrollIntoView({ behavior: "smooth", block: "start" }));
+            item.append(link);
+            list.append(item);
+        }
+        const summary = document.createElement("summary");
+        summary.textContent = "On this page";
+        toc.replaceChildren(summary, list);
     }
 
     function saveEdits() {
@@ -1746,6 +1832,27 @@
             ? `New article ${newPageFile}: write it, then save and commit it to GitHub to publish it on the News page.`
             : `New page ${newPageFile}: write your content, then save and commit it to GitHub.`;
     }
+
+    // Ctrl+S / Cmd+S saves while editing instead of downloading the page.
+    document.addEventListener("keydown", (event) => {
+        if (editing && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+            event.preventDefault();
+            saveEdits();
+        }
+    });
+
+    // A button to jump back up appears once the reader has scrolled down a long page.
+    const backToTop = document.createElement("button");
+    backToTop.type = "button";
+    backToTop.className = "wiki-back-to-top";
+    backToTop.textContent = "↑ Top";
+    backToTop.title = "Back to the top of the page";
+    backToTop.hidden = true;
+    backToTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+    document.body.append(backToTop);
+    window.addEventListener("scroll", () => {
+        backToTop.hidden = window.scrollY < 600;
+    }, { passive: true });
 
     document.querySelector("#new-article-button")?.addEventListener("click", () => openNewPageDialog("news"));
 })();

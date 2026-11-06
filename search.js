@@ -568,6 +568,42 @@ input.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
         suggestions.hidden = true;
         status.textContent = "";
+    } else if (event.key === "ArrowDown" && !suggestions.hidden) {
+        event.preventDefault();
+        suggestions.querySelector("a")?.focus();
+    }
+});
+
+// Arrow keys move through the suggestions; Escape goes back to the search box.
+suggestions.addEventListener("keydown", (event) => {
+    const links = [...suggestions.querySelectorAll("a")];
+    const index = links.indexOf(document.activeElement);
+    if (event.key === "ArrowDown") {
+        event.preventDefault();
+        links[Math.min(index + 1, links.length - 1)]?.focus();
+    } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        (index <= 0 ? input : links[index - 1]).focus();
+    } else if (event.key === "Escape") {
+        suggestions.hidden = true;
+        input.focus();
+    }
+});
+
+// Hide the suggestions when clicking somewhere else on the page.
+document.addEventListener("click", (event) => {
+    if (!form.contains(event.target)) {
+        suggestions.hidden = true;
+    }
+});
+
+// Press "/" anywhere (outside a text field) to jump to the search box.
+document.addEventListener("keydown", (event) => {
+    const target = event.target;
+    if (event.key === "/" && !event.ctrlKey && !event.metaKey &&
+        !target.closest("input, textarea, select, [contenteditable='true']")) {
+        event.preventDefault();
+        input.focus();
     }
 });
 
@@ -582,7 +618,7 @@ form.addEventListener("submit", (event) => {
     }
 });
 
-randomPageButton.addEventListener("click", () => {
+randomPageButton?.addEventListener("click", () => {
     const articlePages = pages.filter((page) => page.href.startsWith("page-"));
     const randomPage = articlePages[Math.floor(Math.random() * articlePages.length)];
     window.location.href = randomPage.href;
