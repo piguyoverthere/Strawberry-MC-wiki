@@ -37,6 +37,7 @@
                 <p class="wiki-dialog-hint">If you just created this page, it may still be publishing. Refresh in a minute or two.</p>
             </section>
         </div>
+        <script src="redirects.js"></script>
         <script>
             (() => {
                 const repository = "piguyoverthere/Strawberry-MC-wiki";
@@ -120,6 +121,13 @@
                             // Offline for a moment; try again on the next poll.
                         }
                     }, pollSeconds * 1000);
+                }
+
+                // Pages that were merged into a main topic page move to where their content now lives.
+                const movedTo = window.wikiRedirects && Object.hasOwn(window.wikiRedirects, file) ? window.wikiRedirects[file] : null;
+                if (movedTo) {
+                    location.replace(movedTo + location.hash);
+                    return;
                 }
 
                 if (!/^[\w.-]+\.html$/.test(file) || file === "404.html") {
