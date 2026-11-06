@@ -1,15 +1,15 @@
-<html>
-    <head>
+<!DOCTYPE html>
+<html><head>
         <meta charset="UTF-8">
         <title>Strawberry MC|Home</title>
         <link rel="stylesheet" href="global.css">
-    </head>
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
     <body>
         <header class="site-header">
             <nav aria-label="Main navigation">
                 <a href="home-index.html">Home</a>|
                 <a href="credits.html">Credits</a>
-                <a class="nav-button" href="Strawberry%20minecraft%20wiki%20(1).pdf" target="_blank" rel="noopener">Open PDF</a>
+                <a class="nav-button" href="Strawberry%20minecraft%20wiki%20(1).pdf" target="_blank" rel="noopener" aria-haspopup="menu" aria-expanded="false">Open PDF</a>
             </nav>
         </header>
         <h1>ComScript</h1>
@@ -51,9 +51,9 @@
 <p>Example:</p>
 <p>Assume that an entity with the correct conditions is being searched for with a relative location selector. The block Chunks are labeled by scan order. The scan terminates and returns the result after the entity is found.</p>
 <pre class="code-box"><code class="consolas">                 North
-              9 10 11 12
-           1  2  3  X  13
-              8     4
+          9 10 11 12
+          1  2  3  X  13
+          8     4
           7  6  5
           X = execution marker location</code></pre>
 <p>[see also: <a href="#custom-execution-pattern">Custom execution pattern</a>]</p>
@@ -91,7 +91,7 @@
         <tr><td>&lt;</td><td><code>&amp;lt;</code></td><td><code>&amp;#60;</code></td><td>Yes</td><td>Yes</td></tr>
         <tr><td>&gt;</td><td><code>&amp;\3C;</code></td><td><code>&amp;#60;</code></td><td>Yes</td><td>Yes</td></tr>
         <tr><td>&amp;</td><td><code>&amp;amp;</code></td><td><code>&amp;#38;</code></td><td>Yes</td><td>Yes</td></tr>
-        <tr><td>&quot;</td><td><code>&amp;quot;</code></td><td><code>&amp;#34;</code></td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>"</td><td><code>&amp;quot;</code></td><td><code>&amp;#34;</code></td><td>Yes</td><td>Yes</td></tr>
         <tr><td>!</td><td><code>&amp;excl;</code></td><td><code>&amp;#33;</code></td><td>Yes</td><td>Yes</td></tr>
         <tr><td>@</td><td><code>&amp;commat;</code></td><td><code>&amp;#64;</code></td><td>Yes</td><td>Yes</td></tr>
         <tr><td>#</td><td><code>&amp;num;</code></td><td><code>&amp;#35;</code></td><td>Yes</td><td>Yes</td></tr>
@@ -718,6 +718,7 @@ Gate;</code></pre>
         <a href="#timers">Timers</a>
         <a href="#native-fetchers">Native Fetchers</a>
         <a href="#return-values">Return Values</a>
-        <script src="wiki-editor.js" defer></script>
-    </body>
-</html>
+        <script src="wiki-editor.js" defer=""></script>
+    
+
+</body></html>
