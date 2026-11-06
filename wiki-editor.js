@@ -21,7 +21,7 @@
         { title: "MC Controversy Resolver", href: "mc-controversy-resolver.pdf", updated: "2026-11-05" }
     ];
     const legacyEditableSelector = "h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, figcaption, summary";
-    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list";
+    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list, #ideas-app, #discussions-app";
     const allowedTags = new Set([
         "A", "ABBR", "B", "BLOCKQUOTE", "BR", "CAPTION", "CODE", "DEL", "DETAILS", "DIV", "EM", "FIGCAPTION",
         "FIGURE", "FOOTER", "H1", "H2", "H3", "H4", "H5", "H6", "HR", "I", "IMG", "INS", "KBD", "LI", "MARK",
@@ -317,6 +317,12 @@
                 newsItem.dataset.wikiInjected = "";
                 newsItem.innerHTML = ' | <a href="news.html">News</a>';
                 nav.insertBefore(newsItem, pdfLink);
+            }
+            if (!nav.querySelector('a[href="ideas.html"]')) {
+                const ideasItem = document.createElement("span");
+                ideasItem.dataset.wikiInjected = "";
+                ideasItem.innerHTML = ' | <a href="ideas.html">Ideas</a> | <a href="discussions.html">Threads &amp; Debates</a>';
+                nav.insertBefore(ideasItem, pdfLink);
             }
             if (!nav.querySelector('a[href="page-bookmarked-pages.html"]')) {
                 const bookmarksItem = document.createElement("span");
@@ -1933,4 +1939,72 @@
     }, { passive: true });
 
     document.querySelector("#new-article-button")?.addEventListener("click", () => openNewPageDialog("news"));
+
+    // Shared data store for interactive pages (Ideas, Threads & Debates). Writes need the wiki password
+    // (or a token already unlocked in this tab) and are committed to a JSON file in the repository.
+    window.wikiStore = {
+        repositoryUrl: `https://github.com/${repository.owner}/${repository.name}`,
+        isUnlocked: () => Boolean(readToken()),
+        hasSharedToken: async () => Boolean(sharedToken || (sharedToken = await loadSharedToken())),
+        async unlock(password) {
+            const existing = readToken();
+            if (existing) {
+                return existing;
+            }
+            sharedToken = sharedToken || await loadSharedToken();
+            if (!sharedToken) {
+                throw new Error("The wiki password has not been set up yet. Use Commit to GitHub → Set up a wiki password first.");
+            }
+            const token = await decryptToken(sharedToken, password);
+            try {
+                sessionStorage.setItem(tokenStorageKey, token);
+            } catch {
+                // Not remembered for this tab; the password is asked again next time.
+            }
+            return token;
+        },
+        forget() {
+            try {
+                sessionStorage.removeItem(tokenStorageKey);
+            } catch {
+                // Nothing stored.
+            }
+        },
+        getAuthor() {
+            try {
+                return localStorage.getItem(authorStorageKey) || "";
+            } catch {
+                return "";
+            }
+        },
+        setAuthor(name) {
+            try {
+                localStorage.setItem(authorStorageKey, name);
+            } catch {
+                // The name is asked again next time.
+            }
+        },
+        // Read the JSON file from GitHub, apply change(data) and commit it, retrying if someone else saved first.
+        async updateJson(file, change, message, password) {
+            const token = await this.unlock(password);
+            for (let attempt = 0; ; attempt++) {
+                const current = await getRepositoryFile(token, file);
+                const data = current ? JSON.parse(current.text) : {};
+                change(data);
+                const text = `${JSON.stringify(data, null, 1)}\n`;
+                try {
+                    await putRepositoryFile(token, file, text, message, current?.sha);
+                    return data;
+                } catch (error) {
+                    if (error.status === 401 || error.status === 403) {
+                        this.forget();
+                    }
+                    if (!(error.status === 409 || error.status === 422) || attempt >= 3) {
+                        throw error;
+                    }
+                }
+            }
+        }
+    };
+    document.dispatchEvent(new Event("wiki-store-ready"));
 })();

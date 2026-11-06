@@ -1,5 +1,7 @@
 const pages = [
     { title: "Home", href: "home-index.html", keywords: "about strawberry mc" },
+    { title: "Ideas", href: "ideas.html", keywords: "mc controversy resolver ideas votes approve disapprove suggestions" },
+    { title: "Threads & Debates", href: "discussions.html", keywords: "mc controversy resolver debates threads discussions archive" },
     { title: "Credits", href: "credits.html", keywords: "copyright editors authors" },
     { title: "Admin Settings", href: "page-admin-settings.html", keywords: "lobby operator permissions gamerules" },
     { title: "Abyssal Plains", href: "page-abyssal-plains.html", keywords: "void biome barren voidstone shade depth worm carp monolith creature dechite shards explosives structure towers guardians key secret room" },

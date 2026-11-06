@@ -748,3 +748,200 @@ tfoot {
     color:#54595d;
     font-size:.85em
 }
+.controversy-toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px 14px;
+    margin:16px 0
+}
+.controversy-toolbar label{
+    font-size:.95em
+}
+.controversy-toolbar select,
+.controversy-toolbar input[type="search"]{
+    padding:6px 8px;
+    border:1px solid #a2a9b1;
+    border-radius:2px;
+    background:#ffffff;
+    font:inherit
+}
+.controversy-toolbar input[type="search"]{
+    flex:1 1 200px
+}
+.wiki-primary-button,
+.discussion-reply button{
+    padding:8px 14px;
+    border:1px solid #0056b3;
+    border-radius:4px;
+    background-color:#0056b3;
+    color:#ffffff;
+    cursor:pointer;
+    font:600 14px/1.2 Arial, Helvetica, sans-serif
+}
+.controversy-status:empty{
+    display:none
+}
+.controversy-status{
+    padding:8px 12px;
+    border:1px solid #9ec5a0;
+    background:#eef7ee
+}
+.idea-card{
+    margin:0 0 14px;
+    padding:12px 16px;
+    border:1px solid #a2a9b1;
+    background:#ffffff
+}
+.idea-header{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:4px 12px
+}
+.idea-card h3{
+    margin:0;
+    padding:0;
+    font-size:1.1em
+}
+.idea-meta{
+    color:#54595d;
+    font-size:.88em
+}
+.idea-author{
+    font-weight:600
+}
+.idea-badge{
+    display:inline-block;
+    margin:0 6px;
+    padding:1px 6px;
+    border-radius:3px;
+    background:#eaecf0;
+    color:#202122;
+    font-size:.8em;
+    text-transform:capitalize
+}
+.idea-badge-resolved{
+    background:#d5fdf4;
+    color:#14866d
+}
+.idea-badge-archived{
+    background:#fef6e7;
+    color:#7a4b00
+}
+.idea-badge-debate{
+    background:#fee7e6;
+    color:#9b1c1c
+}
+.idea-badge-thread{
+    background:#eaf3ff;
+    color:#0b4a8b
+}
+.idea-description p,
+.idea-description ul{
+    margin:.4em 0
+}
+.idea-comments{
+    margin:6px 0;
+    font-size:.92em
+}
+.idea-comments summary{
+    color:#0645ad;
+    cursor:pointer
+}
+.idea-votes{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px;
+    margin-top:8px
+}
+.idea-vote{
+    padding:6px 12px;
+    border:1px solid #a2a9b1;
+    border-radius:16px;
+    background:#f8f9fa;
+    color:#202122;
+    cursor:pointer;
+    font:600 13px/1.2 Arial, Helvetica, sans-serif
+}
+.idea-vote:hover{
+    background:#eaecf0
+}
+.idea-vote-approve[aria-pressed="true"]{
+    border-color:#14866d;
+    background:#d5fdf4;
+    color:#0d5c4a
+}
+.idea-vote-disapprove[aria-pressed="true"]{
+    border-color:#b32424;
+    background:#fee7e6;
+    color:#8a1c1c
+}
+.idea-voters{
+    color:#54595d;
+    font-size:.85em
+}
+.discussion{
+    margin:0 0 10px;
+    border:1px solid #a2a9b1;
+    background:#ffffff
+}
+.discussion > summary{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    gap:4px 8px;
+    padding:10px 14px;
+    cursor:pointer
+}
+.discussion > summary .idea-badge{
+    margin:0
+}
+.discussion[open] > summary{
+    border-bottom:1px solid #eaecf0
+}
+.discussion-posts{
+    margin:0;
+    padding:0 14px;
+    list-style:none
+}
+.discussion-post{
+    padding:8px 0;
+    border-bottom:1px solid #eaecf0
+}
+.discussion-reply{
+    display:flex;
+    gap:8px;
+    align-items:flex-end;
+    padding:10px 14px
+}
+.discussion-reply textarea{
+    flex:1;
+    box-sizing:border-box;
+    min-height:60px;
+    padding:8px;
+    border:1px solid #a2a9b1;
+    font:inherit
+}
+.wiki-dialog select{
+    box-sizing:border-box;
+    width:100%;
+    padding:8px;
+    font:inherit
+}
+.idea-collapsed{
+    position:relative;
+    max-height:9.5em;
+    overflow:hidden
+}
+.idea-collapsed::after{
+    content:"";
+    position:absolute;
+    right:0;
+    bottom:0;
+    left:0;
+    height:3em;
+    background:linear-gradient(rgba(255,255,255,0), #ffffff)
+}
