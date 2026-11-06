@@ -170,6 +170,7 @@ const pages = [
     { title: "Poor and Fertile Farmland [technical]", href: "page-poor-and-fertile-farmland-technical.html", keywords: "soil dirt poor and fertile farmland [technical]" },
     { title: "Clovers [technical]", href: "page-clovers-technical.html", keywords: "clovers [technical]" },
     { title: "Teargrass [technical]", href: "page-teargrass-technical.html", keywords: "teargrass [technical]" },
+    { title: "Fir [technical]", href: "page-fir-technical.html", keywords: "fir [technical]" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
