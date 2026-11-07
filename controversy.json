@@ -792,7 +792,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "date": "2026-11-07T04:18:50.412Z"
+    }
+   }
   },
   {
    "id": "idea-doc-29",
