@@ -20,6 +20,14 @@
    "iterations": 310000,
    "hash": "V+v11LpVgtU4YrtKUi87o0V5muSBflm7cBWvAOREdYc=",
    "created": "2026-11-07T04:26:46.209Z"
+  },
+  "alex": {
+   "name": "Alex",
+   "role": "reviewer",
+   "salt": "x/kh9NxKNbG9M5HuZcxmfQ==",
+   "iterations": 310000,
+   "hash": "Bl9ijjhX7mDl36xiA3AK2cn1ptSTsTwBpWm4la0QWEU=",
+   "created": "2026-11-07T17:00:16.200Z"
   }
  }
 }
