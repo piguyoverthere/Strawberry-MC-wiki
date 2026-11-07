@@ -244,6 +244,12 @@
      "name": "Eric",
      "vote": "disapprove",
      "date": "2026-11-07T01:05:35.842Z"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "disapprove",
+     "date": "2026-11-07T17:01:45.016Z",
+     "pending": true
     }
    }
   },
