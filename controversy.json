@@ -819,7 +819,13 @@
    ],
    "status": "resolved",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "date": "2026-11-07T00:23:40.605Z"
+    }
+   }
   },
   {
    "id": "idea-doc-57",
