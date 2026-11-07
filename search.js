@@ -174,6 +174,7 @@ const pages = [
     { title: "Teargrass [technical]", href: "page-teargrass-technical.html", keywords: "teargrass [technical]" },
     { title: "Fir [technical]", href: "page-fir-technical.html", keywords: "fir [technical]" },
     { title: "MC Controversy", href: "page-mc-controversy.html", keywords: "mc controversy" },
+    { title: "Wisp [technical]", href: "page-wisp-technical.html", keywords: "wisp [technical] technical voidstone peaks guardian void bottle bottleable" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
