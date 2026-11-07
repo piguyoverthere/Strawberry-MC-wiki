@@ -779,7 +779,13 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "date": "2026-11-07T04:18:45.906Z"
+    }
+   }
   },
   {
    "id": "idea-doc-28",
