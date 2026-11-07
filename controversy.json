@@ -16,7 +16,23 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "source": "document"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-2",
@@ -34,7 +50,28 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "caleb": {
+     "name": "Caleb",
+     "vote": "approve",
+     "source": "document"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "source": "document"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-3",
@@ -49,7 +86,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-4",
@@ -62,7 +110,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-5",
@@ -91,7 +145,23 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "source": "document"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-7",
@@ -107,7 +177,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-8",
@@ -123,7 +204,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "sai": {
+     "name": "Sai",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-9",
@@ -139,7 +231,28 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "source": "document"
+    },
+    "sai": {
+     "name": "Sai",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-10",
@@ -155,7 +268,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "aadi": {
+     "name": "Aadi",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-11",
@@ -170,7 +294,23 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "source": "document"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "sai": {
+     "name": "Sai",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-12",
@@ -185,7 +325,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "aadi": {
+     "name": "Aadi",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-13",
@@ -200,7 +351,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "sai": {
+     "name": "Sai",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-14",
@@ -231,7 +393,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "caleb": {
+     "name": "Caleb",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-16",
@@ -246,7 +414,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "sai": {
+     "name": "Sai",
+     "vote": "approve",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-17",
@@ -279,7 +458,33 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "sai": {
+     "name": "Sai",
+     "vote": "approve",
+     "source": "document"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "approve",
+     "source": "document"
+    },
+    "caleb": {
+     "name": "Caleb",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-19",
@@ -296,7 +501,28 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "caleb": {
+     "name": "Caleb",
+     "vote": "approve",
+     "source": "document"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "aadi": {
+     "name": "Aadi",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-20",
@@ -312,7 +538,28 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "sai": {
+     "name": "Sai",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "caleb": {
+     "name": "Caleb",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-21",
@@ -328,7 +575,28 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "sai": {
+     "name": "Sai",
+     "vote": "approve",
+     "source": "document"
+    },
+    "caleb": {
+     "name": "Caleb",
+     "vote": "approve",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-22",
@@ -344,7 +612,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "sai": {
+     "name": "Sai",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-23",
@@ -359,7 +638,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "sai": {
+     "name": "Sai",
+     "vote": "approve",
+     "source": "document"
+    },
+    "caleb": {
+     "name": "Caleb",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-24",
@@ -373,7 +663,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "sai": {
+     "name": "Sai",
+     "vote": "approve",
+     "source": "document"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-25",
@@ -392,7 +693,33 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "source": "document"
+    },
+    "caleb": {
+     "name": "Caleb",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "source": "document"
+    },
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-26",
@@ -446,7 +773,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "aadi": {
+     "name": "Aadi",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-30",
@@ -470,7 +808,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "alex": {
+     "name": "Alex",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-32",
@@ -496,7 +840,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "alex": {
+     "name": "Alex",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-34",
@@ -510,7 +865,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "source": "document"
+    },
+    "caleb": {
+     "name": "Caleb",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-35",
@@ -536,7 +902,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "aadi": {
+     "name": "Aadi",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-36",
@@ -609,7 +986,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-42",
@@ -623,7 +1006,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-43",
@@ -637,7 +1026,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "aadi": {
+     "name": "Aadi",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-44",
@@ -670,7 +1070,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-46",
@@ -684,7 +1090,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "aadi": {
+     "name": "Aadi",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-47",
@@ -699,7 +1116,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-48",
@@ -726,7 +1149,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "source": "document"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-50",
@@ -740,7 +1174,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "source": "document"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-51",
@@ -753,7 +1198,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-52",
@@ -767,7 +1218,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-53",
@@ -791,7 +1248,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-55",
@@ -804,7 +1267,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-56",
@@ -824,6 +1293,11 @@
      "name": "Eric",
      "vote": "approve",
      "date": "2026-11-07T00:23:40.605Z"
+    },
+    "sai": {
+     "name": "Sai",
+     "vote": "approve",
+     "source": "document"
     }
    }
   },
@@ -859,7 +1333,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "sai": {
+     "name": "Sai",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-59",
@@ -873,7 +1358,13 @@
    ],
    "status": "resolved",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-60",
@@ -886,7 +1377,13 @@
    ],
    "status": "resolved",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-61",
@@ -939,7 +1436,13 @@
    ],
    "status": "resolved",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-65",
@@ -992,7 +1495,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-69",
@@ -1005,7 +1519,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-70",
@@ -1020,7 +1540,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-71",
@@ -1095,7 +1621,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-77",
@@ -1225,7 +1757,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-86",
@@ -1264,7 +1802,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-89",
@@ -1278,7 +1822,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-90",
@@ -1292,7 +1842,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-91",
@@ -1316,7 +1872,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-93",
@@ -1329,7 +1891,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-94",
@@ -1342,7 +1910,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-95",
@@ -1355,7 +1929,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-96",
@@ -1368,7 +1948,13 @@
    ],
    "status": "resolved",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-97",
@@ -1396,7 +1982,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-99",
@@ -1422,7 +2014,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-101",
@@ -1449,7 +2047,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-103",
@@ -1516,7 +2120,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-108",
@@ -1529,7 +2139,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-109",
@@ -1555,7 +2171,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-111",
@@ -1582,7 +2204,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-113",
@@ -1596,7 +2224,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "sai": {
+     "name": "Sai",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-114",
@@ -1633,7 +2267,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-117",
@@ -1662,7 +2302,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-119",
@@ -1677,7 +2323,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "sai": {
+     "name": "Sai",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-120",
@@ -1727,7 +2384,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-124",
@@ -1762,7 +2425,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-127",
@@ -1878,7 +2547,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-136",
@@ -2000,7 +2675,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-145",
@@ -2240,7 +2921,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-165",
@@ -2565,7 +3252,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-194",
@@ -2611,7 +3304,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "sai": {
+     "name": "Sai",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-198",
@@ -2690,7 +3389,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-205",
@@ -2705,7 +3410,23 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "approve",
+     "source": "document"
+    },
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-206",
@@ -2720,7 +3441,23 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "approve",
+     "source": "document"
+    },
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-207",
@@ -2742,7 +3479,23 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "approve",
+     "source": "document"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-208",
@@ -2755,7 +3508,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-209",
@@ -2769,7 +3528,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "sai": {
+     "name": "Sai",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-210",
@@ -2784,7 +3554,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-211",
@@ -2846,7 +3622,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-216",
@@ -2859,7 +3641,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-217",
@@ -2872,7 +3660,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "disapprove",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-218",
@@ -2890,7 +3684,38 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "source": "document"
+    },
+    "aadi": {
+     "name": "Aadi",
+     "vote": "approve",
+     "source": "document"
+    },
+    "zafar": {
+     "name": "Zafar",
+     "vote": "approve",
+     "source": "document"
+    },
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "approve",
+     "source": "document"
+    },
+    "sai": {
+     "name": "Sai",
+     "vote": "approve",
+     "source": "document"
+    },
+    "caleb": {
+     "name": "Caleb",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-219",
@@ -2926,7 +3751,18 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "aadi": {
+     "name": "Aadi",
+     "vote": "approve",
+     "source": "document"
+    },
+    "sai": {
+     "name": "Sai",
+     "vote": "approve",
+     "source": "document"
+    }
+   }
   },
   {
    "id": "idea-doc-222",
@@ -2958,6 +3794,11 @@
      "name": "Eric",
      "vote": "disapprove",
      "date": "2026-11-07T00:23:58.393Z"
+    },
+    "sai": {
+     "name": "Sai",
+     "vote": "disapprove",
+     "source": "document"
     }
    }
   }
