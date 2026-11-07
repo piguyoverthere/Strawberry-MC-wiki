@@ -21,7 +21,7 @@
         { title: "MC Controversy Resolver", href: "mc-controversy-resolver.pdf", updated: "2026-11-05" }
     ];
     const legacyEditableSelector = "h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, figcaption, summary";
-    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list, #ideas-app, #discussions-app";
+    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list, #ideas-app, #discussions-app, #notifications-app";
     const allowedTags = new Set([
         "A", "ABBR", "B", "BLOCKQUOTE", "BR", "CAPTION", "CODE", "DEL", "DETAILS", "DIV", "EM", "FIGCAPTION",
         "FIGURE", "FOOTER", "H1", "H2", "H3", "H4", "H5", "H6", "HR", "I", "IMG", "INS", "KBD", "LI", "MARK",
@@ -323,6 +323,12 @@
                 ideasItem.dataset.wikiInjected = "";
                 ideasItem.innerHTML = ' | <a href="ideas.html">Ideas</a> | <a href="discussions.html">Threads &amp; Debates</a>';
                 nav.insertBefore(ideasItem, pdfLink);
+            }
+            if (!nav.querySelector('a[href="notifications.html"]')) {
+                const notificationsItem = document.createElement("span");
+                notificationsItem.dataset.wikiInjected = "";
+                notificationsItem.innerHTML = ' | <a href="notifications.html">Notifications</a>';
+                nav.insertBefore(notificationsItem, pdfLink);
             }
             if (!nav.querySelector('a[href="page-bookmarked-pages.html"]')) {
                 const bookmarksItem = document.createElement("span");

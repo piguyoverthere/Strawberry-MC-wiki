@@ -989,3 +989,68 @@ span.controversy-time[title]{
     cursor:pointer;
     font:600 13px/1.2 Arial, Helvetica, sans-serif
 }
+.notification-list{
+    margin:0;
+    padding:0;
+    list-style:none
+}
+.notification{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    gap:4px 10px;
+    padding:8px 10px;
+    border-bottom:1px solid #d5e5ea
+}
+.notification-new{
+    background:#f3f8ff;
+    box-shadow:inset 3px 0 0 #0056b3
+}
+.notification-badge{
+    margin:0;
+    min-width:9em;
+    text-align:center
+}
+.notification-text{
+    flex:1 1 280px;
+    overflow-wrap:anywhere
+}
+.notification-time,
+.notification-count{
+    color:#54595d;
+    font-size:.88em
+}
+.notification-new-label{
+    margin-left:8px;
+    padding:1px 6px;
+    border-radius:3px;
+    background:#0056b3;
+    color:#ffffff;
+    font-size:.75em;
+    font-weight:600
+}
+.notification-badge-page-new{
+    background:#d5fdf4;
+    color:#14866d
+}
+.notification-badge-page-edit,
+.notification-badge-news{
+    background:#eaf3ff;
+    color:#0b4a8b
+}
+.notification-badge-vote,
+.notification-badge-idea{
+    background:#fef6e7;
+    color:#7a4b00
+}
+.notification-approve .notification-badge-vote{
+    background:#d5fdf4;
+    color:#14866d
+}
+.notification-disapprove .notification-badge-vote{
+    background:#fee7e6;
+    color:#9b1c1c
+}
+.notification-more{
+    margin:14px 0
+}
