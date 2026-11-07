@@ -387,7 +387,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "date": "2026-11-07T01:06:29.261Z"
+    }
+   }
   },
   {
    "id": "idea-doc-15",
