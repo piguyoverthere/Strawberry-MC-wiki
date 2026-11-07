@@ -1,3 +1,19 @@
 {
- "bugs": []
+ "bugs": [
+  {
+   "id": "bug-1",
+   "number": 1,
+   "title": "Clover glades generate underwater and replaces most sea biomes",
+   "description": "most oceans are now clover glades",
+   "steps": "generate world, /locate strawberrymc:clover_glades",
+   "area": "worldgen",
+   "status": "unresolved",
+   "severity": "major",
+   "reporter": "Eric",
+   "reported": "2026-11-07T18:39:20.939Z",
+   "updated": "2026-11-07T18:39:20.939Z",
+   "comments": [],
+   "history": []
+  }
+ ]
 }
