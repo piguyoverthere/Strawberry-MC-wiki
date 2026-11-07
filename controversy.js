@@ -97,133 +97,76 @@
         data.discussions = data.discussions || [];
     }
 
-    // Sign-in: your name and the wiki password, verified once -----------------------------------
-    const authDialog = element("dialog", { className: "wiki-dialog", "data-wiki-injected": true });
-    authDialog.innerHTML = `
-        <form method="dialog">
-            <h2>Sign in</h2>
-            <p class="wiki-dialog-hint wiki-auth-reason"></p>
-            <label for="controversy-name">Your name</label>
-            <input id="controversy-name" type="text" required maxlength="40" autocomplete="name">
-            <div class="wiki-auth-password">
-                <label for="controversy-password">Wiki password</label>
-                <input id="controversy-password" type="password" autocomplete="current-password">
-                <label class="wiki-checkbox"><input id="controversy-remember" type="checkbox" checked> Remember me on this device</label>
-                <p class="wiki-dialog-hint">You only verify once. Untick this on a shared computer, and the password is asked again after you close the tab.</p>
-            </div>
-            <p class="wiki-dialog-error" role="alert"></p>
-            <div class="wiki-dialog-actions">
-                <button type="button" value="cancel">Cancel</button>
-                <button type="submit" class="wiki-primary">Continue</button>
-            </div>
-        </form>
-    `;
-    document.body.append(authDialog);
-    const authName = authDialog.querySelector("#controversy-name");
-    const authPassword = authDialog.querySelector("#controversy-password");
-    const authRemember = authDialog.querySelector("#controversy-remember");
-    const authPasswordField = authDialog.querySelector(".wiki-auth-password");
-    const authError = authDialog.querySelector(".wiki-dialog-error");
-    const authSubmit = authDialog.querySelector('button[type="submit"]');
-    let pendingAction = null;
-
-    authDialog.querySelector('button[value="cancel"]').addEventListener("click", () => authDialog.close());
-
-    function openSignIn(reason, action) {
-        const store = window.wikiStore;
-        pendingAction = action;
-        authDialog.querySelector(".wiki-auth-reason").textContent = reason;
-        authName.value = store.getAuthor();
-        authPassword.value = "";
-        const unlocked = store.isUnlocked();
-        authPasswordField.hidden = unlocked;
-        authPassword.required = !unlocked;
-        authError.textContent = "";
-        authSubmit.disabled = false;
-        authSubmit.textContent = action ? "Continue" : "Sign in";
-        authDialog.showModal();
-        (authName.value ? (unlocked ? authSubmit : authPassword) : authName).focus();
+    // Signing in happens on the login page (username, wiki password and personal password).
+    function signedIn() {
+        return Boolean(window.wikiStore?.isSignedIn());
     }
 
-    // Once you are signed in (name + verified password), actions run straight away.
-    // Otherwise ask first, then run action(name).
+    function isAdmin() {
+        return Boolean(window.wikiStore?.isAdmin());
+    }
+
+    function isReviewer() {
+        return Boolean(window.wikiStore?.isReviewer());
+    }
+
+    // Reviewers' votes, ideas, comments and replies wait for an admin before they count
+    const pendingMark = (role) => role === "reviewer" ? { pending: true } : {};
+
+    // A red "Needs review" line; admins also get Approve and Disapprove
+    function reviewBar(text, onApprove, onDisapprove) {
+        return element("div", { className: "wiki-review-bar" },
+            element("span", { text: `Needs review · ${text}` }),
+            isAdmin() ? element("button", { type: "button", className: "wiki-review-approve", text: "Approve", onclick: onApprove }) : null,
+            isAdmin() ? element("button", { type: "button", className: "wiki-review-disapprove", text: "Disapprove", onclick: onDisapprove }) : null);
+    }
+
+    // An admin approving or disapproving a reviewer's change. change(fresh) returns false when it's no longer waiting.
+    function moderate(approve, what, change) {
+        requireSignIn("", (name) => save((fresh) => {
+            if (change(fresh) === false) throw new Error("That change is no longer waiting for review. Reload the page.");
+        }, `${name} ${approve ? "approves" : "disapproves"} ${what}`)
+            .then(() => { status.textContent = approve ? "Approved." : "Disapproved and removed."; }));
+    }
+
+    const sameEntry = (item) => (other) => other.author === item.author && other.date === item.date;
+
+    // Runs action(name) straight away when signed in; otherwise goes to the login page and back.
     function requireSignIn(reason, action) {
         const store = window.wikiStore;
         if (!store) {
             alert("The wiki editor did not load, so changes cannot be saved right now.");
             return;
         }
-        const name = store.getAuthor();
-        if (name && store.isUnlocked()) {
-            status.textContent = "Saving…";
-            action(name).catch((error) => {
-                status.textContent = `Could not save: ${error.message}`;
-                renderAccount();
-            });
+        if (!signedIn()) {
+            location.href = store.loginHref();
             return;
         }
-        openSignIn(reason, action);
-    }
-
-    authDialog.querySelector("form").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const name = authName.value.trim().replace(/\s+/g, " ");
-        if (!name) return;
-        authSubmit.disabled = true;
-        authSubmit.textContent = "Checking…";
-        authError.textContent = "";
-        try {
-            const store = window.wikiStore;
-            if (!store.isUnlocked()) {
-                await store.unlock(authPassword.value, authRemember.checked);
-            }
-            store.setAuthor(name);
+        status.textContent = "Saving…";
+        action(store.getAuthor()).catch((error) => {
+            status.textContent = `Could not save: ${error.message}`;
             renderAccount();
-            if (pendingAction) {
-                authSubmit.textContent = "Saving…";
-                await pendingAction(name);
-            } else {
-                status.textContent = `Signed in as ${name}.`;
-            }
-            authDialog.close();
-        } catch (error) {
-            authError.textContent = error.message;
-            authSubmit.disabled = false;
-            authSubmit.textContent = "Try again";
-            if (!window.wikiStore.isUnlocked()) {
-                authPasswordField.hidden = false;
-                authPassword.required = true;
-            }
-        }
-    });
-
-    function signedIn() {
-        return Boolean(window.wikiStore?.getAuthor() && window.wikiStore.isUnlocked());
+        });
     }
 
-    // "Signed in as Sai · Change name · Sign out"
+    // "Signed in as Sai · Sign out"
     const account = element("p", { className: "controversy-account" });
     function renderAccount() {
         const store = window.wikiStore;
         if (!store) return;
-        const name = store.getAuthor();
-        if (name && store.isUnlocked()) {
+        if (signedIn()) {
             account.replaceChildren(
-                "Signed in as ", element("strong", { text: name }), " · ",
-                element("button", { type: "button", className: "wiki-link-button", text: "Change name", onclick: () => openSignIn("Change the name your votes and posts are saved under.", null) }),
-                " · ",
+                "Signed in as ", element("strong", { text: store.getAuthor() }), " · ",
                 element("button", {
                     type: "button", className: "wiki-link-button", text: "Sign out",
                     onclick: () => {
-                        store.forget();
-                        renderAccount();
-                        status.textContent = "Signed out. The wiki password will be asked again next time.";
+                        store.signOut();
+                        location.reload();
                     }
                 }));
         } else {
             account.replaceChildren(
-                "Not signed in. ",
-                element("button", { type: "button", className: "wiki-link-button", text: "Sign in", onclick: () => openSignIn("Verify the wiki password once to vote, comment and post.", null) }),
+                element("a", { href: store.loginHref() }, "Log in or register"),
                 " to vote, comment and post.");
         }
     }
@@ -284,14 +227,15 @@
     function voteCounts(idea) {
         const votes = Object.values(idea.votes || {});
         return {
-            approve: votes.filter((vote) => vote.vote === "approve"),
-            disapprove: votes.filter((vote) => vote.vote === "disapprove")
+            approve: votes.filter((vote) => vote.vote === "approve" && !vote.pending),
+            disapprove: votes.filter((vote) => vote.vote === "disapprove" && !vote.pending),
+            pending: votes.filter((vote) => vote.pending)
         };
     }
 
     function vote(idea, choice) {
         requireSignIn(`${choice === "approve" ? "Approve" : "Disapprove"} "${idea.title}". Voting the same way again removes your vote.`, (name) =>
-            save((fresh) => {
+            save((fresh, role) => {
                 const target = (fresh.ideas || []).find((item) => item.id === idea.id);
                 if (!target) throw new Error("This idea no longer exists. Reload the page.");
                 target.votes = target.votes || {};
@@ -299,7 +243,7 @@
                 if (target.votes[key]?.vote === choice) {
                     delete target.votes[key];
                 } else {
-                    target.votes[key] = { name, vote: choice, date: new Date().toISOString() };
+                    target.votes[key] = { name, vote: choice, date: new Date().toISOString(), ...pendingMark(role) };
                 }
             }, `${name} votes ${choice} on idea: ${idea.title}`)
                 .then(() => { status.textContent = `Your vote on "${idea.title}" was saved.`; }));
@@ -307,29 +251,33 @@
 
     function comment(idea, text) {
         requireSignIn(`Comment on "${idea.title}".`, (name) =>
-            save((fresh) => {
+            save((fresh, role) => {
                 const target = (fresh.ideas || []).find((item) => item.id === idea.id);
                 if (!target) throw new Error("This idea no longer exists. Reload the page.");
                 target.replies = target.replies || [];
-                target.replies.push({ author: name, text, date: new Date().toISOString() });
+                target.replies.push({ author: name, text, date: new Date().toISOString(), ...pendingMark(role) });
             }, `${name} comments on idea: ${idea.title}`)
                 .then(() => { status.textContent = "Your comment was posted."; }));
     }
 
     function addIdea() {
+        if (!signedIn()) {
+            location.href = window.wikiStore.loginHref();
+            return;
+        }
         openFormDialog({
             title: "Add an idea",
-            submitLabel: signedIn() ? "Save" : "Next",
+            submitLabel: "Save",
             fields: [
                 { name: "title", label: "Idea name", required: true },
                 { name: "description", label: "Details", type: "textarea", rows: 8, hint: "Start a line with \"- \" to make a bullet point." }
             ],
             onSubmit: (values) => requireSignIn(`Add the idea "${values.title}" under your name.`, (name) =>
-                save((fresh) => {
+                save((fresh, role) => {
                     fresh.ideas = fresh.ideas || [];
                     fresh.ideas.push({
                         id: newId("idea"), author: name, title: values.title, description: values.description,
-                        comments: [], status: "", source: "site", created: new Date().toISOString(), votes: {}
+                        comments: [], status: "", source: "site", created: new Date().toISOString(), votes: {}, ...pendingMark(role)
                     });
                 }, `${name} adds idea: ${values.title}`)
                     .then(() => {
@@ -348,7 +296,8 @@
         const voters = (list) => list.map((vote) => vote.name).join(", ");
         const votedAt = (vote) => vote.date ? ` (${new Date(vote.date).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })})` : "";
         const votersWithTimes = (list) => list.map((vote) => `${vote.name}${votedAt(vote)}`).join(", ");
-        const card = element("article", { className: "idea-card", id: idea.id },
+        const { pending } = voteCounts(idea);
+        const card = element("article", { className: `idea-card${idea.pending ? " wiki-pending-item" : ""}`, id: idea.id },
             element("header", { className: "idea-header" },
                 element("h3", { text: idea.number ? `${idea.number}. ${idea.title}` : idea.title }),
                 element("span", { className: "idea-meta" },
@@ -356,6 +305,17 @@
                     idea.status ? element("span", { className: `idea-badge idea-badge-${idea.status}`, text: idea.status }) : null,
                     " · ",
                     idea.source === "site" && idea.created ? timestamp(idea.created, "added ") : fromDocument())),
+            idea.pending ? reviewBar(`new idea by ${idea.author}`,
+                () => moderate(true, `idea: ${idea.title}`, (fresh) => {
+                    const target = fresh.ideas.find((item) => item.id === idea.id);
+                    if (!target?.pending) return false;
+                    delete target.pending;
+                }),
+                () => moderate(false, `idea: ${idea.title}`, (fresh) => {
+                    const index = fresh.ideas.findIndex((item) => item.id === idea.id && item.pending);
+                    if (index < 0) return false;
+                    fresh.ideas.splice(index, 1);
+                })) : null,
             idea.description ? element("div", { className: "idea-description" }, renderText(idea.description)) : null);
         // Long write-ups start folded so the list stays easy to scan.
         if ((idea.description || "").length > 450) {
@@ -377,10 +337,22 @@
         const replies = idea.replies || [];
         if (replies.length) {
             card.append(element("ul", { className: "idea-replies" },
-                ...replies.map((item) => element("li", {},
+                ...replies.map((item) => element("li", { className: item.pending ? "wiki-pending-item" : null },
                     element("div", { className: "idea-meta" },
                         element("span", { className: "idea-author", text: item.author }), " · ", timestamp(item.date)),
-                    element("div", { className: "idea-description" }, renderText(item.text))))));
+                    element("div", { className: "idea-description" }, renderText(item.text)),
+                    item.pending ? reviewBar(`comment by ${item.author}`,
+                        () => moderate(true, `comment by ${item.author} on idea: ${idea.title}`, (fresh) => {
+                            const target = fresh.ideas.find((other) => other.id === idea.id)?.replies?.find(sameEntry(item));
+                            if (!target?.pending) return false;
+                            delete target.pending;
+                        }),
+                        () => moderate(false, `comment by ${item.author} on idea: ${idea.title}`, (fresh) => {
+                            const list = fresh.ideas.find((other) => other.id === idea.id)?.replies || [];
+                            const index = list.findIndex((other) => sameEntry(item)(other) && other.pending);
+                            if (index < 0) return false;
+                            list.splice(index, 1);
+                        })) : null))));
         }
         const commentInput = element("input", { type: "text", placeholder: "Add a comment…", maxlength: 2000, "aria-label": `Comment on ${idea.title}` });
         card.append(element("form", {
@@ -404,6 +376,22 @@
             approve.length || disapprove.length
                 ? element("span", { className: "idea-voters", text: [approve.length ? `For: ${voters(approve)}` : "", disapprove.length ? `Against: ${voters(disapprove)}` : ""].filter(Boolean).join(" · ") })
                 : null));
+        for (const item of pending) {
+            const key = nameKey(item.name);
+            const what = `${item.name}'s vote on idea: ${idea.title}`;
+            card.append(element("div", { className: "wiki-pending-item idea-pending-vote" },
+                reviewBar(`${item.name} votes ${item.vote === "approve" ? "👍 approve" : "👎 disapprove"}`,
+                    () => moderate(true, what, (fresh) => {
+                        const target = fresh.ideas.find((other) => other.id === idea.id)?.votes?.[key];
+                        if (!target?.pending) return false;
+                        delete target.pending;
+                    }),
+                    () => moderate(false, what, (fresh) => {
+                        const votes = fresh.ideas.find((other) => other.id === idea.id)?.votes || {};
+                        if (!votes[key]?.pending) return false;
+                        delete votes[key];
+                    }))));
+        }
         return card;
     }
 
@@ -444,19 +432,27 @@
 
     function reply(discussion, text) {
         requireSignIn(`Post your reply in "${discussion.title}".`, (name) =>
-            save((fresh) => {
+            save((fresh, role) => {
                 const target = (fresh.discussions || []).find((item) => item.id === discussion.id);
                 if (!target) throw new Error("This discussion no longer exists. Reload the page.");
                 target.posts = target.posts || [];
-                target.posts.push({ author: name, text, date: new Date().toISOString(), source: "site" });
+                target.posts.push({ author: name, text, date: new Date().toISOString(), source: "site", ...pendingMark(role) });
             }, `${name} replies in: ${discussion.title}`)
                 .then(() => { status.textContent = "Your reply was posted."; }));
     }
 
     function startDiscussion() {
+        if (!signedIn()) {
+            location.href = window.wikiStore.loginHref();
+            return;
+        }
+        if (isReviewer()) {
+            status.textContent = "Reviewers can reply in threads and debates but can't start new ones.";
+            return;
+        }
         openFormDialog({
             title: "Start a debate or thread",
-            submitLabel: signedIn() ? "Save" : "Next",
+            submitLabel: "Save",
             fields: [
                 { name: "kind", label: "Type", type: "select", options: [["debate", "Debate"], ["thread", "Thread"]] },
                 { name: "title", label: "Title", required: true },
@@ -509,12 +505,24 @@
             else openDiscussions.delete(discussion.id);
         });
         const list = element("ol", { className: "discussion-posts" },
-            ...posts.map((post) => element("li", { className: "discussion-post" },
+            ...posts.map((post) => element("li", { className: `discussion-post${post.pending ? " wiki-pending-item" : ""}` },
                 element("div", { className: "idea-meta" },
                     element("span", { className: "idea-author", text: post.author || "Unknown" }),
                     " · ",
                     post.source === "site" && post.date ? timestamp(post.date) : fromDocument()),
-                element("div", { className: "idea-description" }, renderText(post.text)))));
+                element("div", { className: "idea-description" }, renderText(post.text)),
+                post.pending ? reviewBar(`reply by ${post.author}`,
+                    () => moderate(true, `reply by ${post.author} in: ${discussion.title}`, (fresh) => {
+                        const target = fresh.discussions.find((other) => other.id === discussion.id)?.posts?.find(sameEntry(post));
+                        if (!target?.pending) return false;
+                        delete target.pending;
+                    }),
+                    () => moderate(false, `reply by ${post.author} in: ${discussion.title}`, (fresh) => {
+                        const list = fresh.discussions.find((other) => other.id === discussion.id)?.posts || [];
+                        const index = list.findIndex((other) => sameEntry(post)(other) && other.pending);
+                        if (index < 0) return false;
+                        list.splice(index, 1);
+                    })) : null)));
         const textarea = element("textarea", { rows: 3, placeholder: "Write a reply…", "aria-label": `Reply to ${discussion.title}`, maxlength: 8000 });
         const form = element("form", {
             className: "discussion-reply",
@@ -534,7 +542,9 @@
             ["Archive", data.discussions.filter((item) => item.archived)]
         ];
         const toolbar = element("div", { className: "controversy-toolbar" },
-            element("button", { type: "button", className: "wiki-primary-button", text: "+ New debate or thread", onclick: startDiscussion }));
+            isReviewer()
+                ? element("span", { className: "idea-meta", text: "Reviewers can reply in threads and debates but can't start new ones." })
+                : element("button", { type: "button", className: "wiki-primary-button", text: "+ New debate or thread", onclick: startDiscussion }));
         const sections = groups.filter(([, items]) => items.length).map(([title, items]) =>
             element("section", { className: "discussion-group" },
                 element("h2", { text: `${title} (${items.length})` }),

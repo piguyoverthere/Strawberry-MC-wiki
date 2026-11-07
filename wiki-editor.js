@@ -14,14 +14,11 @@
     const localPagesStorageKey = `strawberry-wiki-local-pages:${deploymentPath}`;
     const tokenStorageKey = "strawberry-wiki-github-token";
     const authorStorageKey = "strawberry-wiki-author";
+    const accountStorageKey = "strawberry-wiki-account";
+    const roleStorageKey = "strawberry-wiki-role";
     const sharedTokenFile = "wiki-token.json";
-    // Source documents offered by "Open PDF". Update the date whenever a PDF is replaced.
-    const pdfDocuments = [
-        { title: "Strawberry MC Wiki", href: "Strawberry%20minecraft%20wiki%20(1).pdf", updated: "2026-10-29" },
-        { title: "MC Controversy Resolver", href: "mc-controversy-resolver.pdf", updated: "2026-11-05" }
-    ];
     const legacyEditableSelector = "h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, figcaption, summary";
-    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list, #ideas-app, #discussions-app, #notifications-app";
+    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list, #ideas-app, #discussions-app, #notifications-app, #documents-app, #bugs-app, #login-app, #admin-app";
     const allowedTags = new Set([
         "A", "ABBR", "B", "BLOCKQUOTE", "BR", "CAPTION", "CODE", "DEL", "DETAILS", "DIV", "EM", "FIGCAPTION",
         "FIGURE", "FOOTER", "H1", "H2", "H3", "H4", "H5", "H6", "HR", "I", "IMG", "INS", "KBD", "LI", "MARK",
@@ -39,7 +36,8 @@
         TD: ["colspan", "rowspan"],
         TH: ["colspan", "rowspan", "scope"],
         OL: ["start"],
-        DETAILS: ["open"]
+        DETAILS: ["open"],
+        DIV: ["data-pending-by", "data-pending-date", "data-original"]
     };
     const allowedStyles = ["color", "background-color", "text-align"];
     const fontClasses = ["roman", "consolas", "georgia", "comic"];
@@ -71,7 +69,7 @@
 
     // Interactive widgets (search box, buttons, bookmark list) are kept as-is and are not editable.
     const islands = [...root.querySelectorAll(islandSelector)].filter((element) =>
-        !element.parentElement.closest(islandSelector)
+        !element.parentElement.closest(islandSelector) && !element.closest(".wiki-raw-html")
     );
     const islandMarkup = islands.map((element) => element.outerHTML);
     islands.forEach((element, index) => {
@@ -104,6 +102,42 @@
         }
     }
 
+    // Raw HTML blocks keep any tag a writer puts in, except anything that can run code: scripts, plugins,
+    // event attributes (onclick…), javascript: links and framed documents written inline.
+    const rawRemovedTags = new Set(["script", "object", "embed", "applet", "base", "meta", "template", "animate", "set", "handler", "listener"]);
+    const rawUrlAttributes = new Set(["href", "xlink:href", "src", "action", "formaction", "data", "poster", "background", "lowsrc", "dynsrc", "ping", "codebase", "cite", "longdesc", "usemap", "manifest", "srcset"]);
+
+    function cleanRawHtml(markup) {
+        const inertDocument = document.implementation.createHTMLDocument("");
+        const container = inertDocument.body;
+        container.innerHTML = markup;
+        for (const node of [...container.querySelectorAll("*")]) {
+            if (!node.isConnected) {
+                continue;
+            }
+            if (rawRemovedTags.has(node.localName.toLowerCase())) {
+                node.remove();
+                continue;
+            }
+            for (const { name, value } of [...node.attributes]) {
+                const lower = name.toLowerCase();
+                // Browsers ignore spaces and control characters inside "java script:"
+                const url = value.replace(/[\u0000-\u0020]/g, "").toLowerCase();
+                if (
+                    lower.startsWith("on") || lower === "srcdoc" || lower === "contenteditable" || lower.startsWith("data-wiki") ||
+                    /(?:java|vb|live)script:/.test(url) ||
+                    (rawUrlAttributes.has(lower) && url.startsWith("data:") && !/^data:image\/(?:png|jpe?g|gif|webp|avif);/.test(url))
+                ) {
+                    node.removeAttribute(name);
+                }
+            }
+            if (node.localName === "link" && /import|preload|prefetch/i.test(node.getAttribute("rel") || "")) {
+                node.remove();
+            }
+        }
+        return container.innerHTML;
+    }
+
     function sanitizeMarkup(markup, { keepIslands = true } = {}) {
         const inertDocument = document.implementation.createHTMLDocument("");
         const container = inertDocument.body;
@@ -130,6 +164,14 @@
                     continue;
                 }
 
+                if (child.tagName === "DIV" && child.classList.contains("wiki-raw-html")) {
+                    const block = inertDocument.createElement("div");
+                    block.className = "wiki-raw-html";
+                    block.innerHTML = cleanRawHtml(child.innerHTML);
+                    child.replaceWith(block);
+                    continue;
+                }
+
                 if (removedTags.has(child.tagName)) {
                     child.remove();
                     continue;
@@ -147,7 +189,9 @@
                         !allowed ||
                         ((name === "href" || name === "src") && !isSafeUrl(value)) ||
                         (name === "target" && value !== "_blank") ||
-                        ((name === "class" || name === "id") && !/^[\w\s-]*$/.test(value))
+                        ((name === "class" || name === "id") && !/^[\w\s-]*$/.test(value)) ||
+                        (name === "data-original" && !/^[A-Za-z0-9+/=]*$/.test(value)) ||
+                        (name === "data-pending-date" && !/^[\dT:.Z-]*$/.test(value))
                     ) {
                         child.removeAttribute(name);
                     } else if (name === "style") {
@@ -311,7 +355,7 @@
     if (header) {
         const nav = header.querySelector("nav");
         if (nav) {
-            const pdfLink = nav.querySelector('a[href$=".pdf"]');
+            const pdfLink = nav.querySelector('a[href$=".pdf"], a[href="documents.html"]');
             if (!nav.querySelector('a[href="news.html"]')) {
                 const newsItem = document.createElement("span");
                 newsItem.dataset.wikiInjected = "";
@@ -329,6 +373,12 @@
                 notificationsItem.dataset.wikiInjected = "";
                 notificationsItem.innerHTML = ' | <a href="notifications.html">Notifications</a>';
                 nav.insertBefore(notificationsItem, pdfLink);
+            }
+            if (!nav.querySelector('a[href="bugs.html"]')) {
+                const bugsItem = document.createElement("span");
+                bugsItem.dataset.wikiInjected = "";
+                bugsItem.innerHTML = ' | <a href="bugs.html">Bug Tracker</a>';
+                nav.insertBefore(bugsItem, pdfLink);
             }
             if (!nav.querySelector('a[href="page-bookmarked-pages.html"]')) {
                 const bookmarksItem = document.createElement("span");
@@ -365,53 +415,30 @@
             newPageButton.addEventListener("click", () => openNewPageDialog());
             nav.append(newPageButton);
 
-            // "Open PDF" lets readers pick which source document to open.
+            // "Log in" while signed out, the account name while signed in; both go to the login page.
+            const accountLink = document.createElement("a");
+            accountLink.className = "nav-button wiki-account-link";
+            accountLink.dataset.wikiInjected = "";
+            const accountName = readToken() && readAccount();
+            accountLink.href = accountName || currentPage === "login.html" ? "login.html" : `login.html?${new URLSearchParams({ next: currentPage + location.search + location.hash })}`;
+            accountLink.textContent = accountName ? `👤 ${accountName}` : "Log in";
+            accountLink.title = accountName ? `Signed in as ${accountName} (${readRole()})` : "Log in or register";
+            nav.append(accountLink);
+            if (readRole() === "admin") {
+                const adminLink = document.createElement("a");
+                adminLink.className = "nav-button wiki-admin-link";
+                adminLink.dataset.wikiInjected = "";
+                adminLink.href = "admin.html";
+                adminLink.textContent = "Admin";
+                nav.append(adminLink);
+            }
+
+            // "Open PDF" goes to the page listing every PDF and its older versions.
             if (pdfLink) {
-                const pdfMenu = document.createElement("div");
-                pdfMenu.className = "wiki-pdf-menu";
-                pdfMenu.dataset.wikiInjected = "";
-                pdfMenu.setAttribute("role", "menu");
-                pdfMenu.hidden = true;
-                for (const pdf of pdfDocuments) {
-                    const item = document.createElement("a");
-                    item.href = pdf.href;
-                    item.target = "_blank";
-                    item.rel = "noopener";
-                    item.setAttribute("role", "menuitem");
-                    const name = document.createElement("strong");
-                    name.textContent = pdf.title;
-                    const updated = document.createElement("span");
-                    updated.textContent = `Last updated ${formatNewsDate(pdf.updated)}`;
-                    item.append(name, updated);
-                    pdfMenu.append(item);
+                pdfLink.href = "documents.html";
+                for (const name of ["target", "rel", "aria-haspopup", "aria-expanded"]) {
+                    pdfLink.removeAttribute(name);
                 }
-                pdfLink.after(pdfMenu);
-                pdfLink.setAttribute("aria-haspopup", "menu");
-                pdfLink.setAttribute("aria-expanded", "false");
-                const showPdfMenu = (open) => {
-                    pdfMenu.hidden = !open;
-                    pdfLink.setAttribute("aria-expanded", String(open));
-                    if (open) {
-                        pdfMenu.style.left = `${Math.max(0, Math.min(pdfLink.offsetLeft, nav.clientWidth - pdfMenu.offsetWidth - 8))}px`;
-                        pdfMenu.style.top = `${pdfLink.offsetTop + pdfLink.offsetHeight + 6}px`;
-                    }
-                };
-                pdfLink.addEventListener("click", (event) => {
-                    event.preventDefault();
-                    showPdfMenu(pdfMenu.hidden);
-                });
-                pdfMenu.addEventListener("click", () => showPdfMenu(false));
-                document.addEventListener("click", (event) => {
-                    if (!pdfMenu.hidden && event.target !== pdfLink && !pdfMenu.contains(event.target)) {
-                        showPdfMenu(false);
-                    }
-                });
-                document.addEventListener("keydown", (event) => {
-                    if (event.key === "Escape" && !pdfMenu.hidden) {
-                        showPdfMenu(false);
-                        pdfLink.focus();
-                    }
-                });
             }
         }
     }
@@ -568,6 +595,7 @@
             <button type="button" data-command="textBox" title="Insert a text box">+ Text box</button>
             <button type="button" data-command="codeBox" title="Insert a code box">+ Code box</button>
             <button type="button" data-command="table" title="Insert a table">+ Table</button>
+            <button type="button" data-command="rawHtml" title="Insert a block of raw HTML">+ HTML</button>
             <button type="button" data-command="link" title="Add a link">Link</button>
             <button type="button" data-command="image" title="Insert an image from a URL">Image</button>
             <button type="button" data-command="insertHorizontalRule" title="Insert a divider line">Divider</button>
@@ -680,7 +708,7 @@
 
     function stripStyles(container) {
         for (const element of [...container.querySelectorAll("*")]) {
-            if (element.closest("[data-wiki-island]")) {
+            if (element.closest("[data-wiki-island], .wiki-raw-html")) {
                 continue;
             }
             if (isStyleElement(element)) {
@@ -832,6 +860,9 @@
                 document.execCommand("styleWithCSS", false, true);
                 document.execCommand(command, false, value);
                 document.execCommand("styleWithCSS", false, false);
+                break;
+            case "rawHtml":
+                openRawHtmlDialog(null);
                 break;
             case "textBox":
                 insertBlock(`<div class="wiki-textbox"><p>${escapeHtml(selectedText()) || "New text box"}</p></div>`);
@@ -1013,6 +1044,346 @@
         }
     });
 
+    function markRawBlocks(value) {
+        for (const block of root.querySelectorAll(".wiki-raw-html")) {
+            if (value) {
+                block.contentEditable = "false";
+                block.title = "HTML block: click to edit its HTML";
+            } else {
+                block.removeAttribute("contenteditable");
+                block.removeAttribute("title");
+            }
+        }
+    }
+
+    // Write or change a block of raw HTML. block is null for a new one.
+    function openRawHtmlDialog(block) {
+        const dialog = document.createElement("dialog");
+        dialog.className = "wiki-dialog wiki-raw-html-dialog";
+        dialog.dataset.wikiInjected = "";
+        dialog.innerHTML = `
+            <form method="dialog">
+                <h2>${block ? "Edit HTML block" : "Insert HTML"}</h2>
+                <label for="wiki-raw-html-source">HTML</label>
+                <textarea id="wiki-raw-html-source" rows="14" spellcheck="false" class="consolas"></textarea>
+                <p class="wiki-dialog-hint">Any HTML tags work, including &lt;style&gt;, &lt;iframe&gt; and forms. Scripts, onclick-style attributes and javascript: links are removed when the block is saved.</p>
+                <div class="wiki-dialog-actions">
+                    ${block ? '<button type="button" data-raw="delete">Delete block</button>' : ""}
+                    <button type="button" data-raw="cancel">Cancel</button>
+                    <button type="submit" class="wiki-primary">${block ? "Update" : "Insert"}</button>
+                </div>
+            </form>
+        `;
+        const source = dialog.querySelector("textarea");
+        source.value = block ? cleanRawHtml(block.innerHTML).trim() : "";
+        dialog.querySelector('[data-raw="cancel"]').addEventListener("click", () => dialog.close());
+        dialog.querySelector('[data-raw="delete"]')?.addEventListener("click", () => {
+            block.remove();
+            dialog.close();
+        });
+        dialog.querySelector("form").addEventListener("submit", (event) => {
+            event.preventDefault();
+            const markup = cleanRawHtml(source.value).trim();
+            dialog.close();
+            if (!markup) {
+                return;
+            }
+            if (block) {
+                block.innerHTML = markup;
+            } else {
+                restoreSelection();
+                insertBlock(`<div class="wiki-raw-html">${markup}</div>`);
+                markRawBlocks(true);
+                document.getSelection().removeAllRanges();
+            }
+            status.textContent = source.value.trim() === markup ? "HTML block saved." : "HTML block saved. Parts that could run scripts were removed.";
+        });
+        dialog.addEventListener("close", () => dialog.remove());
+        document.body.append(dialog);
+        dialog.showModal();
+        source.focus();
+    }
+
+    root.addEventListener("click", (event) => {
+        const block = editing && event.target.closest(".wiki-raw-html");
+        if (block && root.contains(block)) {
+            event.preventDefault();
+            openRawHtmlDialog(block);
+        }
+    });
+
+    // Reviewers' page edits ---------------------------------------------------------------------------------
+    // When a reviewer commits a page, every paragraph or block they added, changed or deleted is wrapped in a
+    // <div class="wiki-pending"> that remembers the original. It shows in red until an admin approves it (the
+    // change stays) or disapproves it (the original comes back).
+    const pendingPagesFile = "pending-pages.json";
+    const pendingSelector = "div.wiki-pending";
+    const draftPrefix = /^\[draft\]\s*/i;
+
+    function pendingWrapper(inner, original, name, date, removal = false) {
+        const wrapper = document.createElement("div");
+        wrapper.className = removal ? "wiki-pending wiki-pending-removal" : "wiki-pending";
+        wrapper.dataset.pendingBy = name;
+        wrapper.dataset.pendingDate = date;
+        wrapper.dataset.original = encodeBase64(original);
+        wrapper.innerHTML = inner;
+        return wrapper.outerHTML;
+    }
+
+    function topLevelBlocks(markup) {
+        const template = document.createElement("template");
+        template.innerHTML = markup;
+        return [...template.content.childNodes]
+            .filter((node) => node.nodeType === Node.ELEMENT_NODE || node.textContent.trim())
+            .map((node) => node.nodeType === Node.ELEMENT_NODE ? node.outerHTML : escapeHtml(node.textContent));
+    }
+
+    const isPendingMarkup = (markup) => /^<div class="wiki-pending[" ]/.test(markup);
+
+    // Compares the page as committed with the reviewer's version, block by block (longest common subsequence),
+    // and wraps whatever differs.
+    function markPendingChanges(baseMarkup, newMarkup, name) {
+        const before = topLevelBlocks(baseMarkup);
+        const after = topLevelBlocks(newMarkup);
+        const lengths = Array.from({ length: before.length + 1 }, () => new Array(after.length + 1).fill(0));
+        for (let i = before.length - 1; i >= 0; i--) {
+            for (let j = after.length - 1; j >= 0; j--) {
+                lengths[i][j] = before[i] === after[j] ? lengths[i + 1][j + 1] + 1 : Math.max(lengths[i + 1][j], lengths[i][j + 1]);
+            }
+        }
+        const date = new Date().toISOString();
+        const output = [];
+        let removed = [];
+        let added = [];
+        const flush = () => {
+            // Blocks that were already waiting for review keep their wrapper and original
+            const keptPending = added.filter(isPendingMarkup);
+            const newBlocks = added.filter((markup) => !isPendingMarkup(markup));
+            const oldBlocks = removed.filter((markup) => !isPendingMarkup(markup));
+            // A deleted block that was itself waiting for review goes back to its original, marked for removal
+            for (const markup of removed.filter(isPendingMarkup)) {
+                const template = document.createElement("template");
+                template.innerHTML = markup;
+                const block = template.content.firstElementChild;
+                const stillThere = keptPending.some((kept) => kept.includes(`data-pending-date="${block.dataset.pendingDate}"`) && kept.includes(`data-pending-by="${escapeHtml(block.dataset.pendingBy || "")}"`));
+                const original = block.dataset.original ? decodeBase64(block.dataset.original) : "";
+                if (!stillThere && original) oldBlocks.push(original);
+            }
+            output.push(...keptPending);
+            const paired = Math.min(oldBlocks.length, newBlocks.length);
+            for (let index = 0; index < paired; index++) output.push(pendingWrapper(newBlocks[index], oldBlocks[index], name, date));
+            for (const markup of newBlocks.slice(paired)) output.push(pendingWrapper(markup, "", name, date));
+            for (const markup of oldBlocks.slice(paired)) output.push(pendingWrapper(markup, markup, name, date, true));
+            removed = [];
+            added = [];
+        };
+        let i = 0;
+        let j = 0;
+        while (i < before.length || j < after.length) {
+            if (i < before.length && j < after.length && before[i] === after[j]) {
+                flush();
+                output.push(after[j]);
+                i++;
+                j++;
+            } else if (j < after.length && (i >= before.length || lengths[i][j + 1] >= lengths[i + 1][j])) {
+                added.push(after[j++]);
+            } else {
+                removed.push(before[i++]);
+            }
+        }
+        flush();
+        return output.join("\n");
+    }
+
+    function pendingBlocks() {
+        return [...root.querySelectorAll(pendingSelector)];
+    }
+
+    function describePending(block) {
+        const when = block.dataset.pendingDate ? new Date(block.dataset.pendingDate).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "";
+        const kind = block.classList.contains("wiki-pending-removal") ? "Deletion" : block.dataset.original ? "Change" : "Addition";
+        return `${kind} by ${block.dataset.pendingBy || "a reviewer"}${when ? `, ${when}` : ""}`;
+    }
+
+    // Approving keeps the change; disapproving puts the original back (or drops an added block)
+    function resolvePending(block, approve) {
+        const removal = block.classList.contains("wiki-pending-removal");
+        if (approve) {
+            if (removal) {
+                block.remove();
+            } else {
+                block.replaceWith(...block.childNodes);
+            }
+        } else {
+            const template = document.createElement("template");
+            template.innerHTML = sanitizeMarkup(block.dataset.original ? decodeBase64(block.dataset.original) : "");
+            block.replaceWith(template.content);
+        }
+    }
+
+    async function updatePendingPages(token, change, message) {
+        return updateRepositoryJson(token, pendingPagesFile, (data) => {
+            data.pages = data.pages || {};
+            change(data.pages);
+        }, message);
+    }
+
+    // Commits the page after an admin approved or disapproved changes
+    async function commitReview(message, { approveDraft = false } = {}) {
+        const token = readToken();
+        if (!token || readRole() !== "admin" || await checkAccount(token) !== "admin") {
+            throw new Error("Only admins can approve changes. Log in as an admin.");
+        }
+        const title = getCurrentTitle();
+        if (approveDraft && draftPrefix.test(title)) {
+            const heading = root.querySelector("h1");
+            if (heading) heading.textContent = title.replace(draftPrefix, "");
+            document.title = document.title.replace(draftPrefix, "");
+        }
+        savedContent = serializeContent();
+        const existing = await getRepositoryFile(token, targetFile);
+        const pageHtml = buildPageHtml().replace(/\r?\n/g, !existing || existing.text.includes("\r\n") ? "\r\n" : "\n");
+        await putRepositoryFile(token, targetFile, pageHtml, message, existing?.sha);
+        try {
+            localStorage.removeItem(storageKey);
+        } catch {
+            // The draft simply stays in this browser.
+        }
+        if (approveDraft && draftPrefix.test(title)) {
+            const searchFile = await getRepositoryFile(token, "search.js");
+            const line = searchFile?.text.split("\n").find((text) => text.includes(`href: ${JSON.stringify(targetFile)}`));
+            if (line) {
+                const renamed = line.replace(`title: ${JSON.stringify(title)}`, `title: ${JSON.stringify(title.replace(draftPrefix, ""))}`);
+                await putRepositoryFile(token, "search.js", searchFile.text.replace(line, renamed), `Rename ${title} in search`, searchFile.sha);
+            }
+        }
+        if (!pendingBlocks().length) {
+            await updatePendingPages(token, (pages) => { delete pages[targetFile]; }, `Update review queue for ${title.replace(draftPrefix, "")} page`);
+        }
+    }
+
+    const reviewBanner = document.createElement("div");
+    reviewBanner.className = "wiki-review-banner";
+    reviewBanner.dataset.wikiInjected = "";
+    reviewBanner.hidden = true;
+    root.before(reviewBanner);
+
+    const reviewPopover = document.createElement("div");
+    reviewPopover.className = "wiki-review-popover";
+    reviewPopover.dataset.wikiInjected = "";
+    reviewPopover.hidden = true;
+    document.body.append(reviewPopover);
+
+    async function runReview(action, message, options) {
+        reviewPopover.hidden = true;
+        const before = root.innerHTML;
+        try {
+            action();
+            status.textContent = "Saving the review…";
+            await commitReview(message, options);
+            status.textContent = "Saved. The live site usually updates within a minute or two.";
+        } catch (error) {
+            root.innerHTML = before;
+            status.textContent = `Could not save the review: ${error.message}`;
+        }
+        renderReviewState();
+    }
+
+    function renderReviewState() {
+        const blocks = pendingBlocks();
+        const title = getCurrentTitle();
+        const isDraft = draftPrefix.test(title);
+        reviewBanner.hidden = !blocks.length && !isDraft;
+        if (reviewBanner.hidden) {
+            return;
+        }
+        const admin = readRole() === "admin";
+        reviewBanner.replaceChildren();
+        const text = document.createElement("span");
+        text.textContent = isDraft
+            ? `This is a draft page. ${blocks.length ? `${blocks.length} part${blocks.length === 1 ? "" : "s"} still need${blocks.length === 1 ? "s" : ""} an admin's approval.` : "Every part is approved; an admin can publish it."}`
+            : `${blocks.length} change${blocks.length === 1 ? "" : "s"} on this page ${blocks.length === 1 ? "is" : "are"} waiting for an admin's review and show${blocks.length === 1 ? "s" : ""} in red.`;
+        reviewBanner.append(text);
+        if (admin) {
+            const button = (label, className, onclick) => {
+                const element = document.createElement("button");
+                element.type = "button";
+                element.className = className;
+                element.textContent = label;
+                element.addEventListener("click", onclick);
+                reviewBanner.append(element);
+            };
+            const plain = title.replace(draftPrefix, "");
+            button(isDraft ? "Approve entire draft" : "Approve all", "wiki-review-approve", () => runReview(
+                () => pendingBlocks().forEach((block) => resolvePending(block, true)),
+                isDraft ? `${readAccount()} approves the draft ${plain} page` : `${readAccount()} approves all changes to ${plain} page`,
+                { approveDraft: isDraft }));
+            if (blocks.length) {
+                button("Disapprove all", "wiki-review-disapprove", () => {
+                    if (window.confirm(`Undo all ${blocks.length} pending change${blocks.length === 1 ? "" : "s"} on this page?`)) {
+                        runReview(() => pendingBlocks().forEach((block) => resolvePending(block, false)), `${readAccount()} disapproves all changes to ${plain} page`);
+                    }
+                });
+            }
+            const hint = document.createElement("span");
+            hint.className = "wiki-review-hint";
+            hint.textContent = "Click a red part to review it on its own.";
+            if (blocks.length) reviewBanner.append(hint);
+        }
+    }
+
+    function showReviewPopover(block) {
+        const plain = getCurrentTitle().replace(draftPrefix, "");
+        reviewPopover.replaceChildren();
+        const info = document.createElement("p");
+        info.textContent = describePending(block);
+        reviewPopover.append(info);
+        if (block.dataset.original && !block.classList.contains("wiki-pending-removal")) {
+            const original = document.createElement("details");
+            const summary = document.createElement("summary");
+            summary.textContent = "Show the original";
+            const body = document.createElement("div");
+            body.className = "wiki-review-original";
+            body.innerHTML = sanitizeMarkup(decodeBase64(block.dataset.original));
+            original.append(summary, body);
+            reviewPopover.append(original);
+        }
+        const actions = document.createElement("p");
+        for (const [label, className, approve] of [["Approve", "wiki-review-approve", true], ["Disapprove", "wiki-review-disapprove", false]]) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = className;
+            button.textContent = label;
+            button.addEventListener("click", () => runReview(() => resolvePending(block, approve),
+                `${readAccount()} ${approve ? "approves" : "disapproves"} a change to ${plain} page`));
+            actions.append(button);
+        }
+        const close = document.createElement("button");
+        close.type = "button";
+        close.textContent = "Close";
+        close.addEventListener("click", () => { reviewPopover.hidden = true; });
+        actions.append(close);
+        reviewPopover.append(actions);
+        const rect = block.getBoundingClientRect();
+        reviewPopover.style.top = `${window.scrollY + rect.bottom + 6}px`;
+        reviewPopover.style.left = `${Math.max(8, Math.min(window.scrollX + rect.left, window.scrollX + document.documentElement.clientWidth - 360))}px`;
+        reviewPopover.hidden = false;
+    }
+
+    root.addEventListener("click", (event) => {
+        if (editing || readRole() !== "admin") return;
+        const block = event.target.closest(pendingSelector);
+        if (block && root.contains(block) && !event.target.closest("a, button, input, select, textarea, summary")) {
+            showReviewPopover(block);
+        }
+    });
+    document.addEventListener("click", (event) => {
+        if (!reviewPopover.hidden && !reviewPopover.contains(event.target) && !event.target.closest(pendingSelector)) {
+            reviewPopover.hidden = true;
+        }
+    });
+    renderReviewState();
+
     function setEditing(value) {
         editing = value;
         document.body.classList.toggle("wiki-editing", value);
@@ -1022,11 +1393,13 @@
             islands.forEach((island) => {
                 island.contentEditable = "false";
             });
+            markRawBlocks(true);
             document.execCommand("defaultParagraphSeparator", false, "p");
         } else {
             root.removeAttribute("contenteditable");
             root.removeAttribute("spellcheck");
             islands.forEach((island) => island.removeAttribute("contenteditable"));
+            markRawBlocks(false);
             savedRange = null;
             buildTableOfContents();
         }
@@ -1312,6 +1685,9 @@
 
     newPageDialog.querySelector("form").addEventListener("submit", async (event) => {
         event.preventDefault();
+        if (readRole() === "reviewer" && !draftPrefix.test(newPageTitleInput.value.trim())) {
+            newPageTitleInput.value = `[draft] ${newPageTitleInput.value.trim()}`;
+        }
         const title = newPageTitleInput.value.trim();
         const author = newPageAuthorInput.value.trim();
         const file = dialogFileName();
@@ -1727,7 +2103,7 @@
     commitForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         const formData = new FormData(commitForm);
-        const message = String(formData.get("message")).trim();
+        let message = String(formData.get("message")).trim();
         const usingPassword = !passwordField.hidden;
         if (usingPassword ? !formData.get("password") : !readToken() && !String(formData.get("token")).trim()) {
             commitError.textContent = usingPassword ? "Enter the wiki password." : "Enter a GitHub token.";
@@ -1755,6 +2131,14 @@
             saveLocalPage({ title, file: newPageFile, href: getDraftPageHref(newPageFile, title), keywords });
         }
         try {
+            // Signed-in reviewers' edits are saved as pending changes for an admin to review
+            const role = readAccount() && readToken() ? await checkAccount(token) : "";
+            if (role === "reviewer") {
+                savedContent = markPendingChanges(originalContent, savedContent, readAccount());
+                applyContent(savedContent);
+                renderReviewState();
+                if (!message.endsWith("(needs review)")) message += " (needs review)";
+            }
             const existing = await getRepositoryFile(token, targetFile);
             if (newPageFile && existing) {
                 throw new Error(`${targetFile} already exists on GitHub. Create the page with a different title.`);
@@ -1762,6 +2146,11 @@
             // The repository stores pages with Windows (CRLF) line endings; match it so diffs only show real changes.
             const pageHtml = buildPageHtml().replace(/\r?\n/g, !existing || existing.text.includes("\r\n") ? "\r\n" : "\n");
             await putRepositoryFile(token, targetFile, pageHtml, message, existing?.sha);
+            if (role === "reviewer") {
+                await updatePendingPages(token, (pages) => {
+                    pages[targetFile] = { title, by: readAccount(), date: new Date().toISOString() };
+                }, `Update review queue for ${title} page`);
+            }
             if (!readToken() && formData.get(usingPassword ? "rememberPassword" : "remember")) {
                 try {
                     sessionStorage.setItem(tokenStorageKey, token);
@@ -1957,13 +2346,172 @@
 
     document.querySelector("#new-article-button")?.addEventListener("click", () => openNewPageDialog("news"));
 
-    // Shared data store for interactive pages (Ideas, Threads & Debates). Writes need the wiki password
-    // (or a token already unlocked in this tab) and are committed to a JSON file in the repository.
+    // Shared data store for interactive pages (Ideas, Threads & Debates, Bug Tracker). Writes need a wiki account.
+    // The wiki password (admins and editors) or the review password (reviewers) unlocks the shared GitHub token, and
+    // a personal password, checked against accounts.json, proves who you are. Reviewers' changes are saved marked
+    // as pending until an admin approves them. All of this runs in the browser, so it guides honest editors rather
+    // than locking anyone out: whoever can unlock the token could change the files directly.
+    const accountsFile = "accounts.json";
+    const reviewTokenFile = "wiki-token-review.json";
+    const accountIterations = 310000;
+    const roles = ["admin", "editor", "reviewer"];
+
+    function readSession(key) {
+        try {
+            return sessionStorage.getItem(key) || localStorage.getItem(key) || "";
+        } catch {
+            return "";
+        }
+    }
+
+    function readAccount() {
+        return readSession(accountStorageKey);
+    }
+
+    function readRole() {
+        return readToken() && readAccount() ? readSession(roleStorageKey) || "editor" : "";
+    }
+
+    function forgetAccount() {
+        for (const storage of [sessionStorage, localStorage]) {
+            try {
+                storage.removeItem(accountStorageKey);
+                storage.removeItem(roleStorageKey);
+            } catch {
+                // Storage blocked; nothing was saved there.
+            }
+        }
+    }
+
+    // Keeps the role next to wherever the sign-in was saved
+    function storeRole(role) {
+        for (const storage of [sessionStorage, localStorage]) {
+            try {
+                if (storage.getItem(accountStorageKey)) {
+                    storage.setItem(roleStorageKey, role);
+                }
+            } catch {
+                // Storage blocked; the role is checked again on the next save.
+            }
+        }
+    }
+
+    async function hashPersonalPassword(password, salt, iterations) {
+        const material = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+        const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations, hash: "SHA-256" }, material, 256);
+        return bytesToBase64(new Uint8Array(bits));
+    }
+
+    function accountKey(name) {
+        return name.trim().toLowerCase();
+    }
+
+    async function loadReviewToken() {
+        try {
+            const response = await fetch(reviewTokenFile, { cache: "no-store" });
+            return response.ok ? await response.json() : null;
+        } catch {
+            return null;
+        }
+    }
+
+    // The wiki password gives an admin or editor session, the review password a reviewer session
+    async function unlockEither(password) {
+        sharedToken = sharedToken || await loadSharedToken();
+        if (!sharedToken) {
+            throw new Error("The wiki password has not been set up yet.");
+        }
+        try {
+            return { token: await decryptToken(sharedToken, password), kind: "wiki" };
+        } catch {
+            const reviewToken = await loadReviewToken();
+            if (reviewToken) {
+                try {
+                    return { token: await decryptToken(reviewToken, password), kind: "review" };
+                } catch {
+                    // Neither password matched.
+                }
+            }
+            throw new Error("That isn't the wiki password or the review password.");
+        }
+    }
+
+    function blockedMessage(account) {
+        return account.blockedUntil && Date.parse(account.blockedUntil) > Date.now()
+            ? `${account.name} is blocked until ${new Date(account.blockedUntil).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}.`
+            : "";
+    }
+
+    async function readAccounts(token) {
+        return JSON.parse((await getRepositoryFile(token, accountsFile))?.text || "{}");
+    }
+
+    // Read and change a JSON file in the repository, retrying if someone else saved first.
+    async function updateRepositoryJson(token, file, change, message) {
+        for (let attempt = 0; ; attempt++) {
+            const current = await getRepositoryFile(token, file);
+            const data = current ? JSON.parse(current.text) : {};
+            change(data);
+            const text = `${JSON.stringify(data, null, 1)}\n`;
+            try {
+                await putRepositoryFile(token, file, text, message, current?.sha);
+                return data;
+            } catch (error) {
+                if (error.status === 401 || error.status === 403) {
+                    forgetToken();
+                    forgetAccount();
+                }
+                if (!(error.status === 409 || error.status === 422) || attempt >= 3) {
+                    throw error;
+                }
+            }
+        }
+    }
+
+    // Before every save, check the account still exists, isn't blocked, and pick up role changes
+    async function checkAccount(token) {
+        const account = (await readAccounts(token)).accounts?.[accountKey(readAccount())];
+        if (!account) {
+            forgetToken();
+            forgetAccount();
+            throw new Error("Your account no longer exists. Log in again.");
+        }
+        const blocked = blockedMessage(account);
+        if (blocked) {
+            throw new Error(blocked);
+        }
+        storeRole(account.role || "editor");
+        return account.role || "editor";
+    }
+
+    function rememberSignIn(token, name, role, remember) {
+        forgetToken();
+        forgetAccount();
+        try {
+            const storage = remember ? localStorage : sessionStorage;
+            storage.setItem(tokenStorageKey, token);
+            storage.setItem(accountStorageKey, name);
+            storage.setItem(roleStorageKey, role);
+            localStorage.setItem(authorStorageKey, name);
+        } catch {
+            // Not remembered; sign in again next time.
+        }
+    }
+
+    function requireAdmin() {
+        if (readRole() !== "admin") {
+            throw new Error("Only admins can do that.");
+        }
+        return readToken();
+    }
+
     window.wikiStore = {
         repositoryUrl: `https://github.com/${repository.owner}/${repository.name}`,
+        roles,
         isUnlocked: () => Boolean(readToken()),
+        isSignedIn: () => Boolean(readToken() && readAccount()),
         hasSharedToken: async () => Boolean(sharedToken || (sharedToken = await loadSharedToken())),
-        // remember: keep the unlock on this device (one-time verification) instead of only this tab.
+        // Turns the wiki password into the shared GitHub token. remember keeps it on this device instead of only this tab.
         async unlock(password, remember = false) {
             const existing = readToken();
             if (existing) {
@@ -1981,41 +2529,104 @@
             }
             return token;
         },
-        forget: forgetToken,
-        getAuthor() {
-            try {
-                return localStorage.getItem(authorStorageKey) || "";
-            } catch {
-                return "";
+        async login(name, password, personalPassword, remember = false) {
+            const { token, kind } = await unlockEither(password);
+            const account = (await readAccounts(token)).accounts?.[accountKey(name)];
+            if (!account) {
+                throw new Error(`There's no account named "${name}". Register it first.`);
             }
-        },
-        setAuthor(name) {
-            try {
-                localStorage.setItem(authorStorageKey, name);
-            } catch {
-                // The name is asked again next time.
+            if (await hashPersonalPassword(personalPassword, base64ToBytes(account.salt), account.iterations) !== account.hash) {
+                throw new Error("That personal password is wrong.");
             }
+            const role = account.role || "editor";
+            if (kind === "review" && role !== "reviewer") {
+                throw new Error("Admins and editors log in with the wiki password, not the review password.");
+            }
+            const blocked = blockedMessage(account);
+            if (blocked) {
+                throw new Error(blocked);
+            }
+            rememberSignIn(token, account.name, role, remember);
+            return { name: account.name, role };
         },
-        // Read the JSON file from GitHub, apply change(data) and commit it, retrying if someone else saved first.
-        async updateJson(file, change, message, password) {
-            const token = await this.unlock(password);
-            for (let attempt = 0; ; attempt++) {
-                const current = await getRepositoryFile(token, file);
-                const data = current ? JSON.parse(current.text) : {};
-                change(data);
-                const text = `${JSON.stringify(data, null, 1)}\n`;
-                try {
-                    await putRepositoryFile(token, file, text, message, current?.sha);
-                    return data;
-                } catch (error) {
-                    if (error.status === 401 || error.status === 403) {
-                        this.forget();
-                    }
-                    if (!(error.status === 409 || error.status === 422) || attempt >= 3) {
-                        throw error;
-                    }
+        async register(name, password, personalPassword, remember = false) {
+            name = name.trim().replace(/\s+/g, " ");
+            if (!/^[\p{L}\p{N}][\p{L}\p{N} _.-]{1,23}$/u.test(name)) {
+                throw new Error("Usernames are 2 to 24 letters, numbers, spaces, dots, dashes or underscores.");
+            }
+            if (personalPassword.length < 6) {
+                throw new Error("Your personal password needs at least 6 characters.");
+            }
+            const { token, kind } = await unlockEither(password);
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const hash = await hashPersonalPassword(personalPassword, salt, accountIterations);
+            let role = "reviewer";
+            await updateRepositoryJson(token, accountsFile, (data) => {
+                data.accounts = data.accounts || {};
+                if (data.accounts[accountKey(name)]) {
+                    throw new Error(`The username "${data.accounts[accountKey(name)].name}" is taken. Log in instead, or pick another.`);
                 }
+                // The review password makes reviewers; the wiki password makes editors, or admins for the names listed in "admins"
+                role = kind === "review" ? "reviewer" : (data.admins || []).includes(accountKey(name)) ? "admin" : "editor";
+                data.accounts[accountKey(name)] = {
+                    name, role, salt: bytesToBase64(salt), iterations: accountIterations, hash, created: new Date().toISOString()
+                };
+            }, `Register account: ${name}`);
+            rememberSignIn(token, name, role, remember);
+            return { name, role };
+        },
+        signOut() {
+            forgetToken();
+            forgetAccount();
+        },
+        forget() {
+            this.signOut();
+        },
+        // The signed-in account's name, or "" when signed out
+        getAuthor() {
+            return readToken() ? readAccount() : "";
+        },
+        // "admin", "editor" or "reviewer" while signed in, otherwise ""
+        getRole: readRole,
+        isAdmin: () => readRole() === "admin",
+        isReviewer: () => readRole() === "reviewer",
+        // Sends people to the login page, coming back here afterwards
+        loginHref(next = location.pathname.split("/").pop() + location.search + location.hash) {
+            return `login.html?${new URLSearchParams({ next })}`;
+        },
+        // Read the JSON file from GitHub, apply change(data, role) and commit it, retrying if someone else saved first.
+        // A reviewer's commit is marked as needing review.
+        async updateJson(file, change, message) {
+            const token = readToken();
+            if (!token || !readAccount()) {
+                throw new Error("Log in to save changes.");
             }
+            const role = await checkAccount(token);
+            return updateRepositoryJson(token, file, (data) => change(data, role), role === "reviewer" ? `${message} (needs review)` : message);
+        },
+        // Admin tools ---------------------------------------------------------------------------
+        async readAccounts() {
+            return readAccounts(requireAdmin());
+        },
+        async updateAccounts(change, message) {
+            const token = requireAdmin();
+            await checkAccount(token);
+            if (readRole() !== "admin") {
+                throw new Error("Only admins can do that.");
+            }
+            return updateRepositoryJson(token, accountsFile, change, message);
+        },
+        hasReviewPassword: async () => Boolean(await loadReviewToken()),
+        // Saves a copy of the GitHub token locked with the review password, so reviewers can register and log in
+        async setReviewPassword(password) {
+            const token = requireAdmin();
+            await checkAccount(token);
+            if (password.length < 8) {
+                throw new Error("Use at least 8 characters for the review password.");
+            }
+            const encrypted = await encryptToken(token, password);
+            const existing = await getRepositoryFile(token, reviewTokenFile);
+            await putRepositoryFile(token, reviewTokenFile, `${JSON.stringify(encrypted, null, 2)}\n`, `${readAccount()} sets the review password`, existing?.sha);
         }
     };
     document.dispatchEvent(new Event("wiki-store-ready"));

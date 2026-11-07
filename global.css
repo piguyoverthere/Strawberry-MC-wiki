@@ -716,38 +716,6 @@ tfoot {
 .site-header nav{
     position:relative
 }
-.wiki-pdf-menu{
-    position:absolute;
-    z-index:30;
-    display:flex;
-    flex-direction:column;
-    min-width:240px;
-    padding:4px 0;
-    border:1px solid #a2a9b1;
-    border-radius:4px;
-    background:#ffffff;
-    box-shadow:0 6px 16px rgba(0,0,0,0.25);
-    text-shadow:none
-}
-.wiki-pdf-menu[hidden]{
-    display:none
-}
-.site-header nav .wiki-pdf-menu a{
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-    padding:8px 14px;
-    color:#202122
-}
-.site-header nav .wiki-pdf-menu a:hover,
-.site-header nav .wiki-pdf-menu a:focus{
-    background:#eaecf0;
-    text-decoration:none
-}
-.wiki-pdf-menu span{
-    color:#54595d;
-    font-size:.85em
-}
 .controversy-toolbar{
     display:flex;
     flex-wrap:wrap;
@@ -1039,7 +1007,8 @@ span.controversy-time[title]{
     color:#0b4a8b
 }
 .notification-badge-vote,
-.notification-badge-idea{
+.notification-badge-idea,
+.notification-badge-bug{
     background:#fef6e7;
     color:#7a4b00
 }
@@ -1053,4 +1022,381 @@ span.controversy-time[title]{
 }
 .notification-more{
     margin:14px 0
+}
+.pdf-document{
+    padding:4px 0 14px;
+    border-bottom:1px solid #d5e5ea
+}
+.pdf-version{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px 14px
+}
+.pdf-version .wiki-primary-button{
+    text-decoration:none
+}
+.pdf-version-date{
+    color:#54595d;
+    font-size:.92em
+}
+.pdf-older summary{
+    color:#0645ad;
+    cursor:pointer
+}
+.login-card{
+    max-width:440px;
+    padding:16px 20px;
+    border:1px solid #a2a9b1;
+    background:#ffffff
+}
+.login-card h2{
+    margin-top:0
+}
+.login-tabs{
+    display:flex;
+    gap:4px;
+    margin:0 0 12px;
+    border-bottom:1px solid #a2a9b1
+}
+.login-tabs button{
+    padding:8px 14px;
+    border:1px solid transparent;
+    border-bottom:none;
+    background:none;
+    color:#0645ad;
+    cursor:pointer;
+    font:inherit;
+    margin-bottom:-1px
+}
+.login-tabs .login-tab-active{
+    border-color:#a2a9b1;
+    background:#ffffff;
+    color:#202122;
+    font-weight:600
+}
+.login-field{
+    margin:0 0 10px
+}
+.login-field label{
+    display:block;
+    margin-bottom:4px;
+    font-weight:600
+}
+.login-field input{
+    box-sizing:border-box;
+    width:100%;
+    padding:8px;
+    border:1px solid #a2a9b1;
+    border-radius:2px;
+    font:inherit
+}
+.login-field .wiki-dialog-hint{
+    margin:4px 0 0
+}
+.login-actions{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px 12px
+}
+.login-actions .wiki-primary-button{
+    text-decoration:none
+}
+.bug-stats{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:16px 0 4px
+}
+.bug-stat{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    min-width:84px;
+    padding:6px 12px;
+    border:1px solid #a2a9b1;
+    border-radius:4px;
+    background:#ffffff;
+    color:#202122;
+    font:inherit;
+    text-align:left
+}
+button.bug-stat{
+    cursor:pointer
+}
+.bug-stat strong{
+    font-size:1.4em;
+    line-height:1.2
+}
+.bug-stat span{
+    color:#54595d;
+    font-size:.85em
+}
+.bug-stat-active{
+    border-color:#0056b3;
+    box-shadow:inset 0 0 0 1px #0056b3
+}
+.bug-stat-critical strong{
+    color:#9b1c1c
+}
+.bug-badge{
+    margin:0 0 0 6px
+}
+.bug-status-unresolved{
+    background:#fee7e6;
+    color:#9b1c1c
+}
+.bug-status-reviewing{
+    background:#fef6e7;
+    color:#7a4b00
+}
+.bug-status-confirmed{
+    background:#eaf3ff;
+    color:#0b4a8b
+}
+.bug-status-resolved{
+    background:#d5fdf4;
+    color:#14866d
+}
+.bug-status-intended{
+    background:#eaecf0;
+    color:#202122
+}
+.bug-severity-critical{
+    background:#9b1c1c;
+    color:#ffffff
+}
+.bug-severity-major{
+    background:#fde2c8;
+    color:#7a3300
+}
+.bug-severity-minor{
+    background:#eaecf0;
+    color:#3a3f44
+}
+.bug-card-resolved,
+.bug-card-intended{
+    opacity:.85
+}
+.bug-meta{
+    margin:6px 0
+}
+.bug-steps ol{
+    margin:.3em 0 .6em
+}
+.bug-controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 16px;
+    margin:8px 0;
+    font-size:.95em
+}
+.bug-picker select{
+    padding:4px 6px;
+    border:1px solid #a2a9b1;
+    border-radius:2px;
+    background:#ffffff;
+    font:inherit
+}
+.bug-details summary{
+    color:#0645ad;
+    cursor:pointer
+}
+.bug-comments,
+.bug-history{
+    margin:6px 0;
+    padding-left:20px;
+    font-size:.92em
+}
+.bug-comments li{
+    margin:6px 0
+}
+.bug-comments p{
+    margin:.2em 0
+}
+.bug-history{
+    color:#54595d
+}
+.wiki-editing .wiki-raw-html{
+    outline:2px dashed #7a4b00;
+    outline-offset:2px;
+    cursor:pointer
+}
+.wiki-editing .wiki-raw-html:hover{
+    outline-color:#0056b3
+}
+.wiki-raw-html-dialog textarea{
+    box-sizing:border-box;
+    width:100%;
+    min-width:min(640px, 80vw);
+    font-size:13px
+}
+.wiki-pending,
+.wiki-pending *,
+.wiki-pending-item,
+.wiki-pending-item .idea-description,
+.wiki-pending-item h3{
+    color:#b3261e !important
+}
+.wiki-pending{
+    margin:4px 0;
+    padding:2px 0 2px 10px;
+    border-left:3px solid #b3261e
+}
+.wiki-pending-removal{
+    text-decoration:line-through
+}
+.wiki-pending-item{
+    border-left:3px solid #b3261e
+}
+li.wiki-pending-item{
+    padding-left:8px
+}
+.wiki-review-bar{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:6px 10px;
+    margin:6px 0;
+    color:#b3261e;
+    font-size:.9em;
+    font-weight:600
+}
+.wiki-review-bar button,
+.wiki-review-banner button,
+.wiki-review-popover button{
+    padding:4px 10px;
+    border:1px solid #a2a9b1;
+    border-radius:4px;
+    background:#ffffff;
+    color:#202122;
+    cursor:pointer;
+    font:600 13px/1.2 Arial, Helvetica, sans-serif
+}
+.wiki-review-bar .wiki-review-approve,
+.wiki-review-banner .wiki-review-approve,
+.wiki-review-popover .wiki-review-approve{
+    border-color:#14866d;
+    background:#14866d;
+    color:#ffffff
+}
+.wiki-review-bar .wiki-review-disapprove,
+.wiki-review-banner .wiki-review-disapprove,
+.wiki-review-popover .wiki-review-disapprove{
+    border-color:#b3261e;
+    background:#b3261e;
+    color:#ffffff
+}
+.wiki-review-banner{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px 12px;
+    margin:12px 20px 0;
+    padding:10px 14px;
+    border:1px solid #e3a8a3;
+    border-radius:4px;
+    background:#fdecea;
+    color:#7a1c14
+}
+.wiki-review-banner[hidden],
+.wiki-review-popover[hidden]{
+    display:none
+}
+.wiki-review-hint{
+    font-size:.88em
+}
+.wiki-review-popover{
+    position:absolute;
+    z-index:40;
+    width:340px;
+    max-width:calc(100vw - 16px);
+    box-sizing:border-box;
+    padding:8px 12px;
+    border:1px solid #a2a9b1;
+    border-radius:4px;
+    background:#ffffff;
+    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+    color:#202122
+}
+.wiki-review-popover p{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin:6px 0
+}
+.wiki-review-original{
+    max-height:200px;
+    overflow:auto;
+    padding:4px 8px;
+    border:1px solid #d5e5ea;
+    background:#f8f9fa
+}
+body:not(.wiki-editing) .wiki-pending{
+    cursor:default
+}
+.role-badge{
+    margin:0
+}
+.role-admin{
+    background:#fee7e6;
+    color:#9b1c1c
+}
+.role-editor{
+    background:#eaf3ff;
+    color:#0b4a8b
+}
+.role-reviewer{
+    background:#fef6e7;
+    color:#7a4b00
+}
+.admin-section{
+    margin:0 0 24px
+}
+.admin-table-wrap{
+    overflow-x:auto
+}
+.admin-table{
+    border-collapse:collapse;
+    min-width:100%
+}
+.admin-table th,
+.admin-table td{
+    padding:6px 10px;
+    border-bottom:1px solid #d5e5ea;
+    text-align:left;
+    vertical-align:middle
+}
+.admin-actions span{
+    display:inline-flex;
+    flex-wrap:wrap;
+    gap:6px;
+    align-items:center
+}
+.admin-actions button,
+.admin-actions input{
+    padding:4px 8px;
+    font:inherit
+}
+.admin-blocked{
+    color:#b3261e;
+    font-weight:600
+}
+.notification-review-label{
+    margin-left:8px;
+    padding:1px 6px;
+    border-radius:3px;
+    background:#b3261e;
+    color:#ffffff;
+    font-size:.75em;
+    font-weight:600
+}
+.notification-approve .notification-badge-review{
+    background:#d5fdf4;
+    color:#14866d
+}
+.notification-disapprove .notification-badge-review{
+    background:#fee7e6;
+    color:#9b1c1c
 }

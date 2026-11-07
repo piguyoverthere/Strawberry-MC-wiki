@@ -17,6 +17,9 @@
         ["idea", "New ideas"],
         ["comment", "Idea comments"],
         ["thread", "Threads & debates"],
+        ["bug", "Bugs"],
+        ["review", "Reviews"],
+        ["account", "Accounts"],
         ["site", "Site updates"]
     ];
     const typeLabels = Object.fromEntries(types);
@@ -62,6 +65,11 @@
 
     // Ideas and threads are linked by id, looked up from their title
     let controversy = { ideas: new Map(), discussions: new Map() };
+    let bugIds = new Map();
+    function bugHref(title) {
+        const id = bugIds.get(title);
+        return id ? `bugs.html#${id}` : "bugs.html";
+    }
     function ideaHref(title) {
         const id = controversy.ideas.get(title);
         return id ? `ideas.html#${id}` : "ideas.html";
@@ -73,9 +81,19 @@
 
     // Turns a commit message into an update, or null for bookkeeping commits nobody needs to see
     function describe(message) {
-        const line = message.split("\n")[0].trim();
+        const update = describeLine(message.split("\n")[0].trim().replace(/ \(needs review\)$/, ""));
+        if (update && / \(needs review\)$/.test(message.split("\n")[0].trim())) update.needsReview = true;
+        return update;
+    }
+
+    function describeLine(line) {
         let match;
-        if ((match = line.match(/^Add .+ to search$/))) return null;
+        if (/^Add .+ to search$|^Rename .+ in search$|^Update review queue for /.test(line)) return null;
+        if ((match = line.match(/^([^:]+?) (approves|disapproves) ((?:idea|bug): .+|comment by .+|reply by .+|.+'s vote on idea: .+|(?:a change|all changes) to .+ page|the draft .+ page)$/)))
+            return { type: "review", who: match[1], text: ` ${match[2]} `, target: match[3], href: null, vote: match[2] === "approves" ? "approve" : "disapprove" };
+        if ((match = line.match(/^([^:]+?) sets role of ([^:]+) to (admin|editor|reviewer)$/))) return { type: "account", who: match[1], text: ` made ${match[2]} ${match[3] === "admin" ? "an admin" : match[3] === "editor" ? "an editor" : "a reviewer"}`, target: "", href: null };
+        if ((match = line.match(/^([^:]+?) (blocks [^:]+ until .+|unblocks [^:]+)$/))) return { type: "account", who: match[1], text: ` ${match[2]}`, target: "", href: null };
+        if ((match = line.match(/^([^:]+?) sets the review password$/))) return { type: "account", who: match[1], text: " set the review password", target: "", href: null };
         if ((match = line.match(/^Create (.+) page$/))) return { type: "page-new", text: "New page: ", target: match[1], page: true };
         if ((match = line.match(/^Update (.+) page$/))) return { type: "page-edit", text: "Page changed: ", target: match[1], page: true };
         if ((match = line.match(/^Add (.+) to news$/))) return { type: "news", text: "News article: ", target: match[1], href: "news.html" };
@@ -86,6 +104,11 @@
         if ((match = line.match(/^(.+?) replies in: (.+)$/))) return { type: "thread", who: match[1], text: " replied in ", target: match[2], href: discussionHref(match[2]) };
         if ((match = line.match(/^(.+?) starts (debate|thread): (.+)$/)))
             return { type: "thread", who: match[1], text: ` started a ${match[2]}: `, target: match[3], href: discussionHref(match[3]) };
+        if ((match = line.match(/^(.+?) reports bug: (.+)$/))) return { type: "bug", who: match[1], text: " reported a bug: ", target: match[2], href: bugHref(match[2]) };
+        if ((match = line.match(/^(.+?) sets bug (status|severity) to (.+?): (.+)$/)))
+            return { type: "bug", who: match[1], text: ` set ${match[2]} to ${match[3]} on `, target: match[4], href: bugHref(match[4]) };
+        if ((match = line.match(/^(.+?) comments on bug: (.+)$/))) return { type: "bug", who: match[1], text: " commented on bug ", target: match[2], href: bugHref(match[2]) };
+        if ((match = line.match(/^Register account: (.+)$/))) return { type: "account", who: match[1], text: " joined the wiki", target: "", href: null };
         return { type: "site", text: "", target: line, href: null };
     }
 
@@ -140,6 +163,7 @@
                     update.text,
                     href ? element("a", { href }, update.target) : update.target,
                     update.count > 1 ? element("span", { className: "notification-count" }, ` ×${update.count}`) : null,
+                    update.needsReview ? element("span", { className: "notification-review-label" }, "Needs review") : null,
                     update.isNew ? element("span", { className: "notification-new-label" }, "New") : null),
                 element("time", { className: "notification-time", datetime: update.date }, formatTime(update.date)));
         }));
@@ -191,16 +215,17 @@
     // Page links need search.js, which wiki-editor.js adds once the page has loaded
     window.addEventListener("load", () => { if (updates.length) render(); }, { once: true });
 
-    // Load the idea and thread ids first so their links go straight to them
-    fetch("controversy.json", { cache: "no-store" })
-        .then((response) => response.ok ? response.json() : null)
-        .then((data) => {
-            if (!data) return;
+    // Load the idea, thread and bug ids first so their links go straight to them
+    const json = (file) => fetch(file, { cache: "no-store" }).then((response) => response.ok ? response.json() : null).catch(() => null);
+    Promise.all([json("controversy.json"), json("bugs.json")]).then(([ideas, bugs]) => {
+        if (ideas) {
             controversy = {
-                ideas: new Map((data.ideas || []).map((idea) => [idea.title, idea.id])),
-                discussions: new Map((data.discussions || []).map((discussion) => [discussion.title, discussion.id]))
+                ideas: new Map((ideas.ideas || []).map((idea) => [idea.title, idea.id])),
+                discussions: new Map((ideas.discussions || []).map((discussion) => [discussion.title, discussion.id]))
             };
-        })
-        .catch(() => {})
-        .finally(() => load());
+        }
+        if (bugs) {
+            bugIds = new Map((bugs.bugs || []).map((bug) => [bug.title, bug.id]));
+        }
+    }).finally(() => load());
 })();
