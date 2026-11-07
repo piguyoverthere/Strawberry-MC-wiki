@@ -1387,9 +1387,20 @@
 
     function readToken() {
         try {
-            return sessionStorage.getItem(tokenStorageKey);
+            return sessionStorage.getItem(tokenStorageKey) || localStorage.getItem(tokenStorageKey);
         } catch {
             return null;
+        }
+    }
+
+    // Forget the unlocked token in this tab and on this device ("Remember me").
+    function forgetToken() {
+        for (const storage of [sessionStorage, localStorage]) {
+            try {
+                storage.removeItem(tokenStorageKey);
+            } catch {
+                // Storage blocked; nothing was saved there.
+            }
         }
     }
 
@@ -1491,7 +1502,7 @@
 
     commitDialog.querySelector('[data-action="forget-token"]').addEventListener("click", () => {
         try {
-            sessionStorage.removeItem(tokenStorageKey);
+            forgetToken();
         } catch {
             // Nothing stored.
         }
@@ -1794,7 +1805,7 @@
         } catch (error) {
             if (error instanceof GitHubError && error.status === 401) {
                 try {
-                    sessionStorage.removeItem(tokenStorageKey);
+                    forgetToken();
                 } catch {
                     // Nothing stored.
                 }
@@ -1946,7 +1957,8 @@
         repositoryUrl: `https://github.com/${repository.owner}/${repository.name}`,
         isUnlocked: () => Boolean(readToken()),
         hasSharedToken: async () => Boolean(sharedToken || (sharedToken = await loadSharedToken())),
-        async unlock(password) {
+        // remember: keep the unlock on this device (one-time verification) instead of only this tab.
+        async unlock(password, remember = false) {
             const existing = readToken();
             if (existing) {
                 return existing;
@@ -1957,19 +1969,13 @@
             }
             const token = await decryptToken(sharedToken, password);
             try {
-                sessionStorage.setItem(tokenStorageKey, token);
+                (remember ? localStorage : sessionStorage).setItem(tokenStorageKey, token);
             } catch {
-                // Not remembered for this tab; the password is asked again next time.
+                // Not remembered; the password is asked again next time.
             }
             return token;
         },
-        forget() {
-            try {
-                sessionStorage.removeItem(tokenStorageKey);
-            } catch {
-                // Nothing stored.
-            }
-        },
+        forget: forgetToken,
         getAuthor() {
             try {
                 return localStorage.getItem(authorStorageKey) || "";

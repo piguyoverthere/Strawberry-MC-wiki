@@ -945,3 +945,47 @@ tfoot {
     height:3em;
     background:linear-gradient(rgba(255,255,255,0), #ffffff)
 }
+.controversy-time{
+    color:#54595d;
+    white-space:nowrap
+}
+time.controversy-time,
+span.controversy-time[title]{
+    cursor:help
+}
+.controversy-account{
+    margin:0 0 12px;
+    color:#54595d;
+    font-size:.92em
+}
+.idea-replies{
+    margin:8px 0 0;
+    padding:0 0 0 12px;
+    border-left:3px solid #eaecf0;
+    list-style:none
+}
+.idea-replies li{
+    padding:4px 0
+}
+.idea-comment-form,
+.idea-replies + .idea-comment-form{
+    display:flex;
+    gap:6px;
+    margin-top:8px
+}
+.idea-comment-form input{
+    flex:1;
+    min-width:0;
+    padding:6px 8px;
+    border:1px solid #a2a9b1;
+    border-radius:2px;
+    font:inherit
+}
+.idea-comment-form button{
+    padding:6px 12px;
+    border:1px solid #a2a9b1;
+    border-radius:2px;
+    background:#f8f9fa;
+    cursor:pointer;
+    font:600 13px/1.2 Arial, Helvetica, sans-serif
+}

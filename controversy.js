@@ -31,6 +31,31 @@
             : parsed.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
     }
 
+    // Things copied from the document have no time of their own; this is when it was synced.
+    const documentSynced = "2026-11-05";
+
+    // A <time> element: date and time for things posted on the site, date only for plain dates.
+    function timestamp(value, prefix = "") {
+        const parsed = new Date(value.length === 10 ? `${value}T00:00:00` : value);
+        if (Number.isNaN(parsed.getTime())) {
+            return element("span", { text: `${prefix}${value}` });
+        }
+        const day = parsed.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+        const text = value.length === 10
+            ? day
+            : `${day}, ${parsed.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
+        return element("time", {
+            className: "controversy-time",
+            datetime: value,
+            title: value.length === 10 ? formatDate(value) : parsed.toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" }),
+            text: `${prefix}${text}`
+        });
+    }
+
+    function fromDocument() {
+        return element("span", { className: "controversy-time", title: `Copied from the MC Controversy Resolver, synced ${formatDate(documentSynced)}`, text: "from the document" });
+    }
+
     function newId(prefix) {
         return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
     }
@@ -72,18 +97,19 @@
         data.discussions = data.discussions || [];
     }
 
-    // Sign-in dialog: your name and the wiki password -----------------------------------------
+    // Sign-in: your name and the wiki password, verified once -----------------------------------
     const authDialog = element("dialog", { className: "wiki-dialog", "data-wiki-injected": true });
     authDialog.innerHTML = `
         <form method="dialog">
-            <h2>Sign your change</h2>
+            <h2>Sign in</h2>
             <p class="wiki-dialog-hint wiki-auth-reason"></p>
             <label for="controversy-name">Your name</label>
             <input id="controversy-name" type="text" required maxlength="40" autocomplete="name">
             <div class="wiki-auth-password">
                 <label for="controversy-password">Wiki password</label>
                 <input id="controversy-password" type="password" autocomplete="current-password">
-                <p class="wiki-dialog-hint">Ask the wiki owner for the password. It stays unlocked until you close this tab.</p>
+                <label class="wiki-checkbox"><input id="controversy-remember" type="checkbox" checked> Remember me on this device</label>
+                <p class="wiki-dialog-hint">You only verify once. Untick this on a shared computer, and the password is asked again after you close the tab.</p>
             </div>
             <p class="wiki-dialog-error" role="alert"></p>
             <div class="wiki-dialog-actions">
@@ -95,6 +121,7 @@
     document.body.append(authDialog);
     const authName = authDialog.querySelector("#controversy-name");
     const authPassword = authDialog.querySelector("#controversy-password");
+    const authRemember = authDialog.querySelector("#controversy-remember");
     const authPasswordField = authDialog.querySelector(".wiki-auth-password");
     const authError = authDialog.querySelector(".wiki-dialog-error");
     const authSubmit = authDialog.querySelector('button[type="submit"]');
@@ -102,13 +129,8 @@
 
     authDialog.querySelector('button[value="cancel"]').addEventListener("click", () => authDialog.close());
 
-    // Ask for name (and the password if this tab is not unlocked), then run action(name, password).
-    function requireSignIn(reason, action) {
+    function openSignIn(reason, action) {
         const store = window.wikiStore;
-        if (!store) {
-            alert("The wiki editor did not load, so changes cannot be saved right now.");
-            return;
-        }
         pendingAction = action;
         authDialog.querySelector(".wiki-auth-reason").textContent = reason;
         authName.value = store.getAuthor();
@@ -118,9 +140,29 @@
         authPassword.required = !unlocked;
         authError.textContent = "";
         authSubmit.disabled = false;
-        authSubmit.textContent = "Continue";
+        authSubmit.textContent = action ? "Continue" : "Sign in";
         authDialog.showModal();
         (authName.value ? (unlocked ? authSubmit : authPassword) : authName).focus();
+    }
+
+    // Once you are signed in (name + verified password), actions run straight away.
+    // Otherwise ask first, then run action(name).
+    function requireSignIn(reason, action) {
+        const store = window.wikiStore;
+        if (!store) {
+            alert("The wiki editor did not load, so changes cannot be saved right now.");
+            return;
+        }
+        const name = store.getAuthor();
+        if (name && store.isUnlocked()) {
+            status.textContent = "Saving…";
+            action(name).catch((error) => {
+                status.textContent = `Could not save: ${error.message}`;
+                renderAccount();
+            });
+            return;
+        }
+        openSignIn(reason, action);
     }
 
     authDialog.querySelector("form").addEventListener("submit", async (event) => {
@@ -128,11 +170,21 @@
         const name = authName.value.trim().replace(/\s+/g, " ");
         if (!name) return;
         authSubmit.disabled = true;
-        authSubmit.textContent = "Saving…";
+        authSubmit.textContent = "Checking…";
         authError.textContent = "";
         try {
-            window.wikiStore.setAuthor(name);
-            await pendingAction(name, authPassword.value);
+            const store = window.wikiStore;
+            if (!store.isUnlocked()) {
+                await store.unlock(authPassword.value, authRemember.checked);
+            }
+            store.setAuthor(name);
+            renderAccount();
+            if (pendingAction) {
+                authSubmit.textContent = "Saving…";
+                await pendingAction(name);
+            } else {
+                status.textContent = `Signed in as ${name}.`;
+            }
             authDialog.close();
         } catch (error) {
             authError.textContent = error.message;
@@ -145,10 +197,41 @@
         }
     });
 
+    function signedIn() {
+        return Boolean(window.wikiStore?.getAuthor() && window.wikiStore.isUnlocked());
+    }
+
+    // "Signed in as Sai · Change name · Sign out"
+    const account = element("p", { className: "controversy-account" });
+    function renderAccount() {
+        const store = window.wikiStore;
+        if (!store) return;
+        const name = store.getAuthor();
+        if (name && store.isUnlocked()) {
+            account.replaceChildren(
+                "Signed in as ", element("strong", { text: name }), " · ",
+                element("button", { type: "button", className: "wiki-link-button", text: "Change name", onclick: () => openSignIn("Change the name your votes and posts are saved under.", null) }),
+                " · ",
+                element("button", {
+                    type: "button", className: "wiki-link-button", text: "Sign out",
+                    onclick: () => {
+                        store.forget();
+                        renderAccount();
+                        status.textContent = "Signed out. The wiki password will be asked again next time.";
+                    }
+                }));
+        } else {
+            account.replaceChildren(
+                "Not signed in. ",
+                element("button", { type: "button", className: "wiki-link-button", text: "Sign in", onclick: () => openSignIn("Verify the wiki password once to vote, comment and post.", null) }),
+                " to vote, comment and post.");
+        }
+    }
+
     // Commit a change to controversy.json and show the saved result straight away
     // (the live site takes a minute to publish it).
-    async function save(change, message, password) {
-        data = await window.wikiStore.updateJson(dataFile, change, message, password);
+    async function save(change, message) {
+        data = await window.wikiStore.updateJson(dataFile, change, message);
         data.ideas = data.ideas || [];
         data.discussions = data.discussions || [];
         render();
@@ -207,7 +290,7 @@
     }
 
     function vote(idea, choice) {
-        requireSignIn(`${choice === "approve" ? "Approve" : "Disapprove"} "${idea.title}". Voting the same way again removes your vote.`, (name, password) =>
+        requireSignIn(`${choice === "approve" ? "Approve" : "Disapprove"} "${idea.title}". Voting the same way again removes your vote.`, (name) =>
             save((fresh) => {
                 const target = (fresh.ideas || []).find((item) => item.id === idea.id);
                 if (!target) throw new Error("This idea no longer exists. Reload the page.");
@@ -218,26 +301,37 @@
                 } else {
                     target.votes[key] = { name, vote: choice, date: new Date().toISOString() };
                 }
-            }, `${name} votes ${choice} on idea: ${idea.title}`, password)
+            }, `${name} votes ${choice} on idea: ${idea.title}`)
                 .then(() => { status.textContent = `Your vote on "${idea.title}" was saved.`; }));
+    }
+
+    function comment(idea, text) {
+        requireSignIn(`Comment on "${idea.title}".`, (name) =>
+            save((fresh) => {
+                const target = (fresh.ideas || []).find((item) => item.id === idea.id);
+                if (!target) throw new Error("This idea no longer exists. Reload the page.");
+                target.replies = target.replies || [];
+                target.replies.push({ author: name, text, date: new Date().toISOString() });
+            }, `${name} comments on idea: ${idea.title}`)
+                .then(() => { status.textContent = "Your comment was posted."; }));
     }
 
     function addIdea() {
         openFormDialog({
             title: "Add an idea",
-            submitLabel: "Next",
+            submitLabel: signedIn() ? "Save" : "Next",
             fields: [
                 { name: "title", label: "Idea name", required: true },
                 { name: "description", label: "Details", type: "textarea", rows: 8, hint: "Start a line with \"- \" to make a bullet point." }
             ],
-            onSubmit: (values) => requireSignIn(`Add the idea "${values.title}" under your name.`, (name, password) =>
+            onSubmit: (values) => requireSignIn(`Add the idea "${values.title}" under your name.`, (name) =>
                 save((fresh) => {
                     fresh.ideas = fresh.ideas || [];
                     fresh.ideas.push({
                         id: newId("idea"), author: name, title: values.title, description: values.description,
                         comments: [], status: "", source: "site", created: new Date().toISOString(), votes: {}
                     });
-                }, `${name} adds idea: ${values.title}`, password)
+                }, `${name} adds idea: ${values.title}`)
                     .then(() => {
                         ideaFilters.author = "";
                         ideaFilters.sort = "newest";
@@ -252,13 +346,16 @@
         const me = nameKey(window.wikiStore?.getAuthor() || "");
         const mine = me && idea.votes?.[me]?.vote;
         const voters = (list) => list.map((vote) => vote.name).join(", ");
+        const votedAt = (vote) => vote.date ? ` (${new Date(vote.date).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })})` : "";
+        const votersWithTimes = (list) => list.map((vote) => `${vote.name}${votedAt(vote)}`).join(", ");
         const card = element("article", { className: "idea-card", id: idea.id },
             element("header", { className: "idea-header" },
                 element("h3", { text: idea.number ? `${idea.number}. ${idea.title}` : idea.title }),
                 element("span", { className: "idea-meta" },
                     element("span", { className: "idea-author", text: idea.author }),
                     idea.status ? element("span", { className: `idea-badge idea-badge-${idea.status}`, text: idea.status }) : null,
-                    idea.source === "site" && idea.created ? element("span", { text: ` · added ${formatDate(idea.created)}` }) : null)),
+                    " · ",
+                    idea.source === "site" && idea.created ? timestamp(idea.created, "added ") : fromDocument())),
             idea.description ? element("div", { className: "idea-description" }, renderText(idea.description)) : null);
         // Long write-ups start folded so the list stays easy to scan.
         if ((idea.description || "").length > 450) {
@@ -273,19 +370,35 @@
         }
         if (idea.comments?.length) {
             const details = element("details", { className: "idea-comments" },
-                element("summary", { text: `Comments from the document (${idea.comments.length})` }),
+                element("summary", { text: `Comments from the document (${idea.comments.length}) · synced ${formatDate(documentSynced)}` }),
                 element("ul", {}, ...idea.comments.map((comment) => element("li", { text: comment }))));
             card.append(details);
         }
+        const replies = idea.replies || [];
+        if (replies.length) {
+            card.append(element("ul", { className: "idea-replies" },
+                ...replies.map((item) => element("li", {},
+                    element("div", { className: "idea-meta" },
+                        element("span", { className: "idea-author", text: item.author }), " · ", timestamp(item.date)),
+                    element("div", { className: "idea-description" }, renderText(item.text))))));
+        }
+        const commentInput = element("input", { type: "text", placeholder: "Add a comment…", maxlength: 2000, "aria-label": `Comment on ${idea.title}` });
+        card.append(element("form", {
+            className: "idea-comment-form",
+            onsubmit: (event) => {
+                event.preventDefault();
+                if (commentInput.value.trim()) comment(idea, commentInput.value.trim());
+            }
+        }, commentInput, element("button", { type: "submit", text: "Comment" })));
         card.append(element("div", { className: "idea-votes" },
             element("button", {
                 type: "button", className: "idea-vote idea-vote-approve", "aria-pressed": String(mine === "approve"),
-                title: approve.length ? `Approved by ${voters(approve)}` : "No approvals yet",
+                title: approve.length ? `Approved by ${votersWithTimes(approve)}` : "No approvals yet",
                 onclick: () => vote(idea, "approve")
             }, `👍 Approve · ${approve.length}`),
             element("button", {
                 type: "button", className: "idea-vote idea-vote-disapprove", "aria-pressed": String(mine === "disapprove"),
-                title: disapprove.length ? `Disapproved by ${voters(disapprove)}` : "No disapprovals yet",
+                title: disapprove.length ? `Disapproved by ${votersWithTimes(disapprove)}` : "No disapprovals yet",
                 onclick: () => vote(idea, "disapprove")
             }, `👎 Disapprove · ${disapprove.length}`),
             approve.length || disapprove.length
@@ -323,33 +436,33 @@
             list.replaceChildren(...(ideas.length ? ideas.map(({ idea }) => renderIdea(idea)) : [element("p", { text: "No ideas match." })]));
         }
         renderList();
-        ideasApp.replaceChildren(toolbar, status, list);
+        ideasApp.replaceChildren(toolbar, account, status, list);
     }
 
     // Threads & Debates page ----------------------------------------------------------------------
     const openDiscussions = new Set();
 
     function reply(discussion, text) {
-        requireSignIn(`Post your reply in "${discussion.title}".`, (name, password) =>
+        requireSignIn(`Post your reply in "${discussion.title}".`, (name) =>
             save((fresh) => {
                 const target = (fresh.discussions || []).find((item) => item.id === discussion.id);
                 if (!target) throw new Error("This discussion no longer exists. Reload the page.");
                 target.posts = target.posts || [];
                 target.posts.push({ author: name, text, date: new Date().toISOString(), source: "site" });
-            }, `${name} replies in: ${discussion.title}`, password)
+            }, `${name} replies in: ${discussion.title}`)
                 .then(() => { status.textContent = "Your reply was posted."; }));
     }
 
     function startDiscussion() {
         openFormDialog({
             title: "Start a debate or thread",
-            submitLabel: "Next",
+            submitLabel: signedIn() ? "Save" : "Next",
             fields: [
                 { name: "kind", label: "Type", type: "select", options: [["debate", "Debate"], ["thread", "Thread"]] },
                 { name: "title", label: "Title", required: true },
                 { name: "text", label: "First post", type: "textarea", required: true, rows: 7 }
             ],
-            onSubmit: (values) => requireSignIn(`Start the ${values.kind} "${values.title}".`, (name, password) => {
+            onSubmit: (values) => requireSignIn(`Start the ${values.kind} "${values.title}".`, (name) => {
                 const id = newId(values.kind);
                 return save((fresh) => {
                     fresh.discussions = fresh.discussions || [];
@@ -358,7 +471,7 @@
                         participants: "", archived: false, resolved: false, source: "site", author: name,
                         posts: [{ author: name, text: values.text, date: new Date().toISOString(), source: "site" }]
                     });
-                }, `${name} starts ${values.kind}: ${values.title}`, password).then(() => {
+                }, `${name} starts ${values.kind}: ${values.title}`).then(() => {
                     openDiscussions.add(id);
                     render();
                     status.textContent = `Your ${values.kind} was started.`;
@@ -367,13 +480,30 @@
         });
     }
 
+    // "Caleb v. Aadi · started Oct 8, 2026 · 18 posts · last post Nov 6, 2026, 3:07 PM"
+    function summaryMeta(discussion, posts) {
+        const parts = [];
+        const add = (...nodes) => {
+            if (parts.length) parts.push(" · ");
+            parts.push(...nodes);
+        };
+        if (discussion.participants) add(discussion.participants);
+        if (discussion.date) add(timestamp(discussion.source === "site" && posts[0]?.date ? posts[0].date : discussion.date, "started "));
+        add(`${posts.length} post${posts.length === 1 ? "" : "s"}`);
+        const latest = posts.filter((post) => post.source === "site" && post.date).pop();
+        if (latest && posts.length > 1) add(timestamp(latest.date, "last post "));
+        if (discussion.resolved) add("resolved");
+        if (discussion.archived) add("archived");
+        return parts;
+    }
+
     function renderDiscussion(discussion) {
         const posts = discussion.posts || [];
         const details = element("details", { className: `discussion discussion-${discussion.kind}`, id: discussion.id, open: openDiscussions.has(discussion.id) },
             element("summary", {},
                 element("span", { className: `idea-badge idea-badge-${discussion.kind}`, text: discussion.kind }),
                 element("strong", { text: discussion.title }),
-                element("span", { className: "idea-meta", text: [discussion.participants, discussion.date ? formatDate(discussion.date) : "", `${posts.length} post${posts.length === 1 ? "" : "s"}`, discussion.resolved ? "resolved" : "", discussion.archived ? "archived" : ""].filter(Boolean).join(" · ") })));
+                element("span", { className: "idea-meta" }, ...summaryMeta(discussion, posts))));
         details.addEventListener("toggle", () => {
             if (details.open) openDiscussions.add(discussion.id);
             else openDiscussions.delete(discussion.id);
@@ -382,7 +512,8 @@
             ...posts.map((post) => element("li", { className: "discussion-post" },
                 element("div", { className: "idea-meta" },
                     element("span", { className: "idea-author", text: post.author || "Unknown" }),
-                    post.source === "site" && post.date ? element("span", { text: ` · ${formatDate(post.date)}` }) : null),
+                    " · ",
+                    post.source === "site" && post.date ? timestamp(post.date) : fromDocument()),
                 element("div", { className: "idea-description" }, renderText(post.text)))));
         const textarea = element("textarea", { rows: 3, placeholder: "Write a reply…", "aria-label": `Reply to ${discussion.title}`, maxlength: 8000 });
         const form = element("form", {
@@ -408,10 +539,11 @@
             element("section", { className: "discussion-group" },
                 element("h2", { text: `${title} (${items.length})` }),
                 ...items.map(renderDiscussion)));
-        discussionsApp.replaceChildren(toolbar, status, ...sections);
+        discussionsApp.replaceChildren(toolbar, account, status, ...sections);
     }
 
     function render() {
+        renderAccount();
         if (ideasApp) renderIdeas();
         else renderDiscussions();
     }
