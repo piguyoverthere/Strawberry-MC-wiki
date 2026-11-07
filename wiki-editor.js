@@ -432,6 +432,20 @@
                 adminLink.textContent = "Admin";
                 nav.append(adminLink);
             }
+            if (accountName) {
+                const signOutButton = document.createElement("button");
+                signOutButton.type = "button";
+                signOutButton.className = "nav-button wiki-sign-out-button";
+                signOutButton.dataset.wikiInjected = "";
+                signOutButton.textContent = "Sign out";
+                signOutButton.title = `Sign out of ${accountName} on this device`;
+                signOutButton.addEventListener("click", () => {
+                    forgetToken();
+                    forgetAccount();
+                    location.reload();
+                });
+                nav.append(signOutButton);
+            }
 
             // "Open PDF" goes to the page listing every PDF and its older versions.
             if (pdfLink) {
