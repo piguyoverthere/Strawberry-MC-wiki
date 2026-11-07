@@ -833,7 +833,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "date": "2026-11-07T00:16:44.169Z"
+    }
+   }
   },
   {
    "id": "idea-doc-58",
