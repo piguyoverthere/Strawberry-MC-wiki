@@ -393,7 +393,14 @@
      "vote": "disapprove",
      "date": "2026-11-07T01:06:29.261Z"
     }
-   }
+   },
+   "replies": [
+    {
+     "author": "Eric",
+     "text": "too vague",
+     "date": "2026-11-07T01:06:36.956Z"
+    }
+   ]
   },
   {
    "id": "idea-doc-15",
