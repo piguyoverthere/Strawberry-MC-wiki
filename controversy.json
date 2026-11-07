@@ -127,7 +127,13 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {},
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "date": "2026-11-07T18:20:17.556Z"
+    }
+   },
    "replies": [
     {
      "author": "Alex",
