@@ -12,6 +12,14 @@
    "iterations": 310000,
    "hash": "Ik9OpxGGVHLkvniSUKxlD+Au+zd6dl00h/7B4DvVoj4=",
    "created": "2026-11-07T04:15:18.149Z"
+  },
+  "test reviewer": {
+   "name": "test reviewer",
+   "role": "reviewer",
+   "salt": "mRvFNM5NP31QPXO07NcKgQ==",
+   "iterations": 310000,
+   "hash": "V+v11LpVgtU4YrtKUi87o0V5muSBflm7cBWvAOREdYc=",
+   "created": "2026-11-07T04:26:46.209Z"
   }
  }
 }
