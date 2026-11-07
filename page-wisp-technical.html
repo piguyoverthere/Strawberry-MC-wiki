@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Wisp [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="Strawberry%20minecraft%20wiki%20(1).pdf" target="_blank" rel="noopener" aria-haspopup="menu" aria-expanded="false">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Wisp [technical]</h1>
+        <h2>Spawning</h2><h3>Current spawning</h3><p>The wisp currently spawns in groups of 4-10 with a spawn weight of 1 (no other mobs spawn in the <a href="page-voidstone-peaks.html">Voidstone Peaks</a>). (This is not intended behavior and will be changed with the addition of the Convoluted Waypoint</p><h3>Future spawning</h3><p>The wisp will spawn constantly in Convolution Points<sup>[coming soon] </sup>whenever there are less that 30 wisps within a 32x200x32 radius of the Faintly Chiseled Cauldron<sup>[rename][coming soon]</sup>.</p><h2>AI</h2><p>Technically, wisps have no AI. Instead, they have a procedure called DoWispAIProcedure. Pseudocode for this AI is shown here:</p><div class="wiki-textbox"><p>Every tick per wisp:<br>If a 20-sided dice does not roll one and wisp is not in FOV of a player, end the program to prevent lag<br>If wisp is in a non-<a href="page-voidstone-peaks.html">Voidstone Peaks</a>&nbsp;biome AND gamerule doExternalWispGreifing is disabled, end the program<br>Repeat until a valid teleportation position is reached:<br>&nbsp; &nbsp; Choose a random location in a 32x10x32 box<br>&nbsp; &nbsp; Check whether block at this location is not air; if so, end and try again<br>&nbsp; &nbsp; Check whether block at this location is farther than 6 blocks away from a solid block; if so, end and try again<br>Teleport to location<br>If a 50-sided dice rolls as 1{<br>&nbsp; Delete the currently held block<br>&nbsp; If that block was flammable, attempt to place fire<br>If possible, place a block anywhere within a 6x6x6 area around current position, block must have a supporting block on the bottom or side<br>If possible, take a block from anywhere within a 6x6x6 area around current position, prioritizing non-<a href="page-voidstone.html">Voidstone</a>&nbsp;blocks {<br>&nbsp; Preserve block data (note: this is a great way to get illegal block states!)<br>&nbsp; Have a higher chance of placing at higher altitudes<br>&nbsp; If this block is a brewing stand with empty bottles, fail to pickup and {<br>&nbsp; &nbsp; Delete current block, if any<br>&nbsp; &nbsp; Become captured in bottle<br>&nbsp; }<br>}</p></div><p><br></p>
+        <script src="wiki-editor.js" defer=""></script>
+    
+
+</body></html>
