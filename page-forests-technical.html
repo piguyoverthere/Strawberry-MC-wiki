@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Forests [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Forests [technical]</h1>
+<p>The mod's <a href="page-forests.html">Forests</a> code is the talus slope feature and the Juniper wood family.</p>
+
+<h2 id="talus-slope">Forest talus slope feature</h2>
+<p><code class="consolas">elements/ForestTalusSlope.mod.json</code> generates a configured feature, a placed feature and a biome modifier. It is a vanilla <code class="consolas">minecraft:ore</code> feature with two targets and no Java code.</p>
+<table>
+<thead>
+<tr><th>File</th><th>Content</th></tr>
+</thead>
+<tbody>
+<tr><td>configured_feature/forest_talus_slope.json</td><td><code class="consolas">minecraft:ore</code>, size 50, discard_chance_on_air_exposure 0</td></tr>
+<tr><td>placed_feature/forest_talus_slope.json</td><td>One <code class="consolas">minecraft:biome</code> filter</td></tr>
+<tr><td>biome_modifier/forest_talus_slope_biome_modifier.json</td><td><code class="consolas">neoforge:any</code> biomes, step surface_structures</td></tr>
+</tbody>
+</table>
+<pre class="code-box"><code class="consolas">"targets": [
+  { "target": { "predicate_type": "tag_match", "tag": "ore" },
+    "state": { "Name": "minecraft:cobblestone" } },
+  { "target": { "predicate_type": "tag_match", "tag": "ore" },
+    "state": { "Name": "minecraft:gravel" } }
+]</code></pre>
+<p>Both targets use the block tag <code class="consolas">minecraft:ore</code>. Neither vanilla nor the mod defines a tag with that name, so the rule test matches no blocks. The placement list has no <code class="consolas">count</code>, <code class="consolas">in_square</code> or height step, so one attempt per chunk runs at the chunk's origin at the bottom of the world.</p>
+
+<h2 id="juniper">Juniper wood family</h2>
+<p>Juniper is a complete MCreator wood set made of 34 element files. Registration happens in <code class="consolas">StrawberrymcModBlocks</code>, <code class="consolas">StrawberrymcModItems</code> and <code class="consolas">StrawberrymcModEntities</code>, and <code class="consolas">StrawberrymcModWoodTypes</code> registers <code class="consolas">strawberrymc:juniper_sign</code> and <code class="consolas">strawberrymc:juniper_hanging_sign</code> on <code class="consolas">BlockSetType.OAK</code>.</p>
+<table>
+<thead>
+<tr><th>Block</th><th>Hardness / resistance</th><th>Flammability / spread</th><th>Tool</th></tr>
+</thead>
+<tbody>
+<tr><td>juniper_log</td><td>2 / 2</td><td>5 / 5</td><td>Axe</td></tr>
+<tr><td>juniper_leaves</td><td>0.2 / 0.2</td><td>60 / 30</td><td>Hoe</td></tr>
+</tbody>
+</table>
+<p>The other blocks are juniper_wood, stripped_juniper_log, stripped_juniper_wood, juniper_planks, juniper_stairs, juniper_slab, juniper_fence, juniper_fence_gate, juniper_door, juniper_trapdoor, juniper_pressure_plate, juniper_button, juniper_sign, juniper_wall_sign, juniper_hanging_sign and juniper_wall_hanging_sign. The entities <code class="consolas">juniper_boat</code> and <code class="consolas">juniper_chest_boat</code> are registered with their items.</p>
+<h3 id="juniper-leaves">Leaves</h3>
+<p><code class="consolas">JuniperLeavesBlock</code> extends <code class="consolas">UntintedParticleLeavesBlock</code> with a leaf particle chance of 0 and a <code class="consolas">TINTED_LEAVES</code> particle option colored <code class="consolas">-11181774</code>. Its loot table has two pools. The first, for tools other than shears or Silk Touch, gives 1 to 2 sticks at the Fortune chances <code class="consolas">0.02, 0.022222223, 0.025, 0.033333335, 0.1</code>. The second gives the leaves with shears or Silk Touch, and otherwise gives leaves at the Fortune chances <code class="consolas">0.05, 0.0625, 0.083333336, 0.1</code>. <code class="consolas">elements/JuniperLeavesComposting.mod.json</code> and <code class="consolas">data/neoforge/data_maps/item/compostables.json</code> set a compost chance of 0.3.</p>
+<h3 id="juniper-tags">Tags</h3>
+<p>The block and item tags <code class="consolas">strawberrymc:juniper_logs</code> hold the log, wood, stripped log and stripped wood. The family is merged into these vanilla tags with <code class="consolas">"replace": false</code>:</p>
+<ul>
+<li>Items: <code class="consolas">minecraft:planks</code>, <code class="consolas">minecraft:logs_that_burn</code>, <code class="consolas">minecraft:boats</code>, <code class="consolas">minecraft:chest_boats</code>.</li>
+<li>Blocks: <code class="consolas">minecraft:planks</code>, <code class="consolas">minecraft:logs_that_burn</code>, <code class="consolas">minecraft:leaves</code>, <code class="consolas">minecraft:slabs</code>, <code class="consolas">minecraft:stairs</code>, <code class="consolas">minecraft:wooden_fences</code>, <code class="consolas">minecraft:wooden_doors</code>, <code class="consolas">minecraft:wooden_trapdoors</code>, <code class="consolas">minecraft:wooden_buttons</code>, <code class="consolas">minecraft:wooden_pressure_plates</code>, <code class="consolas">minecraft:standing_signs</code>, <code class="consolas">minecraft:wall_signs</code>, <code class="consolas">minecraft:ceiling_hanging_signs</code>, <code class="consolas">minecraft:wall_hanging_signs</code>, <code class="consolas">minecraft:mineable/axe</code>, <code class="consolas">minecraft:mineable/hoe</code>.</li>
+<li>Entity types: <code class="consolas">minecraft:boat</code>.</li>
+</ul>
+<h3 id="juniper-recipes">Recipes</h3>
+<p>Each block has a recipe element named <code class="consolas">Juniper...Recipe</code>, generated into <code class="consolas">data/strawberrymc/recipe/juniper_*_recipe.json</code>, including <code class="consolas">juniper_boat_recipe.json</code> and <code class="consolas">juniper_chest_boat_recipe.json</code>.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Waypoints [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Waypoints [technical]</h1>
+<p>The mod's <a href="page-waypoints.html">Waypoints</a> code is the Chiseled Cauldron block, the Smite Vial interaction with it, and a seed-based location calculator.</p>
+
+<h2 id="chiseled-cauldron">Chiseled Cauldron</h2>
+<p><code class="consolas">ChiseledCauldronBlock</code> (<code class="consolas">strawberrymc:chiseled_cauldron</code>) comes from <code class="consolas">elements/ChiseledCauldron.mod.json</code>. It is listed in the Transportation, Operator and <code class="consolas">Debug</code> creative tabs, and its loot table drops the block itself.</p>
+<table>
+<thead>
+<tr><th>Property</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Strength</td><td>-1, 3600000 (unbreakable)</td></tr>
+<tr><td>Map color</td><td>STONE</td></tr>
+<tr><td>Push reaction</td><td>BLOCK</td></tr>
+<tr><td>Rendering</td><td>noOcclusion, emissive</td></tr>
+<tr><td>Redstone conductor</td><td>false</td></tr>
+<tr><td>Path type</td><td>BLOCKED for mobs</td></tr>
+<tr><td>Waterlogged property</td><td>Yes, set from the fluid at the placement position</td></tr>
+</tbody>
+</table>
+<h3 id="cauldron-shape">Shape</h3>
+<p>The voxel shape is a basin with a 5-pixel floor and 2-pixel walls:</p>
+<pre class="code-box"><code class="consolas">private static final VoxelShape SHAPE = Shapes.or(box(0, 0, 0, 16, 5, 16), box(0, 5, 0, 16, 16, 2),
+		box(0, 5, 14, 16, 16, 16), box(0, 5, 2, 2, 16, 14), box(14, 5, 2, 16, 16, 14));</code></pre>
+<p><code class="consolas">getVisualShape</code> returns <code class="consolas">Shapes.empty()</code>.</p>
+<h3 id="cauldron-particles">Particles</h3>
+<p><code class="consolas">animateTick</code> calls <a href="page-ambientparticleenchantprocedure-raw.html">AmbientParticleEnchantProcedure [raw]</a>, which only sends particles when the <code class="consolas">world</code> argument is a <code class="consolas">ServerLevel</code>. <code class="consolas">animateTick</code> runs on the client, so this branch is skipped.</p>
+
+<h2 id="smite-vial">Smite Vial on a Chiseled Cauldron</h2>
+<p><code class="consolas">SmiteVialItem.useOn</code> runs <a href="page-smitehandlerprocedure-raw.html">SmiteHandlerProcedure [raw]</a> with the clicked position, the player and the item stack. The rest of the procedure only runs if the clicked block is a Chiseled Cauldron.</p>
+<ol>
+<li>The sound <code class="consolas">item.bucket.empty</code> plays at the cauldron.</li>
+<li>For every entity other than the user in a box inflated by 5 blocks around the clicked position, sorted nearest first, a <code class="consolas">minecraft:lightning_bolt</code> spawns at the entity and <code class="consolas">entity.arrow.hit_player</code> plays.</li>
+<li>36 <code class="consolas">ANGRY_VILLAGER</code> particles spawn one block above the position, using <code class="consolas">cos(Angle)</code> and <code class="consolas">sin(Angle)</code> as the spread. <code class="consolas">Angle</code> increases by 10 per particle.</li>
+<li>Outside creative mode, one vial is removed from the stack.</li>
+</ol>
+
+<h2 id="location-calculator">Location prediction</h2>
+<p><a href="page-calculatewaypointlocationprocedure-raw.html">CalculateWaypointLocationProcedure [raw]</a> is a Java class with one static method, <code class="consolas">predictRareVegetalLocation(long worldSeed, int chunkX, int chunkZ, int rarityChance)</code>. It predicts from the seed alone whether a rare feature will appear in a chunk, and at which x and z, without generating it. No other code calls the method.</p>
+<pre class="code-box"><code class="consolas">WorldgenRandom random = new WorldgenRandom(new XoroshiroRandomSource(0L));
+random.setDecorationSeed(worldSeed, chunkX &lt;&lt; 4, chunkZ &lt;&lt; 4);
+
+long internalModifierSalt = random.nextLong();
+WorldgenRandom filterRandom = new WorldgenRandom(new XoroshiroRandomSource(internalModifierSalt));
+
+if (filterRandom.nextInt(rarityChance) != 0) {
+    return new PredictionResult(false, BlockPos.ZERO);
+}
+
+int offsetX = random.nextInt(16);
+int offsetZ = random.nextInt(16);</code></pre>
+<ol>
+<li>A <code class="consolas">WorldgenRandom</code> over <code class="consolas">XoroshiroRandomSource</code> receives the decoration seed for the chunk's block coordinates.</li>
+<li>One <code class="consolas">nextLong</code> seeds a separate filter random, which rolls <code class="consolas">nextInt(rarityChance)</code>. Any result other than 0 means no feature.</li>
+<li>On a pass, the original random gives the x and z offsets within the chunk, and the block position is <code class="consolas">(chunkX &lt;&lt; 4) + offsetX</code>, <code class="consolas">(chunkZ &lt;&lt; 4) + offsetZ</code>.</li>
+<li>The y coordinate is a constant 64, since the terrain is not consulted.</li>
+</ol>
+<p>The result is the record <code class="consolas">PredictionResult(boolean isPresentInChunk, BlockPos position)</code>.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

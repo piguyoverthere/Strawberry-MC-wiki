@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Realism Mode [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Realism Mode [technical]</h1>
+<p>Two crafting materials from the early game of <a href="page-realism-mode.html">Realism Mode</a> are coded as ordinary mod items: <code class="consolas">strawberrymc:flint_shard</code> and <code class="consolas">strawberrymc:plant_fiber</code>. Both are registered unconditionally and behave the same in every world.</p>
+
+<h2 id="registration">Registration</h2>
+<p>The items are declared in the MCreator elements <code class="consolas">FlintShard.mod.json</code> and <code class="consolas">PlantFiber.mod.json</code>, and the generated <code class="consolas">StrawberrymcModItems</code> registers each one against its own item class.</p>
+<pre class="code-box"><code class="consolas">PLANT_FIBER = register("plant_fiber", PlantFiberItem::new);
+FLINT_SHARD = register("flint_shard", FlintShardItem::new);</code></pre>
+<table>
+<thead>
+<tr><th>Property</th><th>Flint Shard</th><th>Plant Fiber</th></tr>
+</thead>
+<tbody>
+<tr><td>Item ID</td><td><code class="consolas">strawberrymc:flint_shard</code></td><td><code class="consolas">strawberrymc:plant_fiber</code></td></tr>
+<tr><td>Class</td><td><code class="consolas">FlintShardItem</code></td><td><code class="consolas">PlantFiberItem</code></td></tr>
+<tr><td>Max stack</td><td>64</td><td>64</td></tr>
+<tr><td>Rarity</td><td>Common</td><td>Common</td></tr>
+<tr><td>Element <code class="consolas">toolType</code></td><td>1.2</td><td>1.0</td></tr>
+<tr><td>Item model texture</td><td><code class="consolas">strawberrymc:item/flint_chip</code></td><td><code class="consolas">strawberrymc:item/placeholder</code></td></tr>
+<tr><td>Creative tabs</td><td>Ingredients</td><td>Ingredients, Natural Blocks</td></tr>
+</tbody>
+</table>
+<p>The English names come from <code class="consolas">assets/strawberrymc/lang/en_us.json</code> under <code class="consolas">item.strawberrymc.flint_shard</code> ("Flint Shard") and <code class="consolas">item.strawberrymc.plant_fiber</code> ("Plant Fiber"). Each item's client definition is a plain <code class="consolas">item/generated</code> model under <code class="consolas">assets/strawberrymc/models/item</code>.</p>
+
+<h2 id="flint-shard">Flint Shard</h2>
+<p><code class="consolas">FlintShardItem</code> extends <code class="consolas">Item</code> and overrides one method. MCreator generates this override from the element's <code class="consolas">toolType</code> value, so the shard mines every block at a speed multiplier of 1.2 instead of the default 1.0.</p>
+<pre class="code-box"><code class="consolas">@Override
+public float getDestroySpeed(ItemStack itemstack, BlockState state) {
+	return 1.2f;
+}</code></pre>
+<p><code class="consolas">PlantFiberItem</code> has a <code class="consolas">toolType</code> of 1.0, which needs no override, so its class only forwards <code class="consolas">Item.Properties</code> to the superclass.</p>
+
+<h3 id="flint-recipe">Flint recipe</h3>
+<p>The element <code class="consolas">FlintRecipe.mod.json</code> generates <code class="consolas">data/strawberrymc/recipe/flint_recipe.json</code>, a shapeless crafting recipe that combines four shards into one vanilla flint.</p>
+<pre class="code-box"><code class="consolas">{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "strawberrymc:flint_shard",
+    "strawberrymc:flint_shard",
+    "strawberrymc:flint_shard",
+    "strawberrymc:flint_shard"
+  ],
+  "result": {
+    "id": "minecraft:flint",
+    "count": 1
+  }
+}</code></pre>
+<p>Its recipe-book unlock is <code class="consolas">data/strawberrymc/advancement/recipes/flint_recipe.json</code>, a child of <code class="consolas">minecraft:recipes/root</code>. The advancement completes on either the <code class="consolas">minecraft:recipe_unlocked</code> criterion for the recipe or a <code class="consolas">minecraft:inventory_changed</code> criterion matching <code class="consolas">strawberrymc:flint_shard</code>, and its reward is the <code class="consolas">strawberrymc:flint_recipe</code> recipe.</p>
+
+<h2 id="plant-fiber">Plant Fiber</h2>
+<p>Plant Fiber is the drop of the Palm Sapling. The <code class="consolas">PalmSapling.mod.json</code> element sets <code class="consolas">customDrop</code> to <code class="consolas">CUSTOM:PlantFiber</code> with a <code class="consolas">dropAmount</code> of 1, which MCreator writes out as the block's loot table, <code class="consolas">data/strawberrymc/loot_table/blocks/palm_sapling.json</code>.</p>
+<pre class="code-box"><code class="consolas">"pools": [
+  {
+    "rolls": 1.0,
+    "conditions": [
+      { "condition": "minecraft:survives_explosion" }
+    ],
+    "entries": [
+      { "type": "minecraft:item", "name": "strawberrymc:plant_fiber" }
+    ]
+  }
+]</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

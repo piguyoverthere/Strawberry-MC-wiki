@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Garnet Nodule [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Garnet Nodule [technical]</h1>
+<h2 id="overview">Overview</h2>
+<p>This page covers the code behind <a href="page-garnet-nodule.html">Garnet Nodule</a>. The Garnet Nodule is the item <code class="consolas">strawberrymc:garnet_nodule</code>, generated from the MCreator element <code class="consolas">GarnetNodule.mod.json</code>. It is a separate item from the placeable Garnet blocks documented on <a href="page-crystals-technical.html">Crystals [technical]</a>.</p>
+
+<h2 id="registration">Registration</h2>
+<p><code class="consolas">StrawberrymcModItems</code> registers the item with a method reference to its class:</p>
+<pre class="code-box"><code class="consolas">GARNET_NODULE = register("garnet_nodule", GarnetNoduleItem::new);
+GARNET = register("garnet", GarnetItem::new);</code></pre>
+<pre class="code-box"><code class="consolas">public class GarnetNoduleItem extends Item {
+	public GarnetNoduleItem(Item.Properties properties) {
+		super(properties);
+	}
+}</code></pre>
+<p>The class adds no behavior, so the item uses default <code class="consolas">Item</code> properties. Its sibling <code class="consolas">strawberrymc:garnet</code> is written the same way in <code class="consolas">GarnetItem</code>.</p>
+
+<h2 id="properties">Properties</h2>
+<table>
+<thead>
+<tr><th>Field</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Lang key and name</td><td><code class="consolas">item.strawberrymc.garnet_nodule</code>, "Garnet Nodule"</td></tr>
+<tr><td>Rarity</td><td>Common</td></tr>
+<tr><td>Stack size</td><td>64</td></tr>
+<tr><td>Creative tab</td><td>Natural Blocks, added in <code class="consolas">StrawberrymcModTabs</code></td></tr>
+<tr><td>Item definition</td><td><code class="consolas">assets/strawberrymc/items/garnet_nodule.json</code></td></tr>
+<tr><td>Model</td><td><code class="consolas">item/generated</code> parent with layer0 <code class="consolas">strawberrymc:item/placeholder</code></td></tr>
+</tbody>
+</table>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

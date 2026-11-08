@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Terrain Generation [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Terrain Generation [technical]</h1>
+<p>The mod's <a href="page-terrain-generation.html">Terrain Generation</a> code has three parts: adding custom biomes to the Overworld biome source, adding their surface rules, and editing the Overworld density functions. The Void dimension's terrain is separate and is described on <a href="page-the-void-technical.html">The Void [technical]</a>.</p>
+
+<h2 id="biome-source">Adding biomes to the biome source</h2>
+<p><code class="consolas">BiomeSourcePresetMixin</code> targets <code class="consolas">MultiNoiseBiomeSourceParameterList.Preset</code>. When a preset with the ID <code class="consolas">minecraft:overworld</code> or <code class="consolas">minecraft:nether</code> is constructed, it wraps the preset's <code class="consolas">provider</code> so the original list passes through <code class="consolas">StrawberrymcModBiomes.adaptPresetParameterList</code>.</p>
+<pre class="code-box"><code class="consolas">this.provider = new MultiNoiseBiomeSourceParameterList.Preset.SourceProvider() {
+	@Override
+	public &lt;T&gt; Climate.ParameterList&lt;T&gt; apply(Function&lt;ResourceKey&lt;Biome&gt;, T&gt; lookup) {
+		Climate.ParameterList&lt;T&gt; originalList = existingProvider.apply(lookup);
+		return StrawberrymcModBiomes.adaptPresetParameterList(idArg, originalList, lookup);
+	}
+};</code></pre>
+<p><code class="consolas">adaptPresetParameterList</code> returns the list unchanged until <code class="consolas">FMLCommonSetupEvent</code> has set <code class="consolas">BOOTSTRAP_VALIDATION_PASSED</code>. After that, the Overworld list goes to <code class="consolas">modifyOverworldParameterPoints</code>, and the Nether list is returned unchanged.</p>
+
+<h3 id="parameter-points">Parameter points</h3>
+<p><code class="consolas">modifyOverworldParameterPoints</code> copies the vanilla list and appends these entries. Surface biomes get two points each, at depth 0 and depth 1; offset is 0 throughout.</p>
+<table>
+<thead>
+<tr><th>Biome</th><th>Temperature</th><th>Humidity</th><th>Continentalness</th><th>Erosion</th><th>Weirdness</th><th>Depth</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">strawberrymc:dry_savanna</code></td><td>0 to 0.5</td><td>0 to 0.5</td><td>0.3 to 1</td><td>-0.5 to 0</td><td>-1 to 1</td><td>Points 0 and 1</td></tr>
+<tr><td><code class="consolas">strawberrymc:clover_glades</code></td><td>0 to 0.5</td><td>0 to 1</td><td>-1 to 0</td><td>-0.5 to 0.2</td><td>-1 to 1</td><td>Points 0 and 1</td></tr>
+<tr><td><code class="consolas">strawberrymc:montane_jungle</code></td><td>0 to 1</td><td>0.6 to 1</td><td>0.3 to 1</td><td>-1 to 0</td><td>-1 to 1</td><td>Points 0 and 1</td></tr>
+<tr><td><code class="consolas">strawberrymc:alpine_meadow</code></td><td>-0.5 to 0</td><td>-0.5 to 0.5</td><td>0.5 to 1</td><td>-0.6 to 0</td><td>0.5 to 1</td><td>Points 0 and 1</td></tr>
+<tr><td><code class="consolas">strawberrymc:crystal_hollows</code></td><td>-2 to 2</td><td>-2 to 2</td><td>-2 to 0.4</td><td>-0.4 to 2</td><td>0 to 0.9999</td><td>Span 0.4 to 1.1</td></tr>
+</tbody>
+</table>
+
+<h3 id="climate-claim">Claiming climate boxes</h3>
+<p><code class="consolas">SurfaceBiomeDepthMixin</code> injects at the return of <code class="consolas">modifyOverworldParameterPoints</code>. It first appends <code class="consolas">strawberrymc:ocean_abyss</code> at depths 0 and 1, with temperature -0.45 to 1, humidity -1 to 1, continentalness -1.05 to -0.7, erosion -1 to 1 and weirdness -1 to 1.</p>
+<p>It then processes its <code class="consolas">SURFACE_BIOMES</code> list, <code class="consolas">alpine_meadow</code> and <code class="consolas">ocean_abyss</code>. For each box a listed biome owns, the <code class="consolas">subtract</code> method cuts that box out of every other surface entry, splitting the entry dimension by dimension into the pieces outside it. <code class="consolas">isSurface</code> limits this to entries whose depth is the single point 0 or 1, so cave biomes keep their ranges. The source comment gives the reason: vanilla already covers every climate value, so a custom biome would otherwise only tie with a vanilla one.</p>
+<pre class="code-box"><code class="consolas">List&lt;Climate.Parameter[]&gt; pieces = new ArrayList&lt;&gt;();
+Climate.Parameter[] rest = from.clone();
+for (int i = 0; i &lt; from.length; i++) {
+	if (rest[i].min() &lt; cut[i].min()) {
+		Climate.Parameter[] below = rest.clone();
+		below[i] = new Climate.Parameter(rest[i].min(), cut[i].min());
+		pieces.add(below);
+	}
+	if (rest[i].max() &gt; cut[i].max()) {
+		Climate.Parameter[] above = rest.clone();
+		above[i] = new Climate.Parameter(cut[i].max(), rest[i].max());
+		pieces.add(above);
+	}</code></pre>
+
+<h2 id="surface-rules">Surface rules</h2>
+<p>At <code class="consolas">ServerAboutToStartEvent</code>, <code class="consolas">StrawberrymcModBiomes.onServerAboutToStart</code> walks the <code class="consolas">LEVEL_STEM</code> registry. For every Overworld or Nether stem using a <code class="consolas">NoiseBasedChunkGenerator</code>, it stores the dimension type on the generator's settings through <code class="consolas">StrawberrymcModNoiseGeneratorSettings</code>.</p>
+<p><code class="consolas">NoiseGeneratorSettingsMixin</code> wraps <code class="consolas">surfaceRule</code> with MixinExtras <code class="consolas">@WrapMethod</code>. If a dimension type was stored, the original rule is passed to <code class="consolas">adaptSurfaceRule</code>, which only changes it for the Overworld.</p>
+<p><code class="consolas">injectOverworldSurfaceRules</code> places the custom rules first. If the original rule is a <code class="consolas">SequenceRuleSource</code>, its entries are appended after them; otherwise the whole rule is appended. Custom biomes therefore resolve before any vanilla rule.</p>
+<table>
+<thead>
+<tr><th>Biome</th><th>Rule helper</th><th>Ground</th><th>Underground</th><th>Underwater</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">crystal_hollows</code></td><td>anySurfaceRule</td><td><code class="consolas">strawberrymc:crystalline_calcite</code></td><td><code class="consolas">minecraft:calcite</code></td><td><code class="consolas">minecraft:calcite</code></td></tr>
+<tr><td><code class="consolas">dry_savanna</code></td><td>preliminarySurfaceRule</td><td><code class="consolas">minecraft:coarse_dirt</code></td><td><code class="consolas">minecraft:sand</code></td><td><code class="consolas">minecraft:gravel</code></td></tr>
+<tr><td><code class="consolas">clover_glades</code></td><td>preliminarySurfaceRule</td><td><code class="consolas">minecraft:grass_block</code></td><td><code class="consolas">minecraft:dirt</code></td><td><code class="consolas">minecraft:gravel</code></td></tr>
+<tr><td><code class="consolas">montane_jungle</code></td><td>preliminarySurfaceRule</td><td><code class="consolas">minecraft:grass_block</code></td><td><code class="consolas">minecraft:dirt</code></td><td><code class="consolas">minecraft:gravel</code></td></tr>
+<tr><td><code class="consolas">alpine_meadow</code></td><td>preliminarySurfaceRule</td><td><code class="consolas">minecraft:grass_block</code></td><td><code class="consolas">minecraft:dirt</code></td><td><code class="consolas">minecraft:gravel</code></td></tr>
+</tbody>
+</table>
+<p><code class="consolas">preliminarySurfaceRule</code> applies above the preliminary surface. <code class="consolas">anySurfaceRule</code> applies from 5 blocks above the bottom of the world to 5 blocks below the top, which lets a cave biome receive surface blocks underground. Both use <code class="consolas">stoneDepthCheck(0, false, 0, FLOOR)</code> for the ground and underwater blocks, with <code class="consolas">waterBlockCheck(-1, 0)</code> choosing between them, and <code class="consolas">stoneDepthCheck(0, true, 0, FLOOR)</code> for the underground block.</p>
+
+<h2 id="density-functions">Overworld density functions</h2>
+<p>The mod overrides two files under <code class="consolas">data/minecraft/worldgen/density_function/overworld/</code>: <code class="consolas">offset.json</code> and <code class="consolas">factor.json</code>. In each, the vanilla expression is kept inside a <code class="consolas">minecraft:add</code>, under <code class="consolas">flat_cache</code> and <code class="consolas">cache_2d</code>, whose second argument is a spline on <code class="consolas">minecraft:overworld/continents</code>. All derivatives are 0.</p>
+<table>
+<thead>
+<tr><th>Continents location</th><th>Added to offset</th><th>Added to factor</th></tr>
+</thead>
+<tbody>
+<tr><td>-1.1</td><td>0</td><td>0</td></tr>
+<tr><td>-1.06</td><td>-0.68</td><td>25</td></tr>
+<tr><td>-0.72</td><td>-0.68</td><td>25</td></tr>
+<tr><td>-0.68</td><td>0</td><td>0</td></tr>
+</tbody>
+</table>
+<p>Outside the range -1.1 to -0.68 the spline adds 0 and the vanilla terrain is unchanged. Inside it, the terrain is lowered and flattened, forming the basin used by the Ocean Abyss. The biome and the feature that floods it are on <a href="page-ocean-abyss-technical.html">Ocean Abyss [technical]</a>.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

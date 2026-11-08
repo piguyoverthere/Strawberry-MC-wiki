@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Savanna [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Savanna [technical]</h1>
+<p>The mod's code for the <a href="page-savanna.html">Savanna</a> is the Dry Savanna biome, <code class="consolas">strawberrymc:dry_savanna</code>, an MCreator element in <code class="consolas">elements/DrySavanna.mod.json</code> with the display name "Dry Savanna".</p>
+
+<h2 id="biome-json">Biome JSON</h2>
+<table>
+<thead>
+<tr><th>Field in dry_savanna.json</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>has_precipitation</td><td>true</td></tr>
+<tr><td>temperature</td><td>0.7</td></tr>
+<tr><td>downfall</td><td>0.15</td></tr>
+<tr><td>foliage_color</td><td>#89822E</td></tr>
+<tr><td>grass_color</td><td>#C9C159</td></tr>
+<tr><td>water_color</td><td>#3F76E4</td></tr>
+<tr><td>minecraft:visual/sky_color</td><td>#D2CCA1</td></tr>
+<tr><td>minecraft:visual/water_fog_color</td><td>#050533</td></tr>
+<tr><td>carvers</td><td>minecraft:cave, minecraft:cave_extra_underground, minecraft:canyon</td></tr>
+<tr><td>spawners</td><td>Every category empty</td></tr>
+</tbody>
+</table>
+
+<h3 id="features-by-step">Features by step</h3>
+<p>The element's <code class="consolas">defaultFeatures</code> are <code class="consolas">Caves</code>, <code class="consolas">Ores</code> and <code class="consolas">SavannaTrees</code>. It has no <code class="consolas">FrozenTopLayer</code> entry, so the <code class="consolas">top_layer_modification</code> step is empty.</p>
+<table>
+<thead>
+<tr><th>Step</th><th>Features</th></tr>
+</thead>
+<tbody>
+<tr><td>lakes</td><td>minecraft:lake_lava_underground</td></tr>
+<tr><td>underground_ores</td><td>ore_coal_upper, ore_coal_lower, ore_iron_upper, ore_iron_middle, ore_iron_small, ore_gold, ore_gold_lower, ore_redstone, ore_redstone_lower, ore_diamond, ore_diamond_medium, ore_diamond_large, ore_diamond_buried, ore_lapis, ore_lapis_buried, ore_copper, underwater_magma</td></tr>
+<tr><td>vegetal_decoration</td><td>strawberrymc:dry_savanna_tree, minecraft:trees_savanna</td></tr>
+</tbody>
+</table>
+
+<h2 id="climate">Climate</h2>
+<p><code class="consolas">StrawberrymcModBiomes.modifyOverworldParameterPoints</code> appends one point at depth 0 and one at depth 1.</p>
+<table>
+<thead>
+<tr><th>Parameter</th><th>Range</th></tr>
+</thead>
+<tbody>
+<tr><td>temperature</td><td>0 to 0.5</td></tr>
+<tr><td>humidity</td><td>0 to 0.5</td></tr>
+<tr><td>continentalness</td><td>0.3 to 1</td></tr>
+<tr><td>erosion</td><td>-0.5 to 0</td></tr>
+<tr><td>depth</td><td>Points 0 and 1</td></tr>
+<tr><td>weirdness</td><td>-1 to 1</td></tr>
+<tr><td>offset</td><td>0</td></tr>
+</tbody>
+</table>
+<p>The biome is not in the <code class="consolas">SURFACE_BIOMES</code> list of <code class="consolas">SurfaceBiomeDepthMixin</code>, so vanilla entries keep the same climate space. The climate temperature above is separate from the 0.7 biome temperature in the JSON. See <a href="page-terrain-generation.html">Terrain Generation</a>.</p>
+
+<h2 id="surface-rule">Surface rule</h2>
+<p><code class="consolas">StrawberrymcModBiomes.injectOverworldSurfaceRules</code> gives the biome a <code class="consolas">preliminarySurfaceRule</code>, which applies above the preliminary surface.</p>
+<table>
+<thead>
+<tr><th>Position</th><th>Block</th></tr>
+</thead>
+<tbody>
+<tr><td>Floor, with the water check passing</td><td>minecraft:coarse_dirt</td></tr>
+<tr><td>Floor, underwater</td><td>minecraft:gravel</td></tr>
+<tr><td>Below the floor (secondary stone-depth check)</td><td>minecraft:sand</td></tr>
+</tbody>
+</table>
+
+<h2 id="trees">Trees</h2>
+<p>Trees come from two features. <code class="consolas">minecraft:trees_savanna</code> is the vanilla list added by the element's <code class="consolas">SavannaTrees</code> default feature, and <code class="consolas">strawberrymc:dry_savanna_tree</code> is the mod's own acacia.</p>
+<table>
+<thead>
+<tr><th>Tree setting</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>trunk_provider</td><td>minecraft:acacia_log, axis y</td></tr>
+<tr><td>foliage_provider</td><td>minecraft:acacia_leaves</td></tr>
+<tr><td>trunk_placer</td><td>minecraft:forking_trunk_placer: base 5, height_rand_a 2, height_rand_b 2</td></tr>
+<tr><td>foliage_placer</td><td>minecraft:acacia_foliage_placer: radius 2, offset 0</td></tr>
+<tr><td>below_trunk_provider</td><td>minecraft:sand, unless the block is in #minecraft:cannot_replace_below_tree_trunk</td></tr>
+<tr><td>minimum_size</td><td>two_layers_feature_size: limit 1, lower 0, upper 2</td></tr>
+<tr><td>ignore_vines</td><td>true</td></tr>
+</tbody>
+</table>
+<p>The placed feature runs <code class="consolas">count</code> 1, <code class="consolas">in_square</code>, <code class="consolas">surface_water_depth_filter</code> with a maximum depth of 0, <code class="consolas">heightmap</code> OCEAN_FLOOR, <code class="consolas">biome</code>, and a <code class="consolas">would_survive</code> check against <code class="consolas">minecraft:oak_sapling</code>.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

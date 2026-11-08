@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Arrow Modifications [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Arrow Modifications [technical]</h1>
+<h2 id="overview">Overview</h2>
+<p>This page covers the code behind <a href="page-arrow-modifications.html">Arrow Modifications</a>. Modified arrows are ordinary <code class="consolas">minecraft:arrow</code> items that carry three strings in their custom data: <code class="consolas">tip</code>, <code class="consolas">shaft</code> and <code class="consolas">fletching</code>. There is no separate arrow item or entity. The strings travel through the system in this order:</p>
+<ol>
+<li>The Fletching Table opens <code class="consolas">FletchingTableGUIMenu</code> through <a href="page-openfletchingtableguiprocedure-raw.html">OpenFletchingTableGUIProcedure [raw]</a>.</li>
+<li><a href="page-calcfletchingprocedure-raw.html">CalcFletchingProcedure [raw]</a> reads the slots every player tick and writes the strings into the <code class="consolas">minecraft:custom_data</code> component of the output stack.</li>
+<li>Taking the output runs <a href="page-shrinkfletchingtableingredientsprocedure-raw.html">ShrinkFletchingTableIngredientsProcedure [raw]</a>, which consumes the inputs.</li>
+<li><code class="consolas">IronBowItem</code> fires an arrow and calls <a href="page-arrowimpacteffectsprocedure-raw.html">ArrowImpactEffectsProcedure [raw]</a>, which copies the strings from the ammo item into the arrow entity's persistent data.</li>
+<li><a href="page-arrowflightvisualsprocedure-raw.html">ArrowFlightVisualsProcedure [raw]</a> handles flight behavior and block impacts on every entity tick.</li>
+<li><a href="page-triggerentityhitprocedure-raw.html">TriggerEntityHitProcedure [raw]</a> catches damage dealt by an arrow and runs <a href="page-arroweffectexecuterprocedure-raw-arrow-effect-executer-procedure.html">ArrowEffectExecuterProcedure [raw]</a>.</li>
+</ol>
+
+<h2 id="fletching-table">Fletching Table menu</h2>
+<h3 id="opening">Opening the menu</h3>
+<p><code class="consolas">OpenFletchingTableGUIProcedure</code> subscribes to <code class="consolas">PlayerInteractEvent.RightClickBlock</code>, ignores the off hand, and opens the menu for a <code class="consolas">ServerPlayer</code> when the clicked block is <code class="consolas">Blocks.FLETCHING_TABLE</code>. The menu type is <code class="consolas">strawberrymc:fletching_table_gui</code>, registered in <code class="consolas">StrawberrymcModMenus</code> and generated from the element <code class="consolas">FletchingTableGUI.mod.json</code>. <code class="consolas">FletchingTableGUIScreen</code> draws <code class="consolas">strawberrymc:textures/screens/fletching_table_gui.png</code> at 176 by 166 pixels with the label <code class="consolas">gui.strawberrymc.fletching_table_gui.label_empty</code> (<code class="consolas">==&gt;</code>) at 88, 39.</p>
+<h3 id="slots">Slots</h3>
+<p>The menu holds a five-slot <code class="consolas">ItemStacksResourceHandler</code>. It is not bound to a block entity, so the contents exist only while the menu is open.</p>
+<table>
+<thead>
+<tr><th>Slot</th><th>Screen position</th><th>Role</th><th>Notes</th></tr>
+</thead>
+<tbody>
+<tr><td>0</td><td>29, 18</td><td>Tip ingredient</td><td>Needs 5 or more of the item</td></tr>
+<tr><td>1</td><td>29, 38</td><td>Shaft ingredient</td><td>Needs 5 or more of the item</td></tr>
+<tr><td>2</td><td>29, 58</td><td>Fletching ingredient</td><td>Needs 5 or more of the item</td></tr>
+<tr><td>3</td><td>118, 38</td><td>Output</td><td><code class="consolas">mayPlace</code> returns false; <code class="consolas">onTake</code> reports the take</td></tr>
+<tr><td>4</td><td>60, 18</td><td>Base arrows</td><td>Needs <code class="consolas">Items.ARROW</code> with a count of 5 or more</td></tr>
+</tbody>
+</table>
+<h3 id="calc">Calculating the output</h3>
+<p><code class="consolas">FletchingTableGUIMenu.onPlayerTick</code> listens to <code class="consolas">PlayerTickEvent.Post</code> and runs <code class="consolas">CalcFletchingProcedure</code> for any player with this menu open. The output stack starts as a copy of slot 4, so custom data already on the input arrows carries over. All recipe logic sits inside one check that slot 4 is plain arrows with a count of at least 5.</p>
+<table>
+<thead>
+<tr><th>Slot</th><th>Item</th><th>Custom data key</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>0</td><td><code class="consolas">minecraft:sponge</code></td><td><code class="consolas">tip</code></td><td><code class="consolas">sponge</code></td></tr>
+<tr><td>0</td><td><code class="consolas">minecraft:raw_gold</code></td><td><code class="consolas">tip</code></td><td><code class="consolas">gold</code></td></tr>
+<tr><td>0</td><td><code class="consolas">minecraft:prismarine_shard</code></td><td><code class="consolas">tip</code></td><td><code class="consolas">prismarine</code></td></tr>
+<tr><td>0</td><td><code class="consolas">minecraft:echo_shard</code></td><td><code class="consolas">tip</code></td><td><code class="consolas">echo</code></td></tr>
+<tr><td>0</td><td><code class="consolas">minecraft:amethyst_shard</code></td><td><code class="consolas">tip</code></td><td><code class="consolas">amethyst</code></td></tr>
+<tr><td>0</td><td><code class="consolas">minecraft:tnt</code></td><td><code class="consolas">tip</code></td><td><code class="consolas">gunpowder</code></td></tr>
+<tr><td>1</td><td><code class="consolas">minecraft:blaze_rod</code></td><td><code class="consolas">shaft</code></td><td><code class="consolas">blaze</code></td></tr>
+<tr><td>1</td><td><code class="consolas">minecraft:breeze_rod</code></td><td><code class="consolas">shaft</code></td><td><code class="consolas">breeze</code></td></tr>
+<tr><td>2</td><td><code class="consolas">minecraft:phantom_membrane</code></td><td><code class="consolas">fletching</code></td><td><code class="consolas">phantom</code></td></tr>
+</tbody>
+</table>
+<p>If at least one string was set, each non-empty string is written with <code class="consolas">CustomData.update</code>, and slot 3 is set to the result with a count of 5. If none was set, slot 3 is cleared. The three categories are independent, so one output can carry a tip, a shaft and a fletching together. When slot 4 does not meet the check, the procedure does nothing and the output slot keeps its contents.</p>
+<pre class="code-box"><code class="consolas">if (!(var_tip).equals("")) {
+	{
+		final String _tagName = "tip";
+		final String _tagValue = var_tip;
+		CustomData.update(DataComponents.CUSTOM_DATA, output_arrow, tag -&gt; tag.putString(_tagName, _tagValue));
+	}
+}</code></pre>
+<h3 id="taking">Taking the output and closing the menu</h3>
+<p>Slot 3's <code class="consolas">onTake</code> calls <code class="consolas">slotChanged(3, 1, count)</code>. On the client this sends a <code class="consolas">FletchingTableGUISlotMessage</code> (payload <code class="consolas">strawberrymc:fletching_table_gui_slots</code>) and runs the same handler locally. <code class="consolas">handleSlotAction</code> first returns if the chunk at the menu position is not loaded, a guard against arbitrary chunk generation, and then runs <code class="consolas">ShrinkFletchingTableIngredientsProcedure</code> when the slot is 3 and the change type is 1.</p>
+<pre class="code-box"><code class="consolas">_menu.getSlots().get(0).remove(5);
+_menu.getSlots().get(1).remove(5);
+_menu.getSlots().get(2).remove(5);
+_menu.getSlots().get(4).remove(5);
+_player.containerMenu.broadcastChanges();</code></pre>
+<p>Five items are removed from all four input slots, including any ingredient that did not contribute a string. The procedure is the only place ingredients are consumed.</p>
+<p>In <code class="consolas">removed</code>, every slot from 0 to 4 is returned to the player with <code class="consolas">placeItemBackInInventory</code>, or dropped if the player is dead or disconnected. Slot 3 is part of that loop, so a stack sitting in the output when the menu closes also goes to the player.</p>
+
+<h2 id="iron-bow">Firing: Iron Bow</h2>
+<p><code class="consolas">IronBowItem</code> (<code class="consolas">strawberrymc:iron_bow</code>, element <code class="consolas">IronBow.mod.json</code>) is the only caller of <code class="consolas">ArrowImpactEffectsProcedure</code>, so it is the only weapon that transfers the strings to the projectile. It is listed in the Combat creative tab and in the <code class="consolas">minecraft:enchantable/durability</code> item tag.</p>
+<table>
+<thead>
+<tr><th>Property</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Durability</td><td>384</td></tr>
+<tr><td>Enchantability</td><td>1</td></tr>
+<tr><td>Use duration</td><td>72000 ticks</td></tr>
+<tr><td>Minimum pull power to fire</td><td>0.1, from <code class="consolas">BowItem.getPowerForTime</code></td></tr>
+<tr><td>Projectile velocity</td><td><code class="consolas">pullingPower * 3.15f</code></td></tr>
+<tr><td>Inaccuracy</td><td>1.0</td></tr>
+<tr><td>Ammo</td><td><code class="consolas">Items.ARROW</code> only, held first, then inventory order</td></tr>
+</tbody>
+</table>
+<p><code class="consolas">releaseUsing</code> runs in this order: it finds the ammo, creates and spawns an <code class="consolas">Arrow</code>, plays <code class="consolas">entity.arrow.shoot</code>, damages the bow by 1, shrinks the ammo stack by 1 in survival, and finally calls <code class="consolas">ArrowImpactEffectsProcedure.execute</code> at the shooter's position.</p>
+<h3 id="transfer">Copying the data to the arrow entity</h3>
+<p><code class="consolas">ArrowImpactEffectsProcedure</code> picks the ammo stack to read: the off hand if it holds an arrow, otherwise the first arrow in entity item slots 0 to 35. It runs after the ammo was shrunk, so when the shot used the last arrow of a stack, the strings come from the next arrow stack found. It then writes the three strings to the persistent data of the closest <code class="consolas">Arrow</code> in a 4-block-wide box centered on the shooter.</p>
+<pre class="code-box"><code class="consolas">(findEntityInWorldRange(world, Arrow.class, x, y, z, 4)).getPersistentData().putString("tip", (ammo_item.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getStringOr("tip", "")));
+(findEntityInWorldRange(world, Arrow.class, x, y, z, 4)).getPersistentData().putString("shaft", (ammo_item.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getStringOr("shaft", "")));
+(findEntityInWorldRange(world, Arrow.class, x, y, z, 4)).getPersistentData().putString("fletching", (ammo_item.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getStringOr("fletching", "")));</code></pre>
+
+<h2 id="flight">In flight</h2>
+<p><code class="consolas">ArrowFlightVisualsProcedure</code> subscribes to <code class="consolas">EntityTickEvent.Pre</code> and acts on entities that are instances of <code class="consolas">Arrow</code>. "Moving" below means at least one component of <code class="consolas">getDeltaMovement()</code> is nonzero. Each tick runs these steps in order:</p>
+<ol>
+<li>Shooter stamp: if <code class="consolas">has_shooter_stamp</code> is false and a player is inside a 4-block-wide box around the arrow, the closest player's display name is stored in <code class="consolas">shooter_name</code> and the flag is set.</li>
+<li>Trail particles while moving.</li>
+<li>Block impact, described below.</li>
+<li>Phantom acceleration.</li>
+<li>Echo homing.</li>
+</ol>
+<table>
+<thead>
+<tr><th>Modifier</th><th>Flight effect</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">shaft = blaze</code></td><td>1 <code class="consolas">SMALL_FLAME</code> per tick, spread 0.05</td></tr>
+<tr><td><code class="consolas">shaft = breeze</code></td><td>1 <code class="consolas">SMALL_GUST</code> per tick, spread 0.1</td></tr>
+<tr><td><code class="consolas">fletching = phantom</code></td><td>1 <code class="consolas">ASH</code> per tick, spread 0.1. While moving and out of water, velocity is multiplied by 1.013 every tick</td></tr>
+<tr><td><code class="consolas">tip = echo</code></td><td>Homing, described below</td></tr>
+</tbody>
+</table>
+<h3 id="echo">Echo homing</h3>
+<p>Each tick, the arrow finds the closest <code class="consolas">LivingEntity</code> in a 12-block-wide box, which reaches 6 blocks each way. Only that one entity is considered. If its display name differs from <code class="consolas">shooter_name</code>, the arrow is moving and the target is more than 4 blocks away, the arrow's velocity gains a steering term. A <code class="consolas">SCULK_SOUL</code> particle is sent at the target.</p>
+<pre class="code-box"><code class="consolas">velocity.x += (target.x - arrow.x) / (distance * 0.13)
+velocity.y += (target.y - arrow.y) / (distance * 0.13) + 1
+velocity.z += (target.z - arrow.z) / (distance * 0.13)</code></pre>
+<p>The steering vector has a length of 1 / 0.13, about 7.69 blocks per tick, toward the target. The y component also gains a flat 1 each tick.</p>
+
+<h2 id="block-impact">Block impact</h2>
+<p>A separate branch in <code class="consolas">ArrowFlightVisualsProcedure</code> runs once per arrow, the first tick its velocity is exactly zero, and sets <code class="consolas">ground_impact</code> so it cannot run again. Fills are server commands run with owner permission at the arrow's position, with output suppressed.</p>
+<table>
+<thead>
+<tr><th>Modifier</th><th>Condition</th><th>Effect</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">shaft = blaze</code></td><td>Any tip except gold</td><td><code class="consolas">fill ~-1 ~-2 ~-1 ~1 ~2 ~1 minecraft:fire replace minecraft:air</code></td></tr>
+<tr><td><code class="consolas">shaft = blaze</code></td><td><code class="consolas">tip = gold</code></td><td><code class="consolas">fill ~-3 ~-3 ~-3 ~3 ~3 ~3 air replace water</code></td></tr>
+<tr><td><code class="consolas">shaft = blaze</code></td><td>Always</td><td>Entities within 1 block on each axis burn for 10 seconds; 5 <code class="consolas">LAVA</code> particles, spread 3; <code class="consolas">entity.generic.explode</code> at volume 1 and pitch 1</td></tr>
+<tr><td><code class="consolas">tip = sponge</code></td><td>Shaft is not <code class="consolas">aqua</code></td><td><code class="consolas">fill ~-2 ~-2 ~-2 ~2 ~2 ~2 air replace water</code></td></tr>
+<tr><td><code class="consolas">tip = gunpowder</code></td><td>Shaft is not <code class="consolas">aqua</code></td><td>Explosion of power 1.5 with <code class="consolas">Level.ExplosionInteraction.MOB</code>, and 1 <code class="consolas">EXPLOSION_EMITTER</code> particle</td></tr>
+</tbody>
+</table>
+<p><code class="consolas">CalcFletchingProcedure</code> has no ingredient that sets the shaft to <code class="consolas">aqua</code>, so the two <code class="consolas">aqua</code> conditions always pass for crafted arrows.</p>
+
+<h2 id="entity-hit">Entity hit</h2>
+<p><code class="consolas">TriggerEntityHitProcedure</code> subscribes to <code class="consolas">LivingIncomingDamageEvent</code>. When <code class="consolas">event.getSource().getDirectEntity()</code> is an <code class="consolas">Arrow</code>, it calls <code class="consolas">ArrowEffectExecuterProcedure</code> with the damaged entity and the arrow. Coordinates are the damaged entity's position. Effects run in the order listed, and more than one can apply.</p>
+<table>
+<thead>
+<tr><th>Modifier</th><th>Condition</th><th>Effect</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">tip = amethyst</code></td><td>Target is a <code class="consolas">LivingEntity</code></td><td>Extra 3 damage from a new <code class="consolas">DamageTypes.ARROW</code> source</td></tr>
+<tr><td><code class="consolas">tip = gunpowder</code></td><td>None</td><td>Explosion of power 1.5 with <code class="consolas">ExplosionInteraction.MOB</code>, and 1 <code class="consolas">EXPLOSION_EMITTER</code> particle</td></tr>
+<tr><td><code class="consolas">tip = prismarine</code></td><td>Target <code class="consolas">isUnderWater()</code></td><td>Target's velocity is multiplied by 1.6 on all axes</td></tr>
+<tr><td><code class="consolas">shaft = blaze</code></td><td>Any tip except gold</td><td><code class="consolas">fill ~-1 ~-2 ~-1 ~1 ~2 ~1 minecraft:fire replace minecraft:air</code></td></tr>
+<tr><td><code class="consolas">shaft = blaze</code></td><td><code class="consolas">tip = gold</code></td><td><code class="consolas">fill ~-2 ~-2 ~-2 ~2 ~2 ~2 minecraft:fire replace minecraft:air</code></td></tr>
+<tr><td><code class="consolas">shaft = blaze</code></td><td>Always</td><td>Entities within 1 block on each axis burn for 12 seconds; 7 <code class="consolas">LAVA</code> particles, spread 0.5; explosion sound</td></tr>
+<tr><td><code class="consolas">shaft = breeze</code></td><td>Any tip except gold</td><td>Entities within 1.5 blocks on each axis, except the arrow, get velocity <code class="consolas">((x - hitX) * 0.3, 1.1, (z - hitZ) * 0.3)</code>. One tick later, the target's velocity becomes <code class="consolas">(0, 1.2, 0)</code></td></tr>
+<tr><td><code class="consolas">shaft = breeze</code></td><td><code class="consolas">tip = gold</code></td><td>Same, with multiplier 0.4 and upward 1.2, then <code class="consolas">(0, 1.3, 0)</code> one tick later</td></tr>
+</tbody>
+</table>
+<p>The breeze effect also runs <code class="consolas">particle minecraft:wind_burst ~ ~ ~ 0 0 0 0 1</code> and plays the explosion sound. The one-tick delay uses <code class="consolas">StrawberrymcMod.queueServerWork(1, ...)</code>.</p>
+<pre class="code-box"><code class="consolas">StrawberrymcMod.queueServerWork(1, () -&gt; {
+	if (entity instanceof LivingEntity) {
+		if ((immediatesourceentity.getPersistentData().getStringOr("tip", "")).equals("gold")) {
+			entity.setDeltaMovement(new Vec3(0, 1.3, 0));
+		} else {
+			entity.setDeltaMovement(new Vec3(0, 1.2, 0));
+		}
+	}
+});</code></pre>
+<h3 id="sponge-hit">Sponge branch</h3>
+<p>The hit procedure's water-removal branch checks <code class="consolas">shaft = sponge</code>, while <code class="consolas">CalcFletchingProcedure</code> stores sponge as a tip. A crafted sponge arrow therefore removes water only through the block impact branch.</p>
+<h3 id="amethyst-tags">Amethyst block tags</h3>
+<p>The non-living branch of the amethyst effect, which breaks a block and plays a glass or dripleaf sound, is only reachable for a non-living target. <code class="consolas">TriggerEntityHitProcedure</code> is driven by a living damage event, so that branch does not run in play. It looks up the tag keys <code class="consolas">mod:amethyst_shard_pierceable</code> and <code class="consolas">mod:vegetation</code>. The tag files ship as <code class="consolas">data/strawberrymc/tags/block/amethyst_shard_pierceable.json</code> and <code class="consolas">data/strawberrymc/tags/block/vegetation.json</code>.</p>
+
+<h2 id="advancement">Advancement</h2>
+<p><code class="consolas">strawberrymc:echo_shard_advancement</code>, titled "Take (Auto) Aim", has <code class="consolas">minecraft:adventure/shoot_arrow</code> as its parent and a single <code class="consolas">minecraft:impossible</code> criterion, so it is granted only by command.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

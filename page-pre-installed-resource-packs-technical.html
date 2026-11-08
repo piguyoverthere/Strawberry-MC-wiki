@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Pre-Installed Resource Packs [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Pre-Installed Resource Packs [technical]</h1>
+<p>The mod ships four packs inside its jar and registers each one as a built-in, always-active pack through NeoForge. Two carry client assets and two carry server data. See the main page, <a href="page-pre-installed-resource-packs.html">Pre-Installed Resource Packs</a>.</p>
+
+<h2 id="registration">Registration</h2>
+<p>Each pack is a folder under <code class="consolas">src/main/resources</code> with its own <code class="consolas">pack.mcmeta</code>. A static method subscribes to <code class="consolas">AddPackFindersEvent</code> on the mod event bus and calls <code class="consolas">addPackFinders</code>. The identifier's path names the folder, so <code class="consolas">strawberrymc:comscript</code> points at <code class="consolas">src/main/resources/comscript</code>.</p>
+<pre class="code-box"><code class="consolas">private static void addPack(AddPackFindersEvent event) {
+	event.addPackFinders(Identifier.fromNamespaceAndPath("strawberrymc", "comscript"), PackType.CLIENT_RESOURCES, Component.literal("Strawberry MC ComScript"),
+		PackSource.BUILT_IN, true, Pack.Position.TOP);
+}</code></pre>
+<p>Every registration passes the same trailing arguments:</p>
+<ul>
+<li><code class="consolas">PackSource.BUILT_IN</code> marks the pack as supplied by the game rather than by the player.</li>
+<li><code class="consolas">true</code> makes the pack always active.</li>
+<li><code class="consolas">Pack.Position.TOP</code> places it at the top of the pack list, so its files take precedence over the packs below it, including the mod's own <code class="consolas">data</code>.</li>
+</ul>
+<p>The registering classes are initialized from the user-code block of the <code class="consolas">StrawberrymcMod</code> constructor, each receiving the mod event bus.</p>
+
+<h2 id="packs">The four packs</h2>
+<table>
+<thead>
+<tr><th>Pack ID</th><th>Registered in</th><th>Pack type</th><th>Title</th><th>Pack format</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">strawberrymc:comscript</code></td><td><code class="consolas">ComScript.addPack</code></td><td><code class="consolas">CLIENT_RESOURCES</code></td><td>Strawberry MC ComScript</td><td>84</td></tr>
+<tr><td><code class="consolas">strawberrymc:monument_cutscene</code></td><td><code class="consolas">MonumentIntro.addPack</code></td><td><code class="consolas">CLIENT_RESOURCES</code></td><td>Strawberry MC monument cutscene</td><td>84</td></tr>
+<tr><td><code class="consolas">strawberrymc:void_terrain</code></td><td><code class="consolas">VoidTerrainPack.addPack</code></td><td><code class="consolas">SERVER_DATA</code></td><td>Strawberry MC Void terrain</td><td>101.1</td></tr>
+<tr><td><code class="consolas">strawberrymc:monument_puzzles</code></td><td><code class="consolas">MonumentPuzzlesPack.addPack</code></td><td><code class="consolas">SERVER_DATA</code></td><td>Strawberry MC monument puzzles</td><td>101.1</td></tr>
+</tbody>
+</table>
+<p>The format values are the <code class="consolas">min_format</code> and <code class="consolas">max_format</code> fields of each <code class="consolas">pack.mcmeta</code>, which are set to the same number in every pack.</p>
+
+<h3 id="comscript-pack">ComScript client pack</h3>
+<p>The <code class="consolas">comscript</code> pack holds the client side of the Scripter block. Its description is "Strawberry MC ComScript (Scripter block and editor font)".</p>
+<ul>
+<li><code class="consolas">assets/strawberrymc/lang/en_us.json</code>, the Scripter's text.</li>
+<li><code class="consolas">blockstates/scripter.json</code>, <code class="consolas">models/block/scripter.json</code>, <code class="consolas">items/scripter.json</code> and <code class="consolas">textures/block/scripter.png</code>, the block's visuals.</li>
+<li><code class="consolas">font/jetbrains_mono.json</code>, <code class="consolas">font/jetbrains_mono_regular.ttf</code> and <code class="consolas">font/JetBrainsMono-OFL.txt</code>, the editor font and its license.</li>
+</ul>
+<p>Its use is described in <a href="page-scripter-technical.html">Scripter [technical]</a>.</p>
+
+<h3 id="monument-cutscene-pack">Monument cutscene client pack</h3>
+<p>The <code class="consolas">monument_cutscene</code> pack holds the chime sound and the two particle definitions used by the Ocean Monument cutscene. Its description reads "Strawberry MC monument cutscene chime (kept out of MCreator's generated sounds.json)".</p>
+<ul>
+<li><code class="consolas">assets/strawberrymc/sounds.json</code> and <code class="consolas">sounds/monument_chime.ogg</code>.</li>
+<li><code class="consolas">particles/rune_funnel.json</code> and <code class="consolas">particles/sensor_glyph.json</code>.</li>
+</ul>
+<p>Its use is described in <a href="page-ocean-monument-technical.html">Ocean Monument [technical]</a>.</p>
+
+<h3 id="data-packs">Built-in data packs</h3>
+<p><code class="consolas">void_terrain</code> and <code class="consolas">monument_puzzles</code> use the same mechanism for <code class="consolas">PackType.SERVER_DATA</code>. Comments on both classes give the reason for the separate packs: MCreator regenerates the mod's own data folder, so these files live where it cannot overwrite them. <code class="consolas">void_terrain</code> also relies on its position at the top of the pack list, because its <code class="consolas">dimension/void_dim.json</code> replaces the copy MCreator generates from the <code class="consolas">VoidDim</code> element. <code class="consolas">tools/void_terrain/gen.py</code> and <code class="consolas">tools/monument_puzzles/gen.py</code> write those packs' files. They are covered further in <a href="page-the-void-technical.html">The Void [technical]</a> and <a href="page-p2-piston-puzzle-technical.html">P2 Piston Puzzle [technical]</a>.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Ores And Minerals [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Ores And Minerals [technical]</h1>
+<h2 id="overview">Overview</h2>
+<p>This page covers the code behind <a href="page-ores-and-minerals.html">Ores And Minerals</a>. The mod adds two generated ores, Radonite and Chorite, and replaces the loot of the emerald ores. It also adds Sulfur Slag. Gem and crystal materials are documented on <a href="page-crystals-technical.html">Crystals [technical]</a>. Blocks are registered in <code class="consolas">StrawberrymcModBlocks</code>, items in <code class="consolas">StrawberrymcModItems</code>, and all of them are generated from MCreator elements.</p>
+
+<h2 id="blocks">Ore and storage blocks</h2>
+<table>
+<thead>
+<tr><th>Block ID</th><th>Class</th><th>Name</th><th>Hardness</th><th>Resistance</th><th>Required tool tag</th><th>Drops</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">strawberrymc:radonite_ore</code></td><td><code class="consolas">RadoniteOreBlock</code></td><td>Radonite Ore</td><td>3</td><td>3</td><td><code class="consolas">needs_iron_tool</code></td><td><code class="consolas">strawberrymc:raw_radonite</code></td></tr>
+<tr><td><code class="consolas">strawberrymc:radonite_block</code></td><td><code class="consolas">RadoniteBlockBlock</code></td><td>Block of Radonite</td><td>5</td><td>6</td><td><code class="consolas">needs_iron_tool</code></td><td>Itself</td></tr>
+<tr><td><code class="consolas">strawberrymc:chorine_ore</code></td><td><code class="consolas">ChorineOreBlock</code></td><td>Chorite Ore</td><td>2</td><td>1</td><td><code class="consolas">needs_stone_tool</code></td><td><code class="consolas">strawberrymc:chorite</code></td></tr>
+<tr><td><code class="consolas">strawberrymc:chorine_block</code></td><td><code class="consolas">ChorineBlockBlock</code></td><td>Block of Chorine</td><td>5</td><td>6</td><td><code class="consolas">needs_stone_tool</code></td><td>Itself</td></tr>
+</tbody>
+</table>
+<p>All four are in <code class="consolas">minecraft:mineable/pickaxe</code> and use <code class="consolas">requiresCorrectToolForDrops</code>. The two ore blocks use <code class="consolas">NoteBlockInstrument.BASEDRUM</code>, and the two storage blocks use <code class="consolas">SoundType.METAL</code>. Each loot table has one pool with one roll and the <code class="consolas">minecraft:survives_explosion</code> condition, without a silk touch branch.</p>
+<pre class="code-box"><code class="consolas">public class RadoniteOreBlock extends Block {
+	public RadoniteOreBlock(BlockBehaviour.Properties properties) {
+		super(properties.strength(3f).requiresCorrectToolForDrops().instrument(NoteBlockInstrument.BASEDRUM));
+	}
+}</code></pre>
+
+<h2 id="items">Items</h2>
+<p>Each is a plain <code class="consolas">Item</code> subclass with only a constructor.</p>
+<table>
+<thead>
+<tr><th>Item ID</th><th>Class</th><th>Name</th><th>Creative tab</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">strawberrymc:raw_radonite</code></td><td><code class="consolas">RawRadoniteItem</code></td><td>Raw Radonite</td><td>None</td></tr>
+<tr><td><code class="consolas">strawberrymc:radonite_ingot</code></td><td><code class="consolas">RadoniteIngotItem</code></td><td>Radonite</td><td>Ingredients</td></tr>
+<tr><td><code class="consolas">strawberrymc:chorite</code></td><td><code class="consolas">ChoriteItem</code></td><td>Chorite</td><td>None</td></tr>
+<tr><td><code class="consolas">strawberrymc:chorine</code></td><td><code class="consolas">ChorineItem</code></td><td>Chorine Nodule</td><td>Ingredients</td></tr>
+<tr><td><code class="consolas">strawberrymc:green_beryl</code></td><td><code class="consolas">GreenBerylItem</code></td><td>Green Beryl</td><td>Ingredients</td></tr>
+</tbody>
+</table>
+
+<h2 id="worldgen">World generation</h2>
+<p>Both ores are <code class="consolas">minecraft:ore</code> configured features with <code class="consolas">discard_chance_on_air_exposure</code> of 0. Each is added to biomes by a NeoForge <code class="consolas">add_features</code> biome modifier in the <code class="consolas">underground_ores</code> step.</p>
+<table>
+<thead>
+<tr><th>Feature</th><th>Biomes</th><th>Replaces</th><th>Vein size</th><th>Count per chunk</th><th>Height (uniform)</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">strawberrymc:radonite_ore</code></td><td><code class="consolas">#is_overworld</code></td><td>Tag <code class="consolas">stone_ore_replaceables</code></td><td>7</td><td>11</td><td>1 to 63</td></tr>
+<tr><td><code class="consolas">strawberrymc:chorine_ore</code></td><td><code class="consolas">end_highlands</code></td><td><code class="consolas">minecraft:end_stone</code></td><td>6</td><td>1</td><td>10 to 70</td></tr>
+</tbody>
+</table>
+<p>The placement order for both is <code class="consolas">count</code>, <code class="consolas">in_square</code>, <code class="consolas">height_range</code>, then <code class="consolas">biome</code>:</p>
+<pre class="code-box"><code class="consolas">{
+  "feature": "strawberrymc:radonite_ore",
+  "placement": [
+    { "type": "minecraft:count", "count": 11 },
+    { "type": "minecraft:in_square" },
+    { "type": "minecraft:height_range", "height": { "type": "minecraft:uniform", "min_inclusive": { "absolute": 1 }, "max_inclusive": { "absolute": 63 } } },
+    { "type": "minecraft:biome" }
+  ]
+}</code></pre>
+
+<h2 id="recipes">Recipes</h2>
+<table>
+<thead>
+<tr><th>File</th><th>Type</th><th>Input</th><th>Output</th><th>Details</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">radonite_ore_smelting.json</code></td><td>Smelting</td><td><code class="consolas">radonite_ore</code></td><td><code class="consolas">radonite_ingot</code></td><td>200 ticks, 0.7 experience</td></tr>
+<tr><td><code class="consolas">chorite_refine.json</code></td><td>Blasting</td><td><code class="consolas">chorite</code></td><td><code class="consolas">chorine</code></td><td>100 ticks, 1 experience</td></tr>
+<tr><td><code class="consolas">radonite_ore_block_recipe.json</code></td><td>Shaped 3x3</td><td>9 <code class="consolas">radonite_ingot</code></td><td><code class="consolas">radonite_block</code></td><td>Category building</td></tr>
+<tr><td><code class="consolas">radonite_block_ore_recipe.json</code></td><td>Shapeless</td><td><code class="consolas">radonite_block</code></td><td>9 <code class="consolas">radonite_ingot</code></td><td>Category misc</td></tr>
+<tr><td><code class="consolas">chorine_ore_block_recipe.json</code></td><td>Shaped 3x3</td><td>9 <code class="consolas">chorine</code></td><td><code class="consolas">chorine_block</code></td><td>Category building</td></tr>
+<tr><td><code class="consolas">chorine_block_ore_recipe.json</code></td><td>Shapeless</td><td><code class="consolas">chorine_block</code></td><td>9 <code class="consolas">chorine</code></td><td>Category misc</td></tr>
+</tbody>
+</table>
+<p><code class="consolas">raw_radonite</code> appears in the ore's loot table and no recipe file uses it as an ingredient.</p>
+
+<h2 id="radonite-gear">Radonite equipment</h2>
+<p>All five tools share a <code class="consolas">ToolMaterial</code> built from <code class="consolas">BlockTags.INCORRECT_FOR_IRON_TOOL</code>, durability 250, mining speed 6, attack bonus 0 and enchantment value 14. Each class defines its own material instance with its own repair tag, and each tag contains <code class="consolas">strawberrymc:radonite_ingot</code>.</p>
+<table>
+<thead>
+<tr><th>Item ID</th><th>Attack damage parameter</th><th>Attack speed parameter</th><th>Pattern</th><th>Repair tag</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">radonite_sword</code></td><td>5</td><td>-2</td><td><code class="consolas">a / a / b</code></td><td><code class="consolas">radonite_sword_repair_items</code></td></tr>
+<tr><td><code class="consolas">radonite_pickaxe</code></td><td>3</td><td>-3</td><td><code class="consolas">aaa /  b  /  b </code></td><td><code class="consolas">radonite_pickaxe_repair_items</code></td></tr>
+<tr><td><code class="consolas">radonite_axe</code></td><td>8</td><td>-3</td><td><code class="consolas">aa / ab /  b</code></td><td><code class="consolas">radonite_axe_repair_items</code></td></tr>
+<tr><td><code class="consolas">radonite_shovel</code></td><td>4</td><td>-3</td><td><code class="consolas">a / b / b</code></td><td><code class="consolas">radonite_shovel_repair_items</code></td></tr>
+<tr><td><code class="consolas">radonite_hoe</code></td><td>0</td><td>-1</td><td><code class="consolas">aa /  b /  b</code></td><td><code class="consolas">radonite_hoe_repair_items</code></td></tr>
+</tbody>
+</table>
+<p>In the patterns, <code class="consolas">a</code> is <code class="consolas">strawberrymc:radonite_ingot</code> and <code class="consolas">b</code> is <code class="consolas">minecraft:stick</code>. Tools are added to <code class="consolas">minecraft:swords</code>, <code class="consolas">pickaxes</code>, <code class="consolas">axes</code>, <code class="consolas">shovels</code> and <code class="consolas">hoes</code>. The sword is one of the items that accepts <a href="page-enchantments.html">Shocking</a>.</p>
+<p><code class="consolas">RadoniteArmorItem</code> has one nested subclass per piece, sharing a single <code class="consolas">ArmorMaterial</code>:</p>
+<table>
+<thead>
+<tr><th>Field</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Durability multiplier</td><td>15</td></tr>
+<tr><td>Defense</td><td>Helmet 2, chestplate 6, leggings 5, boots 2, body 6</td></tr>
+<tr><td>Enchantment value</td><td>9</td></tr>
+<tr><td>Equip sound</td><td><code class="consolas">SoundEvents.EMPTY</code></td></tr>
+<tr><td>Toughness and knockback resistance</td><td>0 and 0</td></tr>
+<tr><td>Repair tag</td><td><code class="consolas">strawberrymc:radonite_armor_repair_items</code></td></tr>
+<tr><td>Equipment asset</td><td><code class="consolas">strawberrymc:radonite_armor</code></td></tr>
+</tbody>
+</table>
+
+<h2 id="emerald">Emerald ore override</h2>
+<p>The elements <code class="consolas">EmeraldOreOverride.mod.json</code> and <code class="consolas">DeepslateEmeraldOreOverride.mod.json</code> generate <code class="consolas">data/minecraft/loot_table/blocks/emerald_ore.json</code> and <code class="consolas">deepslate_emerald_ore.json</code>. Those files replace the vanilla tables, so the ores never drop emeralds directly.</p>
+<table>
+<thead>
+<tr><th>Pool</th><th>Condition</th><th>Item</th><th>Functions</th></tr>
+</thead>
+<tbody>
+<tr><td>First</td><td>Tool does not have Silk Touch</td><td><code class="consolas">strawberrymc:green_beryl</code></td><td><code class="consolas">set_count</code> 1, then <code class="consolas">apply_bonus</code> with Fortune and the <code class="consolas">minecraft:ore_drops</code> formula</td></tr>
+<tr><td>Second</td><td>Tool has Silk Touch level 1 or higher</td><td>The ore block itself</td><td><code class="consolas">set_count</code> 1</td></tr>
+</tbody>
+</table>
+
+<h2 id="slag">Sulfur Slag</h2>
+<p><code class="consolas">strawberrymc:sulfur_slag</code> is <code class="consolas">SulfurSlagItem</code>. Its <code class="consolas">useOn</code> calls <a href="page-sulfurfertilizefarmlandprocedure-raw.html">SulfurFertilizeFarmlandProcedure [raw]</a> and returns <code class="consolas">InteractionResult.SUCCESS</code>. The farmland behavior is documented on <a href="page-poor-and-fertile-farmland-technical.html">Poor And Fertile Farmland [technical]</a>. The item also upgrades normal fire through <a href="page-creative-mode-inventory.html#tall-fires">Tall Fire</a>.</p>
+<p>Three villager trades use it. Their JSON files are under <code class="consolas">data/strawberrymc/villager_trade</code>, and they join the trade pools through the tags <code class="consolas">minecraft:farmer/level_2</code> and <code class="consolas">minecraft:toolsmith/level_1</code>.</p>
+<table>
+<thead>
+<tr><th>File</th><th>Profession and level</th><th>Wants</th><th>Gives</th><th>Max uses</th><th>XP</th><th>Reputation discount</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">sulfur_get_0</code></td><td>Toolsmith, level 1</td><td>1 emerald</td><td>2 Sulfur Slag</td><td>15</td><td>2</td><td>0.05</td></tr>
+<tr><td><code class="consolas">sulfur_trade_farmer_melon_seed_0</code></td><td>Farmer, level 2</td><td>2 Sulfur Slag and 1 emerald</td><td>4 melon seeds</td><td>10</td><td>5</td><td>0.05</td></tr>
+<tr><td><code class="consolas">sulfur_trade_farmer_hoe_0</code></td><td>Farmer, level 2</td><td>4 Sulfur Slag and 2 emeralds</td><td>1 iron hoe</td><td>5</td><td>6</td><td>0.05</td></tr>
+</tbody>
+</table>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

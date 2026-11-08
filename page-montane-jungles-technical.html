@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Montane Jungles [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Montane Jungles [technical]</h1>
+<p>The <a href="page-montane-jungles.html">Montane Jungle</a> is the biome <code class="consolas">strawberrymc:montane_jungle</code>, an MCreator element in <code class="consolas">elements/MontaneJungle.mod.json</code>.</p>
+
+<h2 id="biome-json">Biome JSON</h2>
+<table>
+<thead>
+<tr><th>Field in montane_jungle.json</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>has_precipitation</td><td>true</td></tr>
+<tr><td>temperature</td><td>0.7</td></tr>
+<tr><td>downfall</td><td>0.7</td></tr>
+<tr><td>foliage_color</td><td>#3BD751</td></tr>
+<tr><td>grass_color</td><td>#009815</td></tr>
+<tr><td>water_color</td><td>#2BB2EB</td></tr>
+<tr><td>minecraft:visual/fog_color</td><td>#B0C7D0</td></tr>
+<tr><td>minecraft:visual/water_fog_color</td><td>#050533</td></tr>
+<tr><td>carvers</td><td>minecraft:cave, minecraft:cave_extra_underground, minecraft:canyon</td></tr>
+<tr><td>spawners</td><td>Every category empty</td></tr>
+</tbody>
+</table>
+
+<h3 id="features-by-step">Features by step</h3>
+<p>The element's <code class="consolas">defaultFeatures</code> are <code class="consolas">Caves</code>, <code class="consolas">Ores</code>, <code class="consolas">FrozenTopLayer</code> and <code class="consolas">JungleGrass</code>.</p>
+<table>
+<thead>
+<tr><th>Step</th><th>Features</th></tr>
+</thead>
+<tbody>
+<tr><td>lakes</td><td>minecraft:lake_lava_underground</td></tr>
+<tr><td>underground_ores</td><td>ore_coal_upper, ore_coal_lower, ore_iron_upper, ore_iron_middle, ore_iron_small, ore_gold, ore_gold_lower, ore_redstone, ore_redstone_lower, ore_diamond, ore_diamond_medium, ore_diamond_large, ore_diamond_buried, ore_lapis, ore_lapis_buried, ore_copper, underwater_magma</td></tr>
+<tr><td>vegetal_decoration</td><td>strawberrymc:montane_jungle_tree, minecraft:patch_grass_jungle</td></tr>
+<tr><td>top_layer_modification</td><td>minecraft:freeze_top_layer</td></tr>
+</tbody>
+</table>
+
+<h2 id="climate">Climate</h2>
+<p><code class="consolas">StrawberrymcModBiomes.modifyOverworldParameterPoints</code> appends one point at depth 0 and one at depth 1.</p>
+<table>
+<thead>
+<tr><th>Parameter</th><th>Range</th></tr>
+</thead>
+<tbody>
+<tr><td>temperature</td><td>0 to 1</td></tr>
+<tr><td>humidity</td><td>0.6 to 1</td></tr>
+<tr><td>continentalness</td><td>0.3 to 1</td></tr>
+<tr><td>erosion</td><td>-1 to 0</td></tr>
+<tr><td>depth</td><td>Points 0 and 1</td></tr>
+<tr><td>weirdness</td><td>-1 to 1</td></tr>
+<tr><td>offset</td><td>0</td></tr>
+</tbody>
+</table>
+<p>The biome is not in the <code class="consolas">SURFACE_BIOMES</code> list of <code class="consolas">SurfaceBiomeDepthMixin</code>, so vanilla entries keep the same climate space. See <a href="page-terrain-generation.html">Terrain Generation</a> for how the points reach the biome source.</p>
+
+<h2 id="surface-rule">Surface rule</h2>
+<p><code class="consolas">StrawberrymcModBiomes.injectOverworldSurfaceRules</code> gives the biome a <code class="consolas">preliminarySurfaceRule</code>: <code class="consolas">minecraft:grass_block</code> on the floor where the water check passes, <code class="consolas">minecraft:gravel</code> on the floor underwater, and <code class="consolas">minecraft:dirt</code> at the secondary stone-depth check. It applies above the preliminary surface.</p>
+
+<h2 id="trees">Trees</h2>
+<p><code class="consolas">strawberrymc:montane_jungle_tree</code> is a <code class="consolas">minecraft:tree</code> feature.</p>
+<table>
+<thead>
+<tr><th>Tree setting</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>trunk_provider</td><td>minecraft:oak_log, axis y</td></tr>
+<tr><td>foliage_provider</td><td>minecraft:oak_leaves</td></tr>
+<tr><td>trunk_placer</td><td>minecraft:straight_trunk_placer: base 4, height_rand_a 2, height_rand_b 0</td></tr>
+<tr><td>foliage_placer</td><td>minecraft:blob_foliage_placer: radius 2, offset 0, height 3</td></tr>
+<tr><td>below_trunk_provider</td><td>minecraft:dirt, unless the block is in #minecraft:cannot_replace_below_tree_trunk</td></tr>
+<tr><td>minimum_size</td><td>two_layers_feature_size: limit 1, lower 0, upper 1</td></tr>
+<tr><td>ignore_vines</td><td>true</td></tr>
+</tbody>
+</table>
+<p>The placed feature runs <code class="consolas">count</code> 1, <code class="consolas">in_square</code>, <code class="consolas">surface_water_depth_filter</code> with a maximum depth of 0, <code class="consolas">heightmap</code> OCEAN_FLOOR, <code class="consolas">biome</code>, and a <code class="consolas">would_survive</code> check against <code class="consolas">minecraft:oak_sapling</code>.</p>
+
+<h2 id="structures">Structures</h2>
+<p>The element sets <code class="consolas">spawnJungleTemple</code>, which MCreator writes as an entry in <code class="consolas">data/minecraft/tags/worldgen/biome/has_structure/jungle_temple.json</code> with <code class="consolas">"replace": false</code>. Jungle temples are therefore allowed in the biome through the vanilla structure's own biome tag.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Chiseled Cauldrons [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Chiseled Cauldrons [technical]</h1>
+<p>The Chiseled Cauldron (<code class="consolas">strawberrymc:chiseled_cauldron</code>) is an unbreakable, waterloggable basin block. It is the target block for spell vials; see <a href="page-spells-for-chiseled-cauldrons.html">Spells For Chiseled Cauldrons</a> and the main <a href="page-chiseled-cauldrons.html">Chiseled Cauldrons</a> page.</p>
+<h2 id="registration">Registration</h2>
+<p>The block is defined in <code class="consolas">block/ChiseledCauldronBlock.java</code>, generated from <code class="consolas">elements/ChiseledCauldron.mod.json</code>, and registered in <code class="consolas">init/StrawberrymcModBlocks.java</code> with <code class="consolas">register("chiseled_cauldron", ChiseledCauldronBlock::new)</code>. <code class="consolas">init/StrawberrymcModItems.java</code> creates its block item with <code class="consolas">new Item.Properties().stacksTo(1).rarity(Rarity.RARE)</code>. The lang key is <code class="consolas">item.strawberrymc.chiseled_cauldron</code>.</p>
+<p><code class="consolas">init/StrawberrymcModTabs.java</code> lists the item in three creative tabs:</p>
+<ul>
+<li>The mod's Debug tab (<code class="consolas">strawberrymc:debug</code>).</li>
+<li><code class="consolas">CreativeModeTabs.FUNCTIONAL_BLOCKS</code>.</li>
+<li><code class="consolas">CreativeModeTabs.OP_BLOCKS</code>, inside the <code class="consolas">tabData.hasPermissions()</code> check.</li>
+</ul>
+<h2 id="block-properties">Block properties</h2>
+<p>The constructor applies the following to its <code class="consolas">BlockBehaviour.Properties</code>:</p>
+<table>
+<thead><tr><th>Property</th><th>Call</th><th>Effect</th></tr></thead>
+<tbody>
+<tr><td>Map color</td><td><code class="consolas">mapColor(MapColor.STONE)</code></td><td>Stone color on maps</td></tr>
+<tr><td>Strength</td><td><code class="consolas">strength(-1, 3600000)</code></td><td>Hardness of -1 makes it unbreakable; resistance of 3600000</td></tr>
+<tr><td>Occlusion</td><td><code class="consolas">noOcclusion()</code></td><td>Does not cull neighboring faces</td></tr>
+<tr><td>Piston reaction</td><td><code class="consolas">pushReaction(PushReaction.BLOCK)</code></td><td>Pistons cannot move it</td></tr>
+<tr><td>Post-process</td><td><code class="consolas">postProcess((bs, br, bp) -&gt; bp)</code></td><td>The lambda returns the block's own position</td></tr>
+<tr><td>Emissive</td><td><code class="consolas">emissiveRendering((bs, br, bp) -&gt; true)</code></td><td>Always rendered at full brightness</td></tr>
+<tr><td>Redstone</td><td><code class="consolas">isRedstoneConductor((bs, br, bp) -&gt; false)</code></td><td>Does not conduct redstone</td></tr>
+</tbody>
+</table>
+<p>The element file stores <code class="consolas">"unbreakable": true</code>, which is the setting that produces the <code class="consolas">strength(-1, 3600000)</code> call; its <code class="consolas">hardness</code> of 1.0 and <code class="consolas">resistance</code> of 10.0 fields do not appear in the generated class. <code class="consolas">getBlockPathType</code> returns <code class="consolas">PathType.BLOCKED</code>, so mobs path around the block.</p>
+<h2 id="shape">Collision and outline shape</h2>
+<p><code class="consolas">SHAPE</code> is a <code class="consolas">Shapes.or</code> union of five boxes that form a hollow basin with a 5-pixel floor and 2-pixel walls. <code class="consolas">getShape</code> returns this union, and <code class="consolas">getVisualShape</code> returns <code class="consolas">Shapes.empty()</code>.</p>
+<table>
+<thead><tr><th>Part</th><th>From (x, y, z)</th><th>To (x, y, z)</th></tr></thead>
+<tbody>
+<tr><td>Floor</td><td>0, 0, 0</td><td>16, 5, 16</td></tr>
+<tr><td>North wall</td><td>0, 5, 0</td><td>16, 16, 2</td></tr>
+<tr><td>South wall</td><td>0, 5, 14</td><td>16, 16, 16</td></tr>
+<tr><td>West wall</td><td>0, 5, 2</td><td>2, 16, 14</td></tr>
+<tr><td>East wall</td><td>14, 5, 2</td><td>16, 16, 14</td></tr>
+</tbody>
+</table>
+<h2 id="waterlogging">Waterlogging</h2>
+<p>The block implements <code class="consolas">SimpleWaterloggedBlock</code> and adds <code class="consolas">BlockStateProperties.WATERLOGGED</code>, defaulting to false. The logic is spread over three overrides:</p>
+<ol>
+<li><code class="consolas">getStateForPlacement</code> sets the property to true when the fluid at the clicked position is <code class="consolas">Fluids.WATER</code>.</li>
+<li><code class="consolas">getFluidState</code> returns <code class="consolas">Fluids.WATER.getSource(false)</code> while waterlogged, and otherwise defers to <code class="consolas">super</code>.</li>
+<li><code class="consolas">updateShape</code> schedules a water tick with <code class="consolas">Fluids.WATER.getTickDelay(world)</code> while waterlogged, so the contained water keeps flowing into neighboring spaces.</li>
+</ol>
+<h2 id="client-tick">Ambient particle call</h2>
+<p><code class="consolas">animateTick</code> calls <a href="page-ambientparticleenchantprocedure-raw.html">AmbientParticleEnchantProcedure [raw]</a> with the block's position. The procedure requests five <code class="consolas">ParticleTypes.ENCHANT</code> particles with spreads of 0.5, 0.8 and 0.5 and a speed of 1:</p>
+<pre class="code-box"><code class="consolas">public static void execute(LevelAccessor world, double x, double y, double z) {
+	if (world instanceof ServerLevel _level)
+		_level.sendParticles(ParticleTypes.ENCHANT, x, y, z, 5, 0.5, 0.8, 0.5, 1);
+}</code></pre>
+<p><code class="consolas">animateTick</code> runs on the client, where the level is not a <code class="consolas">ServerLevel</code>, so the guard is false and this call emits nothing.</p>
+<h2 id="resources">Model and resources</h2>
+<table>
+<thead><tr><th>File</th><th>Role</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">assets/strawberrymc/blockstates/chiseled_cauldron.json</code></td><td>Single variant pointing to the block model; the <code class="consolas">waterlogged</code> property is not used for model selection</td></tr>
+<tr><td><code class="consolas">assets/strawberrymc/models/block/chiseled_cauldron.json</code></td><td>Parent <code class="consolas">block/cube</code>, with all six faces and the particle set to <code class="consolas">strawberrymc:block/placeholder</code></td></tr>
+<tr><td><code class="consolas">assets/strawberrymc/models/item/chiseled_cauldron.json</code></td><td>Parent <code class="consolas">strawberrymc:block/chiseled_cauldron</code> with a third-person display transform</td></tr>
+<tr><td><code class="consolas">assets/strawberrymc/items/chiseled_cauldron.json</code></td><td>Item model definition</td></tr>
+<tr><td><code class="consolas">data/strawberrymc/loot_table/blocks/chiseled_cauldron.json</code></td><td>One roll of the block's own item, conditioned on <code class="consolas">minecraft:survives_explosion</code></td></tr>
+</tbody>
+</table>
+<h2 id="interaction">Spell interaction</h2>
+<p>The block has no <code class="consolas">useItemOn</code> or <code class="consolas">useWithoutItem</code> override. Interaction is driven from the item side: <code class="consolas">SmiteVialItem.useOn</code> calls <a href="page-smitehandlerprocedure-raw.html">SmiteHandlerProcedure [raw]</a>, which compares the clicked block against <code class="consolas">StrawberrymcModBlocks.CHISELED_CAULDRON</code>. That flow is described in <a href="page-spells-for-chiseled-cauldrons.html">Spells For Chiseled Cauldrons</a>.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

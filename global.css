@@ -723,7 +723,9 @@ th {
 td code,
 th code,
 p code,
-li code{
+li code,
+p a,
+li a{
     overflow-wrap:anywhere
 }
 @media (max-width:600px){

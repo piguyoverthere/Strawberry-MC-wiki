@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Villagers And Wandering Traders [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Villagers And Wandering Traders [technical]</h1>
+<p>The mod adds villager trades through data files. All three custom offers involve Sulfur Slag (<code class="consolas">strawberrymc:sulfur_slag</code>), the fertilizer used by <a href="page-poor-and-fertile-farmland-technical.html">Poor and Fertile Farmland [technical]</a>. The Shocking enchantment is also registered for villager trading. See the main <a href="page-villagers-and-wandering-traders.html">Villagers And Wandering Traders</a> page.</p>
+<h2 id="trade-data">Trade data</h2>
+<p>Each offer is a JSON file under <code class="consolas">data/strawberrymc/villager_trade/&lt;profession&gt;/&lt;level&gt;/</code>, generated from an MCreator <code class="consolas">villagertrade</code> element. No Java class is involved.</p>
+<table>
+<thead><tr><th>Trade file</th><th>Element</th><th>Profession and level</th><th>Wants</th><th>Additional wants</th><th>Gives</th><th>Max uses</th><th>XP</th><th>Reputation discount</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">toolsmith/1/sulfur_get_0.json</code></td><td><code class="consolas">elements/SulfurGet.mod.json</code></td><td>Toolsmith, level 1</td><td>1 <code class="consolas">minecraft:emerald</code></td><td>None</td><td>2 <code class="consolas">strawberrymc:sulfur_slag</code></td><td>15</td><td>2</td><td>0.05</td></tr>
+<tr><td><code class="consolas">farmer/2/sulfur_trade_farmer_melon_seed_0.json</code></td><td><code class="consolas">elements/SulfurTradeFarmerMelonSeed.mod.json</code></td><td>Farmer, level 2</td><td>2 <code class="consolas">strawberrymc:sulfur_slag</code></td><td>1 <code class="consolas">minecraft:emerald</code></td><td>4 <code class="consolas">minecraft:melon_seeds</code></td><td>10</td><td>5</td><td>0.05</td></tr>
+<tr><td><code class="consolas">farmer/2/sulfur_trade_farmer_hoe_0.json</code></td><td><code class="consolas">elements/SulfurTradeFarmerHoe.mod.json</code></td><td>Farmer, level 2</td><td>4 <code class="consolas">strawberrymc:sulfur_slag</code></td><td>2 <code class="consolas">minecraft:emerald</code></td><td>1 <code class="consolas">minecraft:iron_hoe</code></td><td>5</td><td>6</td><td>0.05</td></tr>
+</tbody>
+</table>
+<p>A file in this directory has the following shape, shown here with the hoe trade:</p>
+<pre class="code-box"><code class="consolas">{
+  "wants": { "id": "strawberrymc:sulfur_slag", "count": 4 },
+  "additional_wants": { "id": "minecraft:emerald", "count": 2 },
+  "gives": { "id": "minecraft:iron_hoe" },
+  "max_uses": 5,
+  "xp": 6,
+  "reputation_discount": 0.05
+}</code></pre>
+<h3 id="element-mapping">Element field mapping</h3>
+<table>
+<thead><tr><th>Element field</th><th>JSON field</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">price1</code>, <code class="consolas">countPrice1</code></td><td><code class="consolas">wants</code></td></tr>
+<tr><td><code class="consolas">price2</code>, <code class="consolas">countPrice2</code></td><td><code class="consolas">additional_wants</code></td></tr>
+<tr><td><code class="consolas">offer</code>, <code class="consolas">countOffer</code></td><td><code class="consolas">gives</code></td></tr>
+<tr><td><code class="consolas">maxTrades</code></td><td><code class="consolas">max_uses</code></td></tr>
+<tr><td><code class="consolas">xp</code></td><td><code class="consolas">xp</code></td></tr>
+<tr><td><code class="consolas">priceMultiplier</code></td><td><code class="consolas">reputation_discount</code></td></tr>
+</tbody>
+</table>
+<p>A count of 1 is omitted from the JSON, which is why the melon seed trade writes its emerald as <code class="consolas">{ "id": "minecraft:emerald" }</code>. The <code class="consolas">villagerProfession</code> and <code class="consolas">level</code> fields determine the directory path and which tag receives the trade.</p>
+<h2 id="trade-tags">Trade tags</h2>
+<p>A trade file only joins a villager's pool when a vanilla-namespace tag lists it. The mod adds to two tags under <code class="consolas">data/minecraft/tags/villager_trade/</code>. Both use <code class="consolas">"replace": false</code>, so vanilla offers stay in the pool:</p>
+<table>
+<thead><tr><th>Tag file</th><th>Values</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">toolsmith/level_1.json</code></td><td><code class="consolas">strawberrymc:toolsmith/1/sulfur_get_0</code></td></tr>
+<tr><td><code class="consolas">farmer/level_2.json</code></td><td><code class="consolas">strawberrymc:farmer/2/sulfur_trade_farmer_melon_seed_0</code>, <code class="consolas">strawberrymc:farmer/2/sulfur_trade_farmer_hoe_0</code></td></tr>
+</tbody>
+</table>
+<pre class="code-box"><code class="consolas">{
+  "replace": false,
+  "values": [
+    "strawberrymc:farmer/2/sulfur_trade_farmer_melon_seed_0",
+    "strawberrymc:farmer/2/sulfur_trade_farmer_hoe_0"
+  ]
+}</code></pre>
+<h2 id="enchantment-trading">Enchantment trading</h2>
+<p>The Shocking enchantment (<code class="consolas">strawberrymc:electricution</code>, element <code class="consolas">elements/Electricution.mod.json</code>) has <code class="consolas">"canVillagerTrade": true</code> in its element. In data, that setting appears as an entry in <code class="consolas">data/minecraft/tags/enchantment/tradeable.json</code>, which uses <code class="consolas">"replace": false</code> and lists <code class="consolas">strawberrymc:electricution</code>.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

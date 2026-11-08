@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Desert [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Desert [technical]</h1>
+<p>The mod's <a href="page-desert.html">Desert</a> code covers palm trees, coconuts and coconut oil. The pools placed around palm trees are covered under <a href="page-oases.html">Oases</a>.</p>
+
+<h2 id="palm-feature">The palm feature</h2>
+<p><code class="consolas">elements/Palm.mod.json</code> generates three data files.</p>
+<table>
+<thead>
+<tr><th>File</th><th>Content</th></tr>
+</thead>
+<tbody>
+<tr><td>configured_feature/palm.json</td><td><code class="consolas">minecraft:tree</code> built from minecraft:oak_log and minecraft:oak_leaves</td></tr>
+<tr><td>placed_feature/palm.json</td><td>One <code class="consolas">minecraft:block_predicate_filter</code>: <code class="consolas">would_survive</code> for minecraft:cactus</td></tr>
+<tr><td>biome_modifier/palm_biome_modifier.json</td><td>Adds the placed feature to <code class="consolas">minecraft:desert</code>, step surface_structures</td></tr>
+</tbody>
+</table>
+<pre class="code-box"><code class="consolas">{
+  "feature": "strawberrymc:palm",
+  "placement": [
+    {
+      "type": "minecraft:block_predicate_filter",
+      "predicate": {
+        "type": "minecraft:would_survive",
+        "state": { "Name": "minecraft:cactus" }
+      }
+    }
+  ]
+}</code></pre>
+<p>The placement list has no <code class="consolas">count</code>, <code class="consolas">in_square</code> or <code class="consolas">heightmap</code> step, so the filter is evaluated once per chunk at the chunk's origin, at the bottom of the world (<code class="consolas">ChunkGenerator.applyBiomeDecoration</code> starts from <code class="consolas">SectionPos.of(centerPos, level.getMinSectionY()).origin()</code>). <code class="consolas">CactusBlock.canSurvive</code> needs a block in <code class="consolas">BlockTags.SUPPORTS_CACTUS</code> or another cactus below, and the block below the lowest layer is outside the world, so the filter does not pass there.</p>
+
+<h3 id="palm-tree-config">Tree configuration</h3>
+<table>
+<thead>
+<tr><th>Setting</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>trunk_placer</td><td>minecraft:straight_trunk_placer: base 4, height_rand_a 2, height_rand_b 0</td></tr>
+<tr><td>foliage_placer</td><td>minecraft:blob_foliage_placer: radius 2, offset 0, height 3</td></tr>
+<tr><td>below_trunk_provider</td><td>minecraft:dirt, unless the block is in #minecraft:cannot_replace_below_tree_trunk</td></tr>
+<tr><td>minimum_size</td><td>two_layers_feature_size: limit 1, lower 0, upper 1</td></tr>
+</tbody>
+</table>
+
+<h2 id="palm-tree">Procedural palm tree</h2>
+<p><a href="page-spawnpalmtreeprocedureprocedure-raw.html">SpawnPalmTreeProcedureProcedure [raw]</a> builds the tree used by oases out of <code class="consolas">PALM_LOG</code> and <code class="consolas">PALM_LEAVES</code> with <code class="consolas">PERSISTENT</code> set to true. It writes with <code class="consolas">world.setBlock</code> flag 3 and does not check for free space.</p>
+<ol>
+<li><strong>Trunk.</strong> Height is <code class="consolas">8 + random.nextInt(6)</code>, so 8 to 13 blocks. A single tilt of -1 to 1 per axis is rolled for the whole tree. From the fourth log up, each log has a 35% chance to shift the trunk by that tilt.</li>
+<li><strong>Crown core.</strong> Leaves go at 1 and 2 blocks above the top log. The 8 surrounding positions at level 1 are always filled, and those at level 2 are filled with 60% chance.</li>
+<li><strong>Fronds.</strong> Eight directions each grow a frond. Straight fronds are 3 or 4 blocks long, diagonal fronds 2 or 3. The first step sets a height offset of 1 or 2, and the last step lowers it by 1.</li>
+<li><strong>Frond volume.</strong> Each frond block has a 50% chance of a leaf below it, and straight fronds have a 40% chance of a side leaf.</li>
+<li><strong>Tips.</strong> The last block hangs 1 or 2 extra leaves downward, each with a 30% chance of a side leaf.</li>
+</ol>
+<pre class="code-box"><code class="consolas">int height = 8 + random.nextInt(6);
+int tiltX = random.nextInt(3) - 1;
+int tiltZ = random.nextInt(3) - 1;
+int currentX = (int) x;
+int currentZ = (int) z;
+
+for (int i = 0; i &lt; height; i++) {
+    world.setBlock(BlockPos.containing(currentX, y + i, currentZ), log, 3);
+    if (i &gt;= 3 &amp;&amp; random.nextFloat() &lt; 0.35f) {
+        currentX += tiltX;
+        currentZ += tiltZ;
+    }
+}</code></pre>
+
+<h2 id="palm-blocks">Palm blocks</h2>
+<table>
+<thead>
+<tr><th>Block</th><th>Hardness / resistance</th><th>Flammability / spread</th><th>Notes</th></tr>
+</thead>
+<tbody>
+<tr><td>palm_log</td><td>2 / 2</td><td>5 / 5</td><td>Axe, in the tag strawberrymc:palm_logs</td></tr>
+<tr><td>palm_leaves</td><td>0.2 / 0.2</td><td>60 / 30</td><td>Hoe, <code class="consolas">UntintedParticleLeavesBlock</code>, compost chance 0.3</td></tr>
+<tr><td>palm_sapling</td><td>0 / 0</td><td>100 / 60</td><td><code class="consolas">FlowerBlock</code> with Haste 100, custom sounds <code class="consolas">strawberrymc:palm_step</code> and <code class="consolas">strawberrymc:palm_break</code></td></tr>
+</tbody>
+</table>
+<p>The rest of the family (wood, stripped log and wood, planks, stairs, slab, fence, fence gate, door, trapdoor, pressure plate, button, signs, hanging signs, boat and chest boat) is registered in <code class="consolas">StrawberrymcModBlocks</code>. <code class="consolas">StrawberrymcModWoodTypes</code> supplies the sign wood types.</p>
+<h3 id="palm-growth">Sapling growth</h3>
+<p><code class="consolas">PalmSaplingBlock</code> implements <code class="consolas">BonemealableBlock</code> with <code class="consolas">isBonemealSuccess</code> always true. <a href="page-palmgrowprocedure-raw.html">PalmGrowProcedure [raw]</a> places the configured feature <code class="consolas">strawberrymc:palm</code> at the sapling, so a bone-mealed sapling produces the oak-block tree from <code class="consolas">configured_feature/palm.json</code>. The sapling drops one <code class="consolas">strawberrymc:plant_fiber</code>.</p>
+<h3 id="palm-leaves-loot">Palm leaves loot</h3>
+<table>
+<thead>
+<tr><th>Pool</th><th>Entry</th><th>Condition</th><th>Count</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>strawberrymc:coconut</td><td>Tool without Silk Touch</td><td>0 to 1</td></tr>
+<tr><td>2</td><td>strawberrymc:palm_leaves</td><td>Tool with Silk Touch</td><td>1</td></tr>
+<tr><td>3</td><td>minecraft:stick</td><td>Tool without Silk Touch</td><td>0 to 1</td></tr>
+</tbody>
+</table>
+
+<h2 id="coconut">Coconut</h2>
+<p><code class="consolas">CoconutItem</code> (<code class="consolas">strawberrymc:coconut</code>) stacks to 64 and is both a thrown projectile and the way to plant a palm.</p>
+<h3 id="coconut-planting">Planting</h3>
+<p>Right-clicking a block runs <a href="page-coconutplantprocedure-raw.html">CoconutPlantProcedure [raw]</a>. If the clicked block is sand or red sand, a <code class="consolas">palm_sapling</code> is set one block above it.</p>
+<pre class="code-box"><code class="consolas">if ((world.getBlockState(BlockPos.containing(x, y, z))).getBlock() == Blocks.SAND
+		|| (world.getBlockState(BlockPos.containing(x, y, z))).getBlock() == Blocks.RED_SAND) {
+	world.setBlock(BlockPos.containing(x, y + 1, z), StrawberrymcModBlocks.PALM_SAPLING.get().defaultBlockState(), 3);
+}</code></pre>
+<h3 id="coconut-throwing">Throwing</h3>
+<p>The item's use animation is <code class="consolas">BLOCK</code> with a use duration of 1 tick. <code class="consolas">use</code> starts the action if the player is in creative mode or <code class="consolas">findAmmo</code> finds a coconut in the inventory. <code class="consolas">releaseUsing</code> calls <code class="consolas">CoconutProjectileEntity.shoot</code> and removes one coconut outside creative mode.</p>
+<table>
+<thead>
+<tr><th>Projectile value</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Entity</td><td>strawberrymc:coconut_projectile, extends <code class="consolas">AbstractArrow</code></td></tr>
+<tr><td>Power (<code class="consolas">shoot</code> multiplies by 2)</td><td>1.3</td></tr>
+<tr><td>Base damage</td><td>5</td></tr>
+<tr><td>Knockback</td><td>6</td></tr>
+<tr><td>Crit arrow</td><td>true</td></tr>
+<tr><td>Sound</td><td>entity.arrow.shoot</td></tr>
+</tbody>
+</table>
+<p><code class="consolas">tick</code> discards the projectile once it is in the ground. <code class="consolas">onHitBlock</code> runs <a href="page-coconutimpactparticlehandlerprocedure-raw.html">CoconutImpactParticleHandlerProcedure [raw]</a>, which sends 5 <code class="consolas">strawberrymc:coconut_impact</code> particles with a spread of 1 on each axis. The particle element has a <code class="consolas">maxAge</code> of 7, gravity 0.7, and collides with blocks.</p>
+<p><a href="page-plantcoconutprocedure-raw.html">PlantCoconutProcedure [raw]</a> is a separate procedure that no item or block calls. Its branch for sand, red sand and gravel sets <code class="consolas">radonite_ore</code> one block above.</p>
+
+<h2 id="coconut-oil">Coconut Oil</h2>
+<p><code class="consolas">CoconutOilItem</code> stacks to 16. The recipe <code class="consolas">coconut_oil_recipe.json</code> is shapeless: one <code class="consolas">strawberrymc:coconut</code> and one <code class="consolas">minecraft:glass_bottle</code> make one <code class="consolas">strawberrymc:coconut_oil</code>.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

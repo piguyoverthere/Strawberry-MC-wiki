@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Spells For Chiseled Cauldrons [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Spells For Chiseled Cauldrons [technical]</h1>
+<p>The spell vial in the mod is the Smite Vial (<code class="consolas">strawberrymc:smite_vial</code>). Used on a <a href="page-chiseled-cauldrons.html">Chiseled Cauldron</a>, it strikes every other entity around the cauldron with lightning. See the main <a href="page-spells-for-chiseled-cauldrons.html">Spells For Chiseled Cauldrons</a> page.</p>
+<h2 id="smite-vial-item">Smite Vial item</h2>
+<p><code class="consolas">item/SmiteVialItem.java</code> (element <code class="consolas">elements/SmiteVial.mod.json</code>) extends <code class="consolas">Item</code> and sets <code class="consolas">Rarity.UNCOMMON</code>. It is registered in <code class="consolas">init/StrawberrymcModItems.java</code> as <code class="consolas">smite_vial</code> with a stack size of 64 in its element, and it is listed in the Ingredients and Combat creative tabs by <code class="consolas">init/StrawberrymcModTabs.java</code>. Its model at <code class="consolas">assets/strawberrymc/models/item/smite_vial.json</code> uses parent <code class="consolas">item/generated</code> with the texture <code class="consolas">strawberrymc:item/smite_vial</code>. The lang key is <code class="consolas">item.strawberrymc.smite_vial</code>.</p>
+<p>The element binds the procedure through its <code class="consolas">onRightClickedOnBlock</code> field, and the generated <code class="consolas">useOn</code> override forwards the clicked block position, the player and the held stack:</p>
+<pre class="code-box"><code class="consolas">@Override
+public InteractionResult useOn(UseOnContext context) {
+	super.useOn(context);
+	SmiteHandlerProcedure.execute(context.getLevel(), context.getClickedPos().getX(), context.getClickedPos().getY(), context.getClickedPos().getZ(), context.getPlayer(), context.getItemInHand());
+	return InteractionResult.SUCCESS;
+}</code></pre>
+<p><code class="consolas">useOn</code> returns <code class="consolas">InteractionResult.SUCCESS</code> for every block, so the hand-swing happens on any right-clicked block, while the spell itself only runs on a cauldron.</p>
+<h2 id="smite-handler">SmiteHandlerProcedure</h2>
+<p><a href="page-smitehandlerprocedure-raw.html">SmiteHandlerProcedure [raw]</a> (element <code class="consolas">elements/SmiteHandler.mod.json</code>) returns immediately if the entity is null, which covers a <code class="consolas">useOn</code> call without a player. It then requires the block at the clicked position to be <code class="consolas">StrawberrymcModBlocks.CHISELED_CAULDRON</code>. When that passes, it runs these steps in order:</p>
+<ol>
+<li>Plays <code class="consolas">item.bucket.empty</code> at the cauldron in <code class="consolas">SoundSource.MASTER</code> at volume 1 and pitch 1.</li>
+<li>Collects the entities in the strike volume, sorted nearest first, and strikes each one other than the user.</li>
+<li>Spawns the 36 angry-villager particles above the cauldron.</li>
+<li>Consumes one vial unless the user is a creative-mode player.</li>
+</ol>
+<h3 id="strike-volume">Strike volume and targets</h3>
+<p>The center is built from the clicked block's integer coordinates, so it sits on the block's lower north-west corner rather than its middle. The box extends 5 blocks in each direction from there (<code class="consolas">inflate(10 / 2d)</code>), making a 10 by 10 by 10 cube. The query uses <code class="consolas">Entity.class</code> with the predicate <code class="consolas">e -&gt; true</code>, so all entity types are targets, including items and other non-living entities. The list is fully collected with <code class="consolas">toList()</code> before any bolt is spawned, so bolts created by the loop do not become targets.</p>
+<pre class="code-box"><code class="consolas">final Vec3 _center = new Vec3(x, y, z);
+for (Entity entityiterator : world.getEntitiesOfClass(Entity.class, new AABB(_center, _center).inflate(10 / 2d), e -&gt; true).stream().sorted(Comparator.comparingDouble(_entcnd -&gt; _entcnd.distanceToSqr(_center))).toList()) {
+	if (!(entityiterator == entity)) {
+		if (world instanceof ServerLevel _level) {
+			LightningBolt entityToSpawn = EntityType.LIGHTNING_BOLT.create(_level, EntitySpawnReason.TRIGGERED);
+			entityToSpawn.snapTo(Vec3.atBottomCenterOf(BlockPos.containing(entityiterator.getX(), entityiterator.getY(), entityiterator.getZ())));;
+			_level.addFreshEntity(entityToSpawn);
+		}</code></pre>
+<p>Each target receives a <code class="consolas">LightningBolt</code> at the bottom center of the block it occupies, created with <code class="consolas">EntitySpawnReason.TRIGGERED</code>, and the sound <code class="consolas">entity.arrow.hit_player</code> in <code class="consolas">SoundSource.MASTER</code> at the target's position.</p>
+<h3 id="side-handling">Client and server handling</h3>
+<p><code class="consolas">useOn</code> runs on both logical sides, so the procedure branches per call: sounds use <code class="consolas">playSound(null, ...)</code> on the server and <code class="consolas">playLocalSound</code> on the client, while lightning and particles are limited to <code class="consolas">ServerLevel</code>.</p>
+<h3 id="particle-ring">Particles</h3>
+<p>A local <code class="consolas">Angle</code> variable starts at 0 and is passed to <code class="consolas">Math.cos</code> and <code class="consolas">Math.sin</code> as the X and Z spread of each <code class="consolas">sendParticles</code> call, at a height of <code class="consolas">y + 1</code>. It increases by 10 on each of 36 iterations. <code class="consolas">Math.cos</code> and <code class="consolas">Math.sin</code> take radians, so each step is 10 radians.</p>
+<pre class="code-box"><code class="consolas">for (int _i1 = 0; _i1 &lt; 36; _i1++) {
+	if (world instanceof ServerLevel _level)
+		_level.sendParticles(ParticleTypes.ANGRY_VILLAGER, x, (y + 1), z, 1, Math.cos(Angle), 0, Math.sin(Angle), 1);
+	Angle = Angle + 10;
+}</code></pre>
+<h3 id="consumption">Consumption</h3>
+<p>The stack shrinks by one when the entity is not a <code class="consolas">Player</code> in <code class="consolas">GameType.CREATIVE</code>. Because this sits inside the cauldron check, right-clicking any other block leaves the vial intact.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

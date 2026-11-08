@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Potions [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Potions [technical]</h1>
+<p>The mod's potion content is made of one custom potion (<code class="consolas">strawberrymc:herb</code>), two brewing recipes that form a chain from Thick Potion to the vanilla Potion of Luck, and one custom mob effect (<code class="consolas">strawberrymc:invulnerability</code>). See the main <a href="page-potions.html">Potions</a> page and <a href="page-clovers-technical.html">Clovers [technical]</a> for the ingredient.</p>
+<h2 id="potion-of-herb">Potion of Herb</h2>
+<p>Potions are registered in <code class="consolas">init/StrawberrymcModPotions.java</code> through a <code class="consolas">DeferredRegister&lt;Potion&gt;</code> on <code class="consolas">Registries.POTION</code>. <code class="consolas">StrawberrymcMod</code> attaches that register to the mod event bus in its constructor. Herb is the only entry:</p>
+<pre class="code-box"><code class="consolas">public static final DeferredHolder&lt;Potion, Potion&gt; HERB = REGISTRY.register("herb", () -&gt; new Potion("herb"));</code></pre>
+<p>The constructor receives no <code class="consolas">MobEffectInstance</code> arguments, so the potion applies nothing when drunk; its only purpose is to be a recipe step. The element file <code class="consolas">elements/Herb.mod.json</code> records this as <code class="consolas">"effects": []</code>. The display names come from four keys in <code class="consolas">assets/strawberrymc/lang/en_us.json</code>, which are placed in the <code class="consolas">minecraft</code> item namespace because the bottle items are the vanilla ones:</p>
+<table>
+<thead><tr><th>Key</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">item.minecraft.potion.effect.herb</code></td><td>Potion of Herb</td></tr>
+<tr><td><code class="consolas">item.minecraft.splash_potion.effect.herb</code></td><td>Splash Potion of Herb</td></tr>
+<tr><td><code class="consolas">item.minecraft.lingering_potion.effect.herb</code></td><td>Lingering Potion of Herb</td></tr>
+<tr><td><code class="consolas">item.minecraft.tipped_arrow.effect.herb</code></td><td>Arrow of Herb</td></tr>
+</tbody>
+</table>
+<h2 id="brewing-recipes">Brewing recipes</h2>
+<table>
+<thead><tr><th>Class</th><th>Element</th><th>Input potion</th><th>Ingredient</th><th>Output potion</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">HerbBrewingBrewingRecipe</code></td><td><code class="consolas">elements/HerbBrewing.mod.json</code></td><td><code class="consolas">Potions.THICK</code></td><td><code class="consolas">strawberrymc:rare_clover_cluff</code></td><td><code class="consolas">StrawberrymcModPotions.HERB</code></td></tr>
+<tr><td><code class="consolas">LuckBrewingBrewingRecipe</code></td><td><code class="consolas">elements/LuckBrewing.mod.json</code></td><td><code class="consolas">StrawberrymcModPotions.HERB</code></td><td><code class="consolas">minecraft:rabbit_foot</code></td><td><code class="consolas">Potions.LUCK</code></td></tr>
+</tbody>
+</table>
+<h3 id="recipe-class-structure">Recipe class structure</h3>
+<p>Both recipes live in <code class="consolas">recipe/brewing/</code> and use the same layout. Each class is annotated <code class="consolas">@EventBusSubscriber</code>, implements NeoForge's <code class="consolas">IBrewingRecipe</code>, and adds an instance of itself in a static <code class="consolas">RegisterBrewingRecipesEvent</code> listener, so no central recipe list exists. <code class="consolas">isInput</code> accepts drinkable, splash and lingering bottles and then compares the bottle's <code class="consolas">DataComponents.POTION_CONTENTS</code> component against the required potion:</p>
+<pre class="code-box"><code class="consolas">@Override
+public boolean isInput(ItemStack input) {
+	Item inputItem = input.getItem();
+	return (inputItem == Items.POTION || inputItem == Items.SPLASH_POTION || inputItem == Items.LINGERING_POTION) &amp;&amp; input.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY).is(Potions.THICK);
+}
+
+@Override
+public ItemStack getOutput(ItemStack input, ItemStack ingredient) {
+	if (isInput(input) &amp;&amp; isIngredient(ingredient)) {
+		return PotionContents.createItemStack(input.getItem(), StrawberrymcModPotions.HERB);
+	}
+	return ItemStack.EMPTY;
+}</code></pre>
+<p>Because <code class="consolas">getOutput</code> passes <code class="consolas">input.getItem()</code> to <code class="consolas">PotionContents.createItemStack</code>, the bottle form carries through the brew: a Splash Thick Potion becomes a Splash Potion of Herb, and a Lingering Potion of Herb becomes a Lingering Potion of Luck. <code class="consolas">isIngredient</code> is a plain <code class="consolas">Ingredient.of(...).test(ingredient)</code> check against the single ingredient item.</p>
+<h3 id="ingredient-source">Ingredient source</h3>
+<p>Rare Clover Cluff is produced by the block loot table <code class="consolas">data/strawberrymc/loot_table/blocks/clover_mat.json</code>. The table has three independent one-roll pools. The third pool holds the single entry below, guarded by an inverted Silk Touch <code class="consolas">match_tool</code> condition, so breaking a Clover Mat without Silk Touch gives a count between 0 and 1:</p>
+<pre class="code-box"><code class="consolas">"name": "strawberrymc:rare_clover_cluff",
+"weight": 1,
+"functions": [
+  {
+    "function": "minecraft:set_count",
+    "count": { "min": 0, "max": 1 }
+  }
+]</code></pre>
+<p>Obtaining the item triggers the advancement <code class="consolas">data/strawberrymc/advancement/luck_based.json</code> (title key <code class="consolas">advancements.luck_based.title</code>, "Luck Based"), which uses a <code class="consolas">minecraft:inventory_changed</code> trigger on the item and rewards 2 experience.</p>
+<h2 id="invulnerability-effect">Invulnerability effect</h2>
+<p>The mod's single mob effect is registered in <code class="consolas">init/StrawberrymcModMobEffects.java</code> as <code class="consolas">strawberrymc:invulnerability</code> and implemented by <code class="consolas">potion/InvulnerabilityMobEffect.java</code> (element <code class="consolas">elements/Invulnerability.mod.json</code>). It is named "Invulnerability" by the lang key <code class="consolas">effect.strawberrymc.invulnerability</code>.</p>
+<table>
+<thead><tr><th>Property</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>Category</td><td><code class="consolas">MobEffectCategory.NEUTRAL</code></td></tr>
+<tr><td>Color</td><td><code class="consolas">-16711707</code> (ARGB <code class="consolas">0xFF00FFE5</code>)</td></tr>
+<tr><td>Sound on added</td><td><code class="consolas">entity.lightning_bolt.impact</code></td></tr>
+<tr><td>Attribute modifiers</td><td>None</td></tr>
+<tr><td>Cured by Honey Bottle</td><td>Yes</td></tr>
+</tbody>
+</table>
+<p>The effect class itself carries no ticking logic. Its protection comes entirely from the separate event handler below.</p>
+<h3 id="effect-immunity">Immunity to other effects</h3>
+<p><code class="consolas">InvulnerabilityEffectHandler</code> subscribes to <code class="consolas">MobEffectEvent.Applicable</code>, which fires when an effect is about to be added. While the entity has Invulnerability, every incoming effect other than Invulnerability itself is rejected with <code class="consolas">DO_NOT_APPLY</code>:</p>
+<pre class="code-box"><code class="consolas">if (entity.hasEffect(StrawberrymcModMobEffects.INVULNERABILITY)) {
+    if (!event.getEffectInstance().getEffect().equals(StrawberrymcModMobEffects.INVULNERABILITY)) {
+        event.setResult(MobEffectEvent.Applicable.Result.DO_NOT_APPLY);
+        long currentTime = entity.level().getGameTime();
+        long lastTime = COOLDOWN_MAP.getOrDefault(entity, 0L);
+        if (currentTime - lastTime &gt;= 10) {
+            COOLDOWN_MAP.put(entity, currentTime);
+            entity.playSound(SoundEvents.SHIELD_BLOCK.value(), 1.0F, 1.0F);</code></pre>
+<p>The block itself is unconditional, while the feedback is throttled. The per-entity last-trigger tick is held in a static <code class="consolas">WeakHashMap&lt;LivingEntity, Long&gt;</code> named <code class="consolas">COOLDOWN_MAP</code>, so entries are released once an entity is no longer referenced, and a deflection only plays feedback if at least 10 game ticks have passed. The feedback is the <code class="consolas">SHIELD_BLOCK</code> sound at volume 1 and pitch 1, plus a server-side particle burst at the entity's vertical center:</p>
+<table>
+<thead><tr><th>sendParticles argument</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>Particle</td><td><code class="consolas">StrawberrymcModParticleTypes.INVULNERABILITY_PARTICLE</code></td></tr>
+<tr><td>Position</td><td><code class="consolas">getX(), getY() + getBbHeight() / 2.0, getZ()</code></td></tr>
+<tr><td>Count</td><td>20</td></tr>
+<tr><td>X, Y, Z spread</td><td>0.5, 0.5, 0.5</td></tr>
+<tr><td>Speed</td><td>0.05</td></tr>
+</tbody>
+</table>
+<h3 id="honey-cure">Honey Bottle cure</h3>
+<p><code class="consolas">InvulnerabilityMobEffect</code> also subscribes to <code class="consolas">ModifyDefaultComponentsEvent</code>. It copies the on-consume effect list of <code class="consolas">Consumables.HONEY_BOTTLE</code>, appends a <code class="consolas">RemoveStatusEffectsConsumeEffect</code> for Invulnerability, builds a new <code class="consolas">Consumable</code> with the original consume time, animation, sound and particle flag, and sets it as the <code class="consolas">DataComponents.CONSUMABLE</code> default on <code class="consolas">Items.HONEY_BOTTLE</code>. Drinking honey therefore removes Invulnerability alongside honey's existing effects. The element flag for this is <code class="consolas">"isCuredbyHoney": true</code>.</p>
+<h3 id="invulnerability-particle">Invulnerability particle</h3>
+<p><code class="consolas">strawberrymc:invulnerability_particle</code> is a <code class="consolas">SimpleParticleType</code> whose sprite is listed in <code class="consolas">assets/strawberrymc/particles/invulnerability_particle.json</code>. The renderer is <code class="consolas">client/particle/InvulnerabilityParticleParticle.java</code>, registered in <code class="consolas">init/StrawberrymcModParticles.java</code>. It has a 0.2 by 0.2 size, a lifetime of 35 ticks, a gravity of <code class="consolas">-1.7f</code> that makes it rise, no block collision (<code class="consolas">hasPhysics = false</code>) and the <code class="consolas">OPAQUE</code> render layer.</p>
+<h3 id="effect-source">Effect source in code</h3>
+<p>The only code outside the effect's own files that uses the effect is <code class="consolas">block/EchowoodSaplingBlock.java</code>. It extends <code class="consolas">FlowerBlock</code> and passes the effect to the super constructor as its suspicious stew effect, with a duration argument of 100. The element <code class="consolas">elements/EchowoodSapling.mod.json</code> stores the same pair as <code class="consolas">suspiciousStewEffect</code> and <code class="consolas">suspiciousStewDuration</code>.</p>
+<pre class="code-box"><code class="consolas">super(StrawberrymcModMobEffects.INVULNERABILITY, 100, properties.mapColor(MapColor.PLANT).instabreak().noCollision().offsetType(BlockBehaviour.OffsetType.XZ).pushReaction(PushReaction.DESTROY));</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

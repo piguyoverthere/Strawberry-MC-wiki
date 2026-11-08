@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Outer End Islands [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Outer End Islands [technical]</h1>
+<p>The mod's <a href="page-outer-end-islands.html">Outer End Islands</a> code covers Chorine ore and its items, the Recovery Pearl, the Invulnerability effect, and Echowood.</p>
+
+<h2 id="chorine">Chorine ore</h2>
+<p>The block <code class="consolas">strawberrymc:chorine_ore</code> has the display name "Chorite Ore", with hardness 2 and resistance 1. It requires the correct tool and is in <code class="consolas">minecraft:mineable/pickaxe</code> and <code class="consolas">minecraft:needs_stone_tool</code>.</p>
+<h3 id="chorine-generation">Generation</h3>
+<table>
+<thead>
+<tr><th>File</th><th>Content</th></tr>
+</thead>
+<tbody>
+<tr><td>configured_feature/chorine_ore.json</td><td><code class="consolas">minecraft:ore</code>, size 6, replaces <code class="consolas">minecraft:end_stone</code> by blockstate match</td></tr>
+<tr><td>placed_feature/chorine_ore.json</td><td><code class="consolas">count</code> 1, <code class="consolas">in_square</code>, <code class="consolas">height_range</code> uniform y 10 to 70, <code class="consolas">biome</code></td></tr>
+<tr><td>biome_modifier/chorine_ore_biome_modifier.json</td><td>Adds it to <code class="consolas">minecraft:end_highlands</code>, step underground_ores</td></tr>
+</tbody>
+</table>
+<h3 id="chorine-items">Items and recipes</h3>
+<table>
+<thead>
+<tr><th>Item</th><th>Source</th></tr>
+</thead>
+<tbody>
+<tr><td>strawberrymc:chorite</td><td>Loot of chorine_ore (survives_explosion)</td></tr>
+<tr><td>strawberrymc:chorine ("Chorine Nodule")</td><td><code class="consolas">chorite_refine.json</code>: blasting Chorite for 100 ticks, 1 experience</td></tr>
+<tr><td>strawberrymc:chorine_block ("Block of Chorine")</td><td><code class="consolas">chorine_ore_block_recipe.json</code>: nine Chorine in a 3x3</td></tr>
+<tr><td>strawberrymc:chorine x9</td><td><code class="consolas">chorine_block_ore_recipe.json</code>: one Block of Chorine, shapeless</td></tr>
+</tbody>
+</table>
+<p>The block has hardness 5 and resistance 6, requires the correct tool, and shares the pickaxe and stone-tool tags with the ore.</p>
+
+<h2 id="recovery-pearl">Recovery Pearl</h2>
+<p><code class="consolas">RecoveryPearlItem</code> stacks to 16, with use animation <code class="consolas">BLOCK</code> and a use duration of 72000 ticks. <code class="consolas">use</code> starts the action when the player is in creative mode or <code class="consolas">findAmmo</code> finds a pearl. <code class="consolas">releaseUsing</code> fires the projectile and shrinks the stack outside creative mode.</p>
+<table>
+<thead>
+<tr><th>Projectile value</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Entity</td><td>strawberrymc:recovery_pearl_projectile, extends <code class="consolas">AbstractArrow</code></td></tr>
+<tr><td>Power (<code class="consolas">shoot</code> multiplies by 2)</td><td>1</td></tr>
+<tr><td>Base damage</td><td>0</td></tr>
+<tr><td>Knockback</td><td>0</td></tr>
+<tr><td>Crit arrow</td><td>false</td></tr>
+<tr><td>Sound</td><td>entity.arrow.shoot</td></tr>
+</tbody>
+</table>
+<p>The projectile is discarded once it is in the ground. <code class="consolas">onHitEntity</code> passes the hit entity and the projectile's owner to <a href="page-recoverypearlfetchprocedure-raw.html">RecoveryPearlFetchProcedure [raw]</a>, which teleports the hit entity to the owner's position.</p>
+<pre class="code-box"><code class="consolas">_ent.teleportTo(_tx, _ty, _tz);
+if (_ent instanceof ServerPlayer _serverPlayer)
+	_serverPlayer.connection.teleport(_tx, _ty, _tz, _ent.getYRot(), _ent.getXRot());</code></pre>
+<p>The entity's rotation is kept, and a hit player also receives the matching connection teleport.</p>
+
+<h2 id="invulnerability">Invulnerability effect</h2>
+<p><code class="consolas">InvulnerabilityMobEffect</code> is the effect <code class="consolas">strawberrymc:invulnerability</code>, category <code class="consolas">NEUTRAL</code>, color <code class="consolas">-16711707</code>, with sound <code class="consolas">entity.lightning_bolt.impact</code> when applied. It has no attribute modifiers: the behavior is in <code class="consolas">InvulnerabilityEffectHandler</code>.</p>
+<h3 id="invulnerability-handler">Blocking other effects</h3>
+<p>The handler listens to <code class="consolas">MobEffectEvent.Applicable</code>. If the entity already has Invulnerability and the incoming effect is any other, the result is <code class="consolas">DO_NOT_APPLY</code>. A <code class="consolas">WeakHashMap</code> limits the feedback to once per 10 ticks per entity.</p>
+<pre class="code-box"><code class="consolas">event.setResult(MobEffectEvent.Applicable.Result.DO_NOT_APPLY);
+
+long currentTime = entity.level().getGameTime();
+long lastTime = COOLDOWN_MAP.getOrDefault(entity, 0L);
+
+if (currentTime - lastTime &gt;= 10) {
+    COOLDOWN_MAP.put(entity, currentTime);
+    entity.playSound(SoundEvents.SHIELD_BLOCK.value(), 1.0F, 1.0F);</code></pre>
+<p>On the server, the handler then sends 20 <code class="consolas">strawberrymc:invulnerability_particle</code> at mid-height with a spread of 0.5 on each axis and speed 0.05. The particle element has a <code class="consolas">maxAge</code> of 35 and gravity -1.7.</p>
+<h3 id="invulnerability-honey">Honey cure</h3>
+<p><code class="consolas">InvulnerabilityMobEffect.modifyItemComponents</code> handles <code class="consolas">ModifyDefaultComponentsEvent</code>. It copies <code class="consolas">Consumables.HONEY_BOTTLE</code>, adds a <code class="consolas">RemoveStatusEffectsConsumeEffect</code> for Invulnerability, and sets the result as the honey bottle's <code class="consolas">DataComponents.CONSUMABLE</code>.</p>
+
+<h2 id="echowood">Echowood</h2>
+<p>Echowood is a wood family parallel to Palm and Juniper: <code class="consolas">echowood_log</code> and the rest of the set, boats, signs and recipes, with the tag <code class="consolas">strawberrymc:echowood_logs</code>. Logs have hardness 2 and resistance 2. <code class="consolas">EchowoodLeavesBlock</code> has hardness 0.2 with a <code class="consolas">TINTED_LEAVES</code> particle option colored <code class="consolas">-12545728</code>. Leaves have a compost chance of 0.3, and their loot follows the shears or Silk Touch pattern with sticks at the Fortune table <code class="consolas">0.02, 0.022222223, 0.025, 0.033333335, 0.1</code>.</p>
+<h3 id="echowood-sapling">Sapling</h3>
+<p><code class="consolas">EchowoodSaplingBlock</code> is a <code class="consolas">FlowerBlock</code> with the suspicious stew effect Invulnerability for 100 ticks. <code class="consolas">mayPlaceOn</code> accepts <code class="consolas">minecraft:end_stone</code> in addition to the inherited blocks. <code class="consolas">isBonemealSuccess</code> is always true, and <code class="consolas">performBonemeal</code> runs <a href="page-echowoodgrowprocedure-raw.html">EchowoodGrowProcedure [raw]</a>.</p>
+<h3 id="echowood-growth">Growth</h3>
+<p>The procedure stops unless <code class="consolas">world.getRandom().nextFloat() &lt;= 0.05f</code>, a 5% chance per use. It then tests the four possible 2x2 squares containing the sapling. On a match, the four saplings become air and <a href="page-spawnechowoodtreeprocedure-raw.html">SpawnEchowoodTreeProcedure [raw]</a> runs at the northwest corner. Echowood therefore requires four saplings in a square.</p>
+<h3 id="echowood-tree">Tree shape</h3>
+<p>The generator returns immediately unless the block below the origin is <code class="consolas">minecraft:end_stone</code>. Leaves are set <code class="consolas">PERSISTENT</code>.</p>
+<ol>
+<li><strong>Trunk.</strong> A 2x2 column, <code class="consolas">10 + random.nextInt(5)</code> blocks tall (10 to 14).</li>
+<li><strong>Canopy.</strong> From <code class="consolas">canopyBottom = canopyTop - 4 - random.nextInt(2)</code> to <code class="consolas">canopyTop + 1</code>. The radius is 2 on the bottom layer and on layers at or above <code class="consolas">canopyTop</code>, and 4 elsewhere. Corner positions are skipped with 60% chance, and leaves only fill empty blocks.</li>
+<li><strong>Branches.</strong> 4 to 6 attempts, each starting from a random trunk column at <code class="consolas">canopyBottom</code> plus 0 to 2, with a direction of -1 to 1 per axis. A direction of (0, 0) skips the branch. Length is 3 to 5, rising one block every two steps.</li>
+<li><strong>Branch tips.</strong> A diamond of leaves in the 3x3x3 around the tip, keeping positions where the sum of the absolute offsets is at most 2.</li>
+</ol>
+<pre class="code-box"><code class="consolas">for (int l = 1; l &lt;= branchLen; l++) {
+    int stepY = by + (l / 2);
+    BlockPos branchPos = BlockPos.containing(bx + (dx * l), stepY, bz + (dz * l));
+    world.setBlock(branchPos, log, 3);
+</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

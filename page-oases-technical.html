@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Oases [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Oases [technical]</h1>
+<p>An <a href="page-oases.html">Oasis</a> is built in one pass by <a href="page-oasisspawnprocedure-raw.html">OasisSpawnProcedure [raw]</a>, which runs when the block <code class="consolas">strawberrymc:oasis_spawner</code> is placed.</p>
+
+<h2 id="spawner-block">Oasis Spawner block</h2>
+<p><code class="consolas">OasisSpawnerBlock</code> is an MCreator element (<code class="consolas">elements/OasisSpawner.mod.json</code>) with hardness 1, resistance 10 and gravel sounds. It sits in the <code class="consolas">Debug</code> creative tab, and its loot table has no pools, so it drops nothing. Its only behavior is the <code class="consolas">onPlace</code> override:</p>
+<pre class="code-box"><code class="consolas">@Override
+public void onPlace(BlockState blockstate, Level world, BlockPos pos, BlockState oldState, boolean moving) {
+	super.onPlace(blockstate, world, pos, oldState, moving);
+	OasisSpawnProcedure.execute(world, pos.getX(), pos.getY(), pos.getZ());
+}</code></pre>
+<p>The spawner is the only caller of the procedure. No configured feature, structure or biome modifier places the block.</p>
+
+<h2 id="order">Order of operations</h2>
+<ol>
+<li>The spawner is replaced with air.</li>
+<li>The procedure stops with 50% probability (<code class="consolas">random.nextFloat() &gt; 0.5f</code>).</li>
+<li>On a <code class="consolas">ServerLevel</code>, it calls <code class="consolas">findNearestMapStructure</code> for the tag <code class="consolas">minecraft:village</code> with a search radius argument of 100, and stops if nothing is found.</li>
+<li>It rolls the size and the pool list.</li>
+<li>It scans a square around the origin, column by column, placing water or bank blocks.</li>
+<li>It places palm trees around the origin.</li>
+</ol>
+
+<h2 id="size">Size and pools</h2>
+<table>
+<thead>
+<tr><th>Value</th><th>Large (50%)</th><th>Small (50%)</th></tr>
+</thead>
+<tbody>
+<tr><td>baseRadius</td><td>5</td><td>3</td></tr>
+<tr><td>Pool count</td><td>2 or 3</td><td>2 or 3</td></tr>
+<tr><td>Pool center offset per axis</td><td>-2 to 2</td><td>-1 to 1</td></tr>
+<tr><td>Pool radius</td><td>5 to 7</td><td>3 to 5</td></tr>
+<tr><td>Scan half-width (<code class="consolas">baseRadius * 2 + 10</code>)</td><td>20</td><td>16</td></tr>
+<tr><td>Palm trees</td><td>3 to 5</td><td>1 or 2</td></tr>
+</tbody>
+</table>
+<pre class="code-box"><code class="consolas">boolean isLarge = random.nextBoolean();
+int baseRadius = isLarge ? 5 : 3;
+
+int numPools = 2 + random.nextInt(2);
+int[][] pools = new int[numPools][3];
+
+for (int i = 0; i &lt; numPools; i++) {
+    pools[i][0] = random.nextInt(baseRadius) - (baseRadius / 2);
+    pools[i][1] = random.nextInt(baseRadius) - (baseRadius / 2);
+    pools[i][2] = baseRadius + random.nextInt(3);
+}</code></pre>
+
+<h2 id="column-scan">Column scan</h2>
+<p>For each column, the procedure measures the distance to every pool center and subtracts <code class="consolas">random.nextFloat() * 1.2f</code> from that pool's radius, which roughens the shoreline. A column is water if it falls inside any pool. It records <code class="consolas">maxInsideDist</code>, the deepest it sits inside a pool, and <code class="consolas">minDistToWaterEdge</code>, the smallest distance outside one.</p>
+
+<h3 id="water-columns">Water columns</h3>
+<ul>
+<li>Blocks at offsets 0 to 3 above the origin level become air, to prevent overhangs.</li>
+<li>Depth is 3 if <code class="consolas">maxInsideDist</code> exceeds 2.5, 2 if it exceeds 1.0, and otherwise 1. Water fills <code class="consolas">y-1</code> down to <code class="consolas">y-depth</code>.</li>
+<li>The block under the water becomes sand. Empty space below it is filled with sand until a solid block is reached or 15 blocks below the origin.</li>
+</ul>
+
+<h3 id="bank-columns">Bank columns</h3>
+<p>Columns within 10 blocks of water may become bank. Up to 4 blocks away the bank is always placed. Beyond that the chance fades with the square of the remaining distance:</p>
+<pre class="code-box"><code class="consolas">if (minDistToWaterEdge &gt; 4.0) {
+    float chance = (10.0f - (float)minDistToWaterEdge) / 6.0f;
+    // Squaring the chance makes the fade-out look much more natural and scattered
+    if (random.nextFloat() &gt; (chance * chance)) placeBank = false;
+}</code></pre>
+<p>A bank block sits at <code class="consolas">y-1</code>, flush with the water surface, and blocks at offsets 0 to 2 above the origin level are cleared first.</p>
+<table>
+<thead>
+<tr><th>Surface condition</th><th>Result</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">sin(x * 0.7) * cos(z * 0.7) &gt; 0.3</code>, then 60% chance</td><td>minecraft:mud</td></tr>
+<tr><td>Within 2 blocks of water</td><td>80% sand, otherwise grass block</td></tr>
+<tr><td>Beyond 2 blocks</td><td>40% sand, otherwise grass block</td></tr>
+</tbody>
+</table>
+<p>Under the bank, empty space fills with sand below sand, or dirt below anything else, to the same 15-block limit. On a grass block with empty space above, a single vegetation roll places minecraft:fern below <code class="consolas">0.15 * modifier</code> and minecraft:short_grass below <code class="consolas">0.35 * modifier</code>. The modifier is 1.0 within 4 blocks of water and 0.3 beyond.</p>
+
+<h2 id="trees">Palm trees</h2>
+<p>Each tree picks a random angle and stands <code class="consolas">baseRadius + 3</code> blocks from the origin. The search for its base starts at <code class="consolas">y + 2</code> and moves down while the column is empty, stopping at <code class="consolas">y - 5</code>. <a href="page-spawnpalmtreeprocedureprocedure-raw.html">SpawnPalmTreeProcedureProcedure [raw]</a> then builds the tree at <code class="consolas">treeY + 1</code>. The tree shape is described under <a href="page-desert.html">Desert</a>.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

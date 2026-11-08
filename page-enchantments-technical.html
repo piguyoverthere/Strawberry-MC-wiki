@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Enchantments [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Enchantments [technical]</h1>
+<h2 id="overview">Overview</h2>
+<p>This page covers the code behind <a href="page-enchantments.html">Enchantments</a>. The mod registers one data-driven enchantment, <code class="consolas">strawberrymc:electricution</code>, displayed as "Shocking". It is generated from the MCreator element <code class="consolas">Electricution.mod.json</code> into <code class="consolas">data/strawberrymc/enchantment/electricution.json</code>. Its gameplay effect comes from <a href="page-entityshockprocedure-raw.html">EntityShockProcedure [raw]</a>, generated from <code class="consolas">EntityShock.mod.json</code>.</p>
+
+<h2 id="definition">Enchantment definition</h2>
+<table>
+<thead>
+<tr><th>Field</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Translation key</td><td><code class="consolas">enchantment.strawberrymc.electricution</code>, "Shocking"</td></tr>
+<tr><td>Supported items</td><td><code class="consolas">strawberrymc:radonite_sword</code>, <code class="consolas">minecraft:wooden_sword</code>, <code class="consolas">minecraft:stone_sword</code>, <code class="consolas">minecraft:netherite_sword</code>, <code class="consolas">minecraft:diamond_sword</code></td></tr>
+<tr><td>Weight</td><td>10</td></tr>
+<tr><td>Max level</td><td>2</td></tr>
+<tr><td>Minimum cost</td><td>Base 1, plus 10 per level above the first</td></tr>
+<tr><td>Maximum cost</td><td>Base 6, plus 10 per level above the first</td></tr>
+<tr><td>Anvil cost</td><td>2</td></tr>
+<tr><td>Slots</td><td><code class="consolas">any</code></td></tr>
+<tr><td>Exclusive set</td><td>Empty</td></tr>
+</tbody>
+</table>
+<p>The JSON has one built-in component effect. It sets mob experience to a flat 1:</p>
+<pre class="code-box"><code class="consolas">"effects": {
+  "minecraft:mob_experience": [
+    {
+      "effect": {
+        "type": "minecraft:set",
+        "value": 1
+      }
+    }
+  ]
+}</code></pre>
+
+<h2 id="availability">Tags</h2>
+<p>Where the enchantment can appear is controlled by three vanilla enchantment tags. Each one contains <code class="consolas">strawberrymc:electricution</code>.</p>
+<table>
+<thead>
+<tr><th>Tag file</th><th>Purpose</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">data/minecraft/tags/enchantment/non_treasure.json</code></td><td>Marks it as a non-treasure enchantment</td></tr>
+<tr><td><code class="consolas">data/minecraft/tags/enchantment/on_random_loot.json</code></td><td>Allows it in randomly enchanted loot</td></tr>
+<tr><td><code class="consolas">data/minecraft/tags/enchantment/tradeable.json</code></td><td>Allows it in villager trades</td></tr>
+</tbody>
+</table>
+
+<h2 id="shock-procedure">EntityShockProcedure</h2>
+<p>The procedure subscribes to <code class="consolas">LivingDamageEvent.Pre</code>, so it runs each time a living entity takes damage. <code class="consolas">entity</code> is the entity being damaged. The gate reads the enchantment level on that entity's item in use from <code class="consolas">getUseItem()</code>, looked up through the registry with <code class="consolas">strawberrymc:electricution</code>:</p>
+<pre class="code-box"><code class="consolas">if ((entity instanceof LivingEntity _entUseItem0 ? _entUseItem0.getUseItem() : ItemStack.EMPTY)
+		.getEnchantmentLevel(world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse("strawberrymc:electricution")))) &gt; 0) {</code></pre>
+<p>The effect therefore applies to a damaged entity that is actively using an item with Shocking. Any level above 0 behaves the same, because the level value is only compared with 0.</p>
+<h3 id="shock-order">Order of effects</h3>
+<ol>
+<li>Sends <code class="consolas">ANGRY_VILLAGER</code>, <code class="consolas">ENCHANTED_HIT</code> and <code class="consolas">GUST</code> particles, 2 of each, with spread 1 and speed 1.</li>
+<li>Applies the four armor damage checks below. Each check is independent, so more than one can apply on the same hit.</li>
+<li>Rolls <code class="consolas">Mth.nextInt(RandomSource.create(), 1, 8) == 1</code>. On success, it runs the equipment drop.</li>
+</ol>
+<h3 id="shock-armor">Armor damage</h3>
+<p>Each check calls <code class="consolas">hurtServer</code> with a new <code class="consolas">strawberrymc:shocking</code> damage source. The slot read for each item is exact:</p>
+<table>
+<thead>
+<tr><th>Check</th><th>Item</th><th>Slot read</th><th>Damage</th></tr>
+</thead>
+<tbody>
+<tr><td>Leggings</td><td>Chainmail, golden, iron or copper leggings</td><td><code class="consolas">LEGS</code></td><td>2</td></tr>
+<tr><td>Boots</td><td>Chainmail boots</td><td><code class="consolas">FEET</code></td><td>1</td></tr>
+<tr><td>Boots</td><td>Golden, iron or copper boots</td><td><code class="consolas">LEGS</code></td><td>1</td></tr>
+<tr><td>Helmet</td><td>Chainmail helmet</td><td><code class="consolas">FEET</code></td><td>1</td></tr>
+<tr><td>Helmet</td><td>Golden, iron or copper helmet</td><td><code class="consolas">LEGS</code></td><td>1</td></tr>
+<tr><td>Chestplate</td><td>Chainmail chestplate</td><td><code class="consolas">FEET</code></td><td>3</td></tr>
+<tr><td>Chestplate</td><td>Golden, iron or copper chestplate</td><td><code class="consolas">LEGS</code></td><td>3</td></tr>
+</tbody>
+</table>
+<p>With equipment in its normal slots, only the leggings row and the chainmail boots row match, because the other rows look for a piece in a slot that does not normally hold it.</p>
+<h3 id="shock-drop">Equipment drop</h3>
+<p>On the 1 in 8 roll, the procedure picks <code class="consolas">Mth.nextInt(RandomSource.create(), 100, 103)</code> as a slot index and reads that index through the entity's <code class="consolas">Capabilities.Item.ENTITY</code> handler. It spawns the stack as an <code class="consolas">ItemEntity</code> with a pickup delay of 5 at the entity's position, empties the slot, and plays <code class="consolas">item.shield.break</code> with <code class="consolas">SoundSource.NEUTRAL</code>.</p>
+<pre class="code-box"><code class="consolas">shockSlotDrop = Mth.nextInt(RandomSource.create(), 100, 103);
+if (world instanceof ServerLevel _level) {
+	ItemEntity entityToSpawn = new ItemEntity(_level, x, y, z, (getEntitySlot(entity, (int) shockSlotDrop)));
+	entityToSpawn.setPickUpDelay(5);
+	_level.addFreshEntity(entityToSpawn);
+}</code></pre>
+
+<h2 id="damage-type">Damage type</h2>
+<p><code class="consolas">data/strawberrymc/damage_type/shocking.json</code>, generated from <code class="consolas">Shocking.mod.json</code>, defines the source used by the armor checks.</p>
+<pre class="code-box"><code class="consolas">{
+  "exhaustion": 0.2,
+  "message_id": "shocking",
+  "scaling": "always",
+  "effects": "poking"
+}</code></pre>
+<table>
+<thead>
+<tr><th>Lang key</th><th>Text</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">death.attack.shocking</code></td><td>%1$s was electricuted</td></tr>
+<tr><td><code class="consolas">death.attack.shocking.player</code></td><td>%1$s was shocked whilst trying to escape %2$s</td></tr>
+<tr><td><code class="consolas">death.attack.shocking.item</code></td><td>%1$s was shocked by %2$s using %3$s</td></tr>
+</tbody>
+</table>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>
