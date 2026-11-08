@@ -775,7 +775,10 @@
         for (const font of markers) {
             liftOutOfStyles(font);
             stripStyles(font);
-            font.closest("h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, pre, div")?.removeAttribute("style");
+            // Editors like VS Code put the background on a box around every line, so clear each level up to the page.
+            for (let block = font.parentElement; block && block !== root; block = block.parentElement) {
+                block.removeAttribute("style");
+            }
         }
         const selection = document.getSelection();
         if (markers.length > 0) {
