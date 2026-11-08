@@ -182,6 +182,7 @@ const pages = [
     { title: "Dry Savanna [technical]", href: "page-dry-savanna-technical.html", keywords: "dry savanna [technical]" },
     { title: "CrystalHollowsGeneratorProcedure [raw]", href: "page-crystalhollowsgeneratorprocedure-raw.html", keywords: "crystalhollowsgeneratorprocedure [raw] crystal hollows generator procedure" },
     { title: "AmbientParticleEnchantProcedure [raw]", href: "page-ambientparticleenchantprocedure-raw.html", keywords: "ambientparticleenchantprocedure [raw] ambient particle enchant procedure" },
+    { title: "ArrowEffectExecuterProcedure [raw] arrow effect executer procedure", href: "page-arroweffectexecuterprocedure-raw-arrow-effect-executer-procedure.html", keywords: "arroweffectexecuterprocedure [raw] arrow effect executer procedure" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
