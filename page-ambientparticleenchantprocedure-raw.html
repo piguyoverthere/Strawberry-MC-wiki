@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>AmbientParticleEnchantProcedure [raw] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>AmbientParticleEnchantProcedure [raw]</h1>
+        <div style="color: rgb(204, 204, 204); background-color: rgb(31, 31, 31)"><div><span class="consolas"><span style="color: rgb(86, 156, 214)">package</span> <span style="color: rgb(212, 212, 212)">io.github.strawberrymc.procedures</span>;</span></div><span class="consolas"><br></span><div><span class="consolas"><span style="color: rgb(86, 156, 214)">import</span> <span style="color: rgb(212, 212, 212)">net.minecraft.world.level.LevelAccessor</span>;</span></div><div><span class="consolas"><span style="color: rgb(86, 156, 214)">import</span> <span style="color: rgb(212, 212, 212)">net.minecraft.server.level.ServerLevel</span>;</span></div><div><span class="consolas"><span style="color: rgb(86, 156, 214)">import</span> <span style="color: rgb(212, 212, 212)">net.minecraft.core.particles.ParticleTypes</span>;</span></div><span class="consolas"><br></span><div><span class="consolas"><span style="color: rgb(86, 156, 214)">public</span> <span style="color: rgb(86, 156, 214)">class</span> <span style="color: rgb(78, 201, 176)">AmbientParticleEnchantProcedure</span> {</span></div><div>    <span class="consolas"><span style="color: rgb(86, 156, 214)">public</span> <span style="color: rgb(86, 156, 214)">static</span> <span style="color: rgb(78, 201, 176)">void</span> <span style="color: rgb(220, 220, 170)">execute</span>(<span style="color: rgb(78, 201, 176)">LevelAccessor</span> <span style="color: rgb(156, 220, 254)">world</span>, <span style="color: rgb(78, 201, 176)">double</span> <span style="color: rgb(156, 220, 254)">x</span>, <span style="color: rgb(78, 201, 176)">double</span> <span style="color: rgb(156, 220, 254)">y</span>, <span style="color: rgb(78, 201, 176)">double</span> <span style="color: rgb(156, 220, 254)">z</span>) {</span></div><div>        <span class="consolas"><span style="color: rgb(197, 134, 192)">if</span> (world <span style="color: rgb(86, 156, 214)">instanceof</span> <span style="color: rgb(78, 201, 176)">ServerLevel</span> _level)</span></div><div>            <span class="consolas"><span style="color: rgb(156, 220, 254)">_level</span>.<span style="color: rgb(220, 220, 170)">sendParticles</span>(<span style="color: rgb(156, 220, 254)">ParticleTypes</span>.<span style="color: rgb(156, 220, 254)">ENCHANT</span>, x, y, z, <span style="color: rgb(181, 206, 168)">5</span>, <span style="color: rgb(181, 206, 168)">0.5</span>, <span style="color: rgb(181, 206, 168)">0.8</span>, <span style="color: rgb(181, 206, 168)">0.5</span>, <span style="color: rgb(181, 206, 168)">1</span>);</span></div><div><span class="consolas">    }</span></div><div><span class="consolas">}</span></div></div>
+        <script src="wiki-editor.js" defer=""></script>
+    
+
+</body></html>
