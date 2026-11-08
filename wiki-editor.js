@@ -1577,6 +1577,11 @@
         return [...new Set(text.toLowerCase().split(/[\s,]+/).filter(Boolean))].join(" ");
     }
 
+    // A page made on the website keeps its new-page address after the first commit; later commits update it.
+    function isPublishedNewPage() {
+        return Boolean(readLocalPages().find((page) => page.file === newPageFile)?.published);
+    }
+
     function getNewPageKeywords() {
         const entry = readLocalPages().find((page) => page.file === newPageFile);
         return entry && typeof entry.keywords === "string" && entry.keywords
@@ -1990,10 +1995,10 @@
         commitDialog.querySelector(".wiki-commit-file").textContent = targetFile;
         commitDialog.querySelector("#wiki-commit-message").value = isNewsArticle
             ? `Publish news article: ${getCurrentTitle()}`
-            : newPageFile
+            : newPageFile && !isPublishedNewPage()
                 ? `Create ${getCurrentTitle()} page`
                 : `Update ${getCurrentTitle()} page`;
-        commitKeywordsField.hidden = !newPageFile;
+        commitKeywordsField.hidden = !newPageFile || isPublishedNewPage();
         if (newPageFile) {
             commitKeywordsInput.value = getNewPageKeywords();
         }
@@ -2157,8 +2162,10 @@
                 if (!message.endsWith("(needs review)")) message += " (needs review)";
             }
             const existing = await getRepositoryFile(token, targetFile);
-            if (newPageFile && existing) {
-                throw new Error(`${targetFile} already exists on GitHub. Create the page with a different title.`);
+            // Pages committed before this browser remembered publishing them land here too, so ask rather than refuse.
+            if (newPageFile && existing && !isPublishedNewPage() &&
+                (role === "reviewer" || !window.confirm(`${targetFile} already exists on GitHub. Replace it with this version?`))) {
+                throw new Error(`${targetFile} already exists on GitHub. Open that page and edit it there, or create this one with a different title.`);
             }
             // The repository stores pages with Windows (CRLF) line endings; match it so diffs only show real changes.
             const pageHtml = buildPageHtml().replace(/\r?\n/g, !existing || existing.text.includes("\r\n") ? "\r\n" : "\n");
@@ -2177,7 +2184,7 @@
             }
 
             let searchNote = "";
-            if (newPageFile) {
+            if (newPageFile && !existing) {
                 try {
                     await addToSearchIndex(token, title, newPageFile, keywords);
                 } catch (error) {
@@ -2197,7 +2204,9 @@
                         searchNote += ` The article was committed, but adding it to the News page failed: ${error.message}`;
                     }
                 }
-                saveLocalPage({ title, file: newPageFile, href: newPageFile, keywords });
+            }
+            if (newPageFile) {
+                saveLocalPage({ title, file: newPageFile, href: newPageFile, keywords, published: true });
             }
             try {
                 localStorage.removeItem(storageKey);
