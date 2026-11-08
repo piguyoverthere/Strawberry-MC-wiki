@@ -180,6 +180,7 @@ const pages = [
     { title: "MC Controversy", href: "page-mc-controversy.html", keywords: "mc controversy" },
     { title: "Wisp [technical]", href: "page-wisp-technical.html", keywords: "wisp [technical] technical voidstone peaks guardian void bottle bottleable" },
     { title: "Dry Savanna [technical]", href: "page-dry-savanna-technical.html", keywords: "dry savanna [technical]" },
+    { title: "CrystalHollowsGeneratorProcedure [raw]", href: "page-crystalhollowsgeneratorprocedure-raw.html", keywords: "crystalhollowsgeneratorprocedure [raw] crystal hollows generator procedure" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
