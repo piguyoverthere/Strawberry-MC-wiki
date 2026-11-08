@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>OasisSpawnProcedure [raw] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>OasisSpawnProcedure [raw]</h1>
+        <pre class="code-box vscode-code"><code class="consolas"><span style="color: #569CD6">package</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.LevelAccessor</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.block.Blocks</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.block.state.BlockState</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.core.BlockPos</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.util.RandomSource</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.server.level.ServerLevel</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.tags.TagKey</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.core.registries.Registries</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.resources.Identifier</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures.SpawnPalmTreeProcedureProcedure</span>;
+
+<span style="color: #569CD6">public class</span> <span style="color: #4EC9B0">OasisSpawnProcedure</span> {
+    <span style="color: #569CD6">public static</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">execute</span>(<span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">x</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">y</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">z</span>) {
+        <span style="color: #4EC9B0">BlockPos</span> <span style="color: #9CDCFE">origin</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(x, y, z);
+        <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(origin, <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">AIR</span>.<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+
+        <span style="color: #4EC9B0">RandomSource</span> <span style="color: #9CDCFE">random</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">getRandom</span>();
+
+        <span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextFloat</span>() <span style="color: #D4D4D4">&gt;</span> <span style="color: #B5CEA8">0.5f</span>) {
+            <span style="color: #C586C0">return</span>;
+        }
+
+        <span style="color: #C586C0">if</span> (world <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">ServerLevel</span> serverLevel) {
+            <span style="color: #569CD6">var</span> <span style="color: #9CDCFE">villageTag</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">TagKey</span>.<span style="color: #DCDCAA">create</span>(<span style="color: #9CDCFE">Registries</span>.<span style="color: #9CDCFE">STRUCTURE</span>, <span style="color: #9CDCFE">Identifier</span>.<span style="color: #DCDCAA">parse</span>(<span style="color: #CE9178">"minecraft:village"</span>));
+            <span style="color: #569CD6">var</span> <span style="color: #9CDCFE">nearestVillage</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">serverLevel</span>.<span style="color: #DCDCAA">findNearestMapStructure</span>(villageTag, origin, <span style="color: #B5CEA8">100</span>, <span style="color: #569CD6">false</span>);
+            
+            <span style="color: #C586C0">if</span> (nearestVillage <span style="color: #D4D4D4">==</span> <span style="color: #569CD6">null</span>) {
+                <span style="color: #C586C0">return</span>;
+            }
+        }
+
+        <span style="color: #4EC9B0">boolean</span> <span style="color: #9CDCFE">isLarge</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextBoolean</span>();
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">baseRadius</span> <span style="color: #D4D4D4">=</span> isLarge <span style="color: #C586C0">?</span> <span style="color: #B5CEA8">5</span> <span style="color: #C586C0">:</span> <span style="color: #B5CEA8">3</span>;
+
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">numPools</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">2</span> <span style="color: #D4D4D4">+</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #B5CEA8">2</span>);
+        <span style="color: #4EC9B0">int</span>[][] <span style="color: #9CDCFE">pools</span> <span style="color: #D4D4D4">=</span> <span style="color: #C586C0">new</span> <span style="color: #4EC9B0">int</span>[numPools][<span style="color: #B5CEA8">3</span>]; 
+        
+        <span style="color: #C586C0">for</span> (<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">i</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>; i <span style="color: #D4D4D4">&lt;</span> numPools; i<span style="color: #D4D4D4">++</span>) {
+            pools[i][<span style="color: #B5CEA8">0</span>] <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(baseRadius) <span style="color: #D4D4D4">-</span> (baseRadius <span style="color: #D4D4D4">/</span> <span style="color: #B5CEA8">2</span>); 
+            pools[i][<span style="color: #B5CEA8">1</span>] <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(baseRadius) <span style="color: #D4D4D4">-</span> (baseRadius <span style="color: #D4D4D4">/</span> <span style="color: #B5CEA8">2</span>); 
+            pools[i][<span style="color: #B5CEA8">2</span>] <span style="color: #D4D4D4">=</span> baseRadius <span style="color: #D4D4D4">+</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #B5CEA8">3</span>);                
+        }
+
+        <span style="color: #6A9955">// Search area increased significantly to allow for a wide, seamless fade-out</span>
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">maxSearch</span> <span style="color: #D4D4D4">=</span> baseRadius <span style="color: #D4D4D4">*</span> <span style="color: #B5CEA8">2</span> <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">10</span>;
+
+        <span style="color: #C586C0">for</span> (<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">dx</span> <span style="color: #D4D4D4">= -</span>maxSearch; dx <span style="color: #D4D4D4">&lt;=</span> maxSearch; dx<span style="color: #D4D4D4">++</span>) {
+            <span style="color: #C586C0">for</span> (<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">dz</span> <span style="color: #D4D4D4">= -</span>maxSearch; dz <span style="color: #D4D4D4">&lt;=</span> maxSearch; dz<span style="color: #D4D4D4">++</span>) {
+                <span style="color: #4EC9B0">BlockPos</span> <span style="color: #9CDCFE">targetPos</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">origin</span>.<span style="color: #DCDCAA">offset</span>(dx, <span style="color: #B5CEA8">0</span>, dz);
+                
+                <span style="color: #4EC9B0">boolean</span> <span style="color: #9CDCFE">isWater</span> <span style="color: #D4D4D4">=</span> <span style="color: #569CD6">false</span>;
+                <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">minDistToWaterEdge</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">999.0</span>;
+                <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">maxInsideDist</span> <span style="color: #D4D4D4">= -</span><span style="color: #B5CEA8">999.0</span>; <span style="color: #6A9955">// Tracks how deep inside the water boundary we are</span>
+                
+                <span style="color: #C586C0">for</span> (<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">i</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>; i <span style="color: #D4D4D4">&lt;</span> numPools; i<span style="color: #D4D4D4">++</span>) {
+                    <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">dist</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">sqrt</span>(<span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">pow</span>(dx <span style="color: #D4D4D4">-</span> pools[i][<span style="color: #B5CEA8">0</span>], <span style="color: #B5CEA8">2</span>) <span style="color: #D4D4D4">+</span> <span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">pow</span>(dz <span style="color: #D4D4D4">-</span> pools[i][<span style="color: #B5CEA8">1</span>], <span style="color: #B5CEA8">2</span>));
+                    <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">noisyRadius</span> <span style="color: #D4D4D4">=</span> pools[i][<span style="color: #B5CEA8">2</span>] <span style="color: #D4D4D4">-</span> (<span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextFloat</span>() <span style="color: #D4D4D4">*</span> <span style="color: #B5CEA8">1.2f</span>);
+                    
+                    <span style="color: #C586C0">if</span> (dist <span style="color: #D4D4D4">&lt;=</span> noisyRadius) {
+                        isWater <span style="color: #D4D4D4">=</span> <span style="color: #569CD6">true</span>;
+                        <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">insideDist</span> <span style="color: #D4D4D4">=</span> noisyRadius <span style="color: #D4D4D4">-</span> dist;
+                        <span style="color: #C586C0">if</span> (insideDist <span style="color: #D4D4D4">&gt;</span> maxInsideDist) maxInsideDist <span style="color: #D4D4D4">=</span> insideDist;
+                    } <span style="color: #C586C0">else</span> {
+                        <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">edgeDist</span> <span style="color: #D4D4D4">=</span> dist <span style="color: #D4D4D4">-</span> noisyRadius;
+                        <span style="color: #C586C0">if</span> (edgeDist <span style="color: #D4D4D4">&lt;</span> minDistToWaterEdge) minDistToWaterEdge <span style="color: #D4D4D4">=</span> edgeDist;
+                    }
+                }
+
+                <span style="color: #C586C0">if</span> (isWater) {
+                    <span style="color: #6A9955">// Carve out airspace above the water to prevent terrain overhangs</span>
+                    <span style="color: #C586C0">for</span> (<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">c</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>; c <span style="color: #D4D4D4">&lt;=</span> <span style="color: #B5CEA8">3</span>; c<span style="color: #D4D4D4">++</span>) {
+                        <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">origin</span>.<span style="color: #DCDCAA">offset</span>(dx, c, dz), <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">AIR</span>.<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+                    }
+
+                    <span style="color: #6A9955">// Tapered depth: shallow at edges, deep in center</span>
+                    <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">depth</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">1</span>;
+                    <span style="color: #C586C0">if</span> (maxInsideDist <span style="color: #D4D4D4">&gt;</span> <span style="color: #B5CEA8">2.5</span>) depth <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">3</span>;
+                    <span style="color: #C586C0">else if</span> (maxInsideDist <span style="color: #D4D4D4">&gt;</span> <span style="color: #B5CEA8">1.0</span>) depth <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">2</span>;
+                    
+                    <span style="color: #C586C0">for</span> (<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">dy</span> <span style="color: #D4D4D4">= -</span><span style="color: #B5CEA8">1</span>; dy <span style="color: #D4D4D4">&gt;= -</span>depth; dy<span style="color: #D4D4D4">--</span>) {
+                        <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">origin</span>.<span style="color: #DCDCAA">offset</span>(dx, dy, dz), <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">WATER</span>.<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+                    }
+                    
+                    <span style="color: #4EC9B0">BlockPos</span> <span style="color: #9CDCFE">bottomPos</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">origin</span>.<span style="color: #DCDCAA">offset</span>(dx, <span style="color: #D4D4D4">-</span>depth <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>, dz);
+                    <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(bottomPos, <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">SAND</span>.<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+                    
+                    <span style="color: #4EC9B0">BlockPos</span> <span style="color: #9CDCFE">fillPos</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">bottomPos</span>.<span style="color: #DCDCAA">below</span>();
+                    <span style="color: #C586C0">while</span> (<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">isEmptyBlock</span>(fillPos) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">fillPos</span>.<span style="color: #DCDCAA">getY</span>() <span style="color: #D4D4D4">&gt;</span> <span style="color: #9CDCFE">origin</span>.<span style="color: #DCDCAA">getY</span>() <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">15</span>) {
+                        <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(fillPos, <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">SAND</span>.<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+                        fillPos <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">fillPos</span>.<span style="color: #DCDCAA">below</span>();
+                    }
+                    
+                } <span style="color: #C586C0">else if</span> (minDistToWaterEdge <span style="color: #D4D4D4">&lt;=</span> <span style="color: #B5CEA8">10.0</span>) { 
+                    <span style="color: #6A9955">// Calculate fade-out chance. 100% chance near water, rapidly drops to 0% at 10 blocks out.</span>
+                    <span style="color: #4EC9B0">boolean</span> <span style="color: #9CDCFE">placeBank</span> <span style="color: #D4D4D4">=</span> <span style="color: #569CD6">true</span>;
+                    <span style="color: #C586C0">if</span> (minDistToWaterEdge <span style="color: #D4D4D4">&gt;</span> <span style="color: #B5CEA8">4.0</span>) {
+                        <span style="color: #4EC9B0">float</span> <span style="color: #9CDCFE">chance</span> <span style="color: #D4D4D4">=</span> (<span style="color: #B5CEA8">10.0f</span> <span style="color: #D4D4D4">-</span> (<span style="color: #4EC9B0">float</span>)minDistToWaterEdge) <span style="color: #D4D4D4">/</span> <span style="color: #B5CEA8">6.0f</span>;
+                        <span style="color: #6A9955">// Squaring the chance makes the fade-out look much more natural and scattered</span>
+                        <span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextFloat</span>() <span style="color: #D4D4D4">&gt;</span> (chance <span style="color: #D4D4D4">*</span> chance)) placeBank <span style="color: #D4D4D4">=</span> <span style="color: #569CD6">false</span>;
+                    }
+
+                    <span style="color: #C586C0">if</span> (placeBank) {
+                        <span style="color: #6A9955">// Place bank at y-1 so it is perfectly flush with the water surface</span>
+                        <span style="color: #4EC9B0">BlockPos</span> <span style="color: #9CDCFE">bankPos</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">origin</span>.<span style="color: #DCDCAA">offset</span>(dx, <span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">1</span>, dz);
+                        
+                        <span style="color: #6A9955">// Clear airspace above the bank to smoothly cut into hills</span>
+                        <span style="color: #C586C0">for</span> (<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">c</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>; c <span style="color: #D4D4D4">&lt;=</span> <span style="color: #B5CEA8">2</span>; c<span style="color: #D4D4D4">++</span>) {
+                            <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">origin</span>.<span style="color: #DCDCAA">offset</span>(dx, c, dz), <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">AIR</span>.<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+                        }
+
+                        <span style="color: #4EC9B0">BlockState</span> <span style="color: #9CDCFE">surfaceBlock</span>;
+                        <span style="color: #4EC9B0">boolean</span> <span style="color: #9CDCFE">isMudPatch</span> <span style="color: #D4D4D4">=</span> (<span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">sin</span>(<span style="color: #9CDCFE">bankPos</span>.<span style="color: #DCDCAA">getX</span>() <span style="color: #D4D4D4">*</span> <span style="color: #B5CEA8">0.7</span>) <span style="color: #D4D4D4">*</span> <span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">cos</span>(<span style="color: #9CDCFE">bankPos</span>.<span style="color: #DCDCAA">getZ</span>() <span style="color: #D4D4D4">*</span> <span style="color: #B5CEA8">0.7</span>)) <span style="color: #D4D4D4">&gt;</span> <span style="color: #B5CEA8">0.3</span>;
+                        
+                        <span style="color: #C586C0">if</span> (isMudPatch <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextFloat</span>() <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">0.6f</span>) {
+                            surfaceBlock <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">MUD</span>.<span style="color: #DCDCAA">defaultBlockState</span>();
+                        } <span style="color: #C586C0">else if</span> (minDistToWaterEdge <span style="color: #D4D4D4">&lt;=</span> <span style="color: #B5CEA8">2.0</span>) {
+                            surfaceBlock <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextFloat</span>() <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">0.8f</span> <span style="color: #C586C0">?</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">SAND</span>.<span style="color: #DCDCAA">defaultBlockState</span>() <span style="color: #C586C0">:</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">GRASS_BLOCK</span>.<span style="color: #DCDCAA">defaultBlockState</span>();
+                        } <span style="color: #C586C0">else</span> {
+                            surfaceBlock <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextFloat</span>() <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">0.4f</span> <span style="color: #C586C0">?</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">SAND</span>.<span style="color: #DCDCAA">defaultBlockState</span>() <span style="color: #C586C0">:</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">GRASS_BLOCK</span>.<span style="color: #DCDCAA">defaultBlockState</span>();
+                        }
+
+                        <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(bankPos, surfaceBlock, <span style="color: #B5CEA8">3</span>);
+                        
+                        <span style="color: #4EC9B0">BlockState</span> <span style="color: #9CDCFE">filler</span> <span style="color: #D4D4D4">=</span> (<span style="color: #9CDCFE">surfaceBlock</span>.<span style="color: #DCDCAA">getBlock</span>() <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">SAND</span>) <span style="color: #C586C0">?</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">SAND</span>.<span style="color: #DCDCAA">defaultBlockState</span>() <span style="color: #C586C0">:</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">DIRT</span>.<span style="color: #DCDCAA">defaultBlockState</span>();
+                        <span style="color: #4EC9B0">BlockPos</span> <span style="color: #9CDCFE">fillPos</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">bankPos</span>.<span style="color: #DCDCAA">below</span>();
+                        <span style="color: #C586C0">while</span> (<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">isEmptyBlock</span>(fillPos) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">fillPos</span>.<span style="color: #DCDCAA">getY</span>() <span style="color: #D4D4D4">&gt;</span> <span style="color: #9CDCFE">origin</span>.<span style="color: #DCDCAA">getY</span>() <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">15</span>) {
+                            <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(fillPos, filler, <span style="color: #B5CEA8">3</span>);
+                            fillPos <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">fillPos</span>.<span style="color: #DCDCAA">below</span>();
+                        }
+                        
+                        <span style="color: #6A9955">// Surface vegetation</span>
+                        <span style="color: #4EC9B0">BlockPos</span> <span style="color: #9CDCFE">aboveBank</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">bankPos</span>.<span style="color: #DCDCAA">above</span>();
+                        <span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">isEmptyBlock</span>(aboveBank) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">surfaceBlock</span>.<span style="color: #DCDCAA">getBlock</span>() <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">GRASS_BLOCK</span>) {
+                            <span style="color: #4EC9B0">float</span> <span style="color: #9CDCFE">vegChance</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextFloat</span>();
+                            <span style="color: #6A9955">// Vegetation gets rarer the further out you go</span>
+                            <span style="color: #4EC9B0">float</span> <span style="color: #9CDCFE">distanceModifier</span> <span style="color: #D4D4D4">=</span> minDistToWaterEdge <span style="color: #D4D4D4">&gt;</span> <span style="color: #B5CEA8">4.0</span> <span style="color: #C586C0">?</span> <span style="color: #B5CEA8">0.3f</span> <span style="color: #C586C0">:</span> <span style="color: #B5CEA8">1.0f</span>; 
+                            
+                            <span style="color: #C586C0">if</span> (vegChance <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">0.15f</span> <span style="color: #D4D4D4">*</span> distanceModifier) {
+                                <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(aboveBank, <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">FERN</span>.<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+                            } <span style="color: #C586C0">else if</span> (vegChance <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">0.35f</span> <span style="color: #D4D4D4">*</span> distanceModifier) {
+                                <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(aboveBank, <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">SHORT_GRASS</span>.<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">numTrees</span> <span style="color: #D4D4D4">=</span> isLarge <span style="color: #C586C0">?</span> <span style="color: #B5CEA8">3</span> <span style="color: #D4D4D4">+</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #B5CEA8">3</span>) <span style="color: #C586C0">:</span> <span style="color: #B5CEA8">1</span> <span style="color: #D4D4D4">+</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #B5CEA8">2</span>);
+        <span style="color: #C586C0">for</span> (<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">i</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>; i <span style="color: #D4D4D4">&lt;</span> numTrees; i<span style="color: #D4D4D4">++</span>) {
+            <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">angle</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextDouble</span>() <span style="color: #D4D4D4">*</span> <span style="color: #9CDCFE">Math</span>.<span style="color: #9CDCFE">PI</span> <span style="color: #D4D4D4">*</span> <span style="color: #B5CEA8">2</span>;
+            <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">treeX</span> <span style="color: #D4D4D4">=</span> (<span style="color: #4EC9B0">int</span>) (x <span style="color: #D4D4D4">+</span> <span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">cos</span>(angle) <span style="color: #D4D4D4">*</span> (baseRadius <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">3</span>));
+            <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">treeZ</span> <span style="color: #D4D4D4">=</span> (<span style="color: #4EC9B0">int</span>) (z <span style="color: #D4D4D4">+</span> <span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">sin</span>(angle) <span style="color: #D4D4D4">*</span> (baseRadius <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">3</span>));
+            
+            <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">treeY</span> <span style="color: #D4D4D4">=</span> (<span style="color: #4EC9B0">int</span>) y <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">2</span>;
+            <span style="color: #C586C0">while</span> (<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">isEmptyBlock</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(treeX, treeY, treeZ)) <span style="color: #D4D4D4">&amp;&amp;</span> treeY <span style="color: #D4D4D4">&gt;</span> y <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">5</span>) {
+                treeY<span style="color: #D4D4D4">--</span>;
+            }
+            
+            <span style="color: #9CDCFE">SpawnPalmTreeProcedureProcedure</span>.<span style="color: #DCDCAA">execute</span>(world, treeX, treeY <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>, treeZ);
+        }
+    }
+}</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

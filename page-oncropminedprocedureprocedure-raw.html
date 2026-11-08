@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>OnCropMinedProcedureProcedure [raw] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>OnCropMinedProcedureProcedure [raw]</h1>
+        <pre class="code-box vscode-code"><code class="consolas"><span style="color: #569CD6">package</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.neoforged.neoforge.event.level.block.BreakBlockEvent</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.neoforged.fml.common.EventBusSubscriber</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.core.BlockPos</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.Level</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.block.Blocks</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.block.state.BlockState</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">io.github.strawberrymc.init.StrawberrymcModBlocks</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">io.github.strawberrymc.block.FarmlandStrawberryBlock</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">io.github.strawberrymc.block.FertileFarmlandBlock</span>;
+
+@<span style="color: #4EC9B0">EventBusSubscriber</span>
+<span style="color: #569CD6">public class</span> <span style="color: #4EC9B0">OnCropMinedProcedureProcedure</span> {
+	<span style="color: #569CD6">public</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">onBlockBreak</span>(<span style="color: #4EC9B0">BreakBlockEvent</span> <span style="color: #9CDCFE">event</span>) {
+		<span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getState</span>().<span style="color: #DCDCAA">is</span>(<span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">CARROTS</span>) <span style="color: #D4D4D4">||</span> <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getState</span>().<span style="color: #DCDCAA">is</span>(<span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">POTATOES</span>) <span style="color: #D4D4D4">||</span> <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getState</span>().<span style="color: #DCDCAA">is</span>(<span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">WHEAT</span>) <span style="color: #D4D4D4">||</span> <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getState</span>().<span style="color: #DCDCAA">is</span>(<span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">BEETROOTS</span>) <span style="color: #D4D4D4">||</span> <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getState</span>().<span style="color: #DCDCAA">is</span>(<span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">TORCHFLOWER_CROP</span>) <span style="color: #D4D4D4">||</span> <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getState</span>().<span style="color: #DCDCAA">is</span>(<span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">PITCHER_CROP</span>)) {
+			<span style="color: #4EC9B0">BlockPos</span> <span style="color: #9CDCFE">farmlandPos</span> <span style="color: #D4D4D4">=</span> <span style="color: #C586C0">new</span> <span style="color: #DCDCAA">BlockPos</span>(<span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getPos</span>().<span style="color: #DCDCAA">getX</span>(), <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getPos</span>().<span style="color: #DCDCAA">getY</span>()<span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">1</span>, <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getPos</span>().<span style="color: #DCDCAA">getZ</span>());
+			<span style="color: #4EC9B0">Level</span> <span style="color: #9CDCFE">world</span> <span style="color: #D4D4D4">=</span> (Level) <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getLevel</span>();
+			<span style="color: #4EC9B0">BlockState</span> <span style="color: #9CDCFE">farmlandState</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">getBlockState</span>(farmlandPos);
+			<span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">farmlandState</span>.<span style="color: #DCDCAA">is</span>(<span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">FARMLAND</span>)) {
+				<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(farmlandPos, <span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">FARMLAND_STRAWBERRY</span>.<span style="color: #DCDCAA">get</span>().<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+			}
+			<span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">farmlandState</span>.<span style="color: #DCDCAA">is</span>(<span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">FARMLAND_STRAWBERRY</span>)) {
+				<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">currentState</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">farmlandState</span>.<span style="color: #DCDCAA">getValue</span>(<span style="color: #9CDCFE">FarmlandStrawberryBlock</span>.<span style="color: #9CDCFE">USES</span>);
+				<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">nextStage</span> <span style="color: #D4D4D4">=</span> currentState <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">5</span> <span style="color: #C586C0">?</span> currentState <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span> <span style="color: #C586C0">:</span> <span style="color: #B5CEA8">0</span>;
+
+				<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(farmlandPos, <span style="color: #9CDCFE">farmlandState</span>.<span style="color: #DCDCAA">setValue</span>(<span style="color: #9CDCFE">FarmlandStrawberryBlock</span>.<span style="color: #9CDCFE">USES</span>, nextStage), <span style="color: #B5CEA8">3</span>);
+				<span style="color: #C586C0">if</span> (currentState <span style="color: #D4D4D4">==</span> <span style="color: #B5CEA8">5</span>) {
+					<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(farmlandPos, <span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">POOR_FARMLAND</span>.<span style="color: #DCDCAA">get</span>().<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+				}
+			}
+      <span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">farmlandState</span>.<span style="color: #DCDCAA">is</span>(<span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">FERTILE_FARMLAND</span>)) {
+				<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">currentState</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">farmlandState</span>.<span style="color: #DCDCAA">getValue</span>(<span style="color: #9CDCFE">FertileFarmlandBlock</span>.<span style="color: #9CDCFE">USES</span>);
+				<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">nextStage</span> <span style="color: #D4D4D4">=</span> currentState <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">5</span> <span style="color: #C586C0">?</span> currentState <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span> <span style="color: #C586C0">:</span> <span style="color: #B5CEA8">0</span>;
+
+				<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(farmlandPos, <span style="color: #9CDCFE">farmlandState</span>.<span style="color: #DCDCAA">setValue</span>(<span style="color: #9CDCFE">FarmlandStrawberryBlock</span>.<span style="color: #9CDCFE">USES</span>, nextStage), <span style="color: #B5CEA8">3</span>);
+				<span style="color: #C586C0">if</span> (currentState <span style="color: #D4D4D4">==</span> <span style="color: #B5CEA8">5</span>) {
+					<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(farmlandPos, <span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">POOR_FARMLAND</span>.<span style="color: #DCDCAA">get</span>().<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+				}
+			}
+		}
+	}
+}
+</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

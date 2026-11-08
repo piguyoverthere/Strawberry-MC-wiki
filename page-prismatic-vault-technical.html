@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Prismatic Vault [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Prismatic Vault [technical]</h1>
+<h2 id="overview">Overview</h2>
+<p>The Prismatic Vault sits at the center of a glass-topped water tank on the roof of the <a href="page-ocean-monument-technical.html">Ocean Monument</a>. Using a Monument Key on it plays a cutscene in which rune glyphs funnel down to the Prismatic Rune at the bottom of the tank, and the rune then rises to just under the glass. <code class="consolas">MonumentShell.buildArena</code> builds the tank at world generation, <code class="consolas">monument/MonumentArena.java</code> runs the server sequence, and <code class="consolas">monument/client/ArenaCutscene.java</code> runs the camera.</p>
+
+<h2 id="items">Blocks and items</h2>
+<table>
+<thead><tr><th>Name</th><th>ID</th><th>Class</th><th>Properties</th><th>Creative tab</th></tr></thead>
+<tbody>
+<tr><td>Prismatic Vault</td><td><code class="consolas">strawberrymc:prismatic_vault</code></td><td><code class="consolas">PrismaticVaultBlock</code></td><td><code class="consolas">strength(-1, 3600000)</code> (unbreakable), light level 7, <code class="consolas">MapColor.DIAMOND</code>, <code class="consolas">PushReaction.BLOCK</code></td><td>Debug, and operator blocks with permissions</td></tr>
+<tr><td>Prismatic Rune</td><td><code class="consolas">strawberrymc:prismatic_rune</code></td><td><code class="consolas">PrismaticRuneItem</code></td><td><code class="consolas">Rarity.EPIC</code>, stacks to 1, enchantment glint through <code class="consolas">isFoil</code></td><td>Ingredients</td></tr>
+<tr><td>Monument Key</td><td><code class="consolas">strawberrymc:monument_key</code></td><td><code class="consolas">MonumentKeyItem</code></td><td><code class="consolas">Rarity.RARE</code>, stacks to 1</td><td>Tools and utilities</td></tr>
+</tbody>
+</table>
+
+<h2 id="tank">Arena tank</h2>
+<h3 id="tank-position">Position</h3>
+<table>
+<thead><tr><th>Method or constant in <code class="consolas">MonumentShell.Layout</code></th><th>Value</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">arenaCenter()</code></td><td><code class="consolas">world(58, floorY, 33)</code>: 25 blocks (<code class="consolas">ARENA_OFFSET</code>) from the gazebo's center towards the entrance, level with the gazebo floor. The vault is placed here.</td></tr>
+<tr><td><code class="consolas">runeFrame()</code></td><td><code class="consolas">arenaCenter().below(6)</code>.</td></tr>
+<tr><td><code class="consolas">ARENA_RADIUS</code></td><td>14</td></tr>
+<tr><td><code class="consolas">TANK_DEPTH</code></td><td>7</td></tr>
+</tbody>
+</table>
+<h3 id="tank-layers">Layers</h3>
+<p><code class="consolas">buildArena</code> loops over a square of radius 15 around the center, skips columns further than 15.2 away, and treats columns further than 14.2 as wall. Each column writes depth 0 to depth 9 below the vault's y.</p>
+<pre class="code-box"><code class="consolas">if (depth == 0)
+	state = wall ? Blocks.DARK_PRISMARINE.defaultBlockState() : Blocks.GLASS.defaultBlockState();
+else if (depth == Layout.TANK_DEPTH + 2)
+	state = Blocks.PRISMARINE_BRICKS.defaultBlockState();
+else if (wall)
+	state = depth == 4 &amp;&amp; (dx * 7 + dz * 3) % 5 == 0 ? Blocks.SEA_LANTERN.defaultBlockState() : Blocks.PRISMARINE_BRICKS.defaultBlockState();
+else if (depth == Layout.TANK_DEPTH + 1)
+	state = random.nextFloat() &lt; 0.3F ? Blocks.GRAVEL.defaultBlockState() : Blocks.SAND.defaultBlockState();
+else
+	state = Blocks.WATER.defaultBlockState();</code></pre>
+<table>
+<thead><tr><th>Depth below the glass</th><th>Inside (distance up to 14.2)</th><th>Wall (14.2 to 15.2)</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><code class="consolas">minecraft:glass</code></td><td><code class="consolas">minecraft:dark_prismarine</code></td></tr>
+<tr><td>1 to 7</td><td><code class="consolas">minecraft:water</code></td><td><code class="consolas">minecraft:prismarine_bricks</code>, with <code class="consolas">minecraft:sea_lantern</code> at depth 4 where <code class="consolas">(dx * 7 + dz * 3) % 5 == 0</code></td></tr>
+<tr><td>8</td><td>70% <code class="consolas">minecraft:sand</code>, 30% <code class="consolas">minecraft:gravel</code></td><td><code class="consolas">minecraft:prismarine_bricks</code></td></tr>
+<tr><td>9</td><td><code class="consolas">minecraft:prismarine_bricks</code></td><td><code class="consolas">minecraft:prismarine_bricks</code></td></tr>
+</tbody>
+</table>
+<p>The random source for each column is seeded from its X and Z, so a column gets the same result regardless of chunk generation order. Below the wall, water is replaced with bricks from depth 10 down, stopping at the first non-water block or at depth 26, so the wall stays propped up where the roof falls away.</p>
+<h3 id="tank-decoration">Decoration</h3>
+<p>The bottom water layer (depth 7) gets a roll from <code class="consolas">decorate</code> in every inside column except the central 3x3.</p>
+<table>
+<thead><tr><th>Roll range</th><th>Chance</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>0 to 0.22</td><td>22%</td><td><code class="consolas">minecraft:seagrass</code></td></tr>
+<tr><td>0.22 to 0.28</td><td>6%</td><td><code class="consolas">minecraft:tall_seagrass</code> (two blocks)</td></tr>
+<tr><td>0.28 to 0.34</td><td>6%</td><td>One of tube, brain, bubble, fire or horn coral, or the matching coral fan</td></tr>
+<tr><td>0.34 to 0.37</td><td>3%</td><td><code class="consolas">minecraft:sea_pickle</code>, 1 to 4 pickles</td></tr>
+<tr><td>0.37 to 0.39</td><td>2%</td><td><code class="consolas">minecraft:kelp</code>, 2 to 4 tall</td></tr>
+<tr><td>0.39 to 1</td><td>61%</td><td>Nothing</td></tr>
+</tbody>
+</table>
+<h3 id="tank-entities">Rune frame and fish</h3>
+<p>After the column loop, the vault goes at the center and a <code class="consolas">minecraft:dark_prismarine</code> pedestal goes at 7 below it. If the frame's position is in the chunk being generated, <code class="consolas">spawnArenaEntities</code> runs, so the entities are created exactly once.</p>
+<pre class="code-box"><code class="consolas">net.minecraft.world.entity.decoration.ItemFrame frame = new net.minecraft.world.entity.decoration.ItemFrame(serverLevel, layout.runeFrame(), Direction.UP);
+frame.setItem(new net.minecraft.world.item.ItemStack(io.github.strawberrymc.init.StrawberrymcModItems.PRISMATIC_RUNE.get()), false);
+((io.github.strawberrymc.custommixin.ItemFrameAccessor) frame).strawberrymc$setFixed(true);
+frame.setInvulnerable(true);
+frame.addTag(MonumentArena.RUNE_FRAME_TAG);
+level.addFreshEntity(frame);</code></pre>
+<p><code class="consolas">ItemFrameAccessor</code> exposes the frame's private <code class="consolas">fixed</code> field. The tag is <code class="consolas">strawberrymc.rune_frame</code>. <code class="consolas">MonumentArena</code> also cancels <code class="consolas">PlayerInteractEvent.EntityInteract</code> and <code class="consolas">AttackEntityEvent</code> on a tagged frame for any player not in creative mode.</p>
+<p>Nine fish are spawned with a random source seeded from the arena's center: 6 <code class="consolas">minecraft:tropical_fish</code> and 3 <code class="consolas">minecraft:cod</code>. Each is placed 2 to 12 blocks from the center at a random angle, 2 to 6 blocks below the glass, using <code class="consolas">EntitySpawnReason.STRUCTURE</code>. All are marked as persistent.</p>
+
+<h2 id="insert">Using the vault</h2>
+<p><code class="consolas">MonumentArena.onUseBlock</code> listens to <code class="consolas">PlayerInteractEvent.RightClickBlock</code> on the server. The checks run in this order:</p>
+<ol>
+<li>If the block is not a Prismatic Vault, it returns. Otherwise the event is cancelled with <code class="consolas">InteractionResult.SUCCESS</code>, whatever is in the player's hand.</li>
+<li>If the vault is not the one at the <code class="consolas">arenaCenter</code> of the monument at its position, it returns silently.</li>
+<li>If the rune frame is missing or empty, or this vault is in the <code class="consolas">OPENING</code> set, the action bar shows "The vault is already open".</li>
+<li>If the held item in the hand used is not a Monument Key, the action bar shows "The vault needs a Monument Key".</li>
+<li>Outside creative mode, the stack shrinks by 1, and <code class="consolas">open</code> runs.</li>
+</ol>
+
+<h2 id="cutscene">Vault cutscene</h2>
+<h3 id="cutscene-timeline">Timeline</h3>
+<p>The constants in <code class="consolas">MonumentArena</code> are <code class="consolas">GLOW</code> 70, <code class="consolas">RELEASE</code> 110 and <code class="consolas">RISE</code> 90. <code class="consolas">CUTSCENE_TICKS</code> is <code class="consolas">RELEASE + RISE + 30</code> = 230 (11.5 seconds). The server queues each step with <code class="consolas">StrawberrymcMod.queueServerWork</code>, and <code class="consolas">ArenaCutscene</code> runs on the client from the same constants.</p>
+<table>
+<thead><tr><th>Tick</th><th>Seconds</th><th>Server</th><th>Camera</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>0</td><td>Vault added to <code class="consolas">OPENING</code>. For every player within 48 blocks of the vault: <code class="consolas">PlayArenaCutscene(frame, vault)</code> and 230 ticks of protection. <code class="consolas">SoundEvents.VAULT_INSERT_ITEM</code> at volume 1.0, pitch 0.8. <code class="consolas">SoundEvents.BEACON_ACTIVATE</code> at volume 1.5, pitch 1.3.</td><td>The player's own view.</td></tr>
+<tr><td>0 to 68</td><td>0 to 3.4</td><td>Every 2 ticks: a burst of <code class="consolas">3 + t / 12</code> funnel glyphs (3 to 8).</td><td>Black dip centerd on tick 30.</td></tr>
+<tr><td>30</td><td>1.5</td><td></td><td>Cuts inside the tank (<code class="consolas">CUT_IN</code>). Looks up at the glyphs and tilts down to the frame by tick 70.</td></tr>
+<tr><td>70</td><td>3.5</td><td>Frame gets the glowing tag. 30 <code class="consolas">minecraft:end_rod</code> (spread 0.4/0.3/0.4, speed 0.03). <code class="consolas">SoundEvents.AMETHYST_BLOCK_RESONATE</code> at volume 2.0, pitch 1.0.</td><td>Settles on the frame.</td></tr>
+<tr><td>110</td><td>5.5</td><td>Frame emptied. Rune item spawned at the frame. <code class="consolas">SoundEvents.TRIDENT_RIPTIDE_1</code> at volume 1.5, pitch 1.2.</td><td>Starts following the rune upward.</td></tr>
+<tr><td>111 to 200</td><td>5.55 to 10</td><td>Each tick the rune moves up the eased path and 2 <code class="consolas">minecraft:bubble</code> appear beneath it.</td><td>Follows the rune.</td></tr>
+<tr><td>205</td><td>10.25</td><td>Vault removed from <code class="consolas">OPENING</code>.</td><td>Follows the rune.</td></tr>
+<tr><td>218</td><td>10.9</td><td></td><td>Cuts back to the player (<code class="consolas">CUT_OUT</code>), through a black dip.</td></tr>
+<tr><td>230</td><td>11.5</td><td>Protection ends.</td><td>Ends.</td></tr>
+</tbody>
+</table>
+<h3 id="cutscene-funnel">Funnel particle</h3>
+<p>Each glyph starts in a ring around the vault, at radius 1.2 to 2.8 and 1.2 to 2.2 above it. The server sends it with count 0, so the three offset arguments arrive at the client as the particle's velocity. The particle uses them as its destination, the frame's center lowered by 0.35.</p>
+<pre class="code-box"><code class="consolas">level.sendParticles(RUNE_FUNNEL.get(), true, true, x, vault.getY() + 1.2 + level.getRandom().nextDouble(), z, 0, target.x, target.y, target.z, 1.0);</code></pre>
+<p><code class="consolas">QuestHud.RuneFunnel</code> registers the sprites from <code class="consolas">rune_funnel.json</code>, the same 26 <code class="consolas">minecraft:sga_*</code> glyph sprites as the sensor glyph. Lifetime is 40 to 54 ticks, size 0.12 to 0.18, block light 15, with no physics. Its position is computed from <code class="consolas">p = age / lifetime</code>.</p>
+<pre class="code-box"><code class="consolas">float p = (float) age / lifetime;
+double r = radius * (1 - p * p * (3 - 2 * p));
+double angle = startAngle + p * Math.PI * 2.5;
+x = targetX + Math.cos(angle) * r;
+z = targetZ + Math.sin(angle) * r;
+y = Mth.lerp(Math.pow(p, 1.4), startY, targetY);
+this.rCol = 0.2F + 0.6F * p;
+this.gCol = 0.55F + 0.4F * p;
+setAlpha(Math.min(1, Math.min(p / 0.15F, (1 - p) / 0.1F)));</code></pre>
+<p>Blue stays at 1.0, so the color moves from <code class="consolas">(0.2, 0.55, 1.0)</code> to <code class="consolas">(0.8, 0.95, 1.0)</code> as the glyph descends. The type is registered with <code class="consolas">new SimpleParticleType(true)</code>.</p>
+<h3 id="cutscene-rune">The floating rune</h3>
+<p><code class="consolas">MonumentArena.release</code> does nothing if the frame is missing or empty. Otherwise it copies the frame's stack, clears the frame and its glowing tag, and spawns an <code class="consolas">ItemEntity</code> at the frame's center.</p>
+<pre class="code-box"><code class="consolas">floating.setNoGravity(true);
+floating.setNeverPickUp();
+floating.setUnlimitedLifetime();
+floating.setGlowingTag(true);
+floating.addTag(RISING_RUNE_TAG);</code></pre>
+<p>The tag is <code class="consolas">strawberrymc.rising_rune</code>. For each tick <code class="consolas">t</code> from 1 to 90, the server queues a position of <code class="consolas">start.y + (topY - start.y) * ease(t / 90)</code>, where <code class="consolas">topY</code> is the vault's y minus 0.6 and <code class="consolas">ease</code> is smoothstep. After the final tick the rune stays floating just under the glass, and the vault answers with "The vault is already open".</p>
+<h3 id="cutscene-camera">Camera</h3>
+<p><code class="consolas">ArenaCutscene.start</code> ignores the packet if the entrance or vent cutscene is playing. The frame position is the bottom center of the frame's block, and the surface is the vault's y minus 0.6. The camera's starting angle is the direction from the frame to the player, so the view comes from the side the player is standing on. Before tick 30 and from tick 218, <code class="consolas">currentShot</code> returns null and the camera stays on the player.</p>
+<pre class="code-box"><code class="consolas">double angle = startAngle + Math.toRadians(40) * (time - CUT_IN) / (CUT_OUT - CUT_IN);
+Vec3 desired = new Vec3(frame.x + Math.cos(angle) * DISTANCE, frame.y + 1.0 + rise * 0.6, frame.z + Math.sin(angle) * DISTANCE);
+// Keep a clear line of sight from just above the frame
+Vec3 anchor = new Vec3(frame.x, desired.y, frame.z).add(0, 0.5, 0);</code></pre>
+<table>
+<thead><tr><th>Value</th><th>Detail</th></tr></thead>
+<tbody>
+<tr><td>Orbit</td><td>40 degrees between ticks 30 and 218, 5 blocks from the frame (<code class="consolas">DISTANCE</code>).</td></tr>
+<tr><td>Height</td><td><code class="consolas">frame.y + 1.0 + rise * 0.6</code>.</td></tr>
+<tr><td>Look target before tick 70</td><td><code class="consolas">frame.y + 2.4 - 1.8 * ease((t - 30) / 40)</code>.</td></tr>
+<tr><td>Look target from tick 70</td><td><code class="consolas">frame.y + 0.6 + rise</code>.</td></tr>
+<tr><td>Rise, after tick 110</td><td><code class="consolas">ease((t - 110) / 90) * (surfaceY - frame.y)</code>.</td></tr>
+<tr><td>Clipping</td><td>A ray from the anchor (<code class="consolas">Block.VISUAL</code>, <code class="consolas">Fluid.NONE</code>) stops the camera 0.6 short of a hit, and never closer than 1.5 to the anchor.</td></tr>
+<tr><td>Black dips</td><td><code class="consolas">max(1 - |t - 30| / 8, 1 - |t - 218| / 8)</code>.</td></tr>
+<tr><td>Letterbox</td><td>Bars 9% of screen height, sliding over 15 ticks.</td></tr>
+<tr><td>HUD and water overlay</td><td>Hidden for all 230 ticks.</td></tr>
+<tr><td>Hand</td><td>Hidden from tick 30 to tick 218.</td></tr>
+<tr><td>Fog</td><td>From tick 30 to tick 218, near plane at least 16 and far plane at least 40.</td></tr>
+</tbody>
+</table>
+<p>The packet is <code class="consolas">strawberrymc:arena_cutscene</code>, registrar version 1, carrying the frame and vault positions. Its handler runs only on the client, so the client-only cutscene class is never loaded on a dedicated server. <code class="consolas">CutsceneCameraMixin</code> gives this cutscene priority over the other two when applying the shot, and protection comes from <code class="consolas">MonumentIntro.protect</code>, described on <a href="page-ocean-monument-technical.html">Ocean Monument</a>.</p>
+
+<h2 id="reset">Reset</h2>
+<p><code class="consolas">/cutscene clear</code> calls <code class="consolas">PrismaticSensors.resetVent</code>, which calls <code class="consolas">MonumentArena.reset</code> for a player inside a monument. The reset removes the vault from <code class="consolas">OPENING</code>, discards every item tagged <code class="consolas">strawberrymc.rising_rune</code> within 14 blocks horizontally and 12 vertically of the vault, puts a new Prismatic Rune in the frame, and clears the frame's glowing tag.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

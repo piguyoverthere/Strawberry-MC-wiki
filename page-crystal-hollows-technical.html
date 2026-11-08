@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Crystal Hollows [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Crystal Hollows [technical]</h1>
+<h2 id="overview">Overview</h2>
+<p>Crystal Hollows is the cave biome <code class="consolas">strawberrymc:crystal_hollows</code>. World generation runs in this order:</p>
+<ol>
+<li>The biome's surface rule lays <a href="page-crystalline-calcite-technical.html">Crystalline Calcite</a> and calcite on cave floors.</li>
+<li><code class="consolas">CrystalHollowsCarver</code> hollows out one vast cavern and crusts every surface it opens.</li>
+<li><code class="consolas">calcite_cleanup</code> runs in the first feature step and clears any floating Crystalline Calcite.</li>
+<li>Decoration features fill the cavern with columns, mountains, geodes, pools and <a href="page-crystals-technical.html">crystals</a>.</li>
+</ol>
+<p>The cavern is a carver instead of a feature so that every neighboring chunk is carved before any feature runs. The crystal columns, calcite mountains, geodes and pools are then never cut in half by a neighbor carving later.</p>
+
+<h2 id="biome">Biome</h2>
+<h3 id="climate">Climate</h3>
+<p>The point is added in <code class="consolas">StrawberrymcModBiomes.modifyOverworldParameterPoints</code>, using the values from the MCreator element <code class="consolas">CrystalHollows.mod.json</code>.</p>
+<table>
+<thead>
+<tr><th>Parameter</th><th>Range</th></tr>
+</thead>
+<tbody>
+<tr><td>temperature</td><td>-2 to 2</td></tr>
+<tr><td>humidity</td><td>-2 to 2</td></tr>
+<tr><td>continentalness</td><td>-2 to 0.4</td></tr>
+<tr><td>erosion</td><td>-0.4 to 2</td></tr>
+<tr><td>depth</td><td>0.4 to 1.1</td></tr>
+<tr><td>weirdness</td><td>0 to 0.9999</td></tr>
+<tr><td>offset</td><td>0</td></tr>
+</tbody>
+</table>
+<h3 id="biome-json">Biome JSON</h3>
+<table>
+<thead>
+<tr><th>Field in crystal_hollows.json</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>has_precipitation</td><td>true</td></tr>
+<tr><td>temperature / downfall</td><td>0.5 / 0.5</td></tr>
+<tr><td>foliage_color / grass_color / water_color</td><td>#9E814D / #90814D / #3F76E4</td></tr>
+<tr><td>sky_color and fog_color</td><td>#1B1626</td></tr>
+<tr><td>water_fog_color</td><td>#050533</td></tr>
+<tr><td>carvers</td><td>minecraft:cave, minecraft:cave_extra_underground, minecraft:canyon</td></tr>
+<tr><td>features, step lakes</td><td>minecraft:lake_lava_underground</td></tr>
+<tr><td>features, step underground_ores</td><td>ore_coal_upper, ore_coal_lower, ore_iron_upper, ore_iron_middle, ore_iron_small, ore_gold, ore_gold_lower, ore_redstone, ore_redstone_lower, ore_diamond, ore_diamond_medium, ore_diamond_large, ore_diamond_buried, ore_lapis, ore_lapis_buried, ore_copper, underwater_magma</td></tr>
+<tr><td>features, step top_layer_modification</td><td>minecraft:freeze_top_layer</td></tr>
+</tbody>
+</table>
+<h3 id="surface-rule">Surface rule</h3>
+<p><code class="consolas">StrawberrymcModBiomes.anySurfaceRule</code> applies from 5 blocks above the world bottom to 5 blocks below the top. At floor depth it places Crystalline Calcite where the water check passes and calcite otherwise, and calcite below the floor at the deeper stone-depth check. It is added to the front of the overworld surface rule sequence.</p>
+
+<h2 id="carver">CrystalHollowsCarver</h2>
+<h3 id="carver-registration">Registration</h3>
+<p>The class extends <code class="consolas">WorldCarver&lt;CarverConfiguration&gt;</code> and is registered as <code class="consolas">strawberrymc:crystal_hollows</code>. The configured carver has probability 1.0 and uses <code class="consolas">#minecraft:overworld_carver_replaceables</code> as its replaceable set. The biome modifier <code class="consolas">crystal_hollows_carver.json</code> adds it to every biome, using <code class="consolas">neoforge:any</code>. A chunk takes its carvers from its biome at y=0, which is often not Crystal Hollows, so the carver checks the biome at each block instead.</p>
+<h3 id="carver-constants">Constants</h3>
+<table>
+<thead>
+<tr><th>Constant</th><th>Value</th><th>Purpose</th></tr>
+</thead>
+<tbody>
+<tr><td>FLOOR</td><td>-50</td><td>Cavern bottom, kept above the deep lava level at -54</td></tr>
+<tr><td>CEILING</td><td>36</td><td>Highest possible cavern top</td></tr>
+<tr><td>ROOF</td><td>12</td><td>Rock left between the cavern and the surface or sea floor</td></tr>
+<tr><td>SHELL</td><td>0.2</td><td>Share of the height over which the floor and ceiling curve in</td></tr>
+<tr><td>CELL</td><td>4</td><td>Spacing of cave noise samples</td></tr>
+</tbody>
+</table>
+<h3 id="carver-order">Order of work in carve()</h3>
+<ol>
+<li><code class="consolas">isStartChunk</code> always returns true, and <code class="consolas">carve</code> returns unless the source chunk is the chunk being generated, so each chunk carves only itself.</li>
+<li>It reads the biome straight from the chunk on the 4x4x4 biome grid, building a <code class="consolas">weight</code> array of 1 for Hollows cells and 0 otherwise. It stops if no cell is Hollows.</li>
+<li>It builds a <code class="consolas">Shape</code>, which samples the cave noise, column ceilings and pillar noise one block past the chunk edge, so surfaces on the border can see the neighbor's cavern before that chunk is carved.</li>
+<li>For each column from FLOOR up to the column's ceiling, every position where <code class="consolas">shape.open</code> is true is set to plain air, if it is replaceable, lava, water or Crystalline Calcite. Plain air is used because MCreator's air predicate matches only <code class="consolas">minecraft:air</code>.</li>
+<li>A second top-down pass applies the crust.</li>
+</ol>
+<h3 id="noises">Noises</h3>
+<p>The noises are created once per <code class="consolas">RandomState</code> from the random factory <code class="consolas">strawberrymc:crystal_hollows</code> and kept in a weak map.</p>
+<table>
+<thead>
+<tr><th>Noise</th><th>firstOctave</th><th>Amplitudes</th><th>Sampling</th></tr>
+</thead>
+<tbody>
+<tr><td>cave</td><td>-7</td><td>1, 1, 0.5, 0.25</td><td>3D every 4 blocks, trilinearly interpolated, y multiplied by 1.8</td></tr>
+<tr><td>pillars</td><td>-5</td><td>1, 0.6, 0.3</td><td>2D, every block</td></tr>
+<tr><td>wobble</td><td>-3</td><td>1, 0.5</td><td>3D, every block</td></tr>
+</tbody>
+</table>
+<p>Stretching y by 1.8 makes chambers wide and flat instead of round.</p>
+<h3 id="density-formula">Density formula</h3>
+<pre class="code-box"><code class="consolas">double t = (y - FLOOR) / (double) (ceiling - FLOOR);
+double shell = Math.max(0, SHELL - t) / SHELL + Math.max(0, t - (1 - SHELL)) / SHELL;
+double density = -0.35 - 0.9 * caveNoise(lx + CELL, y - FLOOR, lz + CELL) + 1.3 * shell * shell + 2.5 * (1 - w);
+if (density &gt;= 0)
+	return false;
+// Pillars flare out toward the floor and ceiling like they grew into the rock
+double edge = 2 * t - 1;
+return pillars[lx + 1][lz + 1] + 0.06 * noises.wobble.getValue(minX + lx, y, minZ + lz) &lt;= 0.5 - 0.22 * edge * edge;</code></pre>
+<table>
+<thead>
+<tr><th>Term</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">t</code></td><td>Height within the column's cavern, 0 at the floor and 1 at the ceiling</td></tr>
+<tr><td><code class="consolas">shell</code></td><td>0 through the middle 60%, rising to 1 at the floor and ceiling</td></tr>
+<tr><td><code class="consolas">-0.35</code></td><td>Base bias toward open space</td></tr>
+<tr><td><code class="consolas">-0.9 * cave</code></td><td>Noise that shapes the chambers</td></tr>
+<tr><td><code class="consolas">1.3 * shell²</code></td><td>Closes the floor and ceiling smoothly</td></tr>
+<tr><td><code class="consolas">2.5 * (1 - w)</code></td><td>Fills the cavern in at the biome's edge</td></tr>
+</tbody>
+</table>
+<p>A column's ceiling is <code class="consolas">min(36, ground - 12)</code>, where <code class="consolas">ground</code> is found by scanning down for the top solid block, because the worldgen heightmaps are not filled in when carvers run. Fluids are skipped by the scan, so the cavern stays 12 blocks under a sea floor. A column with a ceiling at or below y=-42 stays solid.</p>
+<p>The biome weight <code class="consolas">w</code> is a trilinear blend of the 4x4x4 grid, so the cavern edge fades into rock instead of stepping in 4-block cubes. Positions with a weight at or below 0.05 are not carved.</p>
+<h3 id="pillars">Stone pillars</h3>
+<p>The final line of the formula keeps rock where <code class="consolas">pillars + 0.06 * wobble</code> exceeds <code class="consolas">0.5 - 0.22 * edge²</code>. The <code class="consolas">edge</code> value is 0 at mid height and 1 at the floor and ceiling, so the threshold falls from 0.5 to 0.28 and the pillars flare where they meet the rock.</p>
+<h3 id="crust">Crust</h3>
+<pre class="code-box"><code class="consolas">BlockState above = chunk.getBlockState(pos.above());
+BlockState crust = null;
+if (above.isAir())
+	crust = crystalline;
+else if (above.is(crystalline.getBlock()) || shape.air(lx, y - 1, lz) || shape.air(lx - 1, y, lz) || shape.air(lx + 1, y, lz)
+		|| shape.air(lx, y, lz - 1) || shape.air(lx, y, lz + 1))
+	crust = calcite;</code></pre>
+<p>The pass runs from one block above the ceiling down to y=-52. A replaceable block with air above becomes Crystalline Calcite. A block under Crystalline Calcite, or one with air beneath or beside it, becomes calcite. Running top-down means a floor block is already crystalline when the block under it is reached. <code class="consolas">Shape.air</code> reads the chunk for positions inside it and calls <code class="consolas">open</code> for positions in the neighboring chunk.</p>
+
+<h2 id="features">Placed features</h2>
+<p>Each feature is added by a NeoForge biome modifier targeting <code class="consolas">strawberrymc:crystal_hollows</code>, and each placed feature ends in a <code class="consolas">biome</code> filter, except <code class="consolas">calcite_cleanup</code>, which has no placement modifiers.</p>
+<table>
+<thead>
+<tr><th>Placed feature</th><th>Step</th><th>Rate per chunk</th><th>Height</th><th>Position filter</th></tr>
+</thead>
+<tbody>
+<tr><td>calcite_cleanup</td><td>raw_generation</td><td>Once</td><td>Whole chunk</td><td>None</td></tr>
+<tr><td>crystal_column</td><td>underground_structures</td><td>Rarity 1 in 1</td><td>Uniform -46 to 20</td><td>Scan down 32 to air over solid</td></tr>
+<tr><td>calcite_mountain</td><td>underground_structures</td><td>Rarity 1 in 4</td><td>Uniform -46 to 20</td><td>Scan down 32 to air over solid</td></tr>
+<tr><td>hollows_geode</td><td>local_modifications</td><td>Rarity 1 in 2</td><td>Uniform -46 to 30</td><td>Position is solid</td></tr>
+<tr><td>hollows_crystal_patches</td><td>underground_decoration</td><td>Count 10</td><td>Uniform -50 to 36</td><td>None</td></tr>
+<tr><td>hollows_pool</td><td>underground_decoration</td><td>Count 3</td><td>Uniform -50 to 30</td><td>Scan down 32 to air over solid</td></tr>
+<tr><td>hollows_crystals</td><td>vegetal_decoration</td><td>Count 12</td><td>Uniform -50 to 34</td><td>Scan down 32 to air over solid</td></tr>
+<tr><td>hollows_hanging_crystals</td><td>vegetal_decoration</td><td>Count 12</td><td>Uniform -50 to 34</td><td>Scan up 32 to air under solid</td></tr>
+<tr><td>hollows_scattered_crystals</td><td>vegetal_decoration</td><td>Count 10</td><td>Uniform -50 to 34</td><td>Scan down 32 to Crystalline Calcite over solid</td></tr>
+</tbody>
+</table>
+<p>The Java features are registered in <code class="consolas">CrystalHollowsDecor</code>. Its <code class="consolas">ProcedureFeature</code> wrapper runs an MCreator procedure at the position the placed feature found.</p>
+<h3 id="calcite-cleanup">calcite_cleanup</h3>
+<p>Vanilla cave carvers do not count Crystalline Calcite as carvable, so where they cut under a crusted floor the slab is left floating. <code class="consolas">CalciteCleanup</code> runs once per chunk after all carving and removes any Crystalline Calcite with an empty block directly below it, from one block above the world bottom to the top of the world.</p>
+<h3 id="crystal-column">crystal_column</h3>
+<p><a href="page-crystalcolumngenerationprocedure-raw.html">CrystalColumnGenerationProcedure [raw]</a> builds a leaning triangular column from floor to ceiling.</p>
+<ul>
+<li>Material: one of six equally likely blocks: <code class="consolas">minecraft:amethyst_block</code>, garnet_block, dendrite_block, citrine_block, aquamarine_block or rose_quartz_block.</li>
+<li>Gap: it counts air upward from the origin, and the column is built only when the height <code class="consolas">h</code> is at least 8 and less than 120.</li>
+<li>Lean: x and z each drift by a random amount from -5 to 5, divided by <code class="consolas">h + 3</code>, per block of height.</li>
+<li>Radius: an integer from 3 to 5. A random rotation from 0 to 2.0944 radians orients the triangle.</li>
+<li>Range: layers run from 3 below the origin to <code class="consolas">h + 3</code>, so both ends are embedded in rock.</li>
+<li>Replaces air and <code class="consolas">minecraft:base_stone_overworld</code>.</li>
+</ul>
+<pre class="code-box"><code class="consolas">r = (radius * (1 + (0.5 * Math.pow(Math.min(Math.abs((((2 * i) / h) - 1)), 1), 4))));
+reach = (Math.round(r) + 1);
+cx = (x + (lean_x * i));
+cz = (z + (lean_z * i));</code></pre>
+<p>The flare factor is 1 at mid height and 1.5 at the ends. A position belongs to the column when its offset, dotted with each of three unit normals 120 degrees apart, is at most <code class="consolas">r / 2</code>.</p>
+<h3 id="calcite-mountain">calcite_mountain</h3>
+<p><a href="page-calcitemountaingenerationprocedure-raw.html">CalciteMountainGenerationProcedure [raw]</a> builds a mound. The radius is an integer from 7 to 13 and the height is from 0.8 to 1.6 times the radius.</p>
+<pre class="code-box"><code class="consolas">top = Math.round(((height * Math.pow((1 - dist), 1.4)) + Mth.nextDouble(RandomSource.create(), -0.6, 1.2)));
+if (top &gt;= 0) {
+	k = top;
+	while ((k &gt; -12) &amp;&amp; (world.isEmptyBlock(BlockPos.containing((x + dx), (y + k), (z + dz))))) {
+		world.setBlock(BlockPos.containing((x + dx), (y + k), (z + dz)), Blocks.CALCITE.defaultBlockState(), 3);
+		k = (k - 1);
+	}</code></pre>
+<p>Each column fills with calcite down through empty space, to at most 12 blocks below the origin, which skirts the mound over uneven floors. If the block above the top is empty it receives a Crystalline Calcite cap.</p>
+<h3 id="hollows-geode">hollows_geode</h3>
+<table>
+<thead>
+<tr><th>Field</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>type</td><td>minecraft:geode</td></tr>
+<tr><td>filling</td><td>minecraft:air</td></tr>
+<tr><td>inner layer</td><td>minecraft:amethyst_block</td></tr>
+<tr><td>alternate inner layer</td><td>minecraft:budding_amethyst, chance 0.083</td></tr>
+<tr><td>middle layer</td><td>minecraft:calcite</td></tr>
+<tr><td>outer layer</td><td>minecraft:smooth_basalt</td></tr>
+<tr><td>inner placements</td><td>small, medium and large amethyst buds, amethyst cluster</td></tr>
+<tr><td>invalid_blocks_threshold</td><td>1</td></tr>
+</tbody>
+</table>
+<h3 id="crystal-patches">hollows_crystal_patches</h3>
+<p>A <code class="consolas">simple_random_selector</code> of six equally likely <code class="consolas">minecraft:ore</code> features, each size 64 with discard chance 0, replacing <code class="consolas">minecraft:calcite</code> with amethyst, garnet, dendrite, citrine, aquamarine or rose quartz block. They stain the crust with crystal.</p>
+<h3 id="hollows-pool">hollows_pool</h3>
+<table>
+<thead>
+<tr><th>Field</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>type</td><td>minecraft:waterlogged_vegetation_patch, surface floor</td></tr>
+<tr><td>xz_radius</td><td>Uniform 2 to 4</td></tr>
+<tr><td>vertical_range</td><td>5</td></tr>
+<tr><td>ground_state</td><td>strawberrymc:cinnabar</td></tr>
+<tr><td>depth</td><td>2</td></tr>
+<tr><td>extra_bottom_block_chance</td><td>0.8</td></tr>
+<tr><td>extra_edge_column_chance</td><td>0.7</td></tr>
+<tr><td>vegetation</td><td>strawberrymc:aquamarine_crystal facing up, chance 0.12</td></tr>
+<tr><td>replaceable</td><td>#strawberrymc:hollows_ground</td></tr>
+</tbody>
+</table>
+<p>The tag <code class="consolas">#strawberrymc:hollows_ground</code> contains calcite, Crystalline Calcite and <code class="consolas">#minecraft:lush_ground_replaceable</code>.</p>
+<h3 id="crystal-fields">hollows_crystals and hollows_hanging_crystals</h3>
+<p>Each is a <code class="consolas">simple_random_selector</code> of six equally likely <code class="consolas">minecraft:vegetation_patch</code> features, one per crystal type, replacing <code class="consolas">#strawberrymc:hollows_ground</code>.</p>
+<table>
+<thead>
+<tr><th>Field</th><th>hollows_crystals</th><th>hollows_hanging_crystals</th></tr>
+</thead>
+<tbody>
+<tr><td>surface</td><td>floor</td><td>ceiling</td></tr>
+<tr><td>xz_radius</td><td>Uniform 3 to 7</td><td>Uniform 3 to 7</td></tr>
+<tr><td>vertical_range</td><td>4</td><td>4</td></tr>
+<tr><td>depth</td><td>1</td><td>1</td></tr>
+<tr><td>vegetation_chance</td><td>0.75</td><td>0.75</td></tr>
+<tr><td>extra_bottom_block_chance</td><td>0</td><td>0</td></tr>
+<tr><td>extra_edge_column_chance</td><td>0.5</td><td>0.5</td></tr>
+<tr><td>Crystal facing</td><td>up</td><td>down</td></tr>
+</tbody>
+</table>
+<p>The ground of a patch is the matching crystal block and the vegetation is the matching crystal.</p>
+<h3 id="scattered-crystals">hollows_scattered_crystals</h3>
+<p>A <code class="consolas">simple_block</code> with a weighted state provider of the six crystals at weight 1 each, facing up. It has its own placement: count 48, random offset with trapezoid spread from -7 to 7 horizontally and -3 to 3 vertically, then a filter requiring <a href="page-crystalline-calcite-technical.html">Crystalline Calcite</a> with a solid block below.</p>
+
+<h2 id="fog">Fog</h2>
+<p><code class="consolas">CrystalHollowsFog</code> is a client event subscriber on <code class="consolas">ViewportEvent.RenderFog</code>. The cavern is open enough to see out to the edge of the loaded chunks, so inside the biome it closes the atmospheric fog in well before the render distance and fades the view into the biome's dark fog color.</p>
+<pre class="code-box"><code class="consolas">FogData fog = event.getFogData();
+fog.environmentalStart = Math.min(fog.environmentalStart, FOG_START);
+fog.environmentalEnd = Math.min(fog.environmentalEnd, FOG_END);
+fog.renderDistanceStart = Math.min(fog.renderDistanceStart, FOG_START);
+fog.renderDistanceEnd = Math.min(fog.renderDistanceEnd, FOG_END);
+// No sky or clouds show through gaps in the cavern; they're drawn in the fog colour
+fog.skyEnd = 0;
+fog.cloudEnd = 0;</code></pre>
+<p><code class="consolas">FOG_START</code> is 20 and <code class="consolas">FOG_END</code> is 72.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>CalcFletchingProcedure [raw] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>CalcFletchingProcedure [raw]</h1>
+        <pre class="code-box vscode-code"><code class="consolas"><span style="color: #569CD6">package</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.block.Blocks</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.item.component.CustomData</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.item.Items</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.item.ItemStack</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.entity.player.Player</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.entity.Entity</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.core.component.DataComponents</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">io.github.strawberrymc.init.StrawberrymcModMenus</span>;
+
+<span style="color: #569CD6">public class</span> <span style="color: #4EC9B0">CalcFletchingProcedure</span> {
+	<span style="color: #569CD6">public static</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">execute</span>(<span style="color: #4EC9B0">Entity</span> <span style="color: #9CDCFE">entity</span>) {
+		<span style="color: #C586C0">if</span> (entity <span style="color: #D4D4D4">==</span> <span style="color: #569CD6">null</span>)
+			<span style="color: #C586C0">return</span>;
+		<span style="color: #4EC9B0">String</span> <span style="color: #9CDCFE">var_tip</span> <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">""</span>;
+		<span style="color: #4EC9B0">String</span> <span style="color: #9CDCFE">var_shaft</span> <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">""</span>;
+		<span style="color: #4EC9B0">String</span> <span style="color: #9CDCFE">var_fletching</span> <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">""</span>;
+		<span style="color: #4EC9B0">ItemStack</span> <span style="color: #9CDCFE">output_arrow</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">ItemStack</span>.<span style="color: #9CDCFE">EMPTY</span>;
+		var_tip <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">""</span>;
+		var_shaft <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">""</span>;
+		var_fletching <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">""</span>;
+		output_arrow <span style="color: #D4D4D4">=</span> (entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> _plrSlotItem <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">_plrSlotItem</span>.<span style="color: #9CDCFE">containerMenu</span> <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">StrawberrymcModMenus</span>.<span style="color: #9CDCFE">MenuAccessor</span> _menu0 <span style="color: #C586C0">?</span> <span style="color: #9CDCFE">_menu0</span>.<span style="color: #DCDCAA">getSlots</span>().<span style="color: #DCDCAA">get</span>(<span style="color: #B5CEA8">4</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #C586C0">:</span> <span style="color: #9CDCFE">ItemStack</span>.<span style="color: #9CDCFE">EMPTY</span>).<span style="color: #DCDCAA">copy</span>();
+		<span style="color: #C586C0">if</span> ((entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> _plrSlotItem <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">_plrSlotItem</span>.<span style="color: #9CDCFE">containerMenu</span> <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">StrawberrymcModMenus</span>.<span style="color: #9CDCFE">MenuAccessor</span> _menu1 <span style="color: #C586C0">?</span> <span style="color: #9CDCFE">_menu1</span>.<span style="color: #DCDCAA">getSlots</span>().<span style="color: #DCDCAA">get</span>(<span style="color: #B5CEA8">4</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #C586C0">:</span> <span style="color: #9CDCFE">ItemStack</span>.<span style="color: #9CDCFE">EMPTY</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Items</span>.<span style="color: #9CDCFE">ARROW</span>
+				<span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">getAmountInGUISlot</span>(entity, <span style="color: #B5CEA8">4</span>) <span style="color: #D4D4D4">&gt;=</span> <span style="color: #B5CEA8">5</span>) {
+			<span style="color: #C586C0">if</span> ((entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> _plrSlotItem <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">_plrSlotItem</span>.<span style="color: #9CDCFE">containerMenu</span> <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">StrawberrymcModMenus</span>.<span style="color: #9CDCFE">MenuAccessor</span> _menu4 <span style="color: #C586C0">?</span> <span style="color: #9CDCFE">_menu4</span>.<span style="color: #DCDCAA">getSlots</span>().<span style="color: #DCDCAA">get</span>(<span style="color: #B5CEA8">0</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #C586C0">:</span> <span style="color: #9CDCFE">ItemStack</span>.<span style="color: #9CDCFE">EMPTY</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">SPONGE</span>.<span style="color: #DCDCAA">asItem</span>()
+					<span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">getAmountInGUISlot</span>(entity, <span style="color: #B5CEA8">0</span>) <span style="color: #D4D4D4">&gt;=</span> <span style="color: #B5CEA8">5</span>) {
+				var_tip <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">"sponge"</span>;
+			}
+			<span style="color: #C586C0">if</span> ((entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> _plrSlotItem <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">_plrSlotItem</span>.<span style="color: #9CDCFE">containerMenu</span> <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">StrawberrymcModMenus</span>.<span style="color: #9CDCFE">MenuAccessor</span> _menu7 <span style="color: #C586C0">?</span> <span style="color: #9CDCFE">_menu7</span>.<span style="color: #DCDCAA">getSlots</span>().<span style="color: #DCDCAA">get</span>(<span style="color: #B5CEA8">0</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #C586C0">:</span> <span style="color: #9CDCFE">ItemStack</span>.<span style="color: #9CDCFE">EMPTY</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Items</span>.<span style="color: #9CDCFE">RAW_GOLD</span>
+					<span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">getAmountInGUISlot</span>(entity, <span style="color: #B5CEA8">0</span>) <span style="color: #D4D4D4">&gt;=</span> <span style="color: #B5CEA8">5</span>) {
+				var_tip <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">"gold"</span>;
+			}
+			<span style="color: #C586C0">if</span> ((entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> _plrSlotItem <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">_plrSlotItem</span>.<span style="color: #9CDCFE">containerMenu</span> <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">StrawberrymcModMenus</span>.<span style="color: #9CDCFE">MenuAccessor</span> _menu10 <span style="color: #C586C0">?</span> <span style="color: #9CDCFE">_menu10</span>.<span style="color: #DCDCAA">getSlots</span>().<span style="color: #DCDCAA">get</span>(<span style="color: #B5CEA8">0</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #C586C0">:</span> <span style="color: #9CDCFE">ItemStack</span>.<span style="color: #9CDCFE">EMPTY</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Items</span>.<span style="color: #9CDCFE">PRISMARINE_SHARD</span>
+					<span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">getAmountInGUISlot</span>(entity, <span style="color: #B5CEA8">0</span>) <span style="color: #D4D4D4">&gt;=</span> <span style="color: #B5CEA8">5</span>) {
+				var_tip <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">"prismarine"</span>;
+			}
+			<span style="color: #C586C0">if</span> ((entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> _plrSlotItem <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">_plrSlotItem</span>.<span style="color: #9CDCFE">containerMenu</span> <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">StrawberrymcModMenus</span>.<span style="color: #9CDCFE">MenuAccessor</span> _menu13 <span style="color: #C586C0">?</span> <span style="color: #9CDCFE">_menu13</span>.<span style="color: #DCDCAA">getSlots</span>().<span style="color: #DCDCAA">get</span>(<span style="color: #B5CEA8">0</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #C586C0">:</span> <span style="color: #9CDCFE">ItemStack</span>.<span style="color: #9CDCFE">EMPTY</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Items</span>.<span style="color: #9CDCFE">ECHO_SHARD</span>
+					<span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">getAmountInGUISlot</span>(entity, <span style="color: #B5CEA8">0</span>) <span style="color: #D4D4D4">&gt;=</span> <span style="color: #B5CEA8">5</span>) {
+				var_tip <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">"echo"</span>;
+			}
+			<span style="color: #C586C0">if</span> ((entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> _plrSlotItem <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">_plrSlotItem</span>.<span style="color: #9CDCFE">containerMenu</span> <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">StrawberrymcModMenus</span>.<span style="color: #9CDCFE">MenuAccessor</span> _menu16 <span style="color: #C586C0">?</span> <span style="color: #9CDCFE">_menu16</span>.<span style="color: #DCDCAA">getSlots</span>().<span style="color: #DCDCAA">get</span>(<span style="color: #B5CEA8">0</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #C586C0">:</span> <span style="color: #9CDCFE">ItemStack</span>.<span style="color: #9CDCFE">EMPTY</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Items</span>.<span style="color: #9CDCFE">AMETHYST_SHARD</span>
+					<span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">getAmountInGUISlot</span>(entity, <span style="color: #B5CEA8">0</span>) <span style="color: #D4D4D4">&gt;=</span> <span style="color: #B5CEA8">5</span>) {
+				var_tip <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">"amethyst"</span>;
+			}
+			<span style="color: #C586C0">if</span> ((entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> _plrSlotItem <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">_plrSlotItem</span>.<span style="color: #9CDCFE">containerMenu</span> <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">StrawberrymcModMenus</span>.<span style="color: #9CDCFE">MenuAccessor</span> _menu19 <span style="color: #C586C0">?</span> <span style="color: #9CDCFE">_menu19</span>.<span style="color: #DCDCAA">getSlots</span>().<span style="color: #DCDCAA">get</span>(<span style="color: #B5CEA8">0</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #C586C0">:</span> <span style="color: #9CDCFE">ItemStack</span>.<span style="color: #9CDCFE">EMPTY</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">TNT</span>.<span style="color: #DCDCAA">asItem</span>()
+					<span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">getAmountInGUISlot</span>(entity, <span style="color: #B5CEA8">0</span>) <span style="color: #D4D4D4">&gt;=</span> <span style="color: #B5CEA8">5</span>) {
+				var_tip <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">"gunpowder"</span>;
+			}
+			<span style="color: #C586C0">if</span> ((entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> _plrSlotItem <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">_plrSlotItem</span>.<span style="color: #9CDCFE">containerMenu</span> <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">StrawberrymcModMenus</span>.<span style="color: #9CDCFE">MenuAccessor</span> _menu22 <span style="color: #C586C0">?</span> <span style="color: #9CDCFE">_menu22</span>.<span style="color: #DCDCAA">getSlots</span>().<span style="color: #DCDCAA">get</span>(<span style="color: #B5CEA8">1</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #C586C0">:</span> <span style="color: #9CDCFE">ItemStack</span>.<span style="color: #9CDCFE">EMPTY</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Items</span>.<span style="color: #9CDCFE">BLAZE_ROD</span>
+					<span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">getAmountInGUISlot</span>(entity, <span style="color: #B5CEA8">1</span>) <span style="color: #D4D4D4">&gt;=</span> <span style="color: #B5CEA8">5</span>) {
+				var_shaft <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">"blaze"</span>;
+			}
+			<span style="color: #C586C0">if</span> ((entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> _plrSlotItem <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">_plrSlotItem</span>.<span style="color: #9CDCFE">containerMenu</span> <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">StrawberrymcModMenus</span>.<span style="color: #9CDCFE">MenuAccessor</span> _menu25 <span style="color: #C586C0">?</span> <span style="color: #9CDCFE">_menu25</span>.<span style="color: #DCDCAA">getSlots</span>().<span style="color: #DCDCAA">get</span>(<span style="color: #B5CEA8">1</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #C586C0">:</span> <span style="color: #9CDCFE">ItemStack</span>.<span style="color: #9CDCFE">EMPTY</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Items</span>.<span style="color: #9CDCFE">BREEZE_ROD</span>
+					<span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">getAmountInGUISlot</span>(entity, <span style="color: #B5CEA8">1</span>) <span style="color: #D4D4D4">&gt;=</span> <span style="color: #B5CEA8">5</span>) {
+				var_shaft <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">"breeze"</span>;
+			}
+			<span style="color: #C586C0">if</span> ((entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> _plrSlotItem <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">_plrSlotItem</span>.<span style="color: #9CDCFE">containerMenu</span> <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">StrawberrymcModMenus</span>.<span style="color: #9CDCFE">MenuAccessor</span> _menu28 <span style="color: #C586C0">?</span> <span style="color: #9CDCFE">_menu28</span>.<span style="color: #DCDCAA">getSlots</span>().<span style="color: #DCDCAA">get</span>(<span style="color: #B5CEA8">2</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #C586C0">:</span> <span style="color: #9CDCFE">ItemStack</span>.<span style="color: #9CDCFE">EMPTY</span>).<span style="color: #DCDCAA">getItem</span>() <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Items</span>.<span style="color: #9CDCFE">PHANTOM_MEMBRANE</span>
+					<span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">getAmountInGUISlot</span>(entity, <span style="color: #B5CEA8">2</span>) <span style="color: #D4D4D4">&gt;=</span> <span style="color: #B5CEA8">5</span>) {
+				var_fletching <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">"phantom"</span>;
+			}
+			<span style="color: #C586C0">if</span> (<span style="color: #D4D4D4">!</span>(var_tip).<span style="color: #DCDCAA">equals</span>(<span style="color: #CE9178">""</span>) <span style="color: #D4D4D4">|| !</span>(var_shaft).<span style="color: #DCDCAA">equals</span>(<span style="color: #CE9178">""</span>) <span style="color: #D4D4D4">|| !</span>(var_fletching).<span style="color: #DCDCAA">equals</span>(<span style="color: #CE9178">""</span>)) {
+				<span style="color: #C586C0">if</span> (<span style="color: #D4D4D4">!</span>(var_tip).<span style="color: #DCDCAA">equals</span>(<span style="color: #CE9178">""</span>)) {
+					{
+						<span style="color: #569CD6">final</span> <span style="color: #4EC9B0">String</span> <span style="color: #9CDCFE">_tagName</span> <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">"tip"</span>;
+						<span style="color: #569CD6">final</span> <span style="color: #4EC9B0">String</span> <span style="color: #9CDCFE">_tagValue</span> <span style="color: #D4D4D4">=</span> var_tip;
+						<span style="color: #9CDCFE">CustomData</span>.<span style="color: #DCDCAA">update</span>(<span style="color: #9CDCFE">DataComponents</span>.<span style="color: #9CDCFE">CUSTOM_DATA</span>, output_arrow, tag <span style="color: #569CD6">-&gt;</span> <span style="color: #9CDCFE">tag</span>.<span style="color: #DCDCAA">putString</span>(_tagName, _tagValue));
+					}
+				}
+				<span style="color: #C586C0">if</span> (<span style="color: #D4D4D4">!</span>(var_shaft).<span style="color: #DCDCAA">equals</span>(<span style="color: #CE9178">""</span>)) {
+					{
+						<span style="color: #569CD6">final</span> <span style="color: #4EC9B0">String</span> <span style="color: #9CDCFE">_tagName</span> <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">"shaft"</span>;
+						<span style="color: #569CD6">final</span> <span style="color: #4EC9B0">String</span> <span style="color: #9CDCFE">_tagValue</span> <span style="color: #D4D4D4">=</span> var_shaft;
+						<span style="color: #9CDCFE">CustomData</span>.<span style="color: #DCDCAA">update</span>(<span style="color: #9CDCFE">DataComponents</span>.<span style="color: #9CDCFE">CUSTOM_DATA</span>, output_arrow, tag <span style="color: #569CD6">-&gt;</span> <span style="color: #9CDCFE">tag</span>.<span style="color: #DCDCAA">putString</span>(_tagName, _tagValue));
+					}
+				}
+				<span style="color: #C586C0">if</span> (<span style="color: #D4D4D4">!</span>(var_fletching).<span style="color: #DCDCAA">equals</span>(<span style="color: #CE9178">""</span>)) {
+					{
+						<span style="color: #569CD6">final</span> <span style="color: #4EC9B0">String</span> <span style="color: #9CDCFE">_tagName</span> <span style="color: #D4D4D4">=</span> <span style="color: #CE9178">"fletching"</span>;
+						<span style="color: #569CD6">final</span> <span style="color: #4EC9B0">String</span> <span style="color: #9CDCFE">_tagValue</span> <span style="color: #D4D4D4">=</span> var_fletching;
+						<span style="color: #9CDCFE">CustomData</span>.<span style="color: #DCDCAA">update</span>(<span style="color: #9CDCFE">DataComponents</span>.<span style="color: #9CDCFE">CUSTOM_DATA</span>, output_arrow, tag <span style="color: #569CD6">-&gt;</span> <span style="color: #9CDCFE">tag</span>.<span style="color: #DCDCAA">putString</span>(_tagName, _tagValue));
+					}
+				}
+				<span style="color: #C586C0">if</span> (entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> _player <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">_player</span>.<span style="color: #9CDCFE">containerMenu</span> <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">StrawberrymcModMenus</span>.<span style="color: #9CDCFE">MenuAccessor</span> _menu) {
+					<span style="color: #4EC9B0">ItemStack</span> <span style="color: #9CDCFE">_setstack34</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">output_arrow</span>.<span style="color: #DCDCAA">copy</span>();
+					<span style="color: #9CDCFE">_setstack34</span>.<span style="color: #DCDCAA">setCount</span>(<span style="color: #B5CEA8">5</span>);
+					<span style="color: #9CDCFE">_menu</span>.<span style="color: #DCDCAA">getSlots</span>().<span style="color: #DCDCAA">get</span>(<span style="color: #B5CEA8">3</span>).<span style="color: #DCDCAA">set</span>(_setstack34);
+					<span style="color: #9CDCFE">_player</span>.<span style="color: #9CDCFE">containerMenu</span>.<span style="color: #DCDCAA">broadcastChanges</span>();
+				}
+			} <span style="color: #C586C0">else</span> {
+				<span style="color: #C586C0">if</span> (entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> _player <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">_player</span>.<span style="color: #9CDCFE">containerMenu</span> <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">StrawberrymcModMenus</span>.<span style="color: #9CDCFE">MenuAccessor</span> _menu) {
+					<span style="color: #4EC9B0">ItemStack</span> <span style="color: #9CDCFE">_setstack35</span> <span style="color: #D4D4D4">=</span> <span style="color: #C586C0">new</span> <span style="color: #DCDCAA">ItemStack</span>(<span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">AIR</span>).<span style="color: #DCDCAA">copy</span>();
+					<span style="color: #9CDCFE">_setstack35</span>.<span style="color: #DCDCAA">setCount</span>(<span style="color: #B5CEA8">1</span>);
+					<span style="color: #9CDCFE">_menu</span>.<span style="color: #DCDCAA">getSlots</span>().<span style="color: #DCDCAA">get</span>(<span style="color: #B5CEA8">3</span>).<span style="color: #DCDCAA">set</span>(_setstack35);
+					<span style="color: #9CDCFE">_player</span>.<span style="color: #9CDCFE">containerMenu</span>.<span style="color: #DCDCAA">broadcastChanges</span>();
+				}
+			}
+		}
+	}
+
+	<span style="color: #569CD6">private static</span> <span style="color: #4EC9B0">int</span> <span style="color: #DCDCAA">getAmountInGUISlot</span>(<span style="color: #4EC9B0">Entity</span> <span style="color: #9CDCFE">entity</span>, <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">sltid</span>) {
+		<span style="color: #C586C0">if</span> (entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> player <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">player</span>.<span style="color: #9CDCFE">containerMenu</span> <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">StrawberrymcModMenus</span>.<span style="color: #9CDCFE">MenuAccessor</span> menuAccessor) {
+			<span style="color: #4EC9B0">ItemStack</span> <span style="color: #9CDCFE">stack</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">menuAccessor</span>.<span style="color: #DCDCAA">getSlots</span>().<span style="color: #DCDCAA">get</span>(sltid).<span style="color: #DCDCAA">getItem</span>();
+			<span style="color: #C586C0">if</span> (stack <span style="color: #D4D4D4">!=</span> <span style="color: #569CD6">null</span>)
+				<span style="color: #C586C0">return</span> <span style="color: #9CDCFE">stack</span>.<span style="color: #DCDCAA">getCount</span>();
+		}
+		<span style="color: #C586C0">return</span> <span style="color: #B5CEA8">0</span>;
+	}
+}</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>EchowoodGrowProcedure [raw] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>EchowoodGrowProcedure [raw]</h1>
+        <pre class="code-box vscode-code"><code class="consolas"><span style="color: #569CD6">package</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.LevelAccessor</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.block.Blocks</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.block.Block</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.core.BlockPos</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">io.github.strawberrymc.init.StrawberrymcModBlocks</span>;
+
+<span style="color: #6A9955">// Import the tree generator</span>
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures.SpawnEchowoodTreeProcedure</span>;
+
+<span style="color: #569CD6">public class</span> <span style="color: #4EC9B0">EchowoodGrowProcedure</span> {
+    <span style="color: #569CD6">public static</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">execute</span>(<span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">x</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">y</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">z</span>) {
+        <span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">getRandom</span>().<span style="color: #DCDCAA">nextFloat</span>() <span style="color: #D4D4D4">&gt;</span> <span style="color: #B5CEA8">0.05f</span>) {
+            <span style="color: #C586C0">return</span>;
+        }
+
+        <span style="color: #4EC9B0">Block</span> <span style="color: #9CDCFE">sapling</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">ECHOWOOD_SAPLING</span>.<span style="color: #DCDCAA">get</span>();
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">ix</span> <span style="color: #D4D4D4">=</span> (<span style="color: #4EC9B0">int</span>) x;
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">iy</span> <span style="color: #D4D4D4">=</span> (<span style="color: #4EC9B0">int</span>) y;
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">iz</span> <span style="color: #D4D4D4">=</span> (<span style="color: #4EC9B0">int</span>) z;
+
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">baseX</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">baseZ</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+        <span style="color: #4EC9B0">boolean</span> <span style="color: #9CDCFE">is2x2</span> <span style="color: #D4D4D4">=</span> <span style="color: #569CD6">false</span>;
+
+        <span style="color: #C586C0">if</span> (<span style="color: #DCDCAA">checkSapling</span>(world, ix, iy, iz, sapling) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">checkSapling</span>(world, ix <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>, iy, iz, sapling) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">checkSapling</span>(world, ix, iy, iz <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>, sapling) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">checkSapling</span>(world, ix <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>, iy, iz <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>, sapling)) {
+            baseX <span style="color: #D4D4D4">=</span> ix; baseZ <span style="color: #D4D4D4">=</span> iz; is2x2 <span style="color: #D4D4D4">=</span> <span style="color: #569CD6">true</span>;
+        } 
+        <span style="color: #C586C0">else if</span> (<span style="color: #DCDCAA">checkSapling</span>(world, ix <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>, iy, iz, sapling) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">checkSapling</span>(world, ix, iy, iz, sapling) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">checkSapling</span>(world, ix <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>, iy, iz <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>, sapling) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">checkSapling</span>(world, ix, iy, iz <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>, sapling)) {
+            baseX <span style="color: #D4D4D4">=</span> ix <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>; baseZ <span style="color: #D4D4D4">=</span> iz; is2x2 <span style="color: #D4D4D4">=</span> <span style="color: #569CD6">true</span>;
+        } 
+        <span style="color: #C586C0">else if</span> (<span style="color: #DCDCAA">checkSapling</span>(world, ix, iy, iz <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>, sapling) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">checkSapling</span>(world, ix <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>, iy, iz <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>, sapling) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">checkSapling</span>(world, ix, iy, iz, sapling) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">checkSapling</span>(world, ix <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>, iy, iz, sapling)) {
+            baseX <span style="color: #D4D4D4">=</span> ix; baseZ <span style="color: #D4D4D4">=</span> iz <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>; is2x2 <span style="color: #D4D4D4">=</span> <span style="color: #569CD6">true</span>;
+        } 
+        <span style="color: #C586C0">else if</span> (<span style="color: #DCDCAA">checkSapling</span>(world, ix <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>, iy, iz <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>, sapling) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">checkSapling</span>(world, ix, iy, iz <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>, sapling) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">checkSapling</span>(world, ix <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>, iy, iz, sapling) <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #DCDCAA">checkSapling</span>(world, ix, iy, iz, sapling)) {
+            baseX <span style="color: #D4D4D4">=</span> ix <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>; baseZ <span style="color: #D4D4D4">=</span> iz <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>; is2x2 <span style="color: #D4D4D4">=</span> <span style="color: #569CD6">true</span>;
+        }
+
+        <span style="color: #C586C0">if</span> (is2x2) {
+            <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(baseX, iy, baseZ), <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">AIR</span>.<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+            <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(baseX <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>, iy, baseZ), <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">AIR</span>.<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+            <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(baseX, iy, baseZ <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>), <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">AIR</span>.<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+            <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(baseX <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>, iy, baseZ <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>), <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">AIR</span>.<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+
+            <span style="color: #9CDCFE">SpawnEchowoodTreeProcedure</span>.<span style="color: #DCDCAA">execute</span>(world, baseX, iy, baseZ);
+        }
+    }
+
+    <span style="color: #569CD6">private static</span> <span style="color: #4EC9B0">boolean</span> <span style="color: #DCDCAA">checkSapling</span>(<span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">checkX</span>, <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">checkY</span>, <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">checkZ</span>, <span style="color: #4EC9B0">Block</span> <span style="color: #9CDCFE">saplingBlock</span>) {
+        <span style="color: #C586C0">return</span> <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">getBlockState</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(checkX, checkY, checkZ)).<span style="color: #DCDCAA">getBlock</span>() <span style="color: #D4D4D4">==</span> saplingBlock;
+    }
+}</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

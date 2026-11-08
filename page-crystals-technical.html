@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Crystals [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Crystals [technical]</h1>
+<h2 id="overview">Overview</h2>
+<p>The crystal family has a cluster block and a solid block for each of five materials. Amethyst, the sixth type in world generation, uses vanilla <code class="consolas">minecraft:amethyst_cluster</code> and <code class="consolas">minecraft:amethyst_block</code>. All blocks are registered in <code class="consolas">StrawberrymcModBlocks</code> and generated from MCreator elements such as <code class="consolas">CitrineCrystal.mod.json</code> and <code class="consolas">CitrineBlock.mod.json</code>.</p>
+
+<h2 id="clusters">Crystal clusters</h2>
+<table>
+<thead>
+<tr><th>Block ID</th><th>Class</th><th>Name</th><th>Hardness</th><th>Resistance</th><th>Light level</th></tr>
+</thead>
+<tbody>
+<tr><td>strawberrymc:garnet_crystal</td><td><code class="consolas">GarnetCrystalBlock</code></td><td>Garnet Crystal</td><td>1</td><td>10</td><td>0</td></tr>
+<tr><td>strawberrymc:dendrite_crystal</td><td><code class="consolas">DendriteCrystalBlock</code></td><td>Dendrite Crystal</td><td>1</td><td>10</td><td>0</td></tr>
+<tr><td>strawberrymc:citrine_crystal</td><td><code class="consolas">CitrineCrystalBlock</code></td><td>Citrine Crystal</td><td>1.5</td><td>1.5</td><td>7</td></tr>
+<tr><td>strawberrymc:aquamarine_crystal</td><td><code class="consolas">AquamarineCrystalBlock</code></td><td>Aquamarine Crystal</td><td>1.5</td><td>1.5</td><td>10</td></tr>
+<tr><td>strawberrymc:rose_quartz_crystal</td><td><code class="consolas">RoseQuartzCrystalBlock</code></td><td>Rose Quartz Crystal</td><td>1.5</td><td>1.5</td><td>5</td></tr>
+</tbody>
+</table>
+<p>The five classes have the same structure and vary only in strength and light level. Each extends <code class="consolas">Block</code> and implements <code class="consolas">SimpleWaterloggedBlock</code>, with sound <code class="consolas">AMETHYST_CLUSTER</code>, no occlusion, and no redstone conduction.</p>
+<pre class="code-box"><code class="consolas">public AquamarineCrystalBlock(BlockBehaviour.Properties properties) {
+	super(properties.sound(SoundType.AMETHYST_CLUSTER).strength(1.5f).lightLevel(s -&gt; 10).noOcclusion().isRedstoneConductor((bs, br, bp) -&gt; false));
+	this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(WATERLOGGED, false));
+}</code></pre>
+<h3 id="cluster-states">States and placement</h3>
+<p>Clusters have a <code class="consolas">FACING</code> property with all six directions and a <code class="consolas">WATERLOGGED</code> boolean. <code class="consolas">getStateForPlacement</code> sets the facing to the clicked face and waterlogs the block when placed in water. <code class="consolas">updateShape</code> schedules a water tick while waterlogged, and <code class="consolas">getFluidState</code> returns a water source in that state.</p>
+<h3 id="cluster-shape">Shape and light</h3>
+<pre class="code-box"><code class="consolas">return switch (state.getValue(FACING)) {
+	case NORTH -&gt; box(3, 3, 3, 13, 13, 16);
+	case EAST -&gt; box(0, 3, 3, 13, 13, 13);
+	case WEST -&gt; box(3, 3, 3, 16, 13, 13);
+	case UP -&gt; box(3, 0, 3, 13, 13, 13);
+	case DOWN -&gt; box(3, 3, 3, 13, 16, 13);
+	default -&gt; box(3, 3, 0, 13, 13, 13);
+};</code></pre>
+<p>The collision box is a 10 by 10 pixel prism, 13 pixels long. <code class="consolas">getVisualShape</code> returns an empty shape, <code class="consolas">getLightDampening</code> returns 0, and <code class="consolas">propagatesSkylightDown</code> is true when the block is not waterlogged.</p>
+<h3 id="cluster-model">Model</h3>
+<p>Each cluster's block model has the parent <code class="consolas">strawberrymc:custom/crystal_cluster</code>. The blockstate rotates it by facing: north 0, east y 90, south y 180, west y 270, up x 270 and down x 90.</p>
+
+<h2 id="solid-blocks">Solid blocks</h2>
+<table>
+<thead>
+<tr><th>Block ID</th><th>Class</th><th>Name</th><th>Hardness</th><th>Resistance</th><th>Light level</th><th>Sound</th></tr>
+</thead>
+<tbody>
+<tr><td>strawberrymc:garnet_block</td><td><code class="consolas">GarnetBlockBlock</code></td><td>Garnet Block</td><td>1</td><td>10</td><td>0</td><td>GRAVEL</td></tr>
+<tr><td>strawberrymc:dendrite_block</td><td><code class="consolas">DendriteBlockBlock</code></td><td>Dendrite Block</td><td>1</td><td>10</td><td>0</td><td>GRAVEL</td></tr>
+<tr><td>strawberrymc:citrine_block</td><td><code class="consolas">CitrineBlockBlock</code></td><td>Block of Citrine</td><td>1.5</td><td>1.5</td><td>4</td><td>AMETHYST</td></tr>
+<tr><td>strawberrymc:aquamarine_block</td><td><code class="consolas">AquamarineBlockBlock</code></td><td>Block of Aquamarine</td><td>1.5</td><td>1.5</td><td>6</td><td>AMETHYST</td></tr>
+<tr><td>strawberrymc:rose_quartz_block</td><td><code class="consolas">RoseQuartzBlockBlock</code></td><td>Block of Rose Quartz</td><td>1.5</td><td>1.5</td><td>3</td><td>AMETHYST</td></tr>
+</tbody>
+</table>
+<p>Clusters and solid blocks each drop themselves through a loot table with the <code class="consolas">minecraft:survives_explosion</code> condition.</p>
+
+<h2 id="cinnabar">Cinnabar</h2>
+<p><code class="consolas">strawberrymc:cinnabar</code> is <code class="consolas">CinnabarBlock</code>, with hardness 1.5 and resistance 6. It forms the bed of the <code class="consolas">hollows_pool</code> feature and drops itself.</p>
+
+<h2 id="worldgen">World generation</h2>
+<p>Every use is in <a href="page-crystal-hollows-technical.html">Crystal Hollows</a>, and all six crystal types are equally likely in each random choice.</p>
+<table>
+<thead>
+<tr><th>Feature</th><th>Blocks used</th><th>Form</th><th>Rate per chunk</th></tr>
+</thead>
+<tbody>
+<tr><td>crystal_column</td><td>Solid blocks</td><td>Column of radius 3 to 5 from floor to ceiling, one material per column</td><td>Rarity 1 in 1</td></tr>
+<tr><td>hollows_crystal_patches</td><td>Solid blocks</td><td>Ore blobs of size 64 replacing calcite</td><td>Count 10</td></tr>
+<tr><td>hollows_crystals</td><td>Solid block ground with matching clusters</td><td>Floor patch, radius 3 to 7, cluster chance 0.75, facing up</td><td>Count 12</td></tr>
+<tr><td>hollows_hanging_crystals</td><td>Solid block ground with matching clusters</td><td>Ceiling patch, radius 3 to 7, cluster chance 0.75, facing down</td><td>Count 12</td></tr>
+<tr><td>hollows_scattered_crystals</td><td>Clusters</td><td>48 tries within 7 blocks across and 3 vertically, replacing <a href="page-crystalline-calcite-technical.html">Crystalline Calcite</a>, facing up</td><td>Count 10</td></tr>
+<tr><td>hollows_pool</td><td>Aquamarine cluster</td><td>Waterlogged patch radius 2 to 4 with cluster chance 0.12, facing up</td><td>Count 3</td></tr>
+<tr><td>hollows_geode</td><td>Amethyst only</td><td>Geode with budding amethyst chance 0.083</td><td>Rarity 1 in 2</td></tr>
+</tbody>
+</table>
+<p>The column is built by <a href="page-crystalcolumngenerationprocedure-raw.html">CrystalColumnGenerationProcedure [raw]</a>, which picks its material from a random integer 1 to 6:</p>
+<pre class="code-box"><code class="consolas">pick = Mth.nextInt(RandomSource.create(), 1, 6);
+if (pick == 1) {
+	mat = Blocks.AMETHYST_BLOCK.defaultBlockState();
+} else if (pick == 2) {
+	mat = StrawberrymcModBlocks.GARNET_BLOCK.get().defaultBlockState();
+} else if (pick == 3) {
+	mat = StrawberrymcModBlocks.DENDRITE_BLOCK.get().defaultBlockState();
+} else if (pick == 4) {
+	mat = StrawberrymcModBlocks.CITRINE_BLOCK.get().defaultBlockState();
+} else if (pick == 5) {
+	mat = StrawberrymcModBlocks.AQUAMARINE_BLOCK.get().defaultBlockState();
+} else {
+	mat = StrawberrymcModBlocks.ROSE_QUARTZ_BLOCK.get().defaultBlockState();
+}</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

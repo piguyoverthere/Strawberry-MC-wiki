@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Scripter [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Scripter [technical]</h1>
+<p>This page describes how the Scripter block and its editor are coded. The language it runs is covered in <a href="page-comscript.html">ComScript</a>, and the interpreter itself in <a href="page-comscript-technical.html">ComScript technical details</a>.</p>
+
+<h2 id="source-layout">Source layout</h2>
+<table>
+    <thead>
+        <tr><th>File</th><th>Responsibility</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">comscript/ComScript.java</code></td><td>Registers the block, item, block entity, packet, resource pack, callback command and event hooks.</td></tr>
+        <tr><td><code class="consolas">comscript/ScripterBlock.java</code></td><td>Redstone handling, the ticker and opening the editor.</td></tr>
+        <tr><td><code class="consolas">comscript/ScripterBlockEntity.java</code></td><td>The script, the terminal log, the listeners, and starting and stopping runs.</td></tr>
+        <tr><td><code class="consolas">comscript/client/ScripterScreen.java</code></td><td>The code editor and terminal display.</td></tr>
+        <tr><td><code class="consolas">comscript/client/ScriptHighlighter.java</code></td><td>Colors each character of the script.</td></tr>
+        <tr><td><code class="consolas">src/main/resources/comscript</code></td><td>A built-in resource pack with the model, texture, editor font and names.</td></tr>
+    </tbody>
+</table>
+
+<h2 id="registration">Registration</h2>
+<p><code class="consolas">StrawberrymcMod</code> calls <code class="consolas">ComScript.init(modEventBus)</code>, which registers three deferred registers under the <code class="consolas">strawberrymc</code> namespace, then the mod-bus listeners for payloads, the pack and the creative tab, and the game-bus listeners for commands and the four script events.</p>
+<pre class="code-box"><code class="consolas">// Unbreakable in survival and drops nothing, like a command block
+public static final DeferredBlock&lt;ScripterBlock&gt; SCRIPTER = BLOCKS.registerBlock("scripter", ScripterBlock::new,
+	() -&gt; BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLACK).requiresCorrectToolForDrops().strength(-1.0F, 3600000.0F).noLootTable());
+public static final DeferredItem&lt;Item&gt; SCRIPTER_ITEM = ITEMS.registerItem("scripter", properties -&gt; new GameMasterBlockItem(SCRIPTER.get(), properties),
+	() -&gt; new Item.Properties().rarity(Rarity.EPIC).useBlockDescriptionPrefix());</code></pre>
+<p>The block's id is <code class="consolas">strawberrymc:scripter</code>. It has a destroy strength of -1.0, a blast resistance of 3600000.0 and no loot table. The item is an epic-rarity <code class="consolas">GameMasterBlockItem</code>, added to the <code class="consolas">OP_BLOCKS</code> creative tab only when <code class="consolas">event.hasPermissions()</code> is true.</p>
+
+<h3 id="registration-resources">Resource pack</h3>
+<p>The model, texture, font and names live in a built-in pack so that MCreator can't overwrite them. <code class="consolas">addPack</code> registers <code class="consolas">strawberrymc:comscript</code> for client resources, titled <code class="consolas">Strawberry MC ComScript</code>, with the <code class="consolas">BUILT_IN</code> source, always active and at <code class="consolas">Pack.Position.TOP</code>. Its <code class="consolas">pack.mcmeta</code> declares format 84.</p>
+<table>
+    <thead>
+        <tr><th>Resource</th><th>Content</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">blockstates/scripter.json</code></td><td>A single variant using <code class="consolas">strawberrymc:block/scripter</code>.</td></tr>
+        <tr><td><code class="consolas">models/block/scripter.json</code></td><td><code class="consolas">minecraft:block/cube_all</code> with the texture <code class="consolas">strawberrymc:block/scripter</code>.</td></tr>
+        <tr><td><code class="consolas">items/scripter.json</code></td><td>A <code class="consolas">minecraft:model</code> item using the block model.</td></tr>
+        <tr><td><code class="consolas">font/jetbrains_mono.json</code></td><td>A TTF provider for <code class="consolas">jetbrains_mono_regular.ttf</code>: size 8.5, oversample 4.0, shift <code class="consolas">[0, 0.5]</code>.</td></tr>
+    </tbody>
+</table>
+<table>
+    <thead>
+        <tr><th>Language key</th><th>English text</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">block.strawberrymc.scripter</code></td><td>Scripter</td></tr>
+        <tr><td><code class="consolas">gui.strawberrymc.scripter.title</code></td><td>Scripter</td></tr>
+        <tr><td><code class="consolas">gui.strawberrymc.scripter.run</code></td><td>Run</td></tr>
+        <tr><td><code class="consolas">gui.strawberrymc.scripter.stop</code></td><td>Stop</td></tr>
+        <tr><td><code class="consolas">gui.strawberrymc.scripter.clear</code></td><td>Clear</td></tr>
+        <tr><td><code class="consolas">gui.strawberrymc.scripter.terminal</code></td><td>Terminal</td></tr>
+    </tbody>
+</table>
+
+<h2 id="block">The block</h2>
+<p><code class="consolas">ScripterBlock</code> extends <code class="consolas">BaseEntityBlock</code> and implements <code class="consolas">GameMasterBlock</code>. It renders with <code class="consolas">RenderShape.MODEL</code>. <code class="consolas">getTicker</code> returns <code class="consolas">ScripterBlockEntity::serverTick</code> on the server and null on the client.</p>
+
+<h3 id="block-redstone">Redstone edge handling</h3>
+<pre class="code-box"><code class="consolas">@Override
+protected void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, @Nullable Orientation orientation, boolean movedByPiston) {
+	if (level.isClientSide() || !(level.getBlockEntity(pos) instanceof ScripterBlockEntity scripter))
+		return;
+	boolean powered = level.hasNeighborSignal(pos);
+	if (powered != scripter.isPowered()) {
+		scripter.setPowered(powered);
+		// Runs once on each rising edge, a tick later like a command block
+		if (powered)
+			level.scheduleTick(pos, this, 1);
+	}
+}</code></pre>
+<p>The last known power state is kept in the block entity and saved as <code class="consolas">Powered</code>, so reloading a powered Scripter does not count as a new edge. A change from unpowered to powered schedules a block tick 1 tick later, and <code class="consolas">tick</code> calls <code class="consolas">scripter.run()</code>. A falling edge only updates the stored state. Power is examined only in <code class="consolas">neighborChanged</code>, so a Scripter placed where it is already powered runs on its first neighbor update that sees the signal.</p>
+
+<h3 id="block-use">Opening the editor</h3>
+<p><code class="consolas">useWithoutItem</code> returns <code class="consolas">PASS</code> if the block entity is missing or <code class="consolas">player.canUseGameMasterBlocks()</code> is false. Otherwise it returns <code class="consolas">SUCCESS</code> and, on the client only, calls <code class="consolas">ScripterScreen.open(scripter)</code>.</p>
+
+<h2 id="permissions">Permissions</h2>
+<table>
+    <thead>
+        <tr><th>Action</th><th>Check</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Opening the editor</td><td><code class="consolas">player.canUseGameMasterBlocks()</code> in <code class="consolas">ScripterBlock.useWithoutItem</code>.</td></tr>
+        <tr><td>Any editor packet</td><td><code class="consolas">player.canUseGameMasterBlocks()</code> on the server, so a modified client gains nothing.</td></tr>
+        <tr><td>Creative tab listing</td><td><code class="consolas">event.hasPermissions()</code> for <code class="consolas">OP_BLOCKS</code>.</td></tr>
+        <tr><td>Commands a script runs</td><td>The source has <code class="consolas">LevelBasedPermissionSet.GAMEMASTER</code>.</td></tr>
+        <tr><td>Internal <code class="consolas">comscript_callback &lt;id&gt;</code> command</td><td><code class="consolas">Commands.hasPermission(Commands.LEVEL_GAMEMASTERS)</code>.</td></tr>
+    </tbody>
+</table>
+
+<h2 id="block-entity">The block entity</h2>
+<table>
+    <thead>
+        <tr><th>Constant</th><th>Value</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">MAX_SCRIPT_LENGTH</code></td><td>32000</td><td>Characters in a script.</td></tr>
+        <tr><td><code class="consolas">MAX_LOG_LINES</code></td><td>200</td><td>Lines kept in the terminal.</td></tr>
+        <tr><td><code class="consolas">INFO</code></td><td><code class="consolas">'I'</code></td><td>Log level.</td></tr>
+        <tr><td><code class="consolas">WARNING</code></td><td><code class="consolas">'W'</code></td><td>Log level.</td></tr>
+        <tr><td><code class="consolas">ERROR</code></td><td><code class="consolas">'E'</code></td><td>Log level.</td></tr>
+        <tr><td><code class="consolas">TIME</code></td><td><code class="consolas">HH:mm:ss</code></td><td>Log timestamp pattern.</td></tr>
+    </tbody>
+</table>
+<p>The instance holds the script, the log, the list of <code class="consolas">Listener</code> records, the stored power state, <code class="consolas">clientListening</code>, <code class="consolas">needsSync</code> and <code class="consolas">currentLine</code>. A static weak set, <code class="consolas">LISTENING</code>, holds the Scripters that have registered listeners, so event dispatch does not search the world and does not keep removed block entities alive.</p>
+
+<h3 id="block-entity-saving">Saving and syncing</h3>
+<table>
+    <thead>
+        <tr><th>Saved value</th><th>Type</th><th>Content</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">Script</code></td><td>String</td><td>The script text.</td></tr>
+        <tr><td><code class="consolas">Powered</code></td><td>Boolean</td><td>The last redstone state.</td></tr>
+        <tr><td><code class="consolas">Log</code></td><td>String</td><td>One line per entry: the level character followed by the text, with newlines in the text replaced by spaces.</td></tr>
+        <tr><td><code class="consolas">Listening</code></td><td>Boolean</td><td>Whether listeners exist. Read into <code class="consolas">clientListening</code> for the editor.</td></tr>
+    </tbody>
+</table>
+<p>Listeners, their source and the runner's variables are held only in memory, so a loaded Scripter has no active timers or event blocks until the script is run again. <code class="consolas">sync</code> clears <code class="consolas">needsSync</code>, calls <code class="consolas">setChanged</code> and, on the server, calls <code class="consolas">level.sendBlockUpdated</code> with flag 3. <code class="consolas">getUpdateTag</code> uses <code class="consolas">saveCustomOnly</code> and <code class="consolas">getUpdatePacket</code> uses <code class="consolas">ClientboundBlockEntityDataPacket.create</code>, so the same saved values are what the client receives.</p>
+<p><code class="consolas">setScript</code> cuts any text over the limit down to 32000 characters and marks the block entity changed.</p>
+
+<h2 id="packets">Editor packet</h2>
+<p>The editor's only packet is <code class="consolas">ComScript.EditScripter</code>, with id <code class="consolas">strawberrymc:edit_scripter</code>, registered with registrar version <code class="consolas">"1"</code> as play-to-server. Its stream codec is a <code class="consolas">BlockPos</code>, a UTF-8 string of at most 32000, and a <code class="consolas">VAR_INT</code> action.</p>
+<table>
+    <thead>
+        <tr><th>Ordinal</th><th>Action</th><th>Server response</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>0</td><td><code class="consolas">SAVE</code></td><td>Stores the script and calls <code class="consolas">sync()</code>.</td></tr>
+        <tr><td>1</td><td><code class="consolas">RUN</code></td><td>Stores the script and calls <code class="consolas">run()</code>.</td></tr>
+        <tr><td>2</td><td><code class="consolas">STOP</code></td><td>Stores the script and calls <code class="consolas">stop(true)</code>.</td></tr>
+        <tr><td>3</td><td><code class="consolas">CLEAR_TERMINAL</code></td><td>Calls <code class="consolas">clearLog()</code> and leaves the script alone.</td></tr>
+    </tbody>
+</table>
+<pre class="code-box"><code class="consolas">if (!(context.player() instanceof ServerPlayer player) || !player.canUseGameMasterBlocks())
+	return;
+if (!player.level().isLoaded(payload.pos()) || !(player.level().getBlockEntity(payload.pos()) instanceof ScripterBlockEntity scripter))
+	return;
+Action action = Action.values()[Math.floorMod(payload.action(), Action.values().length)];
+if (action != Action.CLEAR_TERMINAL)
+	scripter.setScript(payload.script());
+switch (action) {
+	case SAVE -&gt; scripter.sync();
+	case RUN -&gt; scripter.run();
+	case STOP -&gt; scripter.stop(true);
+	case CLEAR_TERMINAL -&gt; scripter.clearLog();
+}</code></pre>
+<p><code class="consolas">floorMod</code> keeps any received integer inside the enum. The handler loads nothing: a position that is not loaded is ignored.</p>
+
+<h2 id="lifecycle">Run and stop lifecycle</h2>
+<p><code class="consolas">run()</code> is reached from the redstone tick or the Run packet, and only does anything on a <code class="consolas">ServerLevel</code>.</p>
+<ol>
+    <li><code class="consolas">stop(false)</code> silently clears the previous listeners and removes the Scripter from <code class="consolas">LISTENING</code>.</li>
+    <li>The script is parsed. A <code class="consolas">SyntaxError</code> logs <code class="consolas">Syntax error: &lt;message&gt;</code> at its line, syncs and returns, leaving the Scripter with no listeners.</li>
+    <li><code class="consolas">Running script</code> is logged.</li>
+    <li>A new <code class="consolas">ComScriptRunner</code> runs the statements with a new source.</li>
+    <li>If listeners were registered, <code class="consolas">Listening for &lt;list&gt;</code> is logged, naming each distinct listener: an event name, <code class="consolas">every tick</code> or <code class="consolas">every N ticks</code>.</li>
+    <li><code class="consolas">currentLine</code> returns to -1 and the block entity syncs.</li>
+</ol>
+<p><code class="consolas">stop(announce)</code> clears listeners. With <code class="consolas">announce</code> true and listeners present, it also logs <code class="consolas">Stopped</code> and syncs. <code class="consolas">setRemoved</code> clears the listeners and leaves the set as well, which covers breaking or unloading the Scripter.</p>
+<p><code class="consolas">serverTick</code> runs each timer that is due, resets <code class="consolas">currentLine</code>, and then sends pending terminal output:</p>
+<pre class="code-box"><code class="consolas">public static void serverTick(Level level, BlockPos pos, BlockState state, ScripterBlockEntity scripter) {
+	for (Listener listener : List.copyOf(scripter.listeners))
+		if (listener.isTimer() &amp;&amp; (level.getGameTime() - listener.started()) % listener.interval() == 0)
+			listener.runner().run(listener.body(), listener.source());
+	scripter.currentLine = -1;
+	// Every-tick output is sent to the client a few times a second, not every tick
+	if (scripter.needsSync &amp;&amp; level.getGameTime() % 5 == 0)
+		scripter.sync();
+}</code></pre>
+<p>Timer and event internals are covered in <a href="page-comscript-technical.html">ComScript technical details</a>.</p>
+
+<h3 id="lifecycle-source">The command source</h3>
+<pre class="code-box"><code class="consolas">private CommandSourceStack createSource(ServerLevel level) {
+	return new CommandSourceStack(output, Vec3.atCenterOf(worldPosition), Vec2.ZERO, level, LevelBasedPermissionSet.GAMEMASTER, "Scripter",
+		Component.literal("Scripter"), level.getServer(), null);
+}</code></pre>
+<p>A script starts at the center of the block, with zero rotation, named <code class="consolas">Scripter</code>, and with no entity. <code class="consolas">@s</code> therefore has nothing to match until an <code class="consolas">execute as</code> or an event supplies an entity.</p>
+
+<h2 id="terminal">Terminal and log</h2>
+<p><code class="consolas">log(level, line, text)</code> splits the text on newlines and stores each part with this prefix:</p>
+<pre class="code-box"><code class="consolas">String prefix = "[" + LocalTime.now().format(TIME) + "] " + (line &gt; 0 ? "Line " + line + ": " : "");</code></pre>
+<p>Entries over the limit of 200 are dropped from the oldest end, and <code class="consolas">needsSync</code> is set. During a main run the terminal syncs at the end of the run. Timer and event output is sent when the game time is a multiple of 5.</p>
+
+<h3 id="terminal-output">Command output</h3>
+<p>The source's <code class="consolas">CommandSource</code> accepts success and failure messages and does not inform admins. Each message is logged at <code class="consolas">currentLine</code>, as an error when vanilla's failure style is present:</p>
+<pre class="code-box"><code class="consolas">boolean failed = TextColor.fromLegacyFormat(ChatFormatting.RED).equals(message.getStyle().getColor());
+log(failed ? ERROR : INFO, currentLine, message.getString());</code></pre>
+
+<h3 id="terminal-colours">Log colors</h3>
+<table>
+    <thead>
+        <tr><th>Level</th><th>Color</th><th>Used for</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">E</code></td><td><code class="consolas">0xF14C4C</code> (red)</td><td>Syntax errors, runtime errors, failed commands, budget stops.</td></tr>
+        <tr><td><code class="consolas">W</code></td><td><code class="consolas">0xE5E510</code> (yellow)</td><td><code class="consolas">Warning: &lt;name&gt; already exists and was replaced</code>.</td></tr>
+        <tr><td><code class="consolas">I</code></td><td><code class="consolas">0xFFFFFF</code> (white)</td><td>Command output and <code class="consolas">Running script</code>, <code class="consolas">Listening for ...</code>, <code class="consolas">Stopped</code>.</td></tr>
+    </tbody>
+</table>
+<p>Every error message the interpreter can produce is listed in <a href="page-comscript-technical.html">ComScript technical details</a>.</p>
+
+<h2 id="editor">The editor screen</h2>
+<p><code class="consolas">ScripterScreen</code> is a custom text editor drawn directly, not a vanilla text box. It does not pause the game (<code class="consolas">isPauseScreen</code> is false), reports as in-game UI, and closes itself in <code class="consolas">tick</code> if the block entity is removed. Script text, line numbers and the terminal use the <code class="consolas">strawberrymc:jetbrains_mono</code> font.</p>
+<p>The text model is one <code class="consolas">String</code>, a <code class="consolas">cursor</code>, an <code class="consolas">anchor</code> for the selection, and a <code class="consolas">lineStarts</code> list found by binary search in <code class="consolas">lineOf</code>. <code class="consolas">textChanged</code> rebuilds <code class="consolas">lineStarts</code> and the color array after every edit. Tabs in a loaded script become 4 spaces.</p>
+
+<h3 id="editor-layout">Layout</h3>
+<table>
+    <thead>
+        <tr><th>Value</th><th>Formula</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">LINE_HEIGHT</code></td><td>10</td></tr>
+        <tr><td><code class="consolas">buttonY</code></td><td><code class="consolas">height - 26</code></td></tr>
+        <tr><td><code class="consolas">terminalBottom</code></td><td><code class="consolas">buttonY - 6</code></td></tr>
+        <tr><td><code class="consolas">terminalLines</code></td><td><code class="consolas">clamp((terminalBottom - 22) / 4 / LINE_HEIGHT, 2, 8)</code>, about a quarter of the space, so small windows still show plenty of script</td></tr>
+        <tr><td><code class="consolas">terminalTop</code></td><td><code class="consolas">terminalBottom - terminalLines * LINE_HEIGHT - 16</code></td></tr>
+        <tr><td><code class="consolas">editorLeft</code>, <code class="consolas">editorRight</code></td><td><code class="consolas">8</code>, <code class="consolas">width - 8</code></td></tr>
+        <tr><td><code class="consolas">editorTop</code>, <code class="consolas">editorBottom</code></td><td><code class="consolas">22</code>, <code class="consolas">terminalTop - 6</code></td></tr>
+        <tr><td><code class="consolas">charWidth</code></td><td>Width of ten zeros in the editor font, divided by 10</td></tr>
+        <tr><td><code class="consolas">gutterWidth</code></td><td><code class="consolas">charWidth * 4 + 8</code></td></tr>
+        <tr><td><code class="consolas">textLeft</code></td><td><code class="consolas">editorLeft + gutterWidth + 4</code></td></tr>
+        <tr><td>Main button width</td><td><code class="consolas">min(100, (width - 16 - 18) / 4)</code>, height 20</td></tr>
+    </tbody>
+</table>
+
+<h3 id="editor-buttons">Buttons</h3>
+<table>
+    <thead>
+        <tr><th>Button</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Run</td><td>Sends <code class="consolas">RUN</code>, which saves and runs. The editor stays open.</td></tr>
+        <tr><td>Stop</td><td>Sends <code class="consolas">STOP</code>, which saves and clears listeners. The editor stays open.</td></tr>
+        <tr><td>Done</td><td>Sends <code class="consolas">SAVE</code> and closes the screen.</td></tr>
+        <tr><td>Cancel</td><td>Closes the screen and sends nothing.</td></tr>
+        <tr><td>Clear</td><td>Sends <code class="consolas">CLEAR_TERMINAL</code>. A 42 by 12 button at the top right of the terminal.</td></tr>
+    </tbody>
+</table>
+<p><code class="consolas">send</code> also resets the terminal scroll. For every action except Clear, it writes the text into the client's copy of the block entity, so the editor shows the saved script if it is reopened before the server's update arrives.</p>
+
+<h3 id="editor-keys">Keyboard</h3>
+<p><code class="consolas">keyPressed</code> uses two modifier flags. <code class="consolas">control</code> is <code class="consolas">hasControlDownWithQuirk()</code>. <code class="consolas">word</code> is Ctrl or Alt, with Option on a Mac moving and deleting by word.</p>
+<table>
+    <thead>
+        <tr><th>Key</th><th>Effect</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Esc</td><td>Same as Done: saves and closes.</td></tr>
+        <tr><td>Select all</td><td>Selects the whole script.</td></tr>
+        <tr><td>Copy</td><td>Copies the selection, if any.</td></tr>
+        <tr><td>Cut</td><td>Copies and removes the selection, if any.</td></tr>
+        <tr><td>Paste</td><td>Inserts the clipboard over the selection.</td></tr>
+        <tr><td>Ctrl+Z</td><td>Undo.</td></tr>
+        <tr><td>Ctrl+Shift+Z, Ctrl+Y</td><td>Redo.</td></tr>
+        <tr><td>Backspace</td><td>Deletes the selection or one character. In leading spaces it goes back to the previous indent stop. With the word modifier, it deletes to the previous word boundary.</td></tr>
+        <tr><td>Delete</td><td>Deletes the selection or one character forward, or to the next word boundary with the word modifier.</td></tr>
+        <tr><td>Enter, keypad Enter</td><td>New line keeping the current indent, plus 4 more if the text before the caret ends in <code class="consolas">{</code> or <code class="consolas">(</code>.</td></tr>
+        <tr><td>Tab</td><td>Inserts <code class="consolas">4 - column % 4</code> spaces, over any selection.</td></tr>
+        <tr><td>Left, Right</td><td>Moves one character, or one word with the word modifier. With a selection and no Shift, it goes to that end of the selection. Shift extends.</td></tr>
+        <tr><td>Up, Down</td><td>Moves a line and keeps the preferred column. On the first or last line, it goes to the start or end of the script. Shift extends.</td></tr>
+        <tr><td>Page Up, Page Down</td><td>Moves by the number of visible lines. Shift extends.</td></tr>
+        <tr><td>Home</td><td>Goes to the first non-space character, then to column 0 if already there. With Ctrl, to the start of the script. Shift extends.</td></tr>
+        <tr><td>End</td><td>Goes to the end of the line. With Ctrl, to the end of the script. Shift extends.</td></tr>
+    </tbody>
+</table>
+<p>Typed text passes through <code class="consolas">charTyped</code>, which accepts characters allowed in chat. Inserted text has <code class="consolas">\r\n</code> and <code class="consolas">\r</code> normalized to <code class="consolas">\n</code> and tabs expanded to 4 spaces. An insertion that would take the script over 32000 characters is refused.</p>
+
+<h3 id="editor-undo">Undo</h3>
+<p>Undo and redo are stacks of <code class="consolas">Snapshot(text, cursor)</code>, with undo capped at 200 entries. Typing in a burst counts as one step:</p>
+<pre class="code-box"><code class="consolas">private void remember(boolean typing) {
+	long now = System.currentTimeMillis();
+	if (!typing || now - lastEdit &gt; 1000 || undo.isEmpty())
+		undo.push(new Snapshot(text, cursor));
+	lastEdit = typing ? now : 0;
+	while (undo.size() &gt; 200)
+		undo.removeLast();
+	redo.clear();
+}</code></pre>
+
+<h3 id="editor-mouse">Mouse</h3>
+<ul>
+    <li>Left click in the editor places the caret. Shift-click extends the selection, and dragging selects.</li>
+    <li>Double-click selects the word under the pointer. Word characters are letters, digits, <code class="consolas">_</code> and <code class="consolas">$</code>.</li>
+    <li>The wheel over the editor scrolls 3 lines. Horizontal scrolling moves 3 character widths per step.</li>
+    <li>The wheel over the terminal scrolls 1 log line, limited to the log's length.</li>
+</ul>
+
+<h3 id="editor-drawing">Drawing and colors</h3>
+<p>Only visible lines are drawn. Each line is broken into runs of equal color by <code class="consolas">colored</code> and rendered as one component. The caret blinks every 530 ms. The header shows the block position at the top right, followed by <code class="consolas">● listening</code> while listeners exist.</p>
+<table>
+    <thead>
+        <tr><th>Element</th><th>ARGB color</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Editor background</td><td><code class="consolas">0xFF000000</code></td></tr>
+        <tr><td>Border</td><td><code class="consolas">0xFF3C3C3C</code></td></tr>
+        <tr><td>Line numbers</td><td><code class="consolas">0xFF6E7681</code></td></tr>
+        <tr><td>Line number of the caret's line</td><td><code class="consolas">0xFFC6C6C6</code></td></tr>
+        <tr><td>Selection</td><td><code class="consolas">0xFF264F78</code></td></tr>
+        <tr><td>Current line highlight (no selection)</td><td><code class="consolas">0xFF0F0F0F</code></td></tr>
+        <tr><td>Caret</td><td><code class="consolas">0xFFAEAFAD</code></td></tr>
+        <tr><td>Terminal background</td><td><code class="consolas">0xFF0C0C0C</code></td></tr>
+        <tr><td>Terminal label, idle position text</td><td><code class="consolas">0xFF9D9D9D</code></td></tr>
+        <tr><td>Position text while listening</td><td><code class="consolas">0xFF6A9955</code></td></tr>
+    </tbody>
+</table>
+<p>The terminal draws the last <code class="consolas">terminalLines</code> entries, offset by the scroll: the first entry shown is <code class="consolas">max(0, size - terminalLines - terminalScroll)</code>.</p>
+
+<h2 id="highlighter">Syntax highlighter</h2>
+<p><code class="consolas">ScriptHighlighter.colors(text, commands)</code> returns one color per character, using VS Code's dark theme colors. <code class="consolas">commands</code> is the set of root command names, read from the client connection's command tree in <code class="consolas">init</code>.</p>
+<table>
+    <thead>
+        <tr><th>Constant</th><th>Color</th><th>Applies to</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">TEXT</code></td><td><code class="consolas">0xD4D4D4</code></td><td>Everything else.</td></tr>
+        <tr><td><code class="consolas">COMMENT</code></td><td><code class="consolas">0x6A9955</code></td><td>Comments.</td></tr>
+        <tr><td><code class="consolas">STRING</code></td><td><code class="consolas">0xCE9178</code></td><td>Double-quoted strings.</td></tr>
+        <tr><td><code class="consolas">NUMBER</code></td><td><code class="consolas">0xB5CEA8</code></td><td>Numbers, <code class="consolas">~</code> and <code class="consolas">^</code> coordinates.</td></tr>
+        <tr><td><code class="consolas">VARIABLE</code></td><td><code class="consolas">0x9CDCFE</code></td><td><code class="consolas">$name</code>.</td></tr>
+        <tr><td><code class="consolas">SELECTOR</code></td><td><code class="consolas">0x4FC1FF</code></td><td><code class="consolas">@</code> selectors and their arguments.</td></tr>
+        <tr><td><code class="consolas">KEYWORD</code></td><td><code class="consolas">0xC586C0</code></td><td>ComScript keywords, <code class="consolas">mod</code>, boolean literals.</td></tr>
+        <tr><td><code class="consolas">SUBCOMMAND</code></td><td><code class="consolas">0x569CD6</code></td><td><code class="consolas">execute</code> and its subcommands.</td></tr>
+        <tr><td><code class="consolas">COMMAND</code></td><td><code class="consolas">0xDCDCAA</code></td><td>A known command name at the start of a statement.</td></tr>
+        <tr><td><code class="consolas">FUNCTION</code></td><td><code class="consolas">0x4EC9B0</code></td><td>Functions and fetchers.</td></tr>
+        <tr><td><code class="consolas">EVENT</code></td><td><code class="consolas">0xD16969</code></td><td><code class="consolas">*</code> and its timer or event name.</td></tr>
+        <tr><td><code class="consolas">TOKEN</code></td><td><code class="consolas">0xD7BA7D</code></td><td><code class="consolas">&amp;name;</code> tokens.</td></tr>
+    </tbody>
+</table>
+
+<h3 id="highlighter-scan">Scan order</h3>
+<p>The method is one pass that keeps a <code class="consolas">statementStart</code> flag. At each position it tests:</p>
+<ol>
+    <li>Comments, with the same two forms as the interpreter.</li>
+    <li>Double-quoted strings, which end at a closing quote or at the end of the line.</li>
+    <li>The boolean literals <code class="consolas">&lt;true;&gt;</code> and <code class="consolas">&lt;false;&gt;</code>.</li>
+    <li><code class="consolas">;</code>, newline, <code class="consolas">(</code> or <code class="consolas">{</code>, which set <code class="consolas">statementStart</code>.</li>
+    <li>Other whitespace, which changes nothing.</li>
+    <li><code class="consolas">*</code> at a statement start, with following letters, digits and dots.</li>
+    <li><code class="consolas">$</code> variables.</li>
+    <li><code class="consolas">@</code> selectors, whose <code class="consolas">[ ]</code> group ends at a newline at the latest.</li>
+    <li><code class="consolas">&amp;</code> tokens within 12 characters of a <code class="consolas">;</code> and matching <code class="consolas">&amp;[#A-Za-z0-9\\]+</code>.</li>
+    <li>Numbers, <code class="consolas">~</code> and <code class="consolas">^</code>, and <code class="consolas">-</code> or <code class="consolas">.</code> directly before a digit when not following a letter or digit.</li>
+    <li>Words, which may contain <code class="consolas">_</code>, <code class="consolas">.</code>, and <code class="consolas">:</code> before a letter, plus a trailing <code class="consolas">:</code> for <code class="consolas">local:</code> and <code class="consolas">global:</code> and a trailing <code class="consolas">^</code> before <code class="consolas">(</code>.</li>
+</ol>
+<p>A word's color is chosen in priority order:</p>
+<pre class="code-box"><code class="consolas">if (call &amp;&amp; ComScriptSyntax.isFunction(word) || io.github.strawberrymc.comscript.ComScriptFetchers.BARE.contains(word.toLowerCase()))
+	color = FUNCTION;
+else if (ComScriptSyntax.KEYWORDS.contains(word) || word.equals("mod"))
+	color = KEYWORD;
+else if (ComScriptSyntax.SUBCOMMANDS.contains(word))
+	color = SUBCOMMAND;
+else if (statementStart &amp;&amp; (commands.contains(word) || word.equals("store")))
+	color = COMMAND;</code></pre>
+<p>After a word, <code class="consolas">statementStart</code> is true only if the word was <code class="consolas">run</code>, <code class="consolas">local:</code> or <code class="consolas">global:</code>, so the command after <code class="consolas">run</code> is colored as a command.</p>
+<table>
+    <thead>
+        <tr><th>Word set in <code class="consolas">ComScriptSyntax</code></th><th>Members</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">KEYWORDS</code></td><td><code class="consolas">store</code>, <code class="consolas">new</code>, <code class="consolas">set</code>, <code class="consolas">store.global</code>, <code class="consolas">excrd</code>, <code class="consolas">mark</code>, <code class="consolas">add</code>, <code class="consolas">relative</code>, <code class="consolas">local:</code>, <code class="consolas">global:</code>, <code class="consolas">static</code>, <code class="consolas">mobile</code></td></tr>
+        <tr><td><code class="consolas">SUBCOMMANDS</code></td><td><code class="consolas">execute</code>, <code class="consolas">as</code>, <code class="consolas">at</code>, <code class="consolas">in</code>, <code class="consolas">align</code>, <code class="consolas">anchored</code>, <code class="consolas">positioned</code>, <code class="consolas">rotated</code>, <code class="consolas">facing</code>, <code class="consolas">if</code>, <code class="consolas">unless</code>, <code class="consolas">on</code>, <code class="consolas">run</code>, <code class="consolas">comp</code></td></tr>
+    </tbody>
+</table>
+
+<h2 id="limits">Limits</h2>
+<table>
+    <thead>
+        <tr><th>Limit</th><th>Value</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Script length</td><td>32000 characters</td></tr>
+        <tr><td>Statements per run, timer firing or event</td><td>10000</td></tr>
+        <tr><td>Terminal lines kept</td><td>200</td></tr>
+        <tr><td>Terminal lines visible</td><td>2 to 8, depending on window height</td></tr>
+        <tr><td>Undo steps</td><td>200</td></tr>
+        <tr><td>Typing merged into one undo step</td><td>Within 1000 ms of the last keystroke</td></tr>
+        <tr><td>Indent size</td><td>4 spaces</td></tr>
+        <tr><td>Redstone delay</td><td>1 tick after a rising edge</td></tr>
+        <tr><td>Terminal sync from timers and events</td><td>Every 5 game ticks when there is new output</td></tr>
+        <tr><td>Timer skip count</td><td>Up to 9 digits</td></tr>
+    </tbody>
+</table>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

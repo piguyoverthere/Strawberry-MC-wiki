@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>The Void [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>The Void [technical]</h1>
+<h2 id="how-the-void-is-built">How the Void is built</h2>
+<p>The Void is the dimension <code class="consolas">strawberrymc:void_dim</code>. Its terrain is a stack of named density functions combined in <code class="consolas">void/final.json</code>, and it lives in a built-in datapack at <code class="consolas">src/main/resources/void_terrain</code>. Three classes of file work together:</p>
+<ul>
+<li><code class="consolas">VoidTerrainPack.java</code> registers the datapack.</li>
+<li><code class="consolas">tools/void_terrain/gen.py</code> writes every JSON file inside the datapack.</li>
+<li><code class="consolas">data/strawberrymc/dimension_type/void_dim.json</code> and the three biome JSON files sit in the mod's own data and are read alongside the pack.</li>
+</ul>
+
+<h2 id="void-terrain-pack">VoidTerrainPack</h2>
+<p><code class="consolas">VoidTerrainPack.init</code> is called from <code class="consolas">StrawberrymcMod</code> and listens for <code class="consolas">AddPackFindersEvent</code>. The pack is a built-in server data pack, always enabled, and positioned at the top of the pack list, so its <code class="consolas">dimension/void_dim.json</code> replaces the one MCreator generates from the VoidDim element. MCreator can regenerate its copy without affecting the terrain. The pack's <code class="consolas">pack.mcmeta</code> declares format 101.1 for both <code class="consolas">min_format</code> and <code class="consolas">max_format</code>.</p>
+<pre class="code-box"><code class="consolas">private static void addPack(AddPackFindersEvent event) {
+	event.addPackFinders(Identifier.fromNamespaceAndPath("strawberrymc", "void_terrain"), PackType.SERVER_DATA, Component.literal("Strawberry MC Void terrain"),
+			PackSource.BUILT_IN, true, Pack.Position.TOP);
+}</code></pre>
+
+<h2 id="gen-py-pipeline">The gen.py pipeline</h2>
+<p><code class="consolas">gen.py</code> is run from the <code class="consolas">java</code> folder with <code class="consolas">python3 tools/void_terrain/gen.py</code>. It defines small helpers that build density function JSON (<code class="consolas">noise</code>, <code class="consolas">add</code>, <code class="consolas">mul</code>, <code class="consolas">mn</code>, <code class="consolas">mx</code>, <code class="consolas">ab</code>, <code class="consolas">grad</code>, <code class="consolas">sq</code>, <code class="consolas">clamp</code>, <code class="consolas">df</code>), then runs in this order:</p>
+<ol>
+<li>Writes <code class="consolas">pack.mcmeta</code>.</li>
+<li>Writes the 18 noise definitions to <code class="consolas">worldgen/noise</code>.</li>
+<li>Builds the named density functions in a dictionary and writes each to <code class="consolas">worldgen/density_function/void/</code>, so each piece can be tuned on its own.</li>
+<li>Loads MCreator's <code class="consolas">dimension/void_dim.json</code> for its base settings, so changes to the VoidDim element carry over, then overrides the noise router, sea level, aquifers, ore veins, noise size and surface rule. The result is written to <code class="consolas">worldgen/noise_settings/void_dim.json</code>.</li>
+<li>Replaces the dimension's biome source and settings reference and writes <code class="consolas">dimension/void_dim.json</code> into the pack.</li>
+<li>Creates <code class="consolas">abyssal_plains.json</code> and <code class="consolas">echoing_deep.json</code> as copies of <code class="consolas">voidstone_peaks.json</code> if those files do not exist, leaving existing biome files alone.</li>
+</ol>
+
+<h2 id="dimension-settings">Dimension settings</h2>
+<h3 id="dimension-type">Dimension type</h3>
+<table>
+<thead>
+<tr><th>Field in dimension_type/void_dim.json</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>min_y / height / logical_height</td><td>-64 / 384 / 384</td></tr>
+<tr><td>has_skylight / has_ceiling</td><td>false / false</td></tr>
+<tr><td>has_ender_dragon_fight</td><td>false</td></tr>
+<tr><td>coordinate_scale</td><td>3</td></tr>
+<tr><td>ambient_light</td><td>0</td></tr>
+<tr><td>skybox</td><td>end</td></tr>
+<tr><td>infiniburn</td><td>#minecraft:infiniburn_overworld</td></tr>
+<tr><td>monster_spawn_light_level</td><td>uniform 0 to 2</td></tr>
+<tr><td>monster_spawn_block_light_limit</td><td>0</td></tr>
+<tr><td>minecraft:visual/ambient_light_color</td><td>#0a0a0a</td></tr>
+<tr><td>minecraft:visual/fog_color and sky_color</td><td>#050516</td></tr>
+<tr><td>minecraft:visual/fog_start_distance / fog_end_distance</td><td>5 / 40</td></tr>
+<tr><td>minecraft:gameplay/bed_rule</td><td>can_set_spawn never, can_sleep never, explodes true</td></tr>
+<tr><td>minecraft:gameplay/can_start_raid</td><td>false</td></tr>
+<tr><td>minecraft:gameplay/respawn_anchor_works</td><td>false</td></tr>
+</tbody>
+</table>
+<h3 id="noise-settings">Noise settings</h3>
+<table>
+<thead>
+<tr><th>Field in noise_settings/void_dim.json</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>sea_level</td><td>-64</td></tr>
+<tr><td>aquifers_enabled / ore_veins_enabled</td><td>false / false</td></tr>
+<tr><td>default_block</td><td>strawberrymc:voidstone</td></tr>
+<tr><td>default_fluid</td><td>strawberrymc:void_tears, level 0</td></tr>
+<tr><td>noise min_y / height</td><td>-64 / 384</td></tr>
+<tr><td>noise size_horizontal / size_vertical</td><td>1 / 1</td></tr>
+<tr><td>preliminary_surface_level</td><td>64 (a constant)</td></tr>
+<tr><td>final_density</td><td>strawberrymc:void/final</td></tr>
+<tr><td>barrier, fluid_level_floodedness, fluid_level_spread, lava, continents, erosion, depth, ridges, vein_toggle, vein_ridged, vein_gap</td><td>0</td></tr>
+<tr><td>temperature</td><td>shifted_noise of minecraft:temperature, xz_scale 0.25, y_scale 0</td></tr>
+<tr><td>vegetation</td><td>shifted_noise of minecraft:vegetation, xz_scale 0.25, y_scale 0</td></tr>
+</tbody>
+</table>
+<p>Sea level sits at the bottom of the world, so <a href="page-void-tears-technical.html">Void Tears</a> appear only as pools. The surface rule places <a href="page-voidstone-technical.html">Voidstone</a> at floor depth for all three biomes and adds no bedrock floor, leaving the world open below the terrain.</p>
+<pre class="code-box"><code class="consolas">settings['surface_rule'] = {"type": "minecraft:sequence", "sequence": [
+  {"type": "minecraft:condition", "if_true": {"type": "minecraft:biome", "biome_is": biomes},
+   "then_run": {"type": "minecraft:condition",
+     "if_true": {"type": "minecraft:stone_depth", "surface_type": "floor", "add_surface_depth": False, "secondary_depth_range": 0, "offset": 0},
+     "then_run": {"type": "minecraft:block", "result_state": {"Name": "strawberrymc:voidstone"}}}}]}</code></pre>
+
+<h2 id="noises">Noise definitions</h2>
+<table>
+<thead>
+<tr><th>Noise (strawberrymc:)</th><th>firstOctave</th><th>Amplitudes</th><th>Used by</th></tr>
+</thead>
+<tbody>
+<tr><td>void_ground</td><td>-7</td><td>1, 1, 0.5</td><td>ground</td></tr>
+<tr><td>void_underside</td><td>-6</td><td>1, 0.5</td><td>underside</td></tr>
+<tr><td>void_cracks</td><td>-7</td><td>1, 0.5</td><td>cracks</td></tr>
+<tr><td>void_crack_width</td><td>-7</td><td>1</td><td>cracks</td></tr>
+<tr><td>void_roughness</td><td>-4</td><td>1, 0.5</td><td>ground, islands</td></tr>
+<tr><td>void_islands</td><td>-6</td><td>1, 1, 0.5</td><td>islands, main layer</td></tr>
+<tr><td>void_islands_mid</td><td>-6</td><td>1, 1, 0.5</td><td>islands, middle layer</td></tr>
+<tr><td>void_islands_low</td><td>-6</td><td>1, 1, 0.5</td><td>islands, low layer</td></tr>
+<tr><td>void_pillars</td><td>-5</td><td>1</td><td>pillars</td></tr>
+<tr><td>void_bridges_a, void_bridges_b</td><td>-6</td><td>1, 0.5</td><td>bridges</td></tr>
+<tr><td>void_peaks</td><td>-5</td><td>1, 0.5</td><td>peaks_height</td></tr>
+<tr><td>void_spires</td><td>-4</td><td>1, 0.5</td><td>peaks_height, mountains</td></tr>
+<tr><td>void_crags</td><td>-4</td><td>1, 1, 0.5</td><td>mountains, pillars</td></tr>
+<tr><td>void_canyons_a, void_canyons_b</td><td>-6</td><td>1, 0.5</td><td>canyons</td></tr>
+<tr><td>void_tunnels_a, void_tunnels_b</td><td>-5</td><td>1</td><td>tunnels</td></tr>
+</tbody>
+</table>
+
+<h2 id="density-layers">Density functions, layer by layer</h2>
+<p>A block is solid where the final density is positive. <code class="consolas">final</code> is an interpolated maximum of four solid bodies, so each body adds rock wherever it is positive:</p>
+<pre class="code-box"><code class="consolas">fns['final'] = {"type": "minecraft:interpolated", "argument":
+   mx(mx(df('fractured_plain'), df('islands')), mx(df('pillars'), df('bridges')))}</code></pre>
+<h3 id="layer-fractured-plain">fractured_plain</h3>
+<p>The plain combines five functions. The ground is raised by the mountains, then the whole slab is cut from beneath by the underside and across by the cracks:</p>
+<pre class="code-box"><code class="consolas">fns['fractured_plain'] = mn(mn(mx(df('ground'), mn(df('mountains'), mn(df('canyons'), df('tunnels')))), df('underside')), df('cracks'))</code></pre>
+<h3 id="layer-ground">ground</h3>
+<p><code class="consolas">y_clamped_gradient</code> from y=34 (value 1) to y=94 (value -1), plus <code class="consolas">0.35 * void_ground</code> with y_scale 0, plus <code class="consolas">0.08 * void_roughness</code>. The gradient crosses zero at y=64 and falls 1 density unit every 30 blocks, so one unit of <code class="consolas">void_ground</code> moves the surface by 10.5 blocks. The source describes the plane as roughly y=50 to y=80.</p>
+<h3 id="layer-underside">underside</h3>
+<p>Gradient from y=-25 (value -1) to y=15 (value 1), plus <code class="consolas">0.4 * void_underside</code>. It crosses zero at y=-5 and changes 1 unit every 20 blocks, so one unit of noise moves the ragged underside by 8 blocks. Taking the minimum with this function removes everything below it, so cracks open into empty space.</p>
+<h3 id="layer-cracks">cracks</h3>
+<pre class="code-box"><code class="consolas">fns['cracks'] = mul(12, add(ab(noise('void_cracks', 1, 0)), mul(-1, add(0.11, mul(0.06, noise('void_crack_width', 1, 0))))))</code></pre>
+<p>This is negative near the zero line of <code class="consolas">void_cracks</code>, where <code class="consolas">|void_cracks| &lt; 0.11 + 0.06 * void_crack_width</code>. The width noise makes some cracks wide and some narrow. Multiplying by 12 gives the crack walls a steep edge.</p>
+<h3 id="layer-islands">islands</h3>
+<p>Three independent layers are combined with <code class="consolas">max</code>. Each layer uses a triangular vertical profile that reaches 0 at its top height and -1.2 at its limits, added to island noise:</p>
+<pre class="code-box"><code class="consolas">island_layer = lambda n, bottom, top, ceiling: add(mn(grad(bottom, -1.2, top, 0), grad(top, 0, ceiling, -1.2)), add(add(mul(1.4, noise(n, 1, 0)), -0.55), mul(0.1, noise('void_roughness'))))
+fns['islands'] = mx(mx(island_layer('void_islands', 130, 166, 180), island_layer('void_islands_mid', 88, 112, 122)), island_layer('void_islands_low', -60, -30, -20))</code></pre>
+<table>
+<thead>
+<tr><th>Layer</th><th>Noise</th><th>Bottom y</th><th>Top y</th><th>Ceiling y</th></tr>
+</thead>
+<tbody>
+<tr><td>Main</td><td>void_islands</td><td>130</td><td>166</td><td>180</td></tr>
+<tr><td>Middle</td><td>void_islands_mid</td><td>88</td><td>112</td><td>122</td></tr>
+<tr><td>Low, under the plain</td><td>void_islands_low</td><td>-60</td><td>-30</td><td>-20</td></tr>
+</tbody>
+</table>
+<p>The noise has y_scale 0, so an island's outline is the same at every height. Where the noise is strong the island keeps a wide flat top, and where it is weak only the narrow part of the profile stays positive, tapering the island into a cone. Ignoring roughness, an island exists at its top height where <code class="consolas">1.4 * noise &gt; 0.55</code>.</p>
+<h3 id="layer-pillars">pillars</h3>
+<pre class="code-box"><code class="consolas">fns['pillars'] = add(add(add(mul(4, noise('void_pillars', 1, 0)), -3.4), add(add(grad(40, 1, 60, 0), grad(160, 0, 175, -1)), grad(-20, -3, 10, 0))),
+   mul(df('peaks_mask'), add(1.4, mul(0.6, noise('void_crags', 1, 1)))))</code></pre>
+<p>Between y=60 and y=160 the gradients are all 0, so a pillar stands where <code class="consolas">void_pillars &gt; 0.85</code>. The gradient at y=40 to y=60 (1 to 0) widens the foot, the gradient at y=160 to y=175 (0 to -1) closes the top inside the main island layer, and the gradient at y=-20 to y=10 (-3 to 0) stops pillars from hanging below the plain. The <code class="consolas">peaks_mask</code> term is described on the <a href="page-voidstone-peaks-technical.html">Voidstone Peaks</a> page.</p>
+<h3 id="layer-bridges">bridges</h3>
+<pre class="code-box"><code class="consolas">fns['bridges'] = add(add(0.1, mul(-1, mx(ab(noise('void_bridges_a', 1, 0.5)), ab(noise('void_bridges_b', 1, 0.5))))), mul(0.2, mx(mx(mn(grad(140, -1, 155, 0), grad(172, 0, 185, -1)), mn(grad(95, -1, 104, 0), grad(116, 0, 125, -1))), mn(grad(-55, -1, -45, 0), grad(-34, 0, -24, -1)))))</code></pre>
+<p>Bridges are thin winding tubes where both 3D noises are near zero at once. The band term is 0 inside an island layer and -1 outside it, and the tube needs <code class="consolas">0.1 + 0.2 * band</code> to be positive, so bridges form only where the band is above -0.5.</p>
+<table>
+<thead>
+<tr><th>Layer</th><th>Gradient ramps (y)</th><th>Solid range (y)</th></tr>
+</thead>
+<tbody>
+<tr><td>Main</td><td>140 to 155, 172 to 185</td><td>147.5 to 178.5</td></tr>
+<tr><td>Middle</td><td>95 to 104, 116 to 125</td><td>99.5 to 120.5</td></tr>
+<tr><td>Low</td><td>-55 to -45, -34 to -24</td><td>-50 to -29</td></tr>
+</tbody>
+</table>
+
+<h2 id="biomes">Biomes</h2>
+<p>The dimension's <code class="consolas">multi_noise</code> biome source uses only temperature and humidity. Continentalness, erosion, weirdness, depth and offset are 0 for all three biomes, matching the zeroed noise router.</p>
+<table>
+<thead>
+<tr><th>Biome</th><th>Temperature</th><th>Humidity</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="page-abyssal-plains-technical.html">strawberrymc:abyssal_plains</a></td><td>-0.5</td><td>0</td></tr>
+<tr><td>strawberrymc:echoing_deep</td><td>0.4</td><td>-0.5</td></tr>
+<tr><td><a href="page-voidstone-peaks-technical.html">strawberrymc:voidstone_peaks</a></td><td>-0.1 to 1</td><td>-0.15 to 1</td></tr>
+</tbody>
+</table>
+<p>All three biome JSON files share these values:</p>
+<table>
+<thead>
+<tr><th>Field</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>has_precipitation</td><td>false</td></tr>
+<tr><td>temperature / downfall</td><td>0.5 / 0</td></tr>
+<tr><td>foliage_color / grass_color / water_color</td><td>#9E814D / #90814D / #3F76E4</td></tr>
+<tr><td>minecraft:visual/water_fog_color</td><td>#050533</td></tr>
+<tr><td>carvers</td><td>minecraft:cave, minecraft:cave_extra_underground, minecraft:canyon</td></tr>
+<tr><td>features, step lakes</td><td>minecraft:lake_lava_underground</td></tr>
+</tbody>
+</table>
+<p><a href="page-void-tears-technical.html">Void Tears pools</a> are added to all three biomes by the biome modifier <code class="consolas">void_tears_pools.json</code> in the pack.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

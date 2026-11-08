@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>SpawnPalmTreeProcedureProcedure [raw] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>SpawnPalmTreeProcedureProcedure [raw]</h1>
+        <pre class="code-box vscode-code"><code class="consolas"><span style="color: #569CD6">package</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.LevelAccessor</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.block.state.BlockState</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.core.BlockPos</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.util.RandomSource</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.block.state.properties.BlockStateProperties</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">io.github.strawberrymc.init.StrawberrymcModBlocks</span>;
+
+<span style="color: #569CD6">public class</span> <span style="color: #4EC9B0">SpawnPalmTreeProcedureProcedure</span> {
+    <span style="color: #569CD6">public static</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">execute</span>(<span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">x</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">y</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">z</span>) {
+        <span style="color: #4EC9B0">RandomSource</span> <span style="color: #9CDCFE">random</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">getRandom</span>();
+        
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">height</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">8</span> <span style="color: #D4D4D4">+</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #B5CEA8">6</span>);
+        <span style="color: #4EC9B0">BlockState</span> <span style="color: #9CDCFE">log</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">PALM_LOG</span>.<span style="color: #DCDCAA">get</span>().<span style="color: #DCDCAA">defaultBlockState</span>();
+        
+        <span style="color: #4EC9B0">BlockState</span> <span style="color: #9CDCFE">leaves</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">PALM_LEAVES</span>.<span style="color: #DCDCAA">get</span>().<span style="color: #DCDCAA">defaultBlockState</span>();
+        <span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">leaves</span>.<span style="color: #DCDCAA">hasProperty</span>(<span style="color: #9CDCFE">BlockStateProperties</span>.<span style="color: #9CDCFE">PERSISTENT</span>)) {
+            leaves <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">leaves</span>.<span style="color: #DCDCAA">setValue</span>(<span style="color: #9CDCFE">BlockStateProperties</span>.<span style="color: #9CDCFE">PERSISTENT</span>, <span style="color: #569CD6">true</span>);
+        }
+
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">tiltX</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #B5CEA8">3</span>) <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>;
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">tiltZ</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #B5CEA8">3</span>) <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>;
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">currentX</span> <span style="color: #D4D4D4">=</span> (<span style="color: #4EC9B0">int</span>) x;
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">currentZ</span> <span style="color: #D4D4D4">=</span> (<span style="color: #4EC9B0">int</span>) z;
+
+        <span style="color: #6A9955">// 1. Trunk</span>
+        <span style="color: #C586C0">for</span> (<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">i</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>; i <span style="color: #D4D4D4">&lt;</span> height; i<span style="color: #D4D4D4">++</span>) {
+            <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(currentX, y <span style="color: #D4D4D4">+</span> i, currentZ), log, <span style="color: #B5CEA8">3</span>);
+            <span style="color: #C586C0">if</span> (i <span style="color: #D4D4D4">&gt;=</span> <span style="color: #B5CEA8">3</span> <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextFloat</span>() <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">0.35f</span>) {
+                currentX <span style="color: #D4D4D4">+=</span> tiltX;
+                currentZ <span style="color: #D4D4D4">+=</span> tiltZ;
+            }
+        }
+
+        <span style="color: #6A9955">// 2. The Bulky Crown Core</span>
+        <span style="color: #4EC9B0">BlockPos</span> <span style="color: #9CDCFE">topPos</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(currentX, y <span style="color: #D4D4D4">+</span> height <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>, currentZ);
+        
+        <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">topPos</span>.<span style="color: #DCDCAA">above</span>(), leaves, <span style="color: #B5CEA8">3</span>);
+        <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">topPos</span>.<span style="color: #DCDCAA">above</span>(<span style="color: #B5CEA8">2</span>), leaves, <span style="color: #B5CEA8">3</span>);
+        
+        <span style="color: #4EC9B0">int</span>[][] <span style="color: #9CDCFE">coreOffsets</span> <span style="color: #D4D4D4">=</span> {{<span style="color: #B5CEA8">1</span>,<span style="color: #B5CEA8">0</span>}, {<span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">1</span>,<span style="color: #B5CEA8">0</span>}, {<span style="color: #B5CEA8">0</span>,<span style="color: #B5CEA8">1</span>}, {<span style="color: #B5CEA8">0</span>,<span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">1</span>}, {<span style="color: #B5CEA8">1</span>,<span style="color: #B5CEA8">1</span>}, {<span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">1</span>,<span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">1</span>}, {<span style="color: #B5CEA8">1</span>,<span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">1</span>}, {<span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">1</span>,<span style="color: #B5CEA8">1</span>}};
+        <span style="color: #C586C0">for</span> (<span style="color: #4EC9B0">int</span>[] <span style="color: #9CDCFE">off</span> <span style="color: #C586C0">:</span> coreOffsets) {
+            <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">topPos</span>.<span style="color: #DCDCAA">above</span>().<span style="color: #DCDCAA">offset</span>(off[<span style="color: #B5CEA8">0</span>], <span style="color: #B5CEA8">0</span>, off[<span style="color: #B5CEA8">1</span>]), leaves, <span style="color: #B5CEA8">3</span>);
+            <span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextFloat</span>() <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">0.6f</span>) {
+                <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">topPos</span>.<span style="color: #DCDCAA">above</span>(<span style="color: #B5CEA8">2</span>).<span style="color: #DCDCAA">offset</span>(off[<span style="color: #B5CEA8">0</span>], <span style="color: #B5CEA8">0</span>, off[<span style="color: #B5CEA8">1</span>]), leaves, <span style="color: #B5CEA8">3</span>);
+            }
+        }
+
+        <span style="color: #6A9955">// 3. Arching, Clumpy Fronds with Reduced Droop</span>
+        <span style="color: #4EC9B0">int</span>[][] <span style="color: #9CDCFE">directions</span> <span style="color: #D4D4D4">=</span> {
+            {<span style="color: #B5CEA8">1</span>, <span style="color: #B5CEA8">0</span>}, {<span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">1</span>, <span style="color: #B5CEA8">0</span>}, {<span style="color: #B5CEA8">0</span>, <span style="color: #B5CEA8">1</span>}, {<span style="color: #B5CEA8">0</span>, <span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">1</span>}, 
+            {<span style="color: #B5CEA8">1</span>, <span style="color: #B5CEA8">1</span>}, {<span style="color: #B5CEA8">1</span>, <span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">1</span>}, {<span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">1</span>, <span style="color: #B5CEA8">1</span>}, {<span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">1</span>, <span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">1</span>}
+        };
+
+        <span style="color: #C586C0">for</span> (<span style="color: #4EC9B0">int</span>[] <span style="color: #9CDCFE">dir</span> <span style="color: #C586C0">:</span> directions) {
+            <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">dx</span> <span style="color: #D4D4D4">=</span> dir[<span style="color: #B5CEA8">0</span>];
+            <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">dz</span> <span style="color: #D4D4D4">=</span> dir[<span style="color: #B5CEA8">1</span>];
+            
+            <span style="color: #4EC9B0">boolean</span> <span style="color: #9CDCFE">isDiag</span> <span style="color: #D4D4D4">=</span> (dx <span style="color: #D4D4D4">!=</span> <span style="color: #B5CEA8">0</span> <span style="color: #D4D4D4">&amp;&amp;</span> dz <span style="color: #D4D4D4">!=</span> <span style="color: #B5CEA8">0</span>);
+            <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">frondLength</span> <span style="color: #D4D4D4">=</span> isDiag <span style="color: #C586C0">?</span> <span style="color: #B5CEA8">2</span> <span style="color: #D4D4D4">+</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #B5CEA8">2</span>) <span style="color: #C586C0">:</span> <span style="color: #B5CEA8">3</span> <span style="color: #D4D4D4">+</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #B5CEA8">2</span>);
+            
+            <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">currentYOffset</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">1</span>;
+            
+            <span style="color: #C586C0">for</span> (<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">step</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">1</span>; step <span style="color: #D4D4D4">&lt;=</span> frondLength; step<span style="color: #D4D4D4">++</span>) {
+                <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">px</span> <span style="color: #D4D4D4">=</span> dx <span style="color: #D4D4D4">*</span> step;
+                <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">pz</span> <span style="color: #D4D4D4">=</span> dz <span style="color: #D4D4D4">*</span> step;
+                
+                <span style="color: #6A9955">// Keep the branch level longer, only dropping slightly right at the tip</span>
+                <span style="color: #C586C0">if</span> (step <span style="color: #D4D4D4">==</span> <span style="color: #B5CEA8">1</span>) {
+                    currentYOffset <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">1</span> <span style="color: #D4D4D4">+</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #B5CEA8">2</span>);
+                } <span style="color: #C586C0">else if</span> (step <span style="color: #D4D4D4">==</span> frondLength) {
+                    currentYOffset<span style="color: #D4D4D4">--</span>;
+                }
+                
+                <span style="color: #4EC9B0">BlockPos</span> <span style="color: #9CDCFE">placePos</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">topPos</span>.<span style="color: #DCDCAA">offset</span>(px, currentYOffset, pz);
+                <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(placePos, leaves, <span style="color: #B5CEA8">3</span>);
+                
+                <span style="color: #6A9955">// Vertical volume</span>
+                <span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextFloat</span>() <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">0.5f</span>) {
+                    <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">placePos</span>.<span style="color: #DCDCAA">below</span>(), leaves, <span style="color: #B5CEA8">3</span>);
+                }
+                
+                <span style="color: #6A9955">// Lateral volume</span>
+                <span style="color: #C586C0">if</span> (<span style="color: #D4D4D4">!</span>isDiag <span style="color: #D4D4D4">&amp;&amp;</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextFloat</span>() <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">0.4f</span>) {
+                    <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">placePos</span>.<span style="color: #DCDCAA">offset</span>(dz, <span style="color: #B5CEA8">0</span>, dx), leaves, <span style="color: #B5CEA8">3</span>);
+                }
+                
+                <span style="color: #6A9955">// Lighter vertical drop at the very end of the frond</span>
+                <span style="color: #C586C0">if</span> (step <span style="color: #D4D4D4">==</span> frondLength) {
+                    <span style="color: #6A9955">// Reduced hang depth from (2 to 3) down to (1 to 2)</span>
+                    <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">hangDepth</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">1</span> <span style="color: #D4D4D4">+</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #B5CEA8">2</span>); 
+                    <span style="color: #C586C0">for</span> (<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">h</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">1</span>; h <span style="color: #D4D4D4">&lt;=</span> hangDepth; h<span style="color: #D4D4D4">++</span>) {
+                        <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">placePos</span>.<span style="color: #DCDCAA">below</span>(h), leaves, <span style="color: #B5CEA8">3</span>);
+                        <span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextFloat</span>() <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">0.3f</span>) {
+                            <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">placePos</span>.<span style="color: #DCDCAA">below</span>(h).<span style="color: #DCDCAA">offset</span>(dz, <span style="color: #B5CEA8">0</span>, dx), leaves, <span style="color: #B5CEA8">3</span>);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

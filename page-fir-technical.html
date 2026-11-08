@@ -13,7 +13,122 @@
             </nav>
         </header>
         <h1>Fir [technical]</h1>
-        <p>The Fir tree is a feature generating exclusively in the AlpineMeadow biome [Alpine Meadowlands in-game]. Fir trees are made from Spruce Wood, Spruce Leaves, Spruce Logs, and Spruce Fences. Fir trees come in 3 variants listed below.</p><h2>Fir</h2><p>Fir trees are steeply triangular in shape, with bracts widest at the base and moving upwards. A java loop randomizes the bracts and adds a spire of Spruce Logs at the top.</p><h2>Dead Fir</h2><p>Dead Fir features have the same trunk and trunk base at the base of the logs, but has Spruce Fences extending sideways instead of Spruce Leaves.</p><h2><br>Fir Snag</h2><p>Fir Snag features have only a trunk and base decorators.</p><h2>Base Decorators</h2><p>Base Decorators are Spruce Wood blocks at the base that has a 60% chance to generate on the x and z axis. Each decorator can only be 1 block on each axis.</p>
+        <p>The Fir tree is a feature generating exclusively in the AlpineMeadow biome [Alpine Meadow in-game]. Fir trees are made from Spruce Wood, Spruce Leaves, Spruce Logs, and Spruce Fences. Fir trees come in 3 variants listed below.</p><h2>Fir</h2><p>Fir trees are steeply triangular in shape, with bracts widest at the base and moving upwards. A java loop randomizes the bracts and adds a spire of Spruce Leaves at the top.</p><h2>Dead Fir</h2><p>Dead Fir features have the same trunk and trunk base at the base of the logs, but has Spruce Fences extending sideways instead of Spruce Leaves.</p><h2><br>Fir Snag</h2><p>Fir Snag features have only a trunk and base decorators.</p><h2>Base Decorators</h2><p>Base Decorators are Spruce Wood blocks at the base that has a 60% chance to generate on the x and z axis. Each decorator can only be 1 block on each axis.</p>
+        <h2 id="fir-feature">The fir_tree feature</h2>
+<p><code class="consolas">FirTree</code> is a <code class="consolas">Feature&lt;NoneFeatureConfiguration&gt;</code> registered as <code class="consolas">strawberrymc:fir_tree</code>, placed in <a href="page-alpine-meadowlands-technical.html">Alpine Meadowlands</a> once per chunk. The origin is the first air block above the surface, and the trunk replaces the ground block below it. The ground must be in <code class="consolas">BlockTags.SUBSTRATE_OVERWORLD</code>, which covers grass, dirt, podzol, moss and mud.</p>
+<pre class="code-box"><code class="consolas">BlockPos ground = context.origin().below();
+
+if (!level.getBlockState(ground).is(BlockTags.SUBSTRATE_OVERWORLD)) {
+    return false;
+}
+
+DetermineRandFirProcedure.execute(level, ground.getX(), ground.getY(), ground.getZ());
+return true;</code></pre>
+
+<h2 id="variant-selection">Variant selection</h2>
+<p><a href="page-determinerandfirprocedure-raw.html">DetermineRandFirProcedure [raw]</a> makes up to two rolls of an integer from 1 to 100.</p>
+<pre class="code-box"><code class="consolas">randint = Mth.nextInt(RandomSource.create(), 1, 100);
+if (randint &lt; 85) {
+	FirGenerationProcedure.execute(world, x, y, z);
+} else {
+	randint = Mth.nextInt(RandomSource.create(), 1, 100);
+	if (randint &lt; 60) {
+		DeadFirGenerationProcedure.execute(world, x, y, z);
+	} else {
+		FirSnagGenerationProcedure.execute(world, x, y, z);
+	}
+}</code></pre>
+<table>
+<thead>
+<tr><th>Variant</th><th>Procedure</th><th>Chance</th></tr>
+</thead>
+<tbody>
+<tr><td>Fir</td><td><a href="page-firgenerationprocedure-raw.html">FirGenerationProcedure [raw]</a></td><td>84%</td></tr>
+<tr><td>Dead Fir</td><td><a href="page-deadfirgenerationprocedure-raw.html">DeadFirGenerationProcedure [raw]</a></td><td>9.44%</td></tr>
+<tr><td>Fir Snag</td><td><a href="page-firsnaggenerationprocedure-raw.html">FirSnagGenerationProcedure [raw]</a></td><td>6.56%</td></tr>
+</tbody>
+</table>
+
+<h2 id="shared-trunk">Trunk and roots</h2>
+<p>All three procedures choose a height with <code class="consolas">18 + (int)(Math.random() * 8)</code>, giving a trunk of 18 to 25 blocks of <code class="consolas">minecraft:spruce_log</code>. Each of the four horizontal neighbors of the base has its own independent 60% chance of <code class="consolas">minecraft:spruce_wood</code>.</p>
+<pre class="code-box"><code class="consolas">if (Math.random() &lt; 0.6) world.setBlock(BlockPos.containing(x + 1, y, z), Blocks.SPRUCE_WOOD.defaultBlockState(), 3);
+if (Math.random() &lt; 0.6) world.setBlock(BlockPos.containing(x - 1, y, z), Blocks.SPRUCE_WOOD.defaultBlockState(), 3);
+if (Math.random() &lt; 0.6) world.setBlock(BlockPos.containing(x, y, z + 1), Blocks.SPRUCE_WOOD.defaultBlockState(), 3);
+if (Math.random() &lt; 0.6) world.setBlock(BlockPos.containing(x, y, z - 1), Blocks.SPRUCE_WOOD.defaultBlockState(), 3);</code></pre>
+
+<h2 id="fir-procedure">FirGenerationProcedure</h2>
+<h3 id="fir-foliage">Foliage</h3>
+<p>Foliage starts 3 or 4 blocks up (<code class="consolas">3 + (int)(Math.random() * 2)</code>) and runs to <code class="consolas">height - 3</code>. Even heights are wide tiers and odd heights stay tight to the trunk, which produces the layered outline.</p>
+<pre class="code-box"><code class="consolas">boolean isWideTier = (i % 2 == 0);
+
+int radius;
+if (isWideTier) {
+    radius = (int) Math.ceil((double)(height - i) / 6.5);
+} else {
+    radius = 1;
+}
+
+if (radius &lt; 1) radius = 1;</code></pre>
+<p>Dividing the remaining height by 6.5 narrows the tree toward the top, and the widest tier reaches 4 blocks from the trunk. Each position in the square other than the center is then filtered:</p>
+<table>
+<thead>
+<tr><th>Position</th><th>Chance of being skipped</th></tr>
+</thead>
+<tbody>
+<tr><td>Corner, radius above 1</td><td>80%</td></tr>
+<tr><td>Corner, radius 1</td><td>50%</td></tr>
+<tr><td>Any remaining position</td><td>35%</td></tr>
+</tbody>
+</table>
+<p>Surviving positions become <code class="consolas">minecraft:spruce_leaves</code> if empty.</p>
+<h3 id="fir-spire">Spire</h3>
+<p>A loop from <code class="consolas">height - 2</code> to <code class="consolas">height + 3</code> places spruce leaves in the trunk's column where the position is empty. The two lowest positions are already logs, leaving a 4-block spire of leaves above the trunk. The procedure then calls <code class="consolas">FirTreeFinisher.finish</code>.</p>
+
+<h2 id="dead-fir-procedure">DeadFirGenerationProcedure</h2>
+<p>The trunk, roots, first tier and radius formula match the living fir. Branches use <code class="consolas">minecraft:spruce_fence</code> and grow straight out from the trunk, because fences connect only sideways.</p>
+<pre class="code-box"><code class="consolas">int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+for (int[] dir : directions) {
+    if (Math.random() &lt; 0.65) continue;
+
+    int length = 1 + (int)(Math.random() * radius);
+    for (int step = 1; step &lt;= length; step++) {
+        BlockPos branchPos = BlockPos.containing(x + dir[0] * step, y + i, z + dir[1] * step);
+        if (!world.isEmptyBlock(branchPos)) break;
+        world.setBlock(branchPos, Blocks.SPRUCE_FENCE.defaultBlockState(), 3);
+    }
+}</code></pre>
+<p>Each direction on each tier has a 65% chance of no branch, and a branch is from 1 to <code class="consolas">radius</code> blocks long, stopping at the first occupied block. The spire is a loop from <code class="consolas">height - 2</code> to <code class="consolas">height + 1</code> placing spruce fences in empty positions, with a 40% chance of skipping each one for a broken look. It ends by calling <code class="consolas">FirTreeFinisher.finish</code>.</p>
+
+<h2 id="snag-procedure">FirSnagGenerationProcedure</h2>
+<p>The snag is a bare trunk and roots. Blocks near the top are randomly left out to simulate a snapped trunk, with a 30% skip chance for positions where <code class="consolas">i &gt; height - 4</code>, which is the top 3 blocks.</p>
+<pre class="code-box"><code class="consolas">for (int i = 0; i &lt; height; i++) {
+    if (i &gt; height - 4 &amp;&amp; Math.random() &lt; 0.3) continue;
+
+    world.setBlock(BlockPos.containing(x, y + i, z), Blocks.SPRUCE_LOG.defaultBlockState(), 3);
+}</code></pre>
+
+<h2 id="finisher">FirTreeFinisher</h2>
+<p>The procedures place blocks one by one with default states. During world generation nothing updates them afterwards, so fences would never connect and every leaf would keep distance 7, making it decay. <code class="consolas">FirTreeFinisher.finish</code> fixes the finished tree the way vanilla tree features do.</p>
+<table>
+<thead>
+<tr><th>Constant</th><th>Value</th><th>Reason</th></tr>
+</thead>
+<tbody>
+<tr><td>RADIUS</td><td>5</td><td>Widest foliage tier is 4 blocks out, roots 1</td></tr>
+<tr><td>HEIGHT</td><td>31</td><td>Tallest tree is 25 blocks plus a 4-block spire</td></tr>
+</tbody>
+</table>
+<p>It scans a box from <code class="consolas">base.offset(-5, -1, -5)</code> to <code class="consolas">base.offset(5, 31, 5)</code> in three stages:</p>
+<ol>
+<li>Every fence is updated with <code class="consolas">Block.updateFromNeighbourShapes</code>, and every log (a state whose <code class="consolas">LeavesBlock.getOptionalDistanceAt</code> is 0) is added to a queue at distance 0.</li>
+<li>A breadth-first search spreads from the logs through neighboring leaves in all six directions, recording each leaf's distance and stopping at <code class="consolas">LeavesBlock.DECAY_DISTANCE</code>.</li>
+<li>Each leaf receives its computed distance. Leaves the sparse foliage cut off from the trunk are made persistent, like player-placed leaves.</li>
+</ol>
+<pre class="code-box"><code class="consolas">Integer distance = distances.get(pos);
+BlockState fixed = distance != null ? state.setValue(LeavesBlock.DISTANCE, distance) : state.setValue(LeavesBlock.PERSISTENT, true);
+if (fixed != state)
+	world.setBlock(pos, fixed, 2);</code></pre>
+        
         <script src="wiki-editor.js" defer=""></script>
     
 

@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>ComScript [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>ComScript [technical]</h1>
+<p>This page describes how the ComScript interpreter is coded. For the language as a script writer sees it, see <a href="page-comscript.html">ComScript</a>. The block that stores scripts, starts them and shows their output is covered in <a href="page-scripter-technical.html">Scripter technical details</a>.</p>
+
+<h2 id="source-layout">Source layout</h2>
+<p>The interpreter lives in the <code class="consolas">io.github.strawberrymc.comscript</code> package. It is written by hand and is registered from <code class="consolas">StrawberrymcMod</code> with one call to <code class="consolas">ComScript.init</code>.</p>
+<table>
+    <thead>
+        <tr><th>File</th><th>Responsibility</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">ComScriptParser.java</code></td><td>Splits source into statements and turns each one into a <code class="consolas">Statement</code> record.</td></tr>
+        <tr><td><code class="consolas">ComScriptExpression.java</code></td><td>Tokenizes, parses and evaluates values. Also defines the error types and value formatting.</td></tr>
+        <tr><td><code class="consolas">ComScriptRunner.java</code></td><td>Executes statements for one run of a script and owns its variables and statement budget.</td></tr>
+        <tr><td><code class="consolas">ComScriptFetchers.java</code></td><td>The 53 native functions that read entities, terrain and the world.</td></tr>
+        <tr><td><code class="consolas">ComScriptSyntax.java</code></td><td>The sets of known words, the token substitution table and <code class="consolas">substituteTokens</code>. Shared by the interpreter and the editor's coloring.</td></tr>
+        <tr><td><code class="consolas">ComScript.java</code></td><td>Registration, the internal callback command, and the four event hooks.</td></tr>
+        <tr><td><code class="consolas">ScripterBlockEntity.java</code></td><td>Holds the listeners for timers and events and fires them.</td></tr>
+        <tr><td><code class="consolas">custommixin/BiomeTemperatureInvoker.java</code></td><td>A mixin invoker exposing <code class="consolas">Biome.getTemperature(BlockPos, int)</code> for <code class="consolas">getTemperature()</code>.</td></tr>
+    </tbody>
+</table>
+
+<h2 id="pipeline">From source to execution</h2>
+<ol>
+    <li><code class="consolas">ScripterBlockEntity.run</code> calls <code class="consolas">ComScriptParser.parse(script)</code>. The whole script, including nested blocks and every expression, is parsed before anything runs. The first <code class="consolas">SyntaxError</code> ends the attempt.</li>
+    <li><code class="consolas">split</code> cuts the source into <code class="consolas">Piece</code> records (a line number and text) and drops comments.</li>
+    <li><code class="consolas">statement</code> turns each piece into a <code class="consolas">Command</code>, <code class="consolas">Store</code>, <code class="consolas">Mark</code>, <code class="consolas">Execute</code> or <code class="consolas">EventBlock</code>. Block bodies are parsed recursively by the same code.</li>
+    <li>A new <code class="consolas">ComScriptRunner</code> runs the list with a command source located at the Scripter.</li>
+    <li>Timer and event blocks register listeners. Those listeners keep a reference to the same runner, so they share its variables.</li>
+</ol>
+
+<h2 id="splitter">The statement splitter</h2>
+<p><code class="consolas">ComScriptParser.split</code> is a single character loop that tracks the current line, the line a statement began on, and a bracket <code class="consolas">depth</code>. At each position it checks, in order: comment, boolean literal, string, bracket, semicolon, newline, then ordinary character.</p>
+
+<h3 id="splitter-comments">Comments</h3>
+<p>Two characters <code class="consolas">//</code> outside a string start a comment. The loop skips any spaces after them. If the next character is a quote, the comment continues up to the next quote of any kind, across lines, and line numbers are advanced for the newlines inside it. If no closing quote exists, the comment runs to the end of the source without an error. Otherwise the comment ends at the newline.</p>
+<p>Because the quote test only looks at the first character after <code class="consolas">//</code>, a comment such as <code class="consolas">// "a" b</code> ends at the second quote and <code class="consolas">b</code> is read as code. Comments are removed at every bracket depth. Strings are jumped over as a unit, so <code class="consolas">//</code> inside a string is safe, while an unquoted <code class="consolas">//</code> in a command always begins a comment.</p>
+
+<h3 id="splitter-strings">Strings and quotes</h3>
+<p><code class="consolas">isQuote</code> accepts the straight double quote and both curly double quotes, and they close each other. A single quote starts a string only when <code class="consolas">isStringStart</code> finds it at the start of the text or right after one of space, tab, newline, <code class="consolas">:</code>, <code class="consolas">[</code>, <code class="consolas">{</code>, <code class="consolas">(</code>, <code class="consolas">=</code> or <code class="consolas">,</code>, so the apostrophe in <code class="consolas">don't</code> is ordinary text.</p>
+<pre class="code-box"><code class="consolas">static int stringEnd(String text, int i) {
+	char open = text.charAt(i);
+	int j = i + 1;
+	while (j &lt; text.length()) {
+		char c = text.charAt(j);
+		if (c == '\\' &amp;&amp; open == '\'' &amp;&amp; j + 1 &lt; text.length()) {
+			j += 2;
+			continue;
+		}
+		if (open == '\'' ? c == '\'' : isQuote(c))
+			return j + 1;
+		j++;
+	}
+	return text.length();
+}</code></pre>
+<p>A backslash only skips the following character inside single quotes, and the backslash stays in the value. Double-quoted text uses the <code class="consolas">&amp;quot;</code> token for a quote. An unterminated string extends to the end of the source. Strings may span lines.</p>
+
+<h3 id="splitter-booleans">Boolean literals</h3>
+<p><code class="consolas">booleanLiteralAt</code> matches exactly <code class="consolas">&lt;true;&gt;</code> and <code class="consolas">&lt;false;&gt;</code>. They are copied whole, so their semicolon never ends a statement.</p>
+
+<h3 id="splitter-depth">Brackets and newlines</h3>
+<p><code class="consolas">(</code>, <code class="consolas">[</code> and <code class="consolas">{</code> raise the depth. The closers lower it and never take it below zero, so a stray closer is harmless. Newlines inside brackets belong to the statement, which is how multi-line blocks and NBT work. At depth zero, a newline with unfinished text is a syntax error:</p>
+<pre class="code-box"><code class="consolas">if (depth == 0 &amp;&amp; c == '\n') {
+	if (!current.toString().isBlank())
+		throw new SyntaxError(line, OLD_RUN.matcher(current.toString().trim()).matches()
+			? "Put more than one statement after run in { }, not ( )" : "Missing ; at the end of the line");
+	line++;
+	i++;
+	continue;
+}</code></pre>
+<p><code class="consolas">OLD_RUN</code> is the pattern <code class="consolas">(?s).*\brun\s*\(.*\)</code>. At the end of the source, a positive depth gives <code class="consolas">Missing closing bracket</code> and unfinished text gives <code class="consolas">Missing ; at the end of the line</code>.</p>
+
+<h3 id="splitter-semicolons">Semicolons and tokens</h3>
+<p>A semicolon at depth zero ends the statement unless it closes a token. <code class="consolas">endsToken</code> looks at the text since the last <code class="consolas">&amp;</code>. If that is at most 11 characters and matches <code class="consolas">&amp;[#A-Za-z0-9\\]+</code>, the semicolon is part of a token. The test is purely on shape and does not consult the token table, so <code class="consolas">say Tom&amp;Jerry;</code> does not end at its semicolon.</p>
+
+<h3 id="splitter-blocks">Block endings</h3>
+<p>After each ordinary character, a <code class="consolas">}</code> at depth zero ends the statement if <code class="consolas">isBlock</code> accepts the text. <code class="consolas">isBlock</code> removes a leading <code class="consolas">local:</code> or <code class="consolas">global:</code>, then accepts text that begins with <code class="consolas">*</code> or matches <code class="consolas">BLOCK_RUN</code>, the pattern <code class="consolas">(?s).*\brun\s*\{.*\}</code>. These blocks need no semicolon, and an extra one produces an empty piece that <code class="consolas">add</code> discards.</p>
+
+<h2 id="statements">Statement parsing</h2>
+<p><code class="consolas">Statement</code> is a sealed interface whose records all carry the line they began on.</p>
+<table>
+    <thead>
+        <tr><th>Record</th><th>Fields</th><th>Meaning</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">Command</code></td><td><code class="consolas">line, text</code></td><td>A Minecraft command, run after <code class="consolas">$variables</code> are filled in.</td></tr>
+        <tr><td><code class="consolas">Store</code></td><td><code class="consolas">line, op, names, value, style</code></td><td>A variable operation. <code class="consolas">StoreOp</code> is one of NEW, ASSIGN, AS, INCREMENT, DECREMENT, ADD, SUBTRACT, MULTIPLY, DIVIDE, REMAINDER, FONT.</td></tr>
+        <tr><td><code class="consolas">Mark</code></td><td><code class="consolas">line, selector, position</code></td><td>Moves the execution position. <code class="consolas">selector</code> is null for a fixed position.</td></tr>
+        <tr><td><code class="consolas">Execute</code></td><td><code class="consolas">line, subcommands, comparisons, body</code></td><td>Vanilla subcommands, ComScript comparisons, and the statements to run.</td></tr>
+        <tr><td><code class="consolas">EventBlock</code></td><td><code class="consolas">line, event, body</code></td><td><code class="consolas">event</code> is empty for every tick, digits for a timer, or an event name.</td></tr>
+    </tbody>
+</table>
+
+<h3 id="statement-dispatch">Dispatch order</h3>
+<p><code class="consolas">statement(line, text)</code> decides the kind of statement in this order:</p>
+<ol>
+    <li>Text starting with <code class="consolas">*</code> goes to <code class="consolas">eventBlock</code>.</li>
+    <li>A leading <code class="consolas">local:</code> or <code class="consolas">global:</code> is removed and the rest is parsed again. The definer has no effect on the statement.</li>
+    <li>One leading <code class="consolas">/</code> is removed.</li>
+    <li><code class="consolas">words</code> splits the text. A first word of <code class="consolas">execute</code> goes to <code class="consolas">execute</code>.</li>
+    <li><code class="consolas">store</code> followed by <code class="consolas">new</code> or <code class="consolas">set</code> goes to <code class="consolas">store</code>.</li>
+    <li><code class="consolas">store.global</code> goes to <code class="consolas">storeGlobal</code>.</li>
+    <li><code class="consolas">mark</code> goes to <code class="consolas">mark</code>.</li>
+    <li><code class="consolas">if</code> or <code class="consolas">unless</code> must be followed by <code class="consolas">comp</code> and then goes to <code class="consolas">execute</code>. Otherwise the error is <code class="consolas">Minecraft's if needs execute in front: execute if ...</code> (with <code class="consolas">unless</code> when that was the word), which repeats the whole statement after <code class="consolas">execute</code>.</li>
+    <li>Anything else becomes a <code class="consolas">Command</code>.</li>
+</ol>
+
+<h3 id="statement-words">Word splitting</h3>
+<p><code class="consolas">words</code> splits on whitespace at bracket depth zero and keeps strings whole, so selectors, NBT and function calls stay single words. <code class="consolas">topLevelIndex</code> finds the first target text outside brackets and strings, and is used to find the <code class="consolas">=</code> in <code class="consolas">store new</code>.</p>
+
+<h3 id="statement-store">Store grammar</h3>
+<pre class="code-box"><code class="consolas">store new &lt;name&gt; {, &lt;name&gt;} = &lt;expression&gt;
+store (new|set) font(&lt;name&gt;) as &lt;JSON&gt;
+store set &lt;name&gt; ++
+store set &lt;name&gt; --
+store set &lt;name&gt; as &lt;expression&gt;
+store set &lt;name&gt; (= | + | - | * | / | /%) &lt;expression&gt;
+store.global set excrd = &lt;x y z&gt;</code></pre>
+<p>Names may carry a leading <code class="consolas">$</code>, which <code class="consolas">variableName</code> removes, and must match <code class="consolas">[A-Za-z_][A-Za-z0-9_]*</code>. In the <code class="consolas">store set</code> forms, the name ends at whitespace or at any of <code class="consolas">= + - * /</code>, so spaces around those operators are optional. <code class="consolas">++</code> and <code class="consolas">--</code> must be the whole remainder. <code class="consolas">as</code> needs a following space. The other operators are tried in the order <code class="consolas">/%</code>, <code class="consolas">=</code>, <code class="consolas">+</code>, <code class="consolas">-</code>, <code class="consolas">*</code>, <code class="consolas">/</code>, and the text after the operator must be an expression, so <code class="consolas">+=</code> fails with <code class="consolas">Unexpected =</code>.</p>
+<p>For <code class="consolas">font(</code>, the text between the first <code class="consolas">(</code> and <code class="consolas">)</code> is the name and everything after <code class="consolas">as</code> is kept as raw JSON. <code class="consolas">store new font</code> and <code class="consolas">store set font</code> produce the same record and differ only in the wording of the syntax error.</p>
+
+<h3 id="statement-mark">Mark grammar</h3>
+<pre class="code-box"><code class="consolas">mark add &lt;x y z&gt; [static|mobile]
+mark add relative &lt;selector&gt; [&lt;~ ~ ~&gt;]</code></pre>
+<p>A trailing <code class="consolas">static</code> or <code class="consolas">mobile</code> is removed from the fixed form. The relative form defaults its offset to <code class="consolas">~ ~ ~</code>. <code class="consolas">store.global set excrd = &lt;x y z&gt;</code> builds the same <code class="consolas">Mark</code> record with a null selector, using the text after the first <code class="consolas">=</code>.</p>
+
+<h3 id="statement-execute">Execute grammar</h3>
+<p><code class="consolas">execute(line, text)</code> walks the words until it finds <code class="consolas">run</code>, recording the character offset so the text after <code class="consolas">run</code> can be taken verbatim. Words that are part of an <code class="consolas">if comp</code> or <code class="consolas">unless comp</code> are parsed into <code class="consolas">Comparison</code> records. All other words are kept as vanilla subcommands.</p>
+<pre class="code-box"><code class="consolas">if ((word.equals("if") || word.equals("unless")) &amp;&amp; i + 1 &lt; words.size() &amp;&amp; words.get(i + 1).equals("comp")) {
+	if (i + 4 &gt;= words.size())
+		throw new SyntaxError(line, "if comp needs &lt;value1&gt; &lt;operator&gt; &lt;value2&gt;");
+	String operator = words.get(i + 3);
+	if (!ComScriptSyntax.COMPARISONS.contains(operator))
+		throw new SyntaxError(line, "Unknown comparison " + operator + " (use ==, !=, &lt;, &gt;, &lt;= or &gt;=)");
+	comparisons.add(new Comparison(word.equals("unless"), expression(line, words.get(i + 2)), operator, expression(line, words.get(i + 4))));
+	for (int k = 1; k &lt;= 4; k++)
+		offset = text.indexOf(words.get(i + k), offset) + words.get(i + k).length();
+	i += 4;
+	continue;
+}</code></pre>
+<p>Each compared value is exactly one word. A value containing spaces must be wrapped in brackets, such as <code class="consolas">($a + 1)</code>, because bracket depth keeps it as one word.</p>
+<p>After the loop:</p>
+<ul>
+    <li>With no <code class="consolas">run</code> and no comparisons, the statement becomes the plain <code class="consolas">Command</code> <code class="consolas">execute &lt;text&gt;</code>. With comparisons, the error is <code class="consolas">Expected run after if comp</code>.</li>
+    <li>Empty text after <code class="consolas">run</code> gives <code class="consolas">Expected a command after run</code>.</li>
+    <li>Text wrapped in <code class="consolas">{ }</code> is parsed as a statement list.</li>
+    <li>Text wrapped in <code class="consolas">( )</code> gives <code class="consolas">Put more than one statement after run in { }, not ( )</code>.</li>
+    <li>Anything else is a single statement parsed by <code class="consolas">statement</code>, so <code class="consolas">run if comp ...</code> nests.</li>
+</ul>
+
+<h3 id="statement-event">Event block grammar</h3>
+<p><code class="consolas">eventBlock</code> takes the text between <code class="consolas">*</code> and the first <code class="consolas">{</code>, trimmed. It must be empty, all digits (at most 9) or a member of <code class="consolas">ComScriptSyntax.EVENTS</code>, which is compared exactly and is case-sensitive. The body is parsed with the correct starting line.</p>
+
+<h2 id="expressions">Expressions</h2>
+<p>Expressions are parsed when the script is parsed. <code class="consolas">ExpressionError</code> is caught in <code class="consolas">ComScriptParser.expression</code> and rethrown as a <code class="consolas">SyntaxError</code> with the statement's line.</p>
+
+<h3 id="expression-values">Value kinds</h3>
+<table>
+    <thead>
+        <tr><th>Java type</th><th>Name in messages</th><th>Text form</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">Long</code></td><td>integer</td><td>Decimal digits.</td></tr>
+        <tr><td><code class="consolas">Double</code></td><td>float</td><td>See <a href="#expression-format">Formatting</a>.</td></tr>
+        <tr><td><code class="consolas">String</code></td><td>string</td><td>As is.</td></tr>
+        <tr><td><code class="consolas">Boolean</code></td><td>boolean</td><td><code class="consolas">true</code> or <code class="consolas">false</code>.</td></tr>
+        <tr><td><code class="consolas">Selector</code></td><td>selector</td><td>The selector as written.</td></tr>
+        <tr><td><code class="consolas">TextStyle</code></td><td>style</td><td>The text component JSON.</td></tr>
+    </tbody>
+</table>
+
+<h3 id="expression-tokenizer">Tokenizer</h3>
+<p><code class="consolas">tokenize</code> produces a list of strings. At each position it tries:</p>
+<ol>
+    <li>A boolean literal, <code class="consolas">&lt;true;&gt;</code> or <code class="consolas">&lt;false;&gt;</code>.</li>
+    <li>Whitespace, which is skipped.</li>
+    <li><code class="consolas">@</code> followed by letters, digits, <code class="consolas">.</code> and <code class="consolas">_</code>, plus a balanced <code class="consolas">[ ]</code> group if one follows.</li>
+    <li>A string starting with any double quote or <code class="consolas">'</code>.</li>
+    <li>A number: a digit, or <code class="consolas">.</code> followed by a digit, then any run of digits and dots.</li>
+    <li>A word starting with a letter, <code class="consolas">_</code> or <code class="consolas">$</code> and continuing with letters, digits, <code class="consolas">_</code> and <code class="consolas">.</code>. A <code class="consolas">^</code> directly before <code class="consolas">(</code> is absorbed into a word not starting with <code class="consolas">$</code>, which is how <code class="consolas">sin^(</code> is read.</li>
+    <li>A two-character operator: <code class="consolas">/%</code>, <code class="consolas">==</code>, <code class="consolas">!=</code>, <code class="consolas">&lt;=</code>, <code class="consolas">&gt;=</code>.</li>
+    <li>A one-character operator from <code class="consolas">+-*/^(),&lt;&gt;?=</code>.</li>
+    <li>Any other character is the error <code class="consolas">Unexpected character 'c'</code>.</li>
+</ol>
+<p>The absorbed <code class="consolas">^</code> also applies to a bare variable name, so <code class="consolas">x^(2)</code> reads as a call and gives <code class="consolas">Unknown function x^()</code>. <code class="consolas">$x^(2)</code> and <code class="consolas">x ^ (2)</code> are powers.</p>
+
+<h3 id="expression-grammar">Grammar</h3>
+<p>The nested <code class="consolas">Parser</code> class is a recursive-descent parser producing <code class="consolas">Literal</code>, <code class="consolas">Variable</code>, <code class="consolas">Unary</code>, <code class="consolas">Binary</code> and <code class="consolas">Call</code> nodes.</p>
+<pre class="code-box"><code class="consolas">comparison     := additive [ ("==" | "=" | "!=" | "&lt;" | "&gt;" | "&lt;=" | "&gt;=") additive ]
+additive       := multiplicative { ("+" | "-") multiplicative }
+multiplicative := power { ("*" | "/" | "/%" | "mod") power }
+power          := unary [ "^" power ]
+unary          := "-" unary | primary [ "?" ]
+primary        := "(" comparison ")" | number | string | "&lt;true;&gt;" | "&lt;false;&gt;"
+                | selector | "$" name | function "(" [ comparison { "," comparison } ] ")"
+                | name</code></pre>
+<table>
+    <thead>
+        <tr><th>Binding, tightest first</th><th>Operators</th><th>Associativity</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>1</td><td>Brackets, literals, calls, and the optional <code class="consolas">?</code> after a value</td><td>n/a</td></tr>
+        <tr><td>2</td><td>Unary <code class="consolas">-</code></td><td>Right</td></tr>
+        <tr><td>3</td><td><code class="consolas">^</code></td><td>Right</td></tr>
+        <tr><td>4</td><td><code class="consolas">*</code> <code class="consolas">/</code> <code class="consolas">/%</code> <code class="consolas">mod</code></td><td>Left</td></tr>
+        <tr><td>5</td><td><code class="consolas">+</code> <code class="consolas">-</code></td><td>Left</td></tr>
+        <tr><td>6</td><td>Comparisons</td><td>One per level, not chainable</td></tr>
+    </tbody>
+</table>
+<p>Because <code class="consolas">power</code> takes its base from <code class="consolas">unary</code>, <code class="consolas">-2 ^ 2</code> evaluates to 4. <code class="consolas">mod</code> is rewritten to <code class="consolas">/%</code> while parsing. The <code class="consolas">?</code> carries no meaning and is accepted after any value.</p>
+
+<h3 id="expression-primary">Primary values</h3>
+<ul>
+    <li>A number containing a dot is parsed by <code class="consolas">Double.parseDouble</code>, otherwise by <code class="consolas">Long.parseLong</code>. Failure gives <code class="consolas">Invalid number X</code>.</li>
+    <li>A string becomes a literal with its quotes removed and <code class="consolas">substituteTokens</code> applied. <code class="consolas">$variables</code> are not filled in inside these strings.</li>
+    <li>Bare <code class="consolas">true</code> or <code class="consolas">false</code> gives <code class="consolas">Write booleans as &lt;true;&gt;</code> or <code class="consolas">Write booleans as &lt;false;&gt;</code>.</li>
+    <li>A token starting with <code class="consolas">@</code> becomes a <code class="consolas">Selector</code> literal.</li>
+    <li>A letter-initial token before <code class="consolas">(</code> must satisfy <code class="consolas">ComScriptSyntax.isFunction</code>, or the error is <code class="consolas">Unknown function x()</code>. The name is lowercased, so function names are case-insensitive. Each argument's tokens are also joined into a raw string, used by <code class="consolas">bin()</code>.</li>
+    <li>A word with no bracket is a <code class="consolas">Variable</code>. The <code class="consolas">$</code> is therefore optional in values.</li>
+</ul>
+
+<h3 id="expression-variables">Variable lookup</h3>
+<pre class="code-box"><code class="consolas">case Variable variable -&gt; {
+	Object value = env.variable(variable.name());
+	// isDownfall and other fetchers that need no brackets
+	if (value == null &amp;&amp; ComScriptFetchers.BARE.contains(variable.name().toLowerCase()))
+		value = ComScriptFetchers.bare(variable.name(), env);
+	if (value == null)
+		throw ScriptError.undefined(variable.name());
+	yield value;
+}</code></pre>
+<p>A variable takes priority over a bracketless fetcher with the same name.</p>
+
+<h3 id="expression-numeric">Numeric rules</h3>
+<p><code class="consolas">binary</code> evaluates both sides first. Comparison operators go to <code class="consolas">compare</code>. <code class="consolas">+</code> with a <code class="consolas">String</code> on either side joins the <code class="consolas">format</code> of both values. All other operators need two numbers. When both are <code class="consolas">Long</code> the arithmetic is Java 64-bit <code class="consolas">long</code> arithmetic. If either is a <code class="consolas">Double</code>, both are widened.</p>
+<pre class="code-box"><code class="consolas">case "/":
+	// Remainderless division; dividing by 0 gives 0
+	if (y == 0)
+		return 0L;
+	return integers ? (Object) Math.floorDiv((Long) a, (Long) b) : x / y;
+case "/%":
+	if (y == 0)
+		return 0L;
+	return integers ? (Object) Math.floorMod((Long) a, (Long) b) : x - Math.floor(x / y) * y;
+case "^":
+	double result = Math.pow(x, y);
+	return integers &amp;&amp; y &gt;= 0 &amp;&amp; Math.abs(result) &lt; 9.0E18 ? (Object) (long) result : result;</code></pre>
+<ul>
+    <li>Integer division rounds toward negative infinity, so <code class="consolas">-7 / 2</code> is -4.</li>
+    <li>The integer remainder takes the divisor's sign. The float remainder is <code class="consolas">x - floor(x / y) * y</code>.</li>
+    <li>Division or remainder by zero returns the integer 0 for floats as well.</li>
+    <li><code class="consolas">^</code> gives an integer only for two integers with a non-negative exponent and a result below 9.0E18 in size.</li>
+    <li>Unary minus accepts only numbers.</li>
+</ul>
+
+<h3 id="expression-comparison">Comparison rules</h3>
+<p><code class="consolas">==</code>, <code class="consolas">=</code> and <code class="consolas">!=</code> compare two numbers by their <code class="consolas">double</code> value and everything else with <code class="consolas">equals</code>. Values of different kinds are simply unequal. The ordering operators accept two numbers (<code class="consolas">Double.compare</code>) or two strings (<code class="consolas">compareTo</code>). Any other pairing is a type error.</p>
+
+<h3 id="expression-format">Formatting</h3>
+<p><code class="consolas">format</code> decides how a value appears in commands and in string joins.</p>
+<pre class="code-box"><code class="consolas">public static String format(Object value) {
+	if (value instanceof Double d) {
+		if (Double.isNaN(d) || Double.isInfinite(d))
+			return Double.toString(d);
+		// Rounded to 10 decimal places so sin(30) shows as 0.5
+		java.math.BigDecimal rounded = java.math.BigDecimal.valueOf(d).setScale(10, java.math.RoundingMode.HALF_UP).stripTrailingZeros();
+		return rounded.scale() &lt;= 0 ? rounded.toBigInteger().toString() : rounded.toPlainString();
+	}
+	return String.valueOf(value);
+}</code></pre>
+
+<h3 id="expression-functions">Function dispatch</h3>
+<p><code class="consolas">call</code> checks <code class="consolas">ComScriptFetchers.NAMES</code> first, because fetchers need unevaluated arguments for bare player names. <code class="consolas">online</code> is handled next for the same reason. Everything else evaluates all its arguments and then goes through <code class="consolas">random.N.rand</code> and a <code class="consolas">switch</code>. A wrong argument count gives <code class="consolas">name() takes N value(s), got M</code>, with <code class="consolas">value</code> singular for one.</p>
+<table>
+    <thead>
+        <tr><th>Names</th><th>Arguments</th><th>Result</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">string</code>, <code class="consolas">str</code></td><td>1</td><td>The <code class="consolas">format</code> of the value.</td></tr>
+        <tr><td><code class="consolas">boolean</code>, <code class="consolas">bool</code>, <code class="consolas">booleanstate</code></td><td>1</td><td>Booleans pass through. Integers 0 and 1, and strings <code class="consolas">true</code> and <code class="consolas">false</code> in any case, convert.</td></tr>
+        <tr><td><code class="consolas">bin</code>, <code class="consolas">createbin</code></td><td>1</td><td>A string of bits. See below.</td></tr>
+        <tr><td><code class="consolas">float</code>, <code class="consolas">flt</code></td><td>1</td><td>Numbers widen, booleans become 1.0 or 0.0, strings are trimmed and parsed.</td></tr>
+        <tr><td><code class="consolas">integer</code>, <code class="consolas">int</code></td><td>1</td><td>Floats truncate, booleans become 1 or 0. See below for strings.</td></tr>
+        <tr><td><code class="consolas">log</code></td><td>1</td><td><code class="consolas">Math.log10</code>.</td></tr>
+        <tr><td><code class="consolas">log^</code></td><td>1</td><td>10 to the power of the value.</td></tr>
+        <tr><td><code class="consolas">cos</code>, <code class="consolas">cosine</code>, <code class="consolas">sin</code>, <code class="consolas">sine</code>, <code class="consolas">tan</code>, <code class="consolas">tangent</code></td><td>1</td><td>The angle is in degrees.</td></tr>
+        <tr><td><code class="consolas">cos^</code>, <code class="consolas">cosine^</code>, <code class="consolas">sin^</code>, <code class="consolas">sine^</code>, <code class="consolas">tan^</code>, <code class="consolas">tangent^</code></td><td>1</td><td>Inverse functions. The result is in degrees.</td></tr>
+        <tr><td><code class="consolas">sqrt</code>, <code class="consolas">squareroot</code>, <code class="consolas">sqaureroot</code></td><td>1</td><td><code class="consolas">Math.sqrt</code>.</td></tr>
+        <tr><td><code class="consolas">fact</code>, <code class="consolas">factorial</code></td><td>1</td><td>The value is truncated to a <code class="consolas">long</code> and must be 0 to 20. Returns an integer.</td></tr>
+        <tr><td><code class="consolas">random.randint</code></td><td>2</td><td>Integer from min to max, both included.</td></tr>
+        <tr><td><code class="consolas">random.n.randint</code></td><td>2</td><td>As above with max reduced by 1 first.</td></tr>
+        <tr><td><code class="consolas">random.&lt;N&gt;.rand</code></td><td>2</td><td>Float rounded to N decimal places.</td></tr>
+        <tr><td><code class="consolas">online</code></td><td>1</td><td>Whether a player with that name is on the server.</td></tr>
+        <tr><td><code class="consolas">loadchunk</code></td><td>3</td><td>Whether the position is loaded in the Scripter's own level.</td></tr>
+        <tr><td><code class="consolas">font</code></td><td>2</td><td>A copy of a style with new text.</td></tr>
+    </tbody>
+</table>
+<p>Results outside a function's domain come back as Java's <code class="consolas">NaN</code> or an infinity, which <code class="consolas">format</code> prints as <code class="consolas">NaN</code>, <code class="consolas">Infinity</code> or <code class="consolas">-Infinity</code>.</p>
+<p>The random functions use the level's <code class="consolas">RandomSource</code>:</p>
+<pre class="code-box"><code class="consolas">// random.randint and random.n.randint
+return min + (long) Math.floor(env.random().nextDouble() * (max - min + 1));
+
+// random.N.rand
+double value = min + env.random().nextDouble() * (max - min);
+double scale = Math.pow(10, places);
+return Math.round(value * scale) / scale;</code></pre>
+<p><code class="consolas">Online(Steve)</code> uses the word as a name when no variable of that name exists. <code class="consolas">font</code> parses the style's JSON, deep-copies it and sets its <code class="consolas">text</code> property. If the stored JSON is not an object, it starts from an empty object.</p>
+
+<h3 id="expression-conversions">Binary and integer strings</h3>
+<pre class="code-box"><code class="consolas">private static String toBinary(Object value, String raw) {
+	if (raw.matches("[01]+"))
+		return raw;
+	if (value instanceof Long l)
+		return Long.toBinaryString(l);
+	if (value instanceof Boolean b)
+		return b ? "1" : "0";
+	StringBuilder bits = new StringBuilder();
+	for (byte b : format(value).getBytes(StandardCharsets.UTF_8))
+		bits.append(String.format("%8s", Integer.toBinaryString(b &amp; 0xFF)).replace(' ', '0'));
+	return bits.toString();
+}</code></pre>
+<p><code class="consolas">toInteger</code> trims a string, reads it in base 2 if it is made of 0s and 1s and is longer than one character, and otherwise parses it as a <code class="consolas">double</code> and truncates.</p>
+
+<h2 id="variables-implementation">Variables</h2>
+<p>A runner keeps its variables in one <code class="consolas">HashMap&lt;String, Object&gt;</code>. <code class="consolas">ScripterBlockEntity.run</code> creates a new runner each time, so each run starts empty. Timer and event listeners keep the runner that registered them, which is why they can count between ticks.</p>
+<table>
+    <thead>
+        <tr><th>Operation</th><th>Behavior in <code class="consolas">ComScriptRunner.store</code></th></tr>
+    </thead>
+    <tbody>
+        <tr><td>NEW</td><td>Evaluates the value once and assigns it to every name. An existing name logs <code class="consolas">Warning: &lt;name&gt; already exists and was replaced</code>.</td></tr>
+        <tr><td>AS</td><td>Evaluates and stores, whether or not the name exists and whatever its kind.</td></tr>
+        <tr><td>FONT</td><td>Fills <code class="consolas">$variables</code> and tokens in the JSON, validates it, and stores a <code class="consolas">TextStyle</code>. No existence check is made.</td></tr>
+        <tr><td>ASSIGN</td><td>The name must exist. The new value must be the same kind unless the expression's outermost node is a conversion call from <code class="consolas">ComScriptSyntax.CONVERSIONS</code>. <code class="consolas">sameKind</code> counts integers and floats as one kind.</td></tr>
+        <tr><td>INCREMENT, DECREMENT</td><td>The name must exist and hold a number. Adds or subtracts the integer 1.</td></tr>
+        <tr><td>ADD, SUBTRACT, MULTIPLY, DIVIDE, REMAINDER</td><td>The name must exist. Applies <code class="consolas">ComScriptExpression.binary</code> with <code class="consolas">+</code>, <code class="consolas">-</code>, <code class="consolas">*</code>, <code class="consolas">/</code> or <code class="consolas">/%</code>.</td></tr>
+    </tbody>
+</table>
+<p>Style validation parses the text with Gson, then with <code class="consolas">ComponentSerialization.CODEC</code> and the level's registry access, so it accepts exactly what the text component codec accepts.</p>
+
+<h3 id="variables-fill">Filling commands</h3>
+<p><code class="consolas">fill</code> is applied to command text, <code class="consolas">mark</code> selectors and positions, execute subcommands and style JSON. It matches <code class="consolas">\$([A-Za-z_][A-Za-z0-9_]*)</code> anywhere in the text, including inside quotes, and reads only the variable map.</p>
+<pre class="code-box"><code class="consolas">private String fill(String text) {
+	Matcher matcher = VARIABLE.matcher(text);
+	StringBuilder out = new StringBuilder();
+	while (matcher.find()) {
+		Object value = variables.get(matcher.group(1));
+		if (value == null)
+			throw ScriptError.undefined("$" + matcher.group(1));
+		matcher.appendReplacement(out, Matcher.quoteReplacement(ComScriptExpression.format(value)));
+	}
+	matcher.appendTail(out);
+	return ComScriptSyntax.substituteTokens(out.toString());
+}</code></pre>
+<p>Commands are sent to the game after this substitution alone. Expressions and function calls inside command text are not evaluated, so a value has to be stored first and then placed with <code class="consolas">$name</code>. The same applies to <code class="consolas">font()</code>.</p>
+
+<h2 id="token-substitution">Token substitution</h2>
+<p><code class="consolas">ComScriptSyntax.substituteTokens</code> finds each <code class="consolas">&amp;</code> with a <code class="consolas">;</code> at most 12 characters later and looks up the text between them, inclusive. It tries the table first, then the form <code class="consolas">&amp;#\d+;</code>, which becomes that code point. Unrecognised text is left alone. It runs at parse time on quoted strings in expressions, and at run time as the last step of <code class="consolas">fill</code>, so <code class="consolas">&amp;dollar;</code> produces a real <code class="consolas">$</code> after variables are filled.</p>
+<table>
+    <thead>
+        <tr><th>Token</th><th>Character</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">&amp;lt;</code></td><td>&lt;</td></tr>
+        <tr><td><code class="consolas">&amp;gt;</code></td><td>&gt;</td></tr>
+        <tr><td><code class="consolas">&amp;\3C;</code></td><td>&gt;</td></tr>
+        <tr><td><code class="consolas">&amp;amp;</code></td><td>&amp;</td></tr>
+        <tr><td><code class="consolas">&amp;quot;</code></td><td>"</td></tr>
+        <tr><td><code class="consolas">&amp;excl;</code></td><td>!</td></tr>
+        <tr><td><code class="consolas">&amp;commat;</code></td><td>@</td></tr>
+        <tr><td><code class="consolas">&amp;num;</code></td><td>#</td></tr>
+        <tr><td><code class="consolas">&amp;dollar;</code></td><td>$</td></tr>
+        <tr><td><code class="consolas">&amp;percent;</code></td><td>%</td></tr>
+        <tr><td><code class="consolas">&amp;hat;</code></td><td>^</td></tr>
+        <tr><td><code class="consolas">&amp;ast;</code></td><td>*</td></tr>
+        <tr><td><code class="consolas">&amp;lowast;</code></td><td>∗</td></tr>
+        <tr><td><code class="consolas">&amp;oast;</code></td><td>⊛</td></tr>
+        <tr><td><code class="consolas">&amp;sp;</code></td><td>]</td></tr>
+        <tr><td><code class="consolas">&amp;cp;</code></td><td>}</td></tr>
+        <tr><td><code class="consolas">&amp;bs;</code></td><td>\</td></tr>
+        <tr><td><code class="consolas">&amp;sc;</code></td><td>;</td></tr>
+    </tbody>
+</table>
+
+<h2 id="runner">The runner</h2>
+<p><code class="consolas">ComScriptRunner</code> implements <code class="consolas">ComScriptExpression.Environment</code>, giving expressions access to variables, the current command source, the Scripter's level and its random source.</p>
+
+<h3 id="runner-budget">Statement budget</h3>
+<p><code class="consolas">STATEMENT_LIMIT</code> is 10000, so that a script can't freeze the server. <code class="consolas">run</code> sets the budget each time it is entered: once for the main run, and once for each firing of a timer or event. Every statement costs one, including the statements inside blocks, once per context they run in. Exceeding the budget throws the private <code class="consolas">StopRun</code>, which stops only that run, tick or event. Listeners stay registered.</p>
+<pre class="code-box"><code class="consolas">private void runBody(List&lt;Statement&gt; statements, CommandSourceStack source) {
+	for (Statement statement : statements) {
+		if (--budget &lt; 0)
+			throw new StopRun();
+		scripter.currentLine = statement.line();
+		try {
+			source = execute(statement, source);
+		} catch (ScriptError e) {
+			scripter.log(ScripterBlockEntity.ERROR, statement.line(), e.getMessage());
+		} catch (StopRun e) {
+			throw e;
+		} catch (RuntimeException e) {
+			scripter.log(ScripterBlockEntity.ERROR, statement.line(), "Error: " + e);
+		}
+	}
+}</code></pre>
+<p>A failed statement is logged and the next one runs. <code class="consolas">currentLine</code> is what gives command output its line number.</p>
+
+<h3 id="runner-source">Source propagation</h3>
+<p><code class="consolas">execute</code> returns the source that later statements use. Only <code class="consolas">Mark</code> returns a different one. The change is local to the statement list being run, because <code class="consolas">source</code> is a local variable of <code class="consolas">runBody</code>. A block starts from the source it was given and its own <code class="consolas">mark</code> lines do not leak out. The field <code class="consolas">current</code> is set at the start of each statement and is what fetchers use to resolve selectors.</p>
+
+<h3 id="runner-mark">Mark execution</h3>
+<p>The target becomes <code class="consolas">positioned &lt;position&gt;</code>, prefixed with <code class="consolas">at &lt;selector&gt;</code> in the relative form. <code class="consolas">contexts</code> runs that through vanilla's <code class="consolas">execute</code>. Only the first resulting position is used, and only the position changes. No contexts gives <code class="consolas">Error: No mandatory execution marker found: nothing matched &lt;selector&gt;</code>, where a fixed position with invalid coordinates prints <code class="consolas">null</code> as the selector, and the marker stays where it was.</p>
+
+<h2 id="execute-evaluation">Execute and if comp evaluation</h2>
+<pre class="code-box"><code class="consolas">case ComScriptParser.Execute execute -&gt; {
+	for (ComScriptParser.Comparison comparison : execute.comparisons()) {
+		Object left = ComScriptExpression.evaluate(comparison.left(), this);
+		Object right = ComScriptExpression.evaluate(comparison.right(), this);
+		if ((Boolean) ComScriptExpression.binary(comparison.operator(), left, right) == comparison.negate())
+			return source;
+	}
+	if (execute.subcommands().isEmpty())
+		runBody(execute.body(), source);
+	else
+		for (CommandSourceStack context : contexts(fill(execute.subcommands()), source))
+			runBody(execute.body(), context);
+}</code></pre>
+<p>The order matters:</p>
+<ol>
+    <li>All comparisons are evaluated first, once, in written order, against the source the statement started with, wherever they appear among the subcommands.</li>
+    <li>The first comparison that fails ends the statement.</li>
+    <li>With no vanilla subcommands, the body runs once from the same source.</li>
+    <li>Otherwise, <code class="consolas">fill</code> is applied to the subcommands, vanilla's <code class="consolas">execute</code> collects the contexts, and the body runs once per context.</li>
+</ol>
+<p>A comparison that must see each entity's <code class="consolas">@s</code> therefore goes inside the body:</p>
+<pre class="code-box"><code class="consolas">execute as @a at @s run {
+    if comp getHealth(@s) &lt; 5 run say low health;
+}</code></pre>
+
+<h3 id="execute-callback">The callback command</h3>
+<p>Vanilla's parser runs the subcommands, and a hidden command records where they reach. <code class="consolas">ComScript.CALLBACK_COMMAND</code> is <code class="consolas">comscript_callback</code>, which takes an integer id of at least 0 and requires gamemaster permission level.</p>
+<pre class="code-box"><code class="consolas">private List&lt;CommandSourceStack&gt; contexts(String subcommands, CommandSourceStack source) {
+	int id = nextCallback++;
+	List&lt;CommandSourceStack&gt; found = new ArrayList&lt;&gt;();
+	CALLBACKS.put(id, found);
+	try {
+		runCommand("execute " + subcommands + " run " + ComScript.CALLBACK_COMMAND + " " + id, source);
+	} finally {
+		CALLBACKS.remove(id);
+	}
+	return found;
+}</code></pre>
+<p>The block does not run inside the callback, because commands run there would be queued until after the whole <code class="consolas">execute</code> finished. Collecting the contexts first keeps the block in order with the statements around it. Commands are sent with <code class="consolas">performPrefixedCommand</code>, and a failing subcommand reports through the terminal like any command.</p>
+
+<h2 id="timers-implementation">Timers</h2>
+<p>An <code class="consolas">EventBlock</code> statement calls <code class="consolas">ScripterBlockEntity.listen</code>, which stores a <code class="consolas">Listener</code> and continues with the next statement. Timers are non-blocking and repeat until the listeners are cleared.</p>
+<pre class="code-box"><code class="consolas">private record Listener(String event, List&lt;ComScriptParser.Statement&gt; body, CommandSourceStack source, ComScriptRunner runner, long started) {
+	boolean isTimer() {
+		return event.isEmpty() || Character.isDigit(event.charAt(0));
+	}
+
+	int interval() {
+		return event.isEmpty() ? 1 : Integer.parseInt(event) + 1;
+	}
+
+	String describe() {
+		return !isTimer() ? event : interval() == 1 ? "every tick" : "every " + interval() + " ticks";
+	}
+}</code></pre>
+<p><code class="consolas">*{ }</code> has an interval of 1 tick. <code class="consolas">*N{ }</code> skips N ticks between runs, for an interval of N + 1 ticks, up to N = 999999999. Each server tick, <code class="consolas">serverTick</code> iterates a copy of the listener list and runs a timer when this holds:</p>
+<pre class="code-box"><code class="consolas">(level.getGameTime() - listener.started()) % listener.interval() == 0</code></pre>
+<p><code class="consolas">started</code> is the game time at registration, so each timer has its own phase. A timer runs with the source it had when registered, which includes any earlier <code class="consolas">mark</code> and any <code class="consolas">execute</code> context around it.</p>
+<p>Because registration is an ordinary statement, it obeys the flow around it. Inside <code class="consolas">if comp</code> it registers conditionally. Inside <code class="consolas">execute as @a at @s run { }</code> it registers once per context. Inside a timer or event body, it registers another listener each time that body runs, with no limit on the number of listeners. Listeners added during a tick are first examined on the next one, because the loop uses a copy.</p>
+
+<h2 id="events-implementation">Events</h2>
+<p><code class="consolas">ComScript.init</code> adds four listeners on the NeoForge event bus. Each one calls the static <code class="consolas">ScripterBlockEntity.fire</code>.</p>
+<table>
+    <thead>
+        <tr><th>Block name</th><th>NeoForge event</th><th>Position</th><th>Entity (@s)</th><th>Variables</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">blockEvent.blockBreak</code></td><td><code class="consolas">BreakBlockEvent</code></td><td>Block center</td><td>The breaking player</td><td><code class="consolas">event_x</code>, <code class="consolas">event_y</code>, <code class="consolas">event_z</code>, <code class="consolas">event_block</code></td></tr>
+        <tr><td><code class="consolas">blockEvent.blockPlace</code></td><td><code class="consolas">BlockEvent.EntityPlaceEvent</code></td><td>Block center</td><td>The placing entity, if any</td><td><code class="consolas">event_x</code>, <code class="consolas">event_y</code>, <code class="consolas">event_z</code>, <code class="consolas">event_block</code></td></tr>
+        <tr><td><code class="consolas">playerEvent.join</code></td><td><code class="consolas">PlayerEvent.PlayerLoggedInEvent</code></td><td>Player position</td><td>The joining player</td><td><code class="consolas">event_x</code>, <code class="consolas">event_y</code>, <code class="consolas">event_z</code>, <code class="consolas">event_entity</code></td></tr>
+        <tr><td><code class="consolas">entityEvent.death</code></td><td><code class="consolas">LivingDeathEvent</code></td><td>Entity position</td><td>The entity that died</td><td><code class="consolas">event_x</code>, <code class="consolas">event_y</code>, <code class="consolas">event_z</code>, <code class="consolas">event_entity</code></td></tr>
+    </tbody>
+</table>
+<p><code class="consolas">event_x</code>, <code class="consolas">event_y</code> and <code class="consolas">event_z</code> are integer block coordinates. <code class="consolas">event_block</code> is a registry id. <code class="consolas">event_entity</code> is the entity's name.</p>
+<pre class="code-box"><code class="consolas">public static void fire(Level level, String event, Vec3 position, @Nullable Entity entity, Map&lt;String, Object&gt; details) {
+	for (ScripterBlockEntity scripter : List.copyOf(LISTENING))
+		if (scripter.level == level &amp;&amp; !scripter.isRemoved())
+			for (Listener listener : List.copyOf(scripter.listeners))
+				if (listener.event().equals(event)) {
+					CommandSourceStack source = listener.source().withPosition(position);
+					if (entity != null)
+						source = source.withEntity(entity);
+					listener.runner().variables.putAll(details);
+					listener.runner().run(listener.body(), source);
+					scripter.currentLine = -1;
+				}
+}</code></pre>
+<p>Only Scripters in the event's level are notified. The join handler calls <code class="consolas">fire</code> once for every level on the server, so Scripters in all dimensions hear it. The source keeps the listener's own dimension and takes the player's coordinates. The detail variables are written into the runner's normal variable map and remain there after the event.</p>
+
+<h2 id="fetchers">Native fetchers</h2>
+<p><code class="consolas">ComScriptFetchers.NAMES</code> lists 53 lowercase names, and <code class="consolas">call</code> is a <code class="consolas">switch</code> over them. Names are case-insensitive. The level is always <code class="consolas">env.source().getLevel()</code>, the level of the statement being run. Selectors resolve against that same source. A fetcher can be used in any value but is not evaluated in raw command text.</p>
+
+<h3 id="fetchers-arguments">Argument resolution</h3>
+<pre class="code-box"><code class="consolas">static List&lt;? extends Entity&gt; entities(Node arg, Environment env) {
+	String text;
+	if (arg instanceof Variable variable &amp;&amp; env.variable(variable.name()) == null)
+		text = variable.name();
+	else {
+		Object value = ComScriptExpression.evaluate(arg, env);
+		text = value instanceof Selector selector ? selector.text() : ComScriptExpression.format(value);
+	}
+	try {
+		return EntityArgument.entities().parse(new StringReader(text)).findEntities(env.source());
+	} catch (CommandSyntaxException e) {
+		throw new ScriptError("Error: " + e.getMessage());
+	}
+}</code></pre>
+<p>An entity argument is a selector, a player name (quoted or bare), or a variable holding either. Single-entity fetchers use the first match and fail with <code class="consolas">Error: No entity matched &lt;argument&gt;</code>. Position arguments must be numbers and are converted with <code class="consolas">BlockPos.containing</code>.</p>
+<p>The fetchers marked "loaded" below use <code class="consolas">loadedPosition</code>, which fails with <code class="consolas">Error: the chunk at x, y, z isn't loaded</code>.</p>
+
+<h3 id="fetchers-entities">Entity fetchers</h3>
+<table>
+    <thead>
+        <tr><th>Fetcher</th><th>Returns</th><th>Source and notes</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">getDir(e)</code></td><td>float</td><td><code class="consolas">Mth.wrapDegrees(getYRot())</code>, the yaw from -180 to 180.</td></tr>
+        <tr><td><code class="consolas">getPitch(e)</code></td><td>float</td><td><code class="consolas">getXRot()</code>.</td></tr>
+        <tr><td><code class="consolas">getDeltaX(e)</code></td><td>float</td><td>X of <code class="consolas">getDeltaMovement()</code>.</td></tr>
+        <tr><td><code class="consolas">getDeltaY(e)</code></td><td>float</td><td>Y of <code class="consolas">getDeltaMovement()</code>.</td></tr>
+        <tr><td><code class="consolas">getDeltaZ(e)</code></td><td>float</td><td>Z of <code class="consolas">getDeltaMovement()</code>.</td></tr>
+        <tr><td><code class="consolas">getSpeed(e)</code></td><td>float</td><td>Length of <code class="consolas">getDeltaMovement()</code>.</td></tr>
+        <tr><td><code class="consolas">getX(e)</code></td><td>float</td><td>Entity position.</td></tr>
+        <tr><td><code class="consolas">getY(e)</code></td><td>float</td><td>Entity position.</td></tr>
+        <tr><td><code class="consolas">getZ(e)</code></td><td>float</td><td>Entity position.</td></tr>
+        <tr><td><code class="consolas">getHealth(e)</code></td><td>float</td><td>Living entities only: <code class="consolas">gethealth() needs a living entity</code>.</td></tr>
+        <tr><td><code class="consolas">getMaxHealth(e)</code></td><td>float</td><td>Living entities only.</td></tr>
+        <tr><td><code class="consolas">getArmor(e)</code></td><td>integer</td><td><code class="consolas">getArmorValue()</code>. Living entities only.</td></tr>
+        <tr><td><code class="consolas">getFood(e)</code></td><td>integer</td><td>Players only: <code class="consolas">getfood() needs a player</code>.</td></tr>
+        <tr><td><code class="consolas">getXpLevel(e)</code></td><td>integer</td><td>Players only.</td></tr>
+        <tr><td><code class="consolas">getItem(e, slot)</code></td><td>integer</td><td>Stack count in the numbered slot, from <code class="consolas">Entity.getSlot(int)</code>. No such slot: <code class="consolas">Error: &lt;name&gt; has no slot N</code>.</td></tr>
+        <tr><td><code class="consolas">getItemName(e, slot)</code></td><td>string</td><td>Item registry id in that slot, or <code class="consolas">minecraft:air</code> if empty.</td></tr>
+        <tr><td><code class="consolas">getName(e)</code></td><td>string</td><td>Display name as plain text.</td></tr>
+        <tr><td><code class="consolas">getType(e)</code></td><td>string</td><td>Entity type registry id.</td></tr>
+        <tr><td><code class="consolas">getGamemode(e)</code></td><td>string</td><td>Server players only: <code class="consolas">getGamemode() needs a player</code>.</td></tr>
+        <tr><td><code class="consolas">getCount(selector)</code></td><td>integer</td><td>Number of matches, which may be 0.</td></tr>
+        <tr><td><code class="consolas">getDistEntities(e1, e2)</code></td><td>float</td><td>Distance between the two positions.</td></tr>
+        <tr><td><code class="consolas">isAlive(selector)</code></td><td>boolean</td><td>True if any match is alive. False for no matches.</td></tr>
+        <tr><td><code class="consolas">isOnGround(e)</code></td><td>boolean</td><td><code class="consolas">onGround()</code>.</td></tr>
+        <tr><td><code class="consolas">isInWater(e)</code></td><td>boolean</td><td><code class="consolas">isInWater()</code>.</td></tr>
+        <tr><td><code class="consolas">isSneaking(e)</code></td><td>boolean</td><td><code class="consolas">isShiftKeyDown()</code>.</td></tr>
+        <tr><td><code class="consolas">isSprinting(e)</code></td><td>boolean</td><td><code class="consolas">isSprinting()</code>.</td></tr>
+        <tr><td><code class="consolas">isOnFire(e)</code></td><td>boolean</td><td><code class="consolas">isOnFire()</code>.</td></tr>
+        <tr><td><code class="consolas">isPlayer(selector)</code></td><td>boolean</td><td>True if the first match is a player. False for no matches.</td></tr>
+        <tr><td><code class="consolas">hasTag(e, tag)</code></td><td>boolean</td><td>Checks <code class="consolas">entityTags()</code>. The tag is an evaluated value, so it is quoted or a variable.</td></tr>
+    </tbody>
+</table>
+
+<h3 id="fetchers-terrain">Position and terrain fetchers</h3>
+<table>
+    <thead>
+        <tr><th>Fetcher</th><th>Returns</th><th>Source and notes</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">getDistVector(x1, y1, z1, x2, y2, z2)</code></td><td>float</td><td>Straight-line distance between two points.</td></tr>
+        <tr><td><code class="consolas">getTemperature(x, y, z)</code></td><td>float</td><td>Loaded. The biome's height-adjusted temperature through <code class="consolas">BiomeTemperatureInvoker</code>, the value that decides rain or snow.</td></tr>
+        <tr><td><code class="consolas">getPrecipitation(x, y, z)</code></td><td>string</td><td>Loaded. The serialized name from <code class="consolas">getPrecipitationAt(pos, seaLevel)</code>.</td></tr>
+        <tr><td><code class="consolas">getBiome(x, y, z)</code></td><td>string</td><td>Loaded. Biome id, or <code class="consolas">unknown</code>.</td></tr>
+        <tr><td><code class="consolas">getBlock(x, y, z)</code></td><td>string</td><td>Loaded. Block registry id.</td></tr>
+        <tr><td><code class="consolas">getLight(x, y, z)</code></td><td>integer</td><td>Loaded. <code class="consolas">getMaxLocalRawBrightness</code>.</td></tr>
+        <tr><td><code class="consolas">getRedstone(x, y, z)</code></td><td>integer</td><td>Loaded. <code class="consolas">getBestNeighborSignal</code>.</td></tr>
+        <tr><td><code class="consolas">getHeight(x, z)</code></td><td>integer</td><td><code class="consolas">level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z)</code> with floored coordinates. Unloaded: <code class="consolas">Error: the chunk at x z isn't loaded</code>.</td></tr>
+        <tr><td><code class="consolas">getClimateTemperature(x, y, z)</code></td><td>float</td><td>Climate sampler.</td></tr>
+        <tr><td><code class="consolas">getHumidity(x, y, z)</code></td><td>float</td><td>Climate sampler.</td></tr>
+        <tr><td><code class="consolas">getContinentalness(x, y, z)</code></td><td>float</td><td>Climate sampler.</td></tr>
+        <tr><td><code class="consolas">getErosion(x, y, z)</code></td><td>float</td><td>Climate sampler.</td></tr>
+        <tr><td><code class="consolas">getDepth(x, y, z)</code></td><td>float</td><td>Climate sampler.</td></tr>
+        <tr><td><code class="consolas">getWeirdness(x, y, z)</code></td><td>float</td><td>Climate sampler.</td></tr>
+        <tr><td><code class="consolas">getPeaksValleys(x, y, z)</code></td><td>float</td><td>Weirdness passed through <code class="consolas">NoiseRouterData.peaksAndValleys</code>.</td></tr>
+    </tbody>
+</table>
+<p>The climate fetchers do not require a loaded chunk. They sample the noise directly:</p>
+<pre class="code-box"><code class="consolas">Climate.TargetPoint point = level.getChunkSource().randomState().sampler()
+	.sample(QuartPos.fromBlock(pos.getX()), QuartPos.fromBlock(pos.getY()), QuartPos.fromBlock(pos.getZ()));</code></pre>
+<p>The result is converted with <code class="consolas">Climate.unquantizeCoord</code>.</p>
+
+<h3 id="fetchers-world">World fetchers</h3>
+<p>These take no arguments. Each is in <code class="consolas">ComScriptFetchers.BARE</code> and can be written with or without brackets.</p>
+<table>
+    <thead>
+        <tr><th>Fetcher</th><th>Returns</th><th>Source</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">getTime</code></td><td>integer</td><td><code class="consolas">getDefaultClockTime() % 24000</code></td></tr>
+        <tr><td><code class="consolas">getDay</code></td><td>integer</td><td><code class="consolas">getDefaultClockTime() / 24000</code></td></tr>
+        <tr><td><code class="consolas">getGameTime</code></td><td>integer</td><td><code class="consolas">getGameTime()</code></td></tr>
+        <tr><td><code class="consolas">getPlayerCount</code></td><td>integer</td><td><code class="consolas">getServer().getPlayerCount()</code></td></tr>
+        <tr><td><code class="consolas">getDimension</code></td><td>string</td><td>The dimension's identifier.</td></tr>
+        <tr><td><code class="consolas">isDownfall</code></td><td>boolean</td><td><code class="consolas">isRaining()</code></td></tr>
+        <tr><td><code class="consolas">isThundering</code></td><td>boolean</td><td><code class="consolas">isThundering()</code></td></tr>
+        <tr><td><code class="consolas">isDay</code></td><td>boolean</td><td><code class="consolas">isBrightOutside()</code></td></tr>
+        <tr><td><code class="consolas">isNight</code></td><td>boolean</td><td><code class="consolas">isDarkOutside()</code></td></tr>
+    </tbody>
+</table>
+
+<h2 id="error-messages">Error messages</h2>
+<p>How each message reaches the terminal is described under <a href="page-scripter-technical.html">Scripter technical details</a>.</p>
+
+<h3 id="errors-syntax">Syntax errors</h3>
+<p>Each is shown as <code class="consolas">Syntax error: &lt;message&gt;</code> with its line, and nothing in the script runs.</p>
+<table>
+    <thead>
+        <tr><th>Message</th><th>Raised by</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">Missing ; at the end of the line</code></td><td><code class="consolas">split</code></td></tr>
+        <tr><td><code class="consolas">Missing closing bracket</code></td><td><code class="consolas">split</code></td></tr>
+        <tr><td><code class="consolas">Put more than one statement after run in { }, not ( )</code></td><td><code class="consolas">split</code>, <code class="consolas">execute</code></td></tr>
+        <tr><td><code class="consolas">Minecraft's if needs execute in front: execute &lt;statement&gt;</code></td><td><code class="consolas">statement</code>, also for <code class="consolas">unless</code></td></tr>
+        <tr><td><code class="consolas">Expected { ... } after &lt;word&gt;</code></td><td><code class="consolas">eventBlock</code></td></tr>
+        <tr><td><code class="consolas">Too many ticks to skip in *N{ }</code></td><td><code class="consolas">eventBlock</code></td></tr>
+        <tr><td><code class="consolas">Unknown event X (known events: ...)</code></td><td><code class="consolas">eventBlock</code></td></tr>
+        <tr><td><code class="consolas">if comp needs &lt;value1&gt; &lt;operator&gt; &lt;value2&gt;</code></td><td><code class="consolas">execute</code></td></tr>
+        <tr><td><code class="consolas">Unknown comparison X (use ==, !=, &lt;, &gt;, &lt;= or &gt;=)</code></td><td><code class="consolas">execute</code></td></tr>
+        <tr><td><code class="consolas">Expected run after if comp</code></td><td><code class="consolas">execute</code></td></tr>
+        <tr><td><code class="consolas">Expected a command after run</code></td><td><code class="consolas">execute</code></td></tr>
+        <tr><td><code class="consolas">Expected store new font(&lt;name&gt;) as {"text":"...", ...}</code></td><td><code class="consolas">store</code>, with <code class="consolas">set</code> in place of <code class="consolas">new</code> as written</td></tr>
+        <tr><td><code class="consolas">Expected a text component after as, like {"text":"WARNING!","color":"red"}</code></td><td><code class="consolas">store</code></td></tr>
+        <tr><td><code class="consolas">store new needs a starting value: store new &lt;name&gt; = &lt;value&gt;</code></td><td><code class="consolas">store</code></td></tr>
+        <tr><td><code class="consolas">Expected =, ++, --, +, -, *, /, /% or as after store set &lt;name&gt;</code></td><td><code class="consolas">store</code></td></tr>
+        <tr><td><code class="consolas">Expected store.global set excrd = &lt;x y z&gt;</code></td><td><code class="consolas">storeGlobal</code></td></tr>
+        <tr><td><code class="consolas">Expected mark add &lt;x y z&gt; or mark add relative &lt;selector&gt; &lt;~ ~ ~&gt;</code></td><td><code class="consolas">mark</code></td></tr>
+        <tr><td><code class="consolas">Expected mark add relative &lt;selector&gt; &lt;~ ~ ~&gt;</code></td><td><code class="consolas">mark</code></td></tr>
+        <tr><td><code class="consolas">Expected mark add &lt;x y z&gt;</code></td><td><code class="consolas">mark</code></td></tr>
+        <tr><td><code class="consolas">Invalid variable name "x"</code></td><td><code class="consolas">variableName</code></td></tr>
+        <tr><td><code class="consolas">Expected a value</code></td><td>Expression parser</td></tr>
+        <tr><td><code class="consolas">Unexpected X</code></td><td>Expression parser</td></tr>
+        <tr><td><code class="consolas">Unexpected character 'c'</code></td><td>Tokenizer</td></tr>
+        <tr><td><code class="consolas">Missing )</code></td><td>Expression parser</td></tr>
+        <tr><td><code class="consolas">Missing ) after name(</code></td><td>Expression parser</td></tr>
+        <tr><td><code class="consolas">Invalid number X</code></td><td>Expression parser</td></tr>
+        <tr><td><code class="consolas">Write booleans as &lt;true;&gt;</code> or <code class="consolas">&lt;false;&gt;</code></td><td>Expression parser</td></tr>
+        <tr><td><code class="consolas">Unknown function name()</code></td><td>Expression parser</td></tr>
+    </tbody>
+</table>
+
+<h3 id="errors-runtime">Runtime errors</h3>
+<p>Each is logged in red with its line, and the script moves on to the next statement.</p>
+<table>
+    <thead>
+        <tr><th>Message</th><th>Cause</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">Error: Undefined data structure(s): name</code></td><td>A variable is missing. The name has a leading <code class="consolas">$</code> when it came from command text.</td></tr>
+        <tr><td><code class="consolas">Error: No mandatory execution marker found: nothing matched &lt;selector&gt;</code></td><td><code class="consolas">mark</code> reached no position.</td></tr>
+        <tr><td><code class="consolas">Error: No entity matched &lt;argument&gt;</code></td><td>A single-entity fetcher found nothing.</td></tr>
+        <tr><td><code class="consolas">Error: &lt;parser message&gt;</code></td><td>A fetcher's selector could not be parsed or resolved.</td></tr>
+        <tr><td><code class="consolas">Error: &lt;name&gt; has no slot N</code></td><td><code class="consolas">getItem</code> or <code class="consolas">getItemName</code>.</td></tr>
+        <tr><td><code class="consolas">Error: the chunk at x, y, z isn't loaded</code></td><td>A "loaded" fetcher.</td></tr>
+        <tr><td><code class="consolas">Error: the chunk at x z isn't loaded</code></td><td><code class="consolas">getHeight</code>.</td></tr>
+        <tr><td><code class="consolas">name() takes N value(s), got M</code></td><td>Wrong argument count.</td></tr>
+        <tr><td><code class="consolas">Error: &lt;exception&gt;</code></td><td>Any other runtime exception in a statement.</td></tr>
+        <tr><td><code class="consolas">Stopped: more than 10000 statements ran at once</code></td><td>Budget exceeded. Shown without a line number.</td></tr>
+    </tbody>
+</table>
+
+<h3 id="errors-type">Data type errors</h3>
+<p>Each message below follows the prefix <code class="consolas">Error: Unexpected data type in input: </code>.</p>
+<table>
+    <thead>
+        <tr><th>Detail</th><th>Cause</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code class="consolas">- needs a number, got K</code></td><td>Unary minus.</td></tr>
+        <tr><td><code class="consolas">OP needs numbers, got K and K</code></td><td>Arithmetic on other kinds.</td></tr>
+        <tr><td><code class="consolas">OP can't compare K with K</code></td><td>An ordering comparison.</td></tr>
+        <tr><td><code class="consolas">expected a number, got K</code></td><td>A numeric function or fetcher argument.</td></tr>
+        <tr><td><code class="consolas">factorial needs a whole number from 0 to 20</code></td><td><code class="consolas">fact</code>, <code class="consolas">factorial</code>.</td></tr>
+        <tr><td><code class="consolas">name needs a maximum above its minimum</code></td><td><code class="consolas">random.randint</code>, <code class="consolas">random.n.randint</code>.</td></tr>
+        <tr><td><code class="consolas">font() needs a style stored with store new font(&lt;name&gt;) as {...}, got K</code></td><td><code class="consolas">font()</code>.</td></tr>
+        <tr><td><code class="consolas">only 0, 1, "true" and "false" convert to a boolean, got X</code></td><td>Boolean conversion.</td></tr>
+        <tr><td><code class="consolas">"X" isn't a number</code></td><td><code class="consolas">float()</code>, <code class="consolas">int()</code>.</td></tr>
+        <tr><td><code class="consolas">name is a K; use a conversion like C(...) to store a K</code></td><td><code class="consolas">store set =</code> changing kind. C is <code class="consolas">int</code>, <code class="consolas">float</code>, <code class="consolas">bool</code> or <code class="consolas">str</code>, and the article follows the word.</td></tr>
+        <tr><td><code class="consolas">name is a K, and ++ and -- only work on integers and floats</code></td><td><code class="consolas">++</code>, <code class="consolas">--</code>.</td></tr>
+        <tr><td><code class="consolas">the style isn't valid JSON: X</code></td><td><code class="consolas">store ... font()</code>.</td></tr>
+        <tr><td><code class="consolas">the style isn't a valid text component: X</code></td><td><code class="consolas">store ... font()</code>.</td></tr>
+        <tr><td><code class="consolas">name() needs a living entity</code></td><td><code class="consolas">getHealth</code>, <code class="consolas">getMaxHealth</code>, <code class="consolas">getArmor</code>.</td></tr>
+        <tr><td><code class="consolas">name() needs a player</code></td><td><code class="consolas">getFood</code>, <code class="consolas">getXpLevel</code>.</td></tr>
+        <tr><td><code class="consolas">getGamemode() needs a player</code></td><td><code class="consolas">getGamemode</code>.</td></tr>
+    </tbody>
+</table>
+
+<h3 id="errors-warning">Warning</h3>
+<p>The only warning is <code class="consolas">Warning: &lt;name&gt; already exists and was replaced</code>, logged by <code class="consolas">store new</code>.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>TriggerEntityHitProcedure [raw] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>TriggerEntityHitProcedure [raw]</h1>
+        <pre class="code-box vscode-code"><code class="consolas"><span style="color: #569CD6">package</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.neoforged.fml.common.EventBusSubscriber</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.neoforged.bus.api.SubscribeEvent</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.neoforged.bus.api.Event</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.LevelAccessor</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.entity.projectile.arrow.Arrow</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.entity.Entity</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">javax.annotation.Nullable</span>;
+
+@<span style="color: #4EC9B0">EventBusSubscriber</span>
+<span style="color: #569CD6">public class</span> <span style="color: #4EC9B0">TriggerEntityHitProcedure</span> {
+	@<span style="color: #4EC9B0">SubscribeEvent</span>
+	<span style="color: #569CD6">public static</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">onEntityAttacked</span>(<span style="color: #4EC9B0">LivingIncomingDamageEvent</span> <span style="color: #9CDCFE">event</span>) {
+		<span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getEntity</span>() <span style="color: #D4D4D4">!=</span> <span style="color: #569CD6">null</span>) {
+			<span style="color: #DCDCAA">execute</span>(event, <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getEntity</span>().<span style="color: #DCDCAA">level</span>(), <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getEntity</span>().<span style="color: #DCDCAA">getX</span>(), <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getEntity</span>().<span style="color: #DCDCAA">getY</span>(), <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getEntity</span>().<span style="color: #DCDCAA">getZ</span>(), <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getEntity</span>(), <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getSource</span>().<span style="color: #DCDCAA">getDirectEntity</span>());
+		}
+	}
+
+	<span style="color: #569CD6">public static</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">execute</span>(<span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">x</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">y</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">z</span>, <span style="color: #4EC9B0">Entity</span> <span style="color: #9CDCFE">entity</span>, <span style="color: #4EC9B0">Entity</span> <span style="color: #9CDCFE">immediatesourceentity</span>) {
+		<span style="color: #DCDCAA">execute</span>(<span style="color: #569CD6">null</span>, world, x, y, z, entity, immediatesourceentity);
+	}
+
+	<span style="color: #569CD6">private static</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">execute</span>(@<span style="color: #4EC9B0">Nullable Event</span> <span style="color: #9CDCFE">event</span>, <span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">x</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">y</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">z</span>, <span style="color: #4EC9B0">Entity</span> <span style="color: #9CDCFE">entity</span>, <span style="color: #4EC9B0">Entity</span> <span style="color: #9CDCFE">immediatesourceentity</span>) {
+		<span style="color: #C586C0">if</span> (entity <span style="color: #D4D4D4">==</span> <span style="color: #569CD6">null</span> <span style="color: #D4D4D4">||</span> immediatesourceentity <span style="color: #D4D4D4">==</span> <span style="color: #569CD6">null</span>)
+			<span style="color: #C586C0">return</span>;
+		<span style="color: #C586C0">if</span> (immediatesourceentity <span style="color: #569CD6">instanceof</span> Arrow) {
+			<span style="color: #9CDCFE">ArrowEffectExecuterProcedure</span>.<span style="color: #DCDCAA">execute</span>(world, x, y, z, entity, immediatesourceentity);
+		}
+	}
+}</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

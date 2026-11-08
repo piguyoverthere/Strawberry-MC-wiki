@@ -13,196 +13,112 @@
             </nav>
         </header>
         <h1>Ocean Monument Changes</h1>
-        <p>The ocean monument is now included in the points of importance across the map, which include Ocean Monument, Jungle Temple, Nether Fortress, Desert Pyramid, Ice Palace, and Ancient City. Each of these contain puzzles leading to a boss fight, dropping a corresponding rune to each point of importance. These in Eric method are used to craft an Eye of Ender. This point of interest’s theme is about transporting a key through copper grate pipes. The player must repair or make it so that a key can make it through the copper grates and throughout the Ocean Monument. Eventually the player picks up the key and uses it to summon the boss of this point of interest. Generation of the ocean monument has now been moved to the Ocean Abyss biome.</p><br>
+        <p>Generation of the ocean monument takes place in the Ocean Abyss biome. Each monument is a hollow prismarine building topped by a gazebo-like structure and a glass arena, guarded inside by four <a href="page-prismatic-sensor.html">Prismatic Sensors</a>. The first time a player swims inside, a cutscene plays, and an objective then leads them up to the arena on the roof.</p><br>
+        <h2 id="monument-structure">The Monument</h2>
+        <p>The monument is 116 blocks wide and 116 blocks deep. Its outer walls, wings, entrance and pillars stand 46 blocks tall, and the gazebo on the roof adds up to 14 more. Inside, the walls enclose one open hall filled with water, on a Prismarine Brick floor 2 blocks thick.</p><br>
+        <p>Monuments are spaced at least 15 chunks apart on a 32-chunk grid. Each one rests on the lowest sea floor under it, with its base at y=-58 at the very deepest and no higher than y=39. Guardians spawn in groups of 2 to 4 throughout the building.</p><br>
+        <p>A basin is dug into the sea floor around every monument. It stays flat at the monument's base for 8 blocks, then slopes up one block per block until it meets the natural floor, reaching out as far as 56 blocks. Any newly exposed stone is covered with Gravel, and caves opened by the basin are flooded.</p>
+        <h2 id="entrance-cutscene">Entrance Cutscene</h2>
+        <p>The first time a player enters a monument, a spooky chime plays and a 21.25-second cutscene begins. It only plays once per player, even after death. The camera never passes through blocks, and black bars frame the screen while the HUD, hand and water overlay are hidden. Night vision and clear water light up the view, fading away in the seconds after the cutscene.</p>
+        <table>
+            <thead>
+                <tr><th>Time</th><th>Shot</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>0 to 4.25 seconds</td><td>The view pans out from the player to the entrance gate and pushes in towards it.</td></tr>
+                <tr><td>4.25 to 8 seconds</td><td>The camera rises up the corner nearest the player, past the tiered walls.</td></tr>
+                <tr><td>8 to 12 seconds</td><td>It circles the gazebo, looking up at the dome of Cracked Prismarine under its roof.</td></tr>
+                <tr><td>12 to 15.75 seconds</td><td>It circles the Prismatic Sensor nearest the player.</td></tr>
+                <tr><td>15.75 to 20 seconds</td><td>It rises over the corner of the roof with the gazebo ahead, while the title "Ocean Monument" appears in the bottom-left corner.</td></tr>
+                <tr><td>20 to 21.25 seconds</td><td>The view returns to the player out of a slow fade from black.</td></tr>
+            </tbody>
+        </table><br>
+        <p>The player keeps their place in the world while watching. Guardians already attacking them stop, mobs cannot target them, and they take no damage for the length of the cutscene, apart from <code>/kill</code> and the void.</p>
+        <h2 id="objectives">Objectives</h2>
+        <p>After the cutscene, objectives appear in a small panel on the left side of the screen. Each objective has a blinking cyan diamond marker that shows through blocks, labeled with its name and distance. A marker that is off screen sits at the edge of the screen, pointing the way.</p>
+        <ol>
+            <li><strong>Reach the arena on the roof.</strong> The marker, labeled Arena, hovers above the Prismatic Vault.</li>
+            <li>Standing on the arena's glass shows the message "You cannot reach the Monument Key right now. The vault needs a key." for 5.5 seconds.</li>
+            <li><strong>Retrieve the Monument Key.</strong> The marker, labeled Key, hovers above the vent in the gazebo.</li>
+        </ol>
+        <p>Moving more than 400 blocks from the objective drops it, and the objectives start over at the next monument entered.</p><br>
         <h2 id="puzzle-jigsaws">Puzzle Jigsaws</h2>
-        <p>Puzzles in the Ocean Monument are all separate jigsaws that are then paired together and form a complex maze system. Each puzzle has multiple variants, to prevent speed runners from using the same route over and over again. The following are possible puzzles with variants listed as bullet points below.</p><br>
-        <h3 id="p1-intertia-exists">P1: Intertia Exists</h3>
-        <p>This puzzle consists of a 9x9 grid of copper grates encased in glass. Pistons above the glass have underwater levers attached, allowing the player to open the gates and push the key through the grates using the water. However, the player must push it to a certain central location by using pistons to block or unblock areas.</p><br>
+        <p>Puzzles are separate jigsaws that are paired together at random. Each puzzle has multiple variants, listed as bullet points below. They are placed with the command <code>/place structure strawberrymc:monument_puzzles/p2_test ~ ~ ~</code>, which builds a short corridor, one random room with its sub-variants, and an end wall.</p><br>
         <h3 id="p2-piston-puzzle">P2: Piston Puzzle</h3>
-        <p>This puzzle consists of a piston pointing upwards followed by a 3-block gap and an offset Copper Grate pipe that the key is stuck at. The intended solution is that the player must place 3 Ancient Prismarine blocks between the piston and the Copper Grate blocks so that when the piston is activated via an input (varies by variants) the copper grate pipes are re-aligned.</p>
+        <p>The P2 Piston Puzzle is a set of underwater prismarine rooms that snap together at random, joined so the copper grate pipe always lines up from one room to the next. Each room can roll a different layout, with its own inner decoration and sometimes a dry side room over a lava pit. A short test corridor with one random room can be placed with a command. See <a href="page-p2-piston-puzzle-technical.html">P2 Piston Puzzle [technical]</a>.</p><br>
+        <p>Every room is 16 blocks wide, 12 tall and 16 deep, filled with water, with a doorway in its north and south walls and a line of Copper Grates running from door to door high up in the room. A sign and a colored concrete block by the entrance name the variant. Inner decorations hold a Lime Wool block and a sign naming them.</p>
         <ul>
             <li>
-                Variant 1 is identical to the description above but has a Weighted Pressure Plate input in a hole that can be filled with a hidden chest between a slab that can be accessed when the player crouches. Within is Rotten Flesh for the pressure plate and exactly 3 Ancient Prismarine.
+                Variant 1 (White Concrete, 3 in 9 chance) has one of 5 equally likely decorations.
                 <ul>
-                    <li>Variant 1,1 uses a chest hidden by a spruce trapdoor instead of a crouch slab device.</li>
-                    <li>Variant 1,2 has the chest hidden to the left behind ambient seagrass and kelp (that generates across all subvariants).</li>
-                    <li>Variant 1,3 has the chest hidden by the right behind ambient seagrass and kelp (that generates across all subvariants).</li>
-                    <li>Variant 1,4 has a chest hidden in 3 block deep hole embedded into the side wall and an extra hidden barrel in a stack of barrels with a Stone Button (special attributes to be placed) to activate the piston instead of Weighted Pressure Plate.</li>
+                    <li>Variant 1 has a sign reading "crouch slab chest".</li>
+                    <li>Variant 1,1 has a sign reading "trapdoor chest".</li>
+                    <li>Variant 1,2 has a sign reading "chest left behind kelp".</li>
+                    <li>Variant 1,3 has a sign reading "chest right behind kelp".</li>
+                    <li>Variant 1,4 has a sign reading "wall hole, barrels, button".</li>
                 </ul>
             </li>
             <li>
-                Variant 2 has a 2-block gap between the piston and Copper Grates instead of a 3-block gap, as well as only 2 blocks of Ancient Prismarine in the hidden chest instead of 3.
+                Variant 2 (Yellow Concrete, 3 in 9 chance) has one of 5 decorations, or none, each equally likely.
+                <ul>
+                    <li>Variant 2,1,1 has a sign reading "seagrass in gravel".</li>
+                    <li>Variant 2,1,1,1 has a sign reading "+ suspicious gravel".</li>
+                    <li>Variant 2,1,2 has a sign reading "seagrass in sand".</li>
+                    <li>Variant 2,1,2,1 has a sign reading "+ suspicious sand".</li>
+                    <li>Variant 2,1,3 has a sign reading "loot chests under bed".</li>
+                </ul>
+            </li>
+            <li>Variant 3 (Blue Concrete, 1 in 9 chance) has no further sub-variants.</li>
+            <li>
+                Variant 3,1 (Cyan Concrete, 1 in 9 chance) has one of 2 equally likely decorations.
+                <ul>
+                    <li>Variant 3,1,1 has a sign reading "barrel behind kelp".</li>
+                    <li>Variant 3,1,2 has a sign reading "barrel behind seagrass".</li>
+                </ul>
+            </li>
+            <li>
+                Variant 3,2 (Purple Concrete, 1 in 9 chance) has a dry sub-room located to the side of the main room, 12 blocks in each direction, with a blockade of Stone Bricks to block out the water. Below is lava, with a landing inside the door and a platform holding a chest on the far side. One of 4 sub-rooms is chosen, each equally likely. Decorations in a sub-room hold an Orange Wool block and a sign naming them, and one is always chosen when a sub-room has any.
                 <ul>
                     <li>
-                        Variant 2,1 has clumps of Seagrass and Tall Seagrass growing in a [material determined by variant] bed in the room.
+                        Variant 3,2,1 has 3 decorations.
                         <ul>
-                            <li>Variant 2,1,1 has clumps of Seagrass growing in Gravel.
-                                <ul>
-                                    <li>Variant 2,1,1,1 has Suspicious Gravel under the normal Gravel in the pit.</li>
-                                </ul>
-                            </li>
-                            <li>
-                                Variant 2,1,2 has clumps of Seagrass growing in Sand.
-                                <ul>
-                                    <li>Variant 2,1,2,1 has Suspicious Sand under the normal Sand in the pit.</li>
-                                </ul>
-                            </li>
-                            <li>
-                                Variant 2,1,3 has chests filled with randomized loot under the seagrass/tall seagrass substrate, including:
-                                <ul>
-                                    <li>Iron Ingot, Nugget</li>
-                                    <li>Gold Ingot, Nugget</li>
-                                    <li>Copper Ingot, Nugget</li>
-                                    <li>Diamond</li>
-                                    <li>Redstone Dust</li>
-                                    <li>Rotten Flesh</li>
-                                    <li>Bone</li>
-                                    <li>Prismarine items</li>
-                                    <li>Lantern</li>
-                                </ul>
-                            </li>
-                        </ul> 
+                            <li>Variant 3,2,1,1 has a sign reading "Kelp on the neo".</li>
+                            <li>Variant 3,2,1,2 has a sign reading "Seagrass on the neo".</li>
+                            <li>Variant 3,2,1,3 has a sign reading "Sea lantern checkerboard".</li>
+                        </ul>
                     </li>
                     <li>
-                        Variant 3 has 2 separate gaps; specifically, 3 blocks and 2 blocks wide. Only 4 Ancient Prismarine blocks are scattered in groups of 2 within Barrels hidden across the room (depends on subvariant) as well as a hidden chest in a trapdoor crawlspace located on the floor containing a 1 durability unrepairable Iron Pickaxe with Silk Touch and special attributes that allow the player to mine 1 of the Ancient Prismarine. The intended solution is to first use 3 of the Ancient Prismarine blocks to allow the key to enter a Hopper with a Lever. Afterwards, use the 1-durability Silk Touch pickaxe to mine one of the 3 placed Ancient Prismarine combined with the 1 leftover Ancient Prismarine to recover the last broken section of Copper Grate pipe; leading the key to the next jigsaw.
+                        Variant 3,2,2 has 3 decorations.
                         <ul>
-                            <li>
-                                Variant 3,1 has two 2-block gaps instead of 3 and 2 block gaps and corresponding only 2 blocks of Ancient Prismarine. Each Barrel instead contains only 1 Ancient Prismarine.
-                                <ul>
-                                    <li>Variant 3,1,1 has only 1 barrel with both Ancient Prismarines located behind Kelp blocks for camouflage.</li>
-                                    <li>Variant 3,1,2 has only 1 barrel with both Ancient Prismarines located behind Seagrass and Tall Seagrass blocks for camouflage.</li>
-                                </ul>
-                            </li>
-                            <li>
-                                Variant 3,2 has the 1-durability Silk Touch Iron Pickaxe hidden in a sub-room located to the side of the main room with simple parkour and a blockade of blocks [depending on variant] to block out the water. Below the parkour is lava.
-                                <ul>
-                                    <li>
-                                        Variant 3,2,1 has a 3-block jump to an intermediate platform followed by a 1-block Neo leading to the chest containing the 1-durability Silk Touch Pickaxe.
-                                        <ul>
-                                            <li>Variant 3,2,1,1 has Kelp blocks decorating the Neo jump.</li>
-                                            <li>Variant 3,2,1,2 has Seagrass and Tall Seagrass blocks decorating the Neo jump.</li>
-                                            <li>Variant 3,2,1,3 has a Sea Lantern block forming a checkerboard pattern on the Neo jump.</li>
-                                        </ul>
-                                    </li>
-                                    <li>
-                                        Variant 3,2,2 has 2 adjacent 3-block jumps leading to the chest containing the 1-durability Silk Touch Iron Pickaxe.
-                                        <ul>
-                                            <li>Variant 3,2,2,1 has Kelp blocks decorating the intermediate platform between the two 3-block jumps.</li>
-                                            <li>Variant 3,2,2,2 has Seagrass and Tall Seagrass blocks decorating the intermediate platform between the two 3-block jumps.</li>
-                                            <li>Variant 3,2,2,3 has a checkered pattern of Sea Lantern Blocks decorating the intermediate platform.</li>
-                                        </ul>
-                                    </li>
-                                    <li>
-                                        Variant 3,2,3 has a singular 4-block jump.
-                                        <ul>
-                                            <li>Variant 3,2,3,1 has Kelp blocks decorating the 4-block jump.</li>
-                                            <li>Variant 3,2,3,2 has Seagrass and Tall Seagrass blocks decorating the 4-block jump.</li>
-                                            <li>Variant 3,2,3,3 has a checkered pattern of Sea Lantern Blocks decorating the 4-block jump.</li>
-                                        </ul>
-                                    </li>
-                                    <li>
-                                        Variant 3,2,4 has two 1-block Neos separated by a central platform made from different blocks [determined by variant].
-                                        <ul>
-                                            <li>Variant 3,2,4,1 has a singular Conduit block decorating a Quartz pedestal.</li>
-                                            <li>Variant 3,2,4,2 has an intricate fountain structure made from Stone Brick family blocks with 4 spouts exiting from the cardinal directions of the fountain.</li>
-                                            <li>Variant 3,2,4,3 has a large platform in the center with a glass tank extending from ceiling to the bottom of the fall pit. Inside the tank is an arrangement of Gravel, Sand, and Clay covered by Kelp, Coral Block block family, Coral Fan block family and Coral block family. Tanks may be generated with Squid, Cod, Salmon, randomized Tropical Fish, or Pufferfish.</li>
-                                            <li>Variant 3,2,4,4 has a large 2x2x(height of room) tall quartz column arrangement with a circular perimeter walkway to reach the next Neo jump.</li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </li>
+                            <li>Variant 3,2,2,1 has a sign reading "Kelp on the platform".</li>
+                            <li>Variant 3,2,2,2 has a sign reading "Seagrass on the platform".</li>
+                            <li>Variant 3,2,2,3 has a sign reading "Sea lantern checkerboard".</li>
+                        </ul>
+                    </li>
+                    <li>Variant 3,2,3 has no decorations.</li>
+                    <li>
+                        Variant 3,2,4 has 4 decorations.
+                        <ul>
+                            <li>Variant 3,2,4,1 has a sign reading "Conduit on quartz".</li>
+                            <li>Variant 3,2,4,2 has a sign reading "Stone brick fountain".</li>
+                            <li>Variant 3,2,4,3 has a sign reading "Glass aquarium tank".</li>
+                            <li>Variant 3,2,4,4 has a sign reading "Quartz column walkway".</li>
                         </ul>
                     </li>
                 </ul>
             </li>
         </ul>
-        <h3 id="p3-target-block-puzzle">P3: Target Block Puzzle</h3>
-        <p>This room when entered has a deep pit on the righthand side guardrailed by Stone Brick Wall blocks extending across the entire left side of the pit. Behind the pit embedded in the wall are 2-3 Target Blocks (determined by variant) connected to each other via an AND gate. On the lefthand side of the room are stairs leading into an opening with 2-5 Drowned, and 4 non-despawnable Skeletons guarding a mountain of barrels, mostly empty, with only 1 containing exactly 4 Prismarine Shards. The object of this puzzle is to transport the key through the room to the next by repairing the waterlogged Copper Grate pipe system located directly above the pit. The Copper Grate system is repaired when all Target Block are activated at once causing the AND gate to output a signal; which then causes a hidden piston to push an out-of-place Copper Grate block back into position whilst triggering a dropper to dispense the key. The intended solution is to either use a Multishot enchanted bow that you may have with you or kill the skeletons for arrows which then can be inserted to a Fletching Table located on the lefthand side along with the Prismarine Shards from the chest (as the tip), and one of the 4 Oceanic Rods obtained through a hidden Hopper located on the left side wall of the pit accessible via F5 [can be overridden by variants]. Note that projectiles such as [unresolved: Oceanic Rod result projectile] do not have a large enough explosion range on their own to activate all Target Blocks consistently.</p>
-        <table>
-            <!--Diagram implemented later-->
-        </table>
-        <p>The product arrow from the Fletching Table can be shot underwater (due to Prismarine Shard tip) and creates an explosion radius around impact point, which when shot at the central Target Block, triggers the 2 surrounding Target Blocks.</p>
-        <ul>
-            <li>
-                Variant 1 has a line of Hopper blocks with only 1 randomized hopper containing the 4 Oceanic rods. 
-            </li>
-            <li>
-                Variant 2 has only 2 Target Blocks instead of 3 with only 2 Oceanic Rods in the hidden Hopper, only 2 Prismarine Shards instead of 4, but more hostile entities including 6 Drowned, 3 Skeletons, and 1 Guardian. The player must shoot between the 2 Target Blocks to activate them.
-            </li>
-        </ul>
         <h2 id="upper-level">Upper Level</h2>
         <p>The upper level of the Ocean Monument does not have puzzle jigsaw generation.</p><br>
-        <p>In the upper level of the Ocean Monument, this is where the player must first go. 2 staircases flank the monument exterior leading to the upper exposed floor, where there is a pedestal guarded by 3 trident Drowned and 2 Guardians. At the center is minable Ancient Prismarine, that like ancient sand, will not trigger the calibrated sensors within the monument. Ancient Prismarine is not affected by mining fatigue. The mined Ancient Prismarine unblocks a bubble column that triggers a sensor on the roof of the gazebo-like structure over the center of the monument which dispenses a key into a Copper Grate pipe system. The pipes lead to the front of the monument, where the pipes are broken and require the player to replace system, reaching a dispenser checkpoint. If the key despawns now, the key will return to this dispenser instead of the starting dispenser above the pedestal. The key then proceeds to enter a roofed room with a barred off area with ice floors. The key is dispensed in a sulfur cube with barrel that the player must use prismarine shard underwater arrows to direct at a hole, where the key continues its journey onto the next room. From this point, all puzzles are generated via jigsaws listed above.</p>
-        <h2 id="lower-level">Lower Level</h2>
-        <p>After the key enters the hole leading to the lower level, the player must use a spiral staircase or the previous 2 staircases flanking the exterior sides of the monument to access the basement floor, which is below the main floor where the boss fight occurs. The key is dropped through a glass tube falling along with the central cavity in the spiral staircase, then reaches the lower-level B1. The lower level of the monument is themed around an abandoned underwater dungeon, with relatively dark lighting accompanied by: 
-
-Seagrass 
-
-Tall seagrass 
-
-Barrels [randomized loot] 
-
-Candles 
-
-Prismarine items 
-
-Skull 
-
-Iron nugget 
-
-Copper nugget 
-
-Gold nugget 
-
-Bone 
-
-String 
-
-Rotten flesh 
-
-Leather 
-
-Rabbit hide 
-
-Explorer map 
-
-Abandoned camp 
-
-Sunken ship 
-
-Other Ocean Monument 
-
-Burnt candle 
-
-Kelp 
-
-Sand 
-
-Gravel 
-
-Suspicious mediums 
-
-Hadal mediums 
-
-and other components such as skulls. Burnt candles can also be found on barrels. The barrels on this floor contain miscellaneous items such as  
-
-Nautilus Shells,  
-
-Gold Ingots, Nuggets, and equipment 
-
-Iron Ingots, Nuggets, and equipment 
-
-Copper Ingots, Nuggets, and equipment 
-
-Hearts of the Sea 
-
-Emeralds 
-
-Uncut materials</p>
+        <p>A gazebo-like structure stands over the center of the monument's roof. Its floor is 19 blocks across, made of Dark Prismarine edged with Prismarine Bricks. Eight pillars of Prismarine Bricks, each with a Sea Lantern set into it, hold up a stepped Cut Copper roof with a Lightning Rod on top. An upside-down dome of Cracked Prismarine hangs from the ceiling.</p><br>
+        <p>At the center of the floor is a 3x3 cap of minable Ancient Prismarine, which does not trigger the sensors within the monument. Under it is a water-filled vent with Soul Sand at the bottom. Breaking any block of the cap plays a 6-second cutscene for everyone within 48 blocks, and they take no damage while it plays. The camera pulls back to a side view of the gazebo, a jet of water rises out of the vent after 1.5 seconds, and at 3.5 seconds it hits the dome and shatters all of it, leaving no drops. This happens once per monument.</p><br>
+        <p>In front of the gazebo, towards the entrance, is the round glass arena, with the Prismatic Vault at its center. See <a href="page-water-dragon.html">Water Dragon</a> and <a href="page-prismatic-vault-technical.html">Prismatic Vault [technical]</a>.</p>
+        <h2 id="summary">Summary</h2>
+        <p>The Ocean Monument is a huge hollow prismarine temple, twice the size of a normal one, sitting in a dug-out basin on the floor of the Ocean Abyss with a copper-roofed gazebo on top. A cinematic plays the first time you swim inside, and an on-screen objective with a marker that shows through walls then guides you to the glass arena on its roof. Mining the Ancient Prismarine in the gazebo floor sends a jet of water up from the vent that shatters the dome hanging above it. See <a href="page-ocean-monument-technical.html">Ocean Monument [technical]</a>.</p>
         <h2>Appendix: Related Features</h2>
         <a href="page-oceans.html">Ancient Prismarine</a>
         <a href="page-prismatic-sensor.html">Prismatic Sensor</a>
         <a href="page-water-dragon.html">Water Dragon</a>
-            <script src="wiki-editor.js" defer></script>
+        <script src="wiki-editor.js" defer></script>
     </body>
 </html>

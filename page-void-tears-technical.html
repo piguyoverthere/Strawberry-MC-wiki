@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Void Tears [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Void Tears [technical]</h1>
+<h2 id="registration">Registration</h2>
+<p>Void Tears is a NeoForge flowing fluid made of four registered objects:</p>
+<table>
+<thead>
+<tr><th>Object</th><th>Registry name</th><th>Class</th><th>Registered in</th></tr>
+</thead>
+<tbody>
+<tr><td>Source fluid</td><td>strawberrymc:void_tears</td><td><code class="consolas">VoidTearsFluid.Source</code></td><td><code class="consolas">StrawberrymcModFluids</code></td></tr>
+<tr><td>Flowing fluid</td><td>strawberrymc:flowing_void_tears</td><td><code class="consolas">VoidTearsFluid.Flowing</code></td><td><code class="consolas">StrawberrymcModFluids</code></td></tr>
+<tr><td>Fluid type</td><td>strawberrymc:void_tears</td><td><code class="consolas">VoidTearsFluidType</code></td><td><code class="consolas">StrawberrymcModFluidTypes</code></td></tr>
+<tr><td>Liquid block</td><td>strawberrymc:void_tears</td><td><code class="consolas">VoidTearsBlock</code></td><td><code class="consolas">StrawberrymcModBlocks</code></td></tr>
+</tbody>
+</table>
+
+<h2 id="fluid">VoidTearsFluid</h2>
+<p><code class="consolas">VoidTearsFluid</code> extends <code class="consolas">BaseFlowingFluid</code>. A shared <code class="consolas">PROPERTIES</code> object links the type, both fluids and the liquid block, with an explosion resistance of 100 and a tick rate of 4. Drips use the <code class="consolas">SQUID_INK</code> particle.</p>
+<pre class="code-box"><code class="consolas">public static final BaseFlowingFluid.Properties PROPERTIES = new BaseFlowingFluid.Properties(() -&gt; StrawberrymcModFluidTypes.VOID_TEARS_TYPE.get(), () -&gt; StrawberrymcModFluids.VOID_TEARS.get(),
+		() -&gt; StrawberrymcModFluids.FLOWING_VOID_TEARS.get()).explosionResistance(100f).tickRate(4).block(() -&gt; (LiquidBlock) StrawberrymcModBlocks.VOID_TEARS.get());</code></pre>
+<p><code class="consolas">Source</code> always reports amount 8 and <code class="consolas">isSource</code> true. <code class="consolas">Flowing</code> adds the <code class="consolas">LEVEL</code> property to its state and reports that level as its amount.</p>
+
+<h2 id="fluid-type">VoidTearsFluidType</h2>
+<table>
+<thead>
+<tr><th>FluidType property</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>fallDistanceModifier</td><td>0</td></tr>
+<tr><td>canExtinguish</td><td>true</td></tr>
+<tr><td>supportsBoating</td><td>true</td></tr>
+<tr><td>canHydrate</td><td>true</td></tr>
+<tr><td>motionScale</td><td>0.0119</td></tr>
+<tr><td>BUCKET_FILL / BUCKET_EMPTY sounds</td><td>SoundEvents.BUCKET_FILL / SoundEvents.BUCKET_EMPTY</td></tr>
+<tr><td>FLUID_VAPORIZE sound</td><td>SoundEvents.FIRE_EXTINGUISH</td></tr>
+</tbody>
+</table>
+<p>Living entities move through it with water movement, because the type overrides <code class="consolas">move</code>:</p>
+<pre class="code-box"><code class="consolas">@Override
+public boolean move(LivingEntity entity, Vec3 movementVector, double gravity) {
+	entity.travelInWater(movementVector, gravity, entity.getDeltaMovement().y &lt;= 0, entity.getY());
+	return true;
+}</code></pre>
+
+<h2 id="block">VoidTearsBlock</h2>
+<p><code class="consolas">VoidTearsBlock</code> extends <code class="consolas">LiquidBlock</code>.</p>
+<table>
+<thead>
+<tr><th>Block property</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Map color</td><td>COLOR_BLACK</td></tr>
+<tr><td>Strength</td><td>100</td></tr>
+<tr><td>Collision</td><td>None (<code class="consolas">noCollision</code>)</td></tr>
+<tr><td>Loot</td><td>None (<code class="consolas">noLootTable</code>)</td></tr>
+<tr><td>Piston reaction</td><td>DESTROY</td></tr>
+<tr><td>Sound type</td><td>EMPTY</td></tr>
+<tr><td>Replaceable</td><td>Yes, and listed in the <code class="consolas">minecraft:replaceable</code> block tag</td></tr>
+<tr><td>Light dampening</td><td>6</td></tr>
+</tbody>
+</table>
+<p>The block calls two generated procedures after the superclass method:</p>
+<pre class="code-box"><code class="consolas">@Override
+public void neighborChanged(BlockState blockstate, Level world, BlockPos pos, Block neighborBlock, @Nullable Orientation orientation, boolean moving) {
+	super.neighborChanged(blockstate, world, pos, neighborBlock, orientation, moving);
+	VoidTearHissProcedure.execute(world, pos.getX(), pos.getY(), pos.getZ());
+}
+
+@Override
+public void entityInside(BlockState blockstate, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier insideBlockEffectApplier, boolean isPrecise) {
+	super.entityInside(blockstate, world, pos, entity, insideBlockEffectApplier, isPrecise);
+	VoidTearsDamageApplyProcedure.execute(world, entity);
+}</code></pre>
+
+<h2 id="procedures">Procedures</h2>
+<h3 id="damage-procedure">Damage</h3>
+<p><a href="page-voidtearsdamageapplyprocedure-raw.html">VoidTearsDamageApplyProcedure [raw]</a> runs whenever an entity is inside the block. It uses <code class="consolas">StrawberrymcMod.queueServerWork</code> to wait 20 ticks and then deals 5 damage of the custom type <code class="consolas">strawberrymc:void_tear_damage</code>.</p>
+<pre class="code-box"><code class="consolas">StrawberrymcMod.queueServerWork(20, () -&gt; {
+	{
+		Entity _ent = entity;
+		if (_ent.level() instanceof ServerLevel _serverLevel) {
+			_ent.hurtServer(_serverLevel, new DamageSource(world.holderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, Identifier.parse("strawberrymc:void_tear_damage")))), 5);
+		}
+	}
+});</code></pre>
+<p>The damage type is defined in <code class="consolas">damage_type/void_tear_damage.json</code>:</p>
+<table>
+<thead>
+<tr><th>Field</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>exhaustion</td><td>0.2</td></tr>
+<tr><td>message_id</td><td>void_tear_damage</td></tr>
+<tr><td>scaling</td><td>never</td></tr>
+<tr><td>effects</td><td>drowning</td></tr>
+</tbody>
+</table>
+<h3 id="hiss-procedure">Hiss</h3>
+<p><a href="page-voidtearhissprocedure-raw.html">VoidTearHissProcedure [raw]</a> runs when a neighboring block changes. It plays <code class="consolas">block.lava.extinguish</code> in the ambient sound category at volume 1 and pitch 1, at the fluid block's position. On the server it uses <code class="consolas">playSound</code>, and on the client it uses <code class="consolas">playLocalSound</code>.</p>
+
+<h2 id="client">Client rendering</h2>
+<p><code class="consolas">VoidTearsFluidExtension</code> registers the fluid model and the client fluid type extension. While the camera is in the fluid, the overlay texture is <code class="consolas">strawberrymc:textures/void_tears_overlay.png</code>, the fog color is set to red 0, green 0, blue 0.0667, and the fog runs from distance 0 to the smaller of 48 and the render distance.</p>
+<pre class="code-box"><code class="consolas">fluidFogColor.set(0f, 0f, 0.0666666667f, fluidFogColor.w);
+
+fogData.environmentalStart = 0f;
+fogData.environmentalEnd = Math.min(48f, renderDistance);</code></pre>
+
+<h2 id="pool-feature">Pool feature</h2>
+<p>Pools are placed in <a href="page-the-void-technical.html">The Void</a> by three files in the <code class="consolas">void_terrain</code> datapack:</p>
+<table>
+<thead>
+<tr><th>File</th><th>Content</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">configured_feature/void_tears_pool.json</code></td><td><code class="consolas">minecraft:lake</code>, fluid strawberrymc:void_tears level 0, barrier strawberrymc:voidstone</td></tr>
+<tr><td><code class="consolas">placed_feature/void_tears_pool.json</code></td><td><code class="consolas">rarity_filter</code> chance 6, <code class="consolas">in_square</code>, <code class="consolas">heightmap</code> WORLD_SURFACE_WG, <code class="consolas">biome</code></td></tr>
+<tr><td><code class="consolas">neoforge/biome_modifier/void_tears_pools.json</code></td><td>Adds the feature in step <code class="consolas">lakes</code> to abyssal_plains, echoing_deep and voidstone_peaks</td></tr>
+</tbody>
+</table>
+<p>A chunk has a 1 in 6 chance of attempting one pool, at the top surface of a random column. The heightmap finds the topmost non-air block in the column, so a pool can form on the plain or on top of an island. The fluid is also the dimension's <code class="consolas">default_fluid</code>, but with <code class="consolas">sea_level</code> at -64 and aquifers disabled, pools are where it appears in the terrain. Pools are lined with <a href="page-voidstone-technical.html">Voidstone</a>.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

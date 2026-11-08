@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Ancient Prismarine [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Ancient Prismarine [technical]</h1>
+<h2 id="overview">Overview</h2>
+<p>Ancient Prismarine and Cracked Prismarine are simple cube blocks with no block entity or custom block behavior. Their roles in the <a href="page-ocean-monument-technical.html">Ocean Monument</a> come from code that tests for them by block type: <code class="consolas">MonumentShell</code> places them on the roof, and <code class="consolas">PrismaticSensors</code> reacts when they are broken.</p>
+
+<h2 id="blocks">Blocks</h2>
+<table>
+<thead><tr><th>Property</th><th>Ancient Prismarine</th><th>Cracked Prismarine</th></tr></thead>
+<tbody>
+<tr><td>Block and item ID</td><td><code class="consolas">strawberrymc:ancient_prismarine</code></td><td><code class="consolas">strawberrymc:cracked_prismarine</code></td></tr>
+<tr><td>Class</td><td><code class="consolas">AncientPrismarineBlock</code></td><td><code class="consolas">CrackedPrismarineBlock</code></td></tr>
+<tr><td>Hardness</td><td>1.5</td><td>1.5</td></tr>
+<tr><td>Blast resistance</td><td>6</td><td>6</td></tr>
+<tr><td>Tool</td><td>Pickaxe, through <code class="consolas">minecraft:mineable/pickaxe</code></td><td>Pickaxe, through <code class="consolas">minecraft:mineable/pickaxe</code></td></tr>
+<tr><td><code class="consolas">requiresCorrectToolForDrops</code></td><td>Yes</td><td>Yes</td></tr>
+<tr><td>Model</td><td><code class="consolas">block/cube_all</code>, texture <code class="consolas">strawberrymc:block/placeholder</code></td><td><code class="consolas">block/cube_all</code>, texture <code class="consolas">strawberrymc:block/placeholder</code></td></tr>
+<tr><td>Creative tab</td><td>Building blocks</td><td>Building blocks</td></tr>
+</tbody>
+</table>
+<p>Both are defined by MCreator elements (<code class="consolas">AncientPrismarine.mod.json</code>, <code class="consolas">CrackedPrismarine.mod.json</code>) and registered in <code class="consolas">StrawberrymcModBlocks</code> and <code class="consolas">StrawberrymcModItems</code>.</p>
+<pre class="code-box"><code class="consolas">public AncientPrismarineBlock(BlockBehaviour.Properties properties) {
+	super(properties.strength(1.5f, 6f).requiresCorrectToolForDrops());
+}</code></pre>
+<p>Ancient Prismarine's loot table, <code class="consolas">data/strawberrymc/loot_table/blocks/ancient_prismarine.json</code>, rolls once with a <code class="consolas">minecraft:survives_explosion</code> condition and drops the block's own item.</p>
+
+<h2 id="vent-cap">Ancient Prismarine in the monument</h2>
+<p>The vent cap is 9 blocks, a 3x3 set into the gazebo floor at <code class="consolas">floorY</code>, centerd on the gazebo.</p>
+<pre class="code-box"><code class="consolas">public List&lt;BlockPos&gt; ventCap() {
+	List&lt;BlockPos&gt; cap = new ArrayList&lt;&gt;();
+	for (int dx = -1; dx &lt;= 1; dx++)
+		for (int dz = -1; dz &lt;= 1; dz++)
+			cap.add(new BlockPos(centerX() + dx, floorY, centerZ() + dz));
+	return cap;
+}</code></pre>
+<p>Beneath it is a 3x3 shaft of water, 3 deep, with <code class="consolas">minecraft:soul_sand</code> at depth 4, so a bubble column rises once the cap is removed.</p>
+<h3 id="exemption">Exemption from the sensors</h3>
+<p><code class="consolas">PrismaticSensors.isExempt</code> returns true for Ancient Prismarine, for both breaking and placing. It is the only block a survival player can change inside a monument with active <a href="page-prismatic-sensor-technical.html">Prismatic Sensors</a>.</p>
+<pre class="code-box"><code class="consolas">private static boolean isExempt(@Nullable Player player, BlockState state) {
+	return player == null || player.isCreative() || player.isSpectator() || state.is(StrawberrymcModBlocks.ANCIENT_PRISMARINE.get());
+}</code></pre>
+<h3 id="trigger">Vent trigger</h3>
+<p>After an exempt break, <code class="consolas">onBreak</code> calls <code class="consolas">checkVent</code> whenever the broken block is Ancient Prismarine. The rest of the sequence is on <a href="page-ocean-monument-technical.html">Ocean Monument</a>.</p>
+<pre class="code-box"><code class="consolas">private static void checkVent(ServerLevel level, BlockPos pos) {
+	MonumentShell.Layout layout = monumentAt(level, pos);
+	if (layout == null || !layout.ventCap().contains(pos) || ERUPTING.contains(layout.ventCenter()))
+		return;
+	// Only once: after the jet the dome is gone
+	if (!level.getBlockState(layout.lumpCenter()).is(StrawberrymcModBlocks.CRACKED_PRISMARINE.get()))
+		return;</code></pre>
+<p>Any one of the 9 cap blocks starts the eruption. Further cap blocks broken during it, or after the dome is gone, do nothing.</p>
+
+<h2 id="dome">Cracked Prismarine in the monument</h2>
+<p>Cracked Prismarine forms an upside-down dome under the gazebo's copper roof. <code class="consolas">Layout.lump()</code> lists its blocks using a sphere test, with <code class="consolas">DOME_RADIUS</code> 3.6 and <code class="consolas">DOME_DEPTH</code> 3.</p>
+<pre class="code-box"><code class="consolas">int r = (int) Math.ceil(DOME_RADIUS);
+for (int dy = 0; dy &lt;= DOME_DEPTH; dy++)
+	for (int dx = -r; dx &lt;= r; dx++)
+		for (int dz = -r; dz &lt;= r; dz++)
+			if (dx * dx + dz * dz + dy * dy &lt;= DOME_RADIUS * DOME_RADIUS)
+				lump.add(new BlockPos(centerX() + dx, domeTop() - dy, centerZ() + dz));</code></pre>
+<table>
+<thead><tr><th>Height</th><th><code class="consolas">dy</code></th><th>Blocks</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">floorY + 8</code> (flat top)</td><td>0</td><td>37</td></tr>
+<tr><td><code class="consolas">floorY + 7</code> (<code class="consolas">lumpCenter</code>)</td><td>1</td><td>37</td></tr>
+<tr><td><code class="consolas">floorY + 6</code></td><td>2</td><td>25</td></tr>
+<tr><td><code class="consolas">floorY + 5</code> (<code class="consolas">domeTip</code>)</td><td>3</td><td>9</td></tr>
+<tr><td>Total</td><td></td><td>108</td></tr>
+</tbody>
+</table>
+<p>Cracked Prismarine has no sensor exemption, so survival players cannot mine it while its quadrant's sensor is active. The jet removes it at tick 70 (3.5 seconds) of the eruption. <code class="consolas">shatter</code> calls <code class="consolas">level.destroyBlock(pos, false)</code> on each remaining dome block, so the dome drops no items.</p>
+
+<h2 id="reset">Reset</h2>
+<p><code class="consolas">PrismaticSensors.resetVent</code> runs from <code class="consolas">/cutscene clear</code> for a player inside a monument. It clears the monument's <code class="consolas">ERUPTING</code> entry, sets the 3 blocks beneath each cap position to water, puts Ancient Prismarine back in all 9 cap positions, and places Cracked Prismarine at every position in <code class="consolas">Layout.lump()</code>, all with <code class="consolas">Block.UPDATE_ALL</code>. The vent cutscene can then play again.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

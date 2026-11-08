@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>HoeTillNewOverrideProcedure [raw] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>HoeTillNewOverrideProcedure [raw]</h1>
+        <pre class="code-box vscode-code"><code class="consolas"><span style="color: #569CD6">package</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.LevelAccessor</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.block.Blocks</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.item.ItemStack</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.item.HoeItem</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.entity.LivingEntity</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.entity.player.Player</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.core.BlockPos</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.sounds.SoundSource</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.sounds.SoundEvents</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.neoforged.bus.api.Event</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">io.github.strawberrymc.init.StrawberrymcModBlocks</span>;
+
+<span style="color: #569CD6">public class</span> <span style="color: #4EC9B0">HoeTillNewOverrideProcedure</span> {
+    <span style="color: #569CD6">public static</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">execute</span>(<span style="color: #4EC9B0">Event</span> <span style="color: #9CDCFE">event</span>, <span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">x</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">y</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">z</span>, <span style="color: #4EC9B0">LivingEntity</span> <span style="color: #9CDCFE">entity</span>) {
+        <span style="color: #C586C0">if</span> (world <span style="color: #D4D4D4">==</span> <span style="color: #569CD6">null</span> <span style="color: #D4D4D4">||</span> entity <span style="color: #D4D4D4">==</span> <span style="color: #569CD6">null</span>) <span style="color: #C586C0">return</span>;
+        
+        <span style="color: #4EC9B0">BlockPos</span> <span style="color: #9CDCFE">targetPos</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(x, y, z);
+        <span style="color: #4EC9B0">net</span>.<span style="color: #4EC9B0">minecraft</span>.<span style="color: #4EC9B0">world</span>.<span style="color: #4EC9B0">level</span>.<span style="color: #4EC9B0">block</span>.<span style="color: #4EC9B0">Block</span> <span style="color: #9CDCFE">targetBlock</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">getBlockState</span>(targetPos).<span style="color: #DCDCAA">getBlock</span>();
+        <span style="color: #4EC9B0">ItemStack</span> <span style="color: #9CDCFE">mainHandItem</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">entity</span>.<span style="color: #DCDCAA">getMainHandItem</span>();
+        
+        <span style="color: #6A9955">// 1. Check if the item used is any type of Hoe</span>
+        <span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">mainHandItem</span>.<span style="color: #DCDCAA">getItem</span>() <span style="color: #569CD6">instanceof</span> HoeItem) {
+            <span style="color: #C586C0">if</span> (targetBlock <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">DIRT</span> <span style="color: #D4D4D4">||</span> targetBlock <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">GRASS_BLOCK</span> <span style="color: #D4D4D4">||</span> targetBlock <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">DIRT_PATH</span>) {
+                
+                <span style="color: #6A9955">// 3. Ensure the block directly above is empty (cannot till dirt with a block on top)</span>
+                <span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">isEmptyBlock</span>(<span style="color: #9CDCFE">targetPos</span>.<span style="color: #DCDCAA">above</span>())) {
+                    
+                    <span style="color: #6A9955">// 4. Cancel the vanilla tilling event so vanilla farmland isn't placed</span>
+                    <span style="color: #C586C0">if</span> (event <span style="color: #569CD6">instanceof</span> <span style="color: #9CDCFE">net</span>.<span style="color: #9CDCFE">neoforged</span>.<span style="color: #9CDCFE">bus</span>.<span style="color: #9CDCFE">api</span>.<span style="color: #9CDCFE">ICancellableEvent</span> cancellable) {
+    					<span style="color: #9CDCFE">cancellable</span>.<span style="color: #DCDCAA">setCanceled</span>(<span style="color: #569CD6">true</span>);
+					}
+                    
+                    <span style="color: #6A9955">// 5. Place your Custom Farmland Clone</span>
+                    <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(targetPos, <span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">FARMLAND_STRAWBERRY</span>.<span style="color: #DCDCAA">get</span>().<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+                    
+                    <span style="color: #6A9955">// 6. Play the standard tilling sound</span>
+                    <span style="color: #C586C0">if</span> (<span style="color: #D4D4D4">!</span><span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">isClientSide</span>()) {
+                        <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">playSound</span>(<span style="color: #569CD6">null</span>, targetPos, <span style="color: #9CDCFE">SoundEvents</span>.<span style="color: #9CDCFE">HOE_TILL</span>, <span style="color: #9CDCFE">SoundSource</span>.<span style="color: #9CDCFE">BLOCKS</span>, <span style="color: #B5CEA8">1.0F</span>, <span style="color: #B5CEA8">1.0F</span>);
+                    }
+                    
+                    <span style="color: #6A9955">// 7. Damage the hoe by 1 point (if not in Creative mode)</span>
+                    <span style="color: #C586C0">if</span> (entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">Player</span> player <span style="color: #D4D4D4">&amp;&amp; !</span><span style="color: #9CDCFE">player</span>.<span style="color: #DCDCAA">getAbilities</span>().<span style="color: #9CDCFE">instabuild</span>) {
+                        <span style="color: #9CDCFE">mainHandItem</span>.<span style="color: #DCDCAA">hurtAndBreak</span>(<span style="color: #B5CEA8">1</span>, player, <span style="color: #9CDCFE">net</span>.<span style="color: #9CDCFE">minecraft</span>.<span style="color: #9CDCFE">world</span>.<span style="color: #9CDCFE">entity</span>.<span style="color: #9CDCFE">EquipmentSlot</span>.<span style="color: #9CDCFE">MAINHAND</span>);
+                        <span style="color: #6A9955">// Swing the player's arm for visual feedback</span>
+                        <span style="color: #9CDCFE">player</span>.<span style="color: #DCDCAA">swing</span>(<span style="color: #9CDCFE">player</span>.<span style="color: #DCDCAA">getUsedItemHand</span>(), <span style="color: #569CD6">true</span>);
+                    }
+                }
+            }
+        }
+    }
+}</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Alpine Meadowlands [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Alpine Meadowlands [technical]</h1>
+<h2 id="overview">Overview</h2>
+<p>Alpine Meadowlands is the biome <code class="consolas">strawberrymc:alpine_meadow</code>, named "Alpine Meadow" in the language file. It is an MCreator biome element with two additions in hand-written code: a climate claim in <code class="consolas">SurfaceBiomeDepthMixin</code> and a runtime temperature override in <code class="consolas">SetTemperatureBiomeModifier</code>.</p>
+
+<h2 id="biome-json">Biome JSON</h2>
+<table>
+<thead>
+<tr><th>Field in alpine_meadow.json</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>has_precipitation</td><td>true</td></tr>
+<tr><td>temperature</td><td>0.1 in the file, 0.5 at runtime</td></tr>
+<tr><td>downfall</td><td>0.6</td></tr>
+<tr><td>foliage_color</td><td>#9E814D</td></tr>
+<tr><td>grass_color</td><td>#5C8663</td></tr>
+<tr><td>water_color</td><td>#3F76E4</td></tr>
+<tr><td>minecraft:visual/fog_color</td><td>#DEFFFB</td></tr>
+<tr><td>minecraft:visual/water_fog_color</td><td>#050533</td></tr>
+<tr><td>carvers</td><td>minecraft:cave, minecraft:cave_extra_underground, minecraft:canyon</td></tr>
+</tbody>
+</table>
+<h3 id="biome-features">Features by step</h3>
+<table>
+<thead>
+<tr><th>Step</th><th>Features</th></tr>
+</thead>
+<tbody>
+<tr><td>lakes</td><td>minecraft:lake_lava_underground</td></tr>
+<tr><td>underground_ores</td><td>ore_coal_upper, ore_coal_lower, ore_iron_upper, ore_iron_middle, ore_iron_small, ore_gold, ore_gold_lower, ore_redstone, ore_redstone_lower, ore_diamond, ore_diamond_medium, ore_diamond_large, ore_diamond_buried, ore_lapis, ore_lapis_buried, ore_copper, underwater_magma, ore_emerald</td></tr>
+<tr><td>vegetal_decoration</td><td>strawberrymc:alpine_fir_trees, from a biome modifier</td></tr>
+<tr><td>top_layer_modification</td><td>minecraft:freeze_top_layer</td></tr>
+</tbody>
+</table>
+<h3 id="surface-rule">Surface rule</h3>
+<p><code class="consolas">StrawberrymcModBiomes.preliminarySurfaceRule</code> gives the biome <code class="consolas">minecraft:grass_block</code> at the surface where the water check passes, gravel at the surface underwater, and <code class="consolas">minecraft:dirt</code> at the deeper stone-depth check. The rule applies above the preliminary surface.</p>
+
+<h2 id="runtime-temperature">Runtime temperature override</h2>
+<p>A biome below 0.15 receives snow layers and snowfall. To keep the file's value of 0.1 from causing snow without editing MCreator's generated biome, the mod registers a custom biome modifier type, <code class="consolas">strawberrymc:set_temperature</code>. The file <code class="consolas">biome_modifier/alpine_meadow_no_snow.json</code> applies it with temperature 0.5.</p>
+<pre class="code-box"><code class="consolas">@Override
+public void modify(Holder&lt;Biome&gt; biome, Phase phase, ModifiableBiomeInfo.BiomeInfo.Builder builder) {
+	if (phase == Phase.MODIFY &amp;&amp; this.biomes.contains(biome))
+		builder.getClimateSettings().setTemperature(this.temperature);
+}</code></pre>
+<p>The record <code class="consolas">SetTemperatureBiomeModifier</code> takes a biome holder set and a float through its <code class="consolas">MapCodec</code>.</p>
+
+<h2 id="climate">Climate</h2>
+<p><code class="consolas">StrawberrymcModBiomes.modifyOverworldParameterPoints</code> adds two points, one at depth 0 and one at depth 1.</p>
+<table>
+<thead>
+<tr><th>Parameter</th><th>Range</th></tr>
+</thead>
+<tbody>
+<tr><td>temperature</td><td>-0.5 to 0</td></tr>
+<tr><td>humidity</td><td>-0.5 to 0.5</td></tr>
+<tr><td>continentalness</td><td>0.5 to 1</td></tr>
+<tr><td>erosion</td><td>-0.6 to 0</td></tr>
+<tr><td>depth</td><td>Points 0 and 1</td></tr>
+<tr><td>weirdness</td><td>0.5 to 1</td></tr>
+<tr><td>offset</td><td>0</td></tr>
+</tbody>
+</table>
+<p>The climate generation temperature above is separate from the biome's own temperature value: the first decides where the biome appears, and the second controls effects such as snow.</p>
+<p>The biome is in the <code class="consolas">SURFACE_BIOMES</code> list of <code class="consolas">SurfaceBiomeDepthMixin</code>. Vanilla covers every climate value, so a custom biome would otherwise only tie with a vanilla one and win at random. The mixin splits every other surface biome's climate box around the Alpine box, making it the only choice inside its ranges. Cave biomes, which use other depths, are left in place.</p>
+
+<h2 id="fir-placement">Fir placement</h2>
+<table>
+<thead>
+<tr><th>File</th><th>Content</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">configured_feature/alpine_fir_trees.json</code></td><td>Type <code class="consolas">strawberrymc:fir_tree</code>, empty config</td></tr>
+<tr><td><code class="consolas">placed_feature/alpine_fir_trees.json</code></td><td><code class="consolas">count</code> 1, <code class="consolas">in_square</code>, <code class="consolas">heightmap</code> WORLD_SURFACE_WG, <code class="consolas">biome</code></td></tr>
+<tr><td><code class="consolas">biome_modifier/alpine_fir_trees_biome_modifier.json</code></td><td>Adds the placed feature to strawberrymc:alpine_meadow, step vegetal_decoration</td></tr>
+</tbody>
+</table>
+<p>Each chunk makes one attempt at a random surface position. <code class="consolas">FirTree.place</code> takes the block below the origin and continues only if it is in <code class="consolas">BlockTags.SUBSTRATE_OVERWORLD</code>. The tree itself is described on <a href="page-fir-technical.html">Fir</a>, and the choice of tree is made by <a href="page-determinerandfirprocedure-raw.html">DetermineRandFirProcedure [raw]</a>.</p>
+<pre class="code-box"><code class="consolas">// substrate_overworld covers grass, dirt, podzol, moss and mud (DIRT alone no longer includes grass)
+if (!level.getBlockState(ground).is(BlockTags.SUBSTRATE_OVERWORLD)) {
+    return false;
+}
+
+DetermineRandFirProcedure.execute(level, ground.getX(), ground.getY(), ground.getZ());
+return true;</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

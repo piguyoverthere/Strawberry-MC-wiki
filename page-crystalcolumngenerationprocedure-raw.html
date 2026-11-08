@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>CrystalColumnGenerationProcedure [raw] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>CrystalColumnGenerationProcedure [raw]</h1>
+        <pre class="code-box vscode-code"><code class="consolas"><span style="color: #569CD6">package</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.block.state.BlockState</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.block.Blocks</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.LevelAccessor</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.util.RandomSource</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.util.Mth</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.tags.BlockTags</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.resources.Identifier</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.core.BlockPos</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">io.github.strawberrymc.init.StrawberrymcModBlocks</span>;
+
+<span style="color: #569CD6">public class</span> <span style="color: #4EC9B0">CrystalColumnGenerationProcedure</span> {
+	<span style="color: #569CD6">public static</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">execute</span>(<span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">x</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">y</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">z</span>) {
+		<span style="color: #4EC9B0">BlockState</span> <span style="color: #9CDCFE">mat</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">AIR</span>.<span style="color: #DCDCAA">defaultBlockState</span>();
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">pick</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">h</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">lean_x</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">lean_z</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">radius</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">rot</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">n1x</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">n1z</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">n2x</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">n2z</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">n3x</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">n3z</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">i</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">r</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">reach</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">cx</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">cz</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">dx</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">dz</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		pick <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">Mth</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #9CDCFE">RandomSource</span>.<span style="color: #DCDCAA">create</span>(), <span style="color: #B5CEA8">1</span>, <span style="color: #B5CEA8">6</span>);
+		<span style="color: #C586C0">if</span> (pick <span style="color: #D4D4D4">==</span> <span style="color: #B5CEA8">1</span>) {
+			mat <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">AMETHYST_BLOCK</span>.<span style="color: #DCDCAA">defaultBlockState</span>();
+		} <span style="color: #C586C0">else if</span> (pick <span style="color: #D4D4D4">==</span> <span style="color: #B5CEA8">2</span>) {
+			mat <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">GARNET_BLOCK</span>.<span style="color: #DCDCAA">get</span>().<span style="color: #DCDCAA">defaultBlockState</span>();
+		} <span style="color: #C586C0">else if</span> (pick <span style="color: #D4D4D4">==</span> <span style="color: #B5CEA8">3</span>) {
+			mat <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">DENDRITE_BLOCK</span>.<span style="color: #DCDCAA">get</span>().<span style="color: #DCDCAA">defaultBlockState</span>();
+		} <span style="color: #C586C0">else if</span> (pick <span style="color: #D4D4D4">==</span> <span style="color: #B5CEA8">4</span>) {
+			mat <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">CITRINE_BLOCK</span>.<span style="color: #DCDCAA">get</span>().<span style="color: #DCDCAA">defaultBlockState</span>();
+		} <span style="color: #C586C0">else if</span> (pick <span style="color: #D4D4D4">==</span> <span style="color: #B5CEA8">5</span>) {
+			mat <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">AQUAMARINE_BLOCK</span>.<span style="color: #DCDCAA">get</span>().<span style="color: #DCDCAA">defaultBlockState</span>();
+		} <span style="color: #C586C0">else</span> {
+			mat <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">ROSE_QUARTZ_BLOCK</span>.<span style="color: #DCDCAA">get</span>().<span style="color: #DCDCAA">defaultBlockState</span>();
+		}
+		h <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>;
+		<span style="color: #C586C0">while</span> ((<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">isEmptyBlock</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(x, (y <span style="color: #D4D4D4">+</span> h), z))) <span style="color: #D4D4D4">&amp;&amp;</span> (h <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">120</span>)) {
+			h <span style="color: #D4D4D4">=</span> (h <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>);
+		}
+		<span style="color: #C586C0">if</span> ((h <span style="color: #D4D4D4">&gt;=</span> <span style="color: #B5CEA8">8</span>) <span style="color: #D4D4D4">&amp;&amp;</span> (h <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">120</span>)) {
+			lean_x <span style="color: #D4D4D4">=</span> (<span style="color: #9CDCFE">Mth</span>.<span style="color: #DCDCAA">nextDouble</span>(<span style="color: #9CDCFE">RandomSource</span>.<span style="color: #DCDCAA">create</span>(), <span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">5</span>, <span style="color: #B5CEA8">5</span>) <span style="color: #D4D4D4">/</span> (h <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">3</span>));
+			lean_z <span style="color: #D4D4D4">=</span> (<span style="color: #9CDCFE">Mth</span>.<span style="color: #DCDCAA">nextDouble</span>(<span style="color: #9CDCFE">RandomSource</span>.<span style="color: #DCDCAA">create</span>(), <span style="color: #D4D4D4">-</span><span style="color: #B5CEA8">5</span>, <span style="color: #B5CEA8">5</span>) <span style="color: #D4D4D4">/</span> (h <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">3</span>));
+			radius <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">Mth</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #9CDCFE">RandomSource</span>.<span style="color: #DCDCAA">create</span>(), <span style="color: #B5CEA8">3</span>, <span style="color: #B5CEA8">5</span>);
+			rot <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">Mth</span>.<span style="color: #DCDCAA">nextDouble</span>(<span style="color: #9CDCFE">RandomSource</span>.<span style="color: #DCDCAA">create</span>(), <span style="color: #B5CEA8">0</span>, <span style="color: #B5CEA8">2.0944</span>);
+			n1x <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">cos</span>(rot);
+			n1z <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">sin</span>(rot);
+			n2x <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">cos</span>((rot <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">2.0944</span>));
+			n2z <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">sin</span>((rot <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">2.0944</span>));
+			n3x <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">cos</span>((rot <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">4.1888</span>));
+			n3z <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">sin</span>((rot <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">4.1888</span>));
+			i <span style="color: #D4D4D4">= -</span><span style="color: #B5CEA8">3</span>;
+			<span style="color: #C586C0">while</span> (i <span style="color: #D4D4D4">&lt;=</span> (h <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">3</span>)) {
+				r <span style="color: #D4D4D4">=</span> (radius <span style="color: #D4D4D4">*</span> (<span style="color: #B5CEA8">1</span> <span style="color: #D4D4D4">+</span> (<span style="color: #B5CEA8">0.5</span> <span style="color: #D4D4D4">*</span> <span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">pow</span>(<span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">min</span>(<span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">abs</span>((((<span style="color: #B5CEA8">2</span> <span style="color: #D4D4D4">*</span> i) <span style="color: #D4D4D4">/</span> h) <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>)), <span style="color: #B5CEA8">1</span>), <span style="color: #B5CEA8">4</span>))));
+				reach <span style="color: #D4D4D4">=</span> (<span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">round</span>(r) <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>);
+				cx <span style="color: #D4D4D4">=</span> (x <span style="color: #D4D4D4">+</span> (lean_x <span style="color: #D4D4D4">*</span> i));
+				cz <span style="color: #D4D4D4">=</span> (z <span style="color: #D4D4D4">+</span> (lean_z <span style="color: #D4D4D4">*</span> i));
+				dx <span style="color: #D4D4D4">=</span> (<span style="color: #B5CEA8">0</span> <span style="color: #D4D4D4">-</span> reach);
+				<span style="color: #C586C0">while</span> (dx <span style="color: #D4D4D4">&lt;=</span> reach) {
+					dz <span style="color: #D4D4D4">=</span> (<span style="color: #B5CEA8">0</span> <span style="color: #D4D4D4">-</span> reach);
+					<span style="color: #C586C0">while</span> (dz <span style="color: #D4D4D4">&lt;=</span> reach) {
+						<span style="color: #C586C0">if</span> (((((dx <span style="color: #D4D4D4">*</span> n1x) <span style="color: #D4D4D4">+</span> (dz <span style="color: #D4D4D4">*</span> n1z)) <span style="color: #D4D4D4">&lt;=</span> (r <span style="color: #D4D4D4">/</span> <span style="color: #B5CEA8">2</span>)) <span style="color: #D4D4D4">&amp;&amp;</span> (((dx <span style="color: #D4D4D4">*</span> n2x) <span style="color: #D4D4D4">+</span> (dz <span style="color: #D4D4D4">*</span> n2z)) <span style="color: #D4D4D4">&lt;=</span> (r <span style="color: #D4D4D4">/</span> <span style="color: #B5CEA8">2</span>))) <span style="color: #D4D4D4">&amp;&amp;</span> (((dx <span style="color: #D4D4D4">*</span> n3x) <span style="color: #D4D4D4">+</span> (dz <span style="color: #D4D4D4">*</span> n3z)) <span style="color: #D4D4D4">&lt;=</span> (r <span style="color: #D4D4D4">/</span> <span style="color: #B5CEA8">2</span>))) {
+							<span style="color: #C586C0">if</span> ((<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">isEmptyBlock</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>((cx <span style="color: #D4D4D4">+</span> dx), (y <span style="color: #D4D4D4">+</span> i), (cz <span style="color: #D4D4D4">+</span> dz)))) <span style="color: #D4D4D4">||</span> ((<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">getBlockState</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>((cx <span style="color: #D4D4D4">+</span> dx), (y <span style="color: #D4D4D4">+</span> i), (cz <span style="color: #D4D4D4">+</span> dz)))).<span style="color: #DCDCAA">is</span>(<span style="color: #9CDCFE">BlockTags</span>.<span style="color: #DCDCAA">create</span>(<span style="color: #9CDCFE">Identifier</span>.<span style="color: #DCDCAA">parse</span>(<span style="color: #CE9178">"minecraft:base_stone_overworld"</span>))))) {
+								<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>((cx <span style="color: #D4D4D4">+</span> dx), (y <span style="color: #D4D4D4">+</span> i), (cz <span style="color: #D4D4D4">+</span> dz)), mat, <span style="color: #B5CEA8">3</span>);
+							}
+						}
+						dz <span style="color: #D4D4D4">=</span> (dz <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>);
+					}
+					dx <span style="color: #D4D4D4">=</span> (dx <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>);
+				}
+				i <span style="color: #D4D4D4">=</span> (i <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>);
+			}
+		}
+	}
+}</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

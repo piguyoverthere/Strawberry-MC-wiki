@@ -13,15 +13,33 @@
             </nav>
         </header>
         <h1>Water Dragon</h1>
-        <p>The Water Dragon is a boss mob that safegaurds the treassure of the Ocean Monument and only granting it ot those who defeat it.</p><br>
-        <h2 id="fight-location">Fight Location</h2>
-        <p>The Water Dragon fight occurs at the top of the Ocean Monument on a glass disc specifically located in front of the gazebo-like structure used for the first puzzle.</p>
-        <h2 id="technical">Technical</h2>
-        <p>The sequence is initiated when the player inserts the key into the center of the glass disc, which encapsulates a cylinder made of prismarine filled with ocean groundcover. As the key falls through the cylinder below the disc of Glass Blocks, camerashake is applied to the player while the camera is locked following the key on the way down.</p><br>
-        <p>A block display is summoned off campus out of bounds behind the prismarine cylinder in a inaccessible area. The block display is made of custom blocks that depict the Water dragon, which then snatches the key by first killing the tagged item then summoning a block display anchored towards the Water Dragon’s block display. Then the main block display swims across the width of the cylinder, breaking any nearby blocks and summoning bubble particles with negative gravity. The block display is culled and saved after the Water Dragon is out-of-bounds. After the first sequence listed above, then a similar sequence is played out as the camera pans toward the Dragon block display [tagged mod:water_dragon].</p><br>
-        <p>A similar sequence occurs directly after this time with amplified water fog and stored as a file that plays the same time each time during this fight. After the 2nd cutscene, the Water Dragon itself (non-block display) is forced upwards which currently has no hitbox. The glass in the area is culled with the glass break sound effect played on the global server-side. glass_break particles are summoned around the perimeter of the disc as the Water Dragon gains elevation then curves downward initiating the fight.</p>
+        <p>This page covers the arena at the top of the Ocean Monument: its glass disc, the Prismatic Vault at the center, and the Prismatic Rune sealed in the water below.</p><br>
+        <h2 id="fight-location">Location</h2>
+        <p>The arena is at the top of the Ocean Monument on a glass disc specifically located in front of the gazebo-like structure, 25 blocks from the gazebo's center towards the monument's entrance and level with the gazebo's floor.</p><br>
+        <p>The disc of Glass Blocks has a radius of 14 and a Dark Prismarine rim. It encapsulates a cylinder made of prismarine filled with ocean groundcover: 7 blocks of water over a bed of Sand and Gravel, with Sea Lanterns set into the walls. Seagrass, Tall Seagrass, coral, Sea Pickles and the odd Kelp grow on the bed, and 6 Tropical Fish and 3 Cod swim in the tank.</p><br>
+        <p>The Prismatic Rune waits in an Item Frame on a Dark Prismarine pedestal at the bottom of the tank. Players outside creative mode can't take it from the frame, turn it or break the frame.</p>
+        <h2 id="technical">Opening the Vault</h2>
+        <p>The sequence is initiated when the player inserts the key into the center of the glass disc, by using a Monument Key on the Prismatic Vault. The key is used up, except in creative mode. Without a key the vault shows "The vault needs a Monument Key", and once opened it shows "The vault is already open".</p><br>
+        <p>Everyone within 48 blocks of the vault watches an 11.5-second cutscene, during which they take no damage and mobs can't target them.</p>
+        <table>
+            <thead>
+                <tr><th>Time</th><th>What happens</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>0 seconds</td><td>The vault takes the key with a beacon-like sound, and rune glyphs begin to swirl above the glass and spiral down towards the Prismatic Rune.</td></tr>
+                <tr><td>1.5 seconds</td><td>The view cuts through black to inside the tank, slowly circling the frame 5 blocks away.</td></tr>
+                <tr><td>3.5 seconds</td><td>The glyphs stop and the rune starts to glow.</td></tr>
+                <tr><td>5.5 seconds</td><td>The rune breaks loose from its frame and begins to rise, with the camera following.</td></tr>
+                <tr><td>10 seconds</td><td>The rune comes to rest just under the glass.</td></tr>
+                <tr><td>10.9 seconds</td><td>The view cuts back to the player.</td></tr>
+            </tbody>
+        </table><br>
+        <p>The rune stays floating under the glass, glowing, and can't be picked up.</p>
+        <h2 id="prismatic-vault">Prismatic Vault</h2>
+        <p>The Prismatic Vault is an unbreakable block in the middle of a round glass floor on the Ocean Monument's roof, above a deep tank of water, sand, coral and fish with the Prismatic Rune locked in a frame at the bottom. Using a Monument Key on the vault consumes the key and plays a cutscene for everyone nearby, as glowing runes spiral down into the tank. The rune then lights up, breaks free, and rises to float just beneath the glass. See <a href="page-prismatic-vault-technical.html">Prismatic Vault [technical]</a>.</p><br>
+        <p>The Monument Key is a rare item that stacks to 1, found in the Tools &amp; Utilities tab of the creative inventory. The Prismatic Rune is an epic, enchanted-looking item that stacks to 1, found in the Ingredients tab.</p>
         <h2>Appendix: Related topics</h2>
             <a href="page-prismatic-sensor.html">Prismatic Sensor</a>
-            <script src="wiki-editor.js" defer></script>
+        <script src="wiki-editor.js" defer></script>
     </body>
 </html>

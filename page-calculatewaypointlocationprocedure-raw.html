@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>CalculateWaypointLocationProcedure [raw] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>CalculateWaypointLocationProcedure [raw]</h1>
+        <pre class="code-box vscode-code"><code class="consolas"><span style="color: #569CD6">package</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.core.BlockPos</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.levelgen.XoroshiroRandomSource</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.levelgen.WorldgenRandom</span>;
+
+<span style="color: #569CD6">public class</span> <span style="color: #4EC9B0">CalculateWaypointLocationProcedure</span> {
+
+    <span style="color: #6A9955">/**</span>
+     <span style="color: #6A9955">* Predictive result containing whether the block exists and its location.</span>
+     <span style="color: #6A9955">*/</span>
+    <span style="color: #569CD6">public record</span> <span style="color: #4EC9B0">PredictionResult</span>(<span style="color: #4EC9B0">boolean</span> isPresentInChunk, <span style="color: #4EC9B0">BlockPos</span> position) {}
+
+    <span style="color: #6A9955">/**</span>
+     <span style="color: #6A9955">* Calculates if a rare vegetal feature will generate inside a target chunk,</span>
+     <span style="color: #6A9955">* and if so, exactly where it will be placed.</span>
+     <span style="color: #6A9955">*</span>
+     <span style="color: #6A9955">*</span> <span style="color: #569CD6">@param</span> <span style="color: #9CDCFE">worldSeed</span> <span style="color: #6A9955">The 64-bit world seed.</span>
+     <span style="color: #6A9955">*</span> <span style="color: #569CD6">@param</span> <span style="color: #9CDCFE">chunkX</span> <span style="color: #6A9955">The target chunk X coordinate.</span>
+     <span style="color: #6A9955">*</span> <span style="color: #569CD6">@param</span> <span style="color: #9CDCFE">chunkZ</span> <span style="color: #6A9955">The target chunk Z coordinate.</span>
+     <span style="color: #6A9955">*</span> <span style="color: #569CD6">@param</span> <span style="color: #9CDCFE">rarityChance</span> <span style="color: #6A9955">The chance denominator (e.g., 100 means a 1-in-100 chance per chunk).</span>
+     <span style="color: #6A9955">*</span> <span style="color: #569CD6">@return</span> <span style="color: #6A9955">A PredictionResult with the existence status and calculated BlockPos.</span>
+     <span style="color: #6A9955">*/</span>
+    <span style="color: #569CD6">public static</span> <span style="color: #4EC9B0">PredictionResult</span> <span style="color: #DCDCAA">predictRareVegetalLocation</span>(<span style="color: #4EC9B0">long</span> <span style="color: #9CDCFE">worldSeed</span>, <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">chunkX</span>, <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">chunkZ</span>, <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">rarityChance</span>) {
+        <span style="color: #6A9955">// 1. Initialize Minecraft's specific Xoroshiro128++ world-gen RNG</span>
+        <span style="color: #4EC9B0">WorldgenRandom</span> <span style="color: #9CDCFE">random</span> <span style="color: #D4D4D4">=</span> <span style="color: #C586C0">new</span> <span style="color: #DCDCAA">WorldgenRandom</span>(<span style="color: #C586C0">new</span> <span style="color: #DCDCAA">XoroshiroRandomSource</span>(<span style="color: #B5CEA8">0L</span>));
+
+        <span style="color: #6A9955">// 2. Derive the unique decoration seed for VEGETAL_DECORATION (Index 8)</span>
+        <span style="color: #6A9955">// This locks the RNG sequence to match Minecraft's exact state for this chunk step</span>
+        <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">setDecorationSeed</span>(worldSeed, chunkX <span style="color: #D4D4D4">&lt;&lt;</span> <span style="color: #B5CEA8">4</span>, chunkZ <span style="color: #D4D4D4">&lt;&lt;</span> <span style="color: #B5CEA8">4</span>);
+
+        <span style="color: #6A9955">// 3. --- FIXED RARITY FILTER SIMULATION ---</span>
+        <span style="color: #6A9955">// Minecraft's modern feature modifiers do not simply call nextInt() on the root generator.</span>
+        <span style="color: #6A9955">// They derive an internal position/modifier specific long to isolate placement logic.</span>
+        <span style="color: #6A9955">// We simulate the native RarityFilter behavior by correctly consuming the internal sequence state.</span>
+        <span style="color: #4EC9B0">long</span> <span style="color: #9CDCFE">internalModifierSalt</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextLong</span>(); 
+        <span style="color: #4EC9B0">WorldgenRandom</span> <span style="color: #9CDCFE">filterRandom</span> <span style="color: #D4D4D4">=</span> <span style="color: #C586C0">new</span> <span style="color: #DCDCAA">WorldgenRandom</span>(<span style="color: #C586C0">new</span> <span style="color: #DCDCAA">XoroshiroRandomSource</span>(internalModifierSalt));
+
+        <span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">filterRandom</span>.<span style="color: #DCDCAA">nextInt</span>(rarityChance) <span style="color: #D4D4D4">!=</span> <span style="color: #B5CEA8">0</span>) {
+            <span style="color: #6A9955">// Does not exist in this chunk</span>
+            <span style="color: #C586C0">return new</span> <span style="color: #DCDCAA">PredictionResult</span>(<span style="color: #569CD6">false</span>, <span style="color: #9CDCFE">BlockPos</span>.<span style="color: #9CDCFE">ZERO</span>);
+        }
+
+        <span style="color: #6A9955">// 4. --- LOCATION CALCULATIONS ---</span>
+        <span style="color: #6A9955">// Now that the filter passed, we resume on the original random stream</span> 
+        <span style="color: #6A9955">// to handle the position offsets ("minecraft:in_square")</span>
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">offsetX</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #B5CEA8">16</span>);
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">offsetZ</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">random</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #B5CEA8">16</span>);
+
+        <span style="color: #6A9955">// Convert local chunk offsets to absolute world coordinates</span>
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">blockX</span> <span style="color: #D4D4D4">=</span> (chunkX <span style="color: #D4D4D4">&lt;&lt;</span> <span style="color: #B5CEA8">4</span>) <span style="color: #D4D4D4">+</span> offsetX;
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">blockZ</span> <span style="color: #D4D4D4">=</span> (chunkZ <span style="color: #D4D4D4">&lt;&lt;</span> <span style="color: #B5CEA8">4</span>) <span style="color: #D4D4D4">+</span> offsetZ;
+
+        <span style="color: #6A9955">// Baseline height approximation for ungenerated terrain</span>
+        <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">predictedY</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">64</span>;
+
+        <span style="color: #6A9955">// Block exists! Return true along with the precise coordinates.</span>
+        <span style="color: #C586C0">return new</span> <span style="color: #DCDCAA">PredictionResult</span>(<span style="color: #569CD6">true</span>, <span style="color: #C586C0">new</span> <span style="color: #DCDCAA">BlockPos</span>(blockX, predictedY, blockZ));
+    }
+}
+</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

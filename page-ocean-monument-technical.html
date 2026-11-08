@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Ocean Monument [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Ocean Monument [technical]</h1>
+<h2 id="overview">Overview and source map</h2>
+<p>The Ocean Monument is built from a set of mixins on vanilla's monument classes, one static builder class, and three event-driven gameplay classes. <code class="consolas">StrawberrymcMod</code> calls <code class="consolas">MonumentIntro.init</code>, <code class="consolas">MonumentPuzzlesPack.init</code>, <code class="consolas">PrismaticSensors.init</code>, <code class="consolas">MonumentArena.init</code> and <code class="consolas">MonumentQuest.init</code> on the mod event bus. Each one registers its own deferred registers, payloads and NeoForge event listeners.</p>
+<table>
+<thead><tr><th>Class or file</th><th>Job</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">OceanMonumentFloorMixin</code></td><td>Lowers the monument onto the sea floor and keeps that height when pieces are rebuilt from disk.</td></tr>
+<tr><td><code class="consolas">MonumentBasinMixin</code></td><td>Digs a sloped water basin around the monument.</td></tr>
+<tr><td><code class="consolas">MonumentBuildingShellMixin</code></td><td>Doubles the building's bounding box and replaces its <code class="consolas">postProcess</code> with <code class="consolas">MonumentShell.place</code>.</td></tr>
+<tr><td><code class="consolas">MonumentBuildingAccessor</code>, <code class="consolas">StructurePieceBoxAccessor</code></td><td>Expose the private <code class="consolas">childPieces</code> list and let the bounding box be reassigned.</td></tr>
+<tr><td><code class="consolas">MonumentShell</code> and its <code class="consolas">Layout</code> record</td><td>Records the vanilla shell, places it at double scale, builds the gazebo, arena and sensors, and answers every "where is X" question.</td></tr>
+<tr><td><code class="consolas">MonumentIntro</code></td><td>Entrance cutscene trigger, damage and targeting protection, <code class="consolas">/cutscene</code>.</td></tr>
+<tr><td><code class="consolas">cutscene/MonumentCutscene</code></td><td>Client side of the entrance cutscene.</td></tr>
+<tr><td><code class="consolas">PrismaticSensors</code></td><td>Build protection (see <a href="page-prismatic-sensor-technical.html">Prismatic Sensor</a>), the vent eruption and <code class="consolas">/sensors</code>.</td></tr>
+<tr><td><code class="consolas">monument/client/VentCutscene</code></td><td>Client side of the vent cutscene.</td></tr>
+<tr><td><code class="consolas">MonumentQuest</code></td><td>Objectives, ping data, <code class="consolas">/ping</code>.</td></tr>
+<tr><td><code class="consolas">monument/client/QuestHud</code></td><td>Objective panel, story notice and pings on the HUD.</td></tr>
+<tr><td><code class="consolas">CutsceneCameraMixin</code>, <code class="consolas">CutsceneNightVisionMixin</code></td><td>Apply the cutscene shot to the camera and fade the cutscene's night vision.</td></tr>
+</tbody>
+</table>
+<p>The arena on the roof is documented on <a href="page-prismatic-vault-technical.html">Prismatic Vault</a>. The puzzle jigsaw datapack is documented on <a href="page-p2-piston-puzzle-technical.html">P2 Piston Puzzle</a>. The roof vent's blocks are documented on <a href="page-ancient-prismarine-technical.html">Ancient Prismarine</a>.</p>
+
+<h2 id="placement">Placement</h2>
+<h3 id="placement-json">Structure and structure set JSON</h3>
+<p><code class="consolas">data/minecraft/worldgen/structure/monument.json</code> keeps the type <code class="consolas">minecraft:ocean_monument</code> and sets <code class="consolas">"biomes": "strawberrymc:ocean_abyss"</code>, with step <code class="consolas">surface_structures</code>. Its <code class="consolas">spawn_overrides</code> give the <code class="consolas">monster</code> category one entry, <code class="consolas">minecraft:guardian</code> with weight 1, min count 2 and max count 4, over the <code class="consolas">full</code> bounding box. The <code class="consolas">axolotls</code> and <code class="consolas">underground_water_creature</code> categories are empty.</p>
+<p><code class="consolas">data/minecraft/worldgen/structure_set/ocean_monuments.json</code> lives in the always-on <code class="consolas">monument_puzzles</code> built-in datapack, so MCreator's generator cannot overwrite it.</p>
+<table>
+<thead><tr><th>Field</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">type</code></td><td><code class="consolas">minecraft:random_spread</code></td></tr>
+<tr><td><code class="consolas">spacing</code></td><td>32</td></tr>
+<tr><td><code class="consolas">separation</code></td><td>15</td></tr>
+<tr><td><code class="consolas">salt</code></td><td>10387313</td></tr>
+<tr><td><code class="consolas">spread_type</code></td><td><code class="consolas">triangular</code></td></tr>
+<tr><td><code class="consolas">structures</code></td><td><code class="consolas">minecraft:monument</code>, weight 1</td></tr>
+</tbody>
+</table>
+<h3 id="placement-floor">Sitting on the sea floor</h3>
+<p>Vanilla builds monuments with their base at y=39. <code class="consolas">OceanMonumentFloorMixin</code> injects at <code class="consolas">TAIL</code> of <code class="consolas">OceanMonumentStructure.generatePieces</code>. The building's constructor has already been widened by the shell mixin, so the builder's box is the full 116x116 footprint. The mixin samples a 5x5 grid across that box with <code class="consolas">Heightmap.Types.OCEAN_FLOOR_WG</code>, subtracts 1 from each height to get the floor block, and keeps the lowest value.</p>
+<pre class="code-box"><code class="consolas">int dy = Math.max(lowestFloor, LOWEST_BASE_Y) - box.minY();
+// Only ever move down; vanilla height is fine wherever the floor is higher
+if (dy &lt; 0)
+	builder.offsetPiecesVertically(dy);</code></pre>
+<p><code class="consolas">LOWEST_BASE_Y</code> is -58. Bedrock reaches y=-60, so this leaves some deepslate under the monument. Monument pieces are regenerated at y=39 whenever a chunk is loaded from disk, so a second injection at <code class="consolas">RETURN</code> of <code class="consolas">regeneratePiecesAfterLoad</code> moves every rebuilt piece by the difference between the saved and rebuilt <code class="consolas">minY</code>.</p>
+
+<h2 id="basin">Basin</h2>
+<p><code class="consolas">MonumentBasinMixin</code> targets <code class="consolas">Structure</code> and checks <code class="consolas">this instanceof OceanMonumentStructure</code>. A structure may only place blocks in chunks its bounding box covers, so the injection at <code class="consolas">RETURN</code> of <code class="consolas">adjustBoundingBox</code> widens the box by 56 on the X and Z sides. The injection at <code class="consolas">HEAD</code> of <code class="consolas">afterPlace</code> does the digging, column by column across the chunk.</p>
+<table>
+<thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">FLAT_RING</code></td><td>8</td><td>Blocks of flat floor around the monument at base height.</td></tr>
+<tr><td><code class="consolas">BASIN_RADIUS</code></td><td>56</td><td>Outer limit of the dig, far enough for the slope to climb from y=-58 to the usual abyss floor.</td></tr>
+<tr><td><code class="consolas">MAX_CAVE_FLOOD</code></td><td>16</td><td>The cave flood loop runs while <code class="consolas">y &gt; floorY - 16</code>, so up to 15 blocks.</td></tr>
+</tbody>
+</table>
+<pre class="code-box"><code class="consolas">int dx = Math.max(0, Math.max(monument.minX() - x, x - monument.maxX()));
+int dz = Math.max(0, Math.max(monument.minZ() - z, z - monument.maxZ()));
+// Inside the footprint the monument already fills everything with water
+if (dx == 0 &amp;&amp; dz == 0)
+	continue;
+double distance = Math.sqrt(dx * dx + dz * dz);
+if (distance &gt; BASIN_RADIUS)
+	continue;
+
+int floorY = monument.minY() + (int) Math.max(0, distance - FLAT_RING);</code></pre>
+<p>The floor therefore rises one block per block of distance after the flat ring. Per column, in order:</p>
+<ol>
+<li>Every non-water block from <code class="consolas">floorY</code> up to sea level becomes water, and the column is marked as dug.</li>
+<li>Air directly below <code class="consolas">floorY</code> becomes water, stopping at the first non-air block.</li>
+<li>If the column was dug, and the block at <code class="consolas">floorY - 1</code> is in <code class="consolas">BlockTags.BASE_STONE_OVERWORLD</code> with a solid block beneath it, that block becomes <code class="consolas">minecraft:gravel</code>.</li>
+</ol>
+
+<h2 id="shell">Shell conversion</h2>
+<h3 id="shell-size">Size</h3>
+<table>
+<thead><tr><th>Constant in <code class="consolas">MonumentShell</code></th><th>Value</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">SCALE</code></td><td>2</td></tr>
+<tr><td><code class="consolas">VANILLA_WIDTH</code></td><td>58</td></tr>
+<tr><td><code class="consolas">WIDTH</code></td><td>116</td></tr>
+<tr><td><code class="consolas">SHELL_HEIGHT</code></td><td>46 (23 x 2)</td></tr>
+<tr><td><code class="consolas">GAZEBO_HEIGHT</code></td><td>14</td></tr>
+<tr><td><code class="consolas">HEIGHT</code></td><td>60</td></tr>
+<tr><td><code class="consolas">MIN_LY</code> / <code class="consolas">MAX_LY</code></td><td>-1 / 30 (vanilla-scale recording range)</td></tr>
+<tr><td><code class="consolas">RECORD_BASE_Y</code></td><td>39</td></tr>
+</tbody>
+</table>
+<p><code class="consolas">MonumentBuildingShellMixin</code> injects at <code class="consolas">TAIL</code> of the <code class="consolas">MonumentBuilding</code> constructor and assigns <code class="consolas">MonumentShell.scaledBox(box)</code>, which grows the box by 29 on each horizontal side around the same center. It injects at <code class="consolas">HEAD</code> of <code class="consolas">postProcess</code>, calls <code class="consolas">MonumentShell.place</code> and cancels vanilla. Both injections do nothing while <code class="consolas">MonumentShell.isRecording()</code> is true.</p>
+<h3 id="shell-recording">Recording vanilla's shell</h3>
+<p>Instead of reimplementing the monument's walls, <code class="consolas">MonumentShell</code> runs vanilla's own code once per orientation. <code class="consolas">record(Direction)</code> sets a <code class="consolas">ThreadLocal</code> recording flag, builds a <code class="consolas">MonumentBuilding</code> at (0, 0), and clears its child pieces, which removes every room and leaves the outer shell. It then calls <code class="consolas">postProcess</code> with a fake world.</p>
+<pre class="code-box"><code class="consolas">OceanMonumentPieces.MonumentBuilding building = new OceanMonumentPieces.MonumentBuilding(RandomSource.create(0), 0, 0, orientation);
+// Hollow: without its rooms, only the outer shell is built
+((MonumentBuildingAccessor) building).strawberrymc$getChildPieces().clear();
+BoundingBox box = building.getBoundingBox();
+building.postProcess(recorder(recorded, box), null, null, RandomSource.create(0), new BoundingBox(-64, -64, -64, 128, 128, 128),
+	new ChunkPos(0, 0), BlockPos.ZERO);</code></pre>
+<p>The fake world is a <code class="consolas">java.lang.reflect.Proxy</code> of <code class="consolas">WorldGenLevel</code>. It handles these methods:</p>
+<ul>
+<li><code class="consolas">setBlock</code> writes the state into a flat array, indexed by vanilla-scale local position.</li>
+<li><code class="consolas">getBlockState</code> and <code class="consolas">getFluidState</code> read that array, returning air for anything unrecorded.</li>
+<li><code class="consolas">getSeaLevel</code> returns 69 (39 + 30), so water fills up to <code class="consolas">MAX_LY</code>.</li>
+<li><code class="consolas">getMinY</code> returns 36, so support pillars stop one block under the floor.</li>
+<li><code class="consolas">scheduleTick</code> is a no-op; <code class="consolas">isClientSide</code> returns false; <code class="consolas">hashCode</code>, <code class="consolas">equals</code> and <code class="consolas">toString</code> are answered directly.</li>
+<li>Default interface methods are invoked normally, and anything else throws <code class="consolas">UnsupportedOperationException</code>.</li>
+</ul>
+<p>Air and water are dropped from the result, leaving only solids. Results are cached in a <code class="consolas">ConcurrentHashMap&lt;Direction, Recording&gt;</code>.</p>
+<p>The roof height comes from the recording as well. Scanning down from <code class="consolas">MAX_LY</code>, <code class="consolas">roofTop</code> is the first layer in which at least 50 of the central 10x10 columns are solid. Sparse decoration above the slab does not reach that count, so the gazebo sits on the real roof.</p>
+<h3 id="shell-place">Placing the shell</h3>
+<p><code class="consolas">MonumentShell.place</code> loops over the columns where the box and chunk overlap. Each world block maps to vanilla-scale coordinates by integer division, so every recorded block becomes a 2x2x2 cube.</p>
+<pre class="code-box"><code class="consolas">int lx = (x - box.minX()) / SCALE, lz = (z - box.minZ()) / SCALE;
+// Vanilla's support pillars reach down to the sea floor
+BlockState pillar = recording.get(lx, -1, lz);
+if (pillar != null) {
+	pos.set(x, box.minY() - 1, z);
+	while (pos.getY() &gt; level.getMinY() + 1 &amp;&amp; isReplaceable(level.getBlockState(pos))) {
+		level.setBlock(pos, pillar, 2);
+		pos.move(Direction.DOWN);
+	}
+}
+for (int y = box.minY(); y &lt; top; y++) {
+	BlockState state = recording.get(lx, (y - box.minY()) / SCALE, lz);
+	if (state == null)
+		state = y &lt; box.minY() + SCALE ? FLOOR : y &lt; seaLevel ? WATER : Blocks.AIR.defaultBlockState();</code></pre>
+<p><code class="consolas">top</code> is <code class="consolas">max(seaLevel, minY + 46)</code>. <code class="consolas">FLOOR</code> is <code class="consolas">minecraft:prismarine_bricks</code>, so the hollow interior has a floor two blocks thick and water above it. <code class="consolas">isReplaceable</code> accepts air, liquids, seagrass, tall seagrass, kelp and kelp plant. After the shell, <code class="consolas">buildGazebo</code>, <code class="consolas">buildArena</code> and <code class="consolas">buildSensors</code> run in that order.</p>
+<h3 id="shell-layout">The Layout record</h3>
+<p><code class="consolas">MonumentShell.Layout(box, orientation, floorY)</code> holds every position used by the server and sent to the client. <code class="consolas">floorY</code>, the top of the roof and the height of the gazebo floor, equals <code class="consolas">box.minY() + 2 * (roofTop + 1)</code>. Local coordinates put the entrance at z=0 and are converted by <code class="consolas">world(x, y, z)</code>.</p>
+<table>
+<thead><tr><th>Orientation</th><th>World X</th><th>World Z</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">SOUTH</code></td><td><code class="consolas">minX + x</code></td><td><code class="consolas">minZ + z</code></td></tr>
+<tr><td><code class="consolas">WEST</code></td><td><code class="consolas">maxX - z</code></td><td><code class="consolas">minZ + x</code></td></tr>
+<tr><td><code class="consolas">EAST</code></td><td><code class="consolas">minX + z</code></td><td><code class="consolas">minZ + x</code></td></tr>
+<tr><td>Default (north)</td><td><code class="consolas">minX + x</code></td><td><code class="consolas">maxZ - z</code></td></tr>
+</tbody>
+</table>
+<p><code class="consolas">PrismaticSensors.monumentAt(level, pos)</code> resolves a position to a <code class="consolas">Layout</code> through <code class="consolas">getStructureWithPieceAt</code>. It uses the first piece, because the structure start's own box is widened for the basin, and then checks <code class="consolas">layout.contains(pos)</code>: inside the X and Z of the building box, from <code class="consolas">minY - 1</code> to <code class="consolas">maxY</code>.</p>
+
+<h2 id="gazebo">Roof gazebo</h2>
+<p><code class="consolas">buildGazebo</code> is centerd on <code class="consolas">(minX + 58, minZ + 58)</code> at <code class="consolas">floorY</code>. Every write is limited to the chunk being generated.</p>
+<table>
+<thead><tr><th>Part</th><th>Construction</th></tr></thead>
+<tbody>
+<tr><td>Floor</td><td>19x19 (<code class="consolas">GAZEBO_RADIUS</code> 9). <code class="consolas">minecraft:dark_prismarine</code> with a <code class="consolas">minecraft:prismarine_bricks</code> edge. Up to 7 blocks of water below each column become bricks where the floor overhangs the roof.</td></tr>
+<tr><td>Interior</td><td>The full 19x19 from <code class="consolas">floor + 1</code> to below the roof is set to water, clearing vanilla's roof decoration.</td></tr>
+<tr><td>Pillars</td><td>8, at the corners and side midpoints. 7 tall (<code class="consolas">PILLAR_HEIGHT</code>), bricks with <code class="consolas">minecraft:sea_lantern</code> at height 3, topped with dark prismarine at height 8.</td></tr>
+<tr><td>Roof</td><td><code class="consolas">minecraft:cut_copper</code> from <code class="consolas">floor + 9</code>, 5 steps with radii 10, 8, 6, 4 and 2. The first and last steps are solid; the middle steps are rings 2 wide.</td></tr>
+<tr><td>Lightning rod</td><td><code class="consolas">minecraft:lightning_rod</code> at <code class="consolas">floor + 14</code>, centerd.</td></tr>
+<tr><td>Dome</td><td><a href="page-ancient-prismarine-technical.html">Cracked Prismarine</a> hanging from the roof: radius 3.6, 3 deep, flat top at <code class="consolas">floor + 8</code>, tip at <code class="consolas">floor + 5</code>.</td></tr>
+<tr><td>Vent shaft</td><td>Depths 1 to 4 under the floor, 5x5. The center 3x3 is water at depths 1 to 3 and <code class="consolas">minecraft:soul_sand</code> at depth 4; the surrounding ring is dark prismarine. The soul sand makes a bubble column rise once the cap is gone.</td></tr>
+<tr><td>Vent cap</td><td>3x3 <a href="page-ancient-prismarine-technical.html">Ancient Prismarine</a> set into the floor at <code class="consolas">floorY</code>.</td></tr>
+</tbody>
+</table>
+
+<h2 id="vent">Vent eruption</h2>
+<h3 id="vent-server">Server side</h3>
+<p><code class="consolas">PrismaticSensors.onBreak</code> listens to <code class="consolas">BreakBlockEvent</code> and calls <code class="consolas">checkVent</code> when Ancient Prismarine is broken. <code class="consolas">checkVent</code> requires three things: the position is one of the 9 cap blocks, the vent is not already in the <code class="consolas">ERUPTING</code> set, and the dome's center block (<code class="consolas">floor + 7</code>) is still Cracked Prismarine. The last check is what makes the eruption happen only once per monument.</p>
+<pre class="code-box"><code class="consolas">BlockPos vent = layout.ventCenter();
+ERUPTING.add(vent);
+for (ServerPlayer player : level.players())
+	if (player.blockPosition().closerThan(vent, CUTSCENE_RANGE)) {
+		PacketDistributor.sendToPlayer(player, new PlayVentCutscene(vent, layout.lumpCenter()));
+		MonumentIntro.protect(player, VENT_CUTSCENE_TICKS);
+	}
+level.playSound(null, vent, SoundEvents.BUBBLE_COLUMN_UPWARDS_AMBIENT, SoundSource.BLOCKS, 2.0F, 0.6F);
+for (int t = 0; t &lt;= JET_HIT - JET_START + 20; t += 2) {
+	int tick = t;
+	io.github.strawberrymc.StrawberrymcMod.queueServerWork(JET_START + t, () -&gt; jet(level, layout, tick));
+}
+io.github.strawberrymc.StrawberrymcMod.queueServerWork(JET_HIT, () -&gt; shatter(level, layout));
+io.github.strawberrymc.StrawberrymcMod.queueServerWork(VENT_CUTSCENE_TICKS, () -&gt; ERUPTING.remove(vent));</code></pre>
+<p><code class="consolas">CUTSCENE_RANGE</code> is 48 blocks. In <code class="consolas">jet</code>, the jet's height is <code class="consolas">min(1, tick / 40) * (domeTip.y - vent.y)</code>, 5 blocks at full height. Every half block up the jet it sends <code class="consolas">minecraft:bubble_column_up</code> (6 particles, spread 0.6/0.2/0.6, speed 0.1) and <code class="consolas">minecraft:cloud</code> (2 particles, spread 0.4/0.2/0.4, speed 0.02). The top gets 10 <code class="consolas">minecraft:bubble_pop</code> (spread 0.7/0.3/0.7, speed 0.05).</p>
+<table>
+<thead><tr><th>Tick</th><th>Seconds</th><th>Server</th><th>Camera (<code class="consolas">VentCutscene</code>)</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>0</td><td>Cap mined. Packet sent, 120-tick protection applied, bubble sound at volume 2.0, pitch 0.6.</td><td>Pan starts from the player's eyes.</td></tr>
+<tr><td>22</td><td>1.1</td><td></td><td>Pan complete, held on the shot.</td></tr>
+<tr><td>30</td><td>1.5</td><td>Jet starts (<code class="consolas">JET_START</code>), repeating every 2 ticks.</td><td>Held.</td></tr>
+<tr><td>70</td><td>3.5</td><td>Jet reaches the dome (<code class="consolas">JET_HIT</code>). <code class="consolas">shatter</code>: every remaining dome block is destroyed without drops, 60 <code class="consolas">minecraft:cloud</code> (spread 1.2, speed 0.15), <code class="consolas">SoundEvents.GENERIC_EXPLODE</code> at volume 1.5, pitch 1.4.</td><td>Held.</td></tr>
+<tr><td>90</td><td>4.5</td><td>Last jet burst.</td><td>Held.</td></tr>
+<tr><td>98</td><td>4.9</td><td></td><td>Pan back begins.</td></tr>
+<tr><td>120</td><td>6</td><td>Vent removed from <code class="consolas">ERUPTING</code>.</td><td>Ends.</td></tr>
+</tbody>
+</table>
+<h3 id="vent-client">Client side</h3>
+<p><code class="consolas">VentCutscene.start</code> ignores the packet if another cutscene is playing. The shot is computed once:</p>
+<ul>
+<li>The target is halfway between the top of the vent and the dome's center block.</li>
+<li>The horizontal direction from the vent to the player is snapped to <code class="consolas">22.5 + 45n</code> degrees, which lands between two pillars.</li>
+<li>The desired position is 15 blocks from the target along that direction and 0.5 up.</li>
+<li>A clip ray runs from 1.5 above the vent. On a hit, the camera stops 0.8 short of the block, but never closer than 2.5 from the anchor.</li>
+<li>If the line from the player's eyes to the shot is blocked, <code class="consolas">dip</code> is set. The pan becomes a cut at its midpoint, with black at ticks 11 and 109, ramping over 8 ticks each side.</li>
+</ul>
+<p>While active, it cancels all <code class="consolas">RenderGuiLayerEvent.Pre</code> layers, the hand and the water screen overlay, and draws black bars 9% of the screen height, sliding over 15 ticks. Fog is lerped to near 24 and far 64 by <code class="consolas">min(ease(t / 22), ease((120 - t) / 22))</code>. Easing throughout is smoothstep, <code class="consolas">t * t * (3 - 2 * t)</code>.</p>
+
+<h2 id="entrance">Entrance cutscene</h2>
+<h3 id="entrance-trigger">Trigger</h3>
+<p><code class="consolas">MonumentIntro.onPlayerTick</code> listens to <code class="consolas">PlayerTickEvent.Post</code> and returns unless the player is a <code class="consolas">ServerPlayer</code>, <code class="consolas">tickCount % 10 == 0</code> (every 0.5 seconds), not a spectator, and has not seen the cutscene. Being seen is the attachment <code class="consolas">strawberrymc:seen_monument_intro</code>, a boolean saved under the field <code class="consolas">seen</code> and copied on death.</p>
+<p>When the player is inside the building's box, the method runs these steps in order:</p>
+<ol>
+<li>Takes the first structure piece and its box. The entrance direction is the opposite of the piece's orientation.</li>
+<li>Picks the sensor nearest the player, because its chunk is sure to be loaded on their client.</li>
+<li>Sets the seen attachment to true.</li>
+<li>Stores the protection expiry as game time plus 425.</li>
+<li>Clears the target of every <code class="consolas">Mob</code> within 64 blocks that is targeting the player.</li>
+<li>Sends <code class="consolas">PlayCutscene(min, max, entrance, vent, sensor)</code>.</li>
+</ol>
+<h3 id="entrance-protection">Protection</h3>
+<p><code class="consolas">PROTECTED_UNTIL</code> maps player UUID to a game time and is shared by all three monument cutscenes. <code class="consolas">protect(player, ticks)</code> merges with <code class="consolas">Math::max</code>. Two listeners read it:</p>
+<ul>
+<li><code class="consolas">LivingIncomingDamageEvent</code> is cancelled unless the source is in <code class="consolas">DamageTypeTags.BYPASSES_INVULNERABILITY</code>, so <code class="consolas">/kill</code> and the void still work.</li>
+<li><code class="consolas">LivingChangeTargetEvent</code> is cancelled when the new target is a protected player, which stops guardians and every other mob from acquiring the player again.</li>
+</ul>
+<p>The player remains the camera entity. The game keeps running throughout, which keeps kelp, seagrass and mobs animated on screen.</p>
+<h3 id="entrance-timeline">Timeline</h3>
+<p><code class="consolas">MonumentIntro.CUTSCENE_TICKS</code> is 425 (21.25 seconds). Shots start at <code class="consolas">{0, 85, 160, 240, 315}</code>. Progress within a shot is eased with smoothstep. "Vent" here is the top of the vent cap, <code class="consolas">floorY + 1</code>, and "shell" is the height from the monument's base to it.</p>
+<table>
+<thead><tr><th>Shot</th><th>Ticks</th><th>Seconds</th><th>Subject</th><th>Camera position</th><th>Looks at</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>0–85</td><td>0–4.25</td><td>Entrance gate, 8 above the base at the entrance wall.</td><td>30 to 17 blocks out from the gate, 8 to 3 above it.</td><td>6 inside the gate, 1 lower.</td></tr>
+<tr><td>2</td><td>85–160</td><td>4.25–8</td><td>Corner nearest the player.</td><td>14 out along the diagonal, sliding -5 to +5 sideways, height 6 to 55% of shell.</td><td>34 back along the diagonal, at 80% of the camera height.</td></tr>
+<tr><td>3</td><td>160–240</td><td>8–12</td><td>Gazebo.</td><td>Orbits 50 degrees from -25 relative to the player's direction, 18 from the vent, 3 up.</td><td>3.5 above the vent, the underside of the dome.</td></tr>
+<tr><td>4</td><td>240–315</td><td>12–15.75</td><td>Nearest Prismatic Sensor.</td><td>Orbits -25 to +25 degrees from the hall side, 6 to 4.5 blocks, 1.5 up.</td><td>0.2 below the sensor's center.</td></tr>
+<tr><td>5</td><td>315–400</td><td>15.75–20</td><td>Roof, for the title.</td><td>46 from the center along the nearest diagonal, height 70% of shell to shell + 16.</td><td>2 above the vent.</td></tr>
+<tr><td>Return</td><td>400–425</td><td>20–21.25</td><td>Player.</td><td>The player's own eyes, under the final fade.</td><td>The player's view.</td></tr>
+</tbody>
+</table>
+<table>
+<thead><tr><th>Overlay</th><th>Ticks</th><th>Detail</th></tr></thead>
+<tbody>
+<tr><td>Opening pan</td><td>0–30 (1.5 s)</td><td>Blends from the player's eyes with <code class="consolas">ease(t / 30)</code>. If the path is blocked at the start (<code class="consolas">dipIn</code>), the view fades to black by tick 10, cuts, and clears by tick 30.</td></tr>
+<tr><td>Black dips</td><td>±10 around 85, 160, 240, 315</td><td><code class="consolas">1 - |t - cut| / 10</code>.</td></tr>
+<tr><td>Final dip</td><td>375–425</td><td><code class="consolas">1 - |t - 400| / 25</code>, fully black at tick 400 (20 seconds).</td></tr>
+<tr><td>Letterbox</td><td>0–20, 405–425</td><td>Bars 9% of screen height.</td></tr>
+<tr><td>Title</td><td>330–395</td><td>"Ocean Monument", color <code class="consolas">#D8F4FF</code>, scale 2.5, at x=18 and 46 above the bottom bar. Fades in over 20 ticks from tick 330 (16.5 s), out over 15 ticks from tick 380 (19 s). A one-pixel underline 25 below it grows over 30 ticks.</td></tr>
+<tr><td>Night vision</td><td>0–465</td><td>Fades in over 20 ticks. Fades out from tick 375 to tick 465 (23.25 s), 40 ticks after the camera ends.</td></tr>
+<tr><td>Water fog</td><td>0–465</td><td>Same fade. Near plane to 80% of render distance, far plane to full render distance.</td></tr>
+</tbody>
+</table>
+<h3 id="entrance-camera">How the camera works</h3>
+<p><code class="consolas">MonumentCutscene.start</code> runs from the packet handler. It computes the center at floor level, the half width (58) and the direction towards the player. That direction picks which corner to film, because the client only has chunks loaded near the player. It adds the night vision effect if the player has none: duration 825 ticks, amplifier 0, ambient, hidden. It then plays the chime through <code class="consolas">SimpleSoundInstance.forUI(CHIME, 1.0F, 1.0F)</code>.</p>
+<p>Each frame, <code class="consolas">framing(shot, progress)</code> returns a <code class="consolas">Framing(anchor, desired, target)</code>. The anchor is a point known to be open. The camera sits on the line from the anchor to the desired position, as far along as a clip ray allows.</p>
+<pre class="code-box"><code class="consolas">// The line of sight shrinks instantly when blocked and grows back smoothly
+double free = freeDistance(framing.anchor(), framing.desired());
+double frameTicks = Math.max(0, time - lastFrameTime);
+lastFrameTime = time;
+clipDistance = free &lt; clipDistance ? free : clipDistance + (free - clipDistance) * Math.min(1, CLIP_RECOVERY * frameTicks);
+Shot view = lookingAt(clipFrom(framing.anchor(), framing.desired(), clipDistance), framing.target());</code></pre>
+<p><code class="consolas">freeDistance</code> uses <code class="consolas">ClipContext.Block.VISUAL</code> and <code class="consolas">Fluid.NONE</code>, with <code class="consolas">CLIP_MARGIN</code> 1.0 and <code class="consolas">MIN_DISTANCE</code> 3.0. <code class="consolas">CLIP_RECOVERY</code> is 0.12 of the remaining distance per tick. <code class="consolas">clipDistance</code> resets at each new shot.</p>
+<p><code class="consolas">CutsceneCameraMixin</code> injects at <code class="consolas">TAIL</code> of <code class="consolas">Camera.alignWithEntity</code> and applies the shot, with the arena cutscene taking priority, then the vent cutscene, then the entrance cutscene. <code class="consolas">CutsceneNightVisionMixin</code> overrides <code class="consolas">GameRenderer.getNightVisionScale</code> with the cutscene's fade strength, avoiding vanilla's flicker as the effect runs out.</p>
+<p>The chime <code class="consolas">strawberrymc:monument_chime</code> (master category, streamed) lives in the built-in client resource pack <code class="consolas">monument_cutscene</code>, registered always-on at the top of the pack list by <code class="consolas">MonumentIntro.addPack</code> and titled "Strawberry MC monument cutscene". Keeping it there stops MCreator's generated <code class="consolas">sounds.json</code> from overwriting it. The same pack carries the <code class="consolas">sensor_glyph</code> and <code class="consolas">rune_funnel</code> particle definitions.</p>
+
+<h2 id="objectives">Objectives</h2>
+<p><code class="consolas">MonumentQuest.State(stage, arena, vent)</code> is stored in the attachment <code class="consolas">strawberrymc:monument_quest</code>, serialized under the field <code class="consolas">quest</code> and copied on death. <code class="consolas">Stage</code> is an enum.</p>
+<table>
+<thead><tr><th>Stage</th><th>Objective text</th><th>Ping position</th><th>Ping label</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">NONE</code></td><td>(empty)</td><td>None</td><td></td></tr>
+<tr><td><code class="consolas">ARENA</code></td><td>Reach the arena on the roof</td><td>2.5 above the vault</td><td>Arena</td></tr>
+<tr><td><code class="consolas">KEY</code></td><td>Retrieve the Monument Key</td><td>2.5 above the vent center</td><td>Key</td></tr>
+</tbody>
+</table>
+<p><code class="consolas">onPlayerTick</code> runs every 10 ticks for non-spectators who are not in a cutscene, so the first objective appears after the entrance cutscene.</p>
+<pre class="code-box"><code class="consolas">State state = player.getData(STATE);
+// Wandering too far from the objective drops the quest and its ping; it starts over at the next monument entered
+if (state.stage() != Stage.NONE &amp;&amp; player.position().distanceToSqr(objectivePos(state)) &gt; ABORT_DISTANCE * ABORT_DISTANCE) {
+	setStage(player, Stage.NONE, null);
+	return;
+}
+if (state.stage() == Stage.KEY)
+	return;
+MonumentShell.Layout layout = PrismaticSensors.monumentAt(player.level(), player.blockPosition());
+if (layout == null)
+	return;
+if (state.stage() == Stage.NONE)
+	setStage(player, Stage.ARENA, layout);
+else if (layout.onArena(player.position()) &amp;&amp; READING.add(player.getUUID()))
+	reachArena(player, layout);</code></pre>
+<p><code class="consolas">ABORT_DISTANCE</code> is 400 blocks. <code class="consolas">Layout.onArena</code> is true within radius 14 of the vault's center and from the vault's y to 6 above it.</p>
+<p><code class="consolas">reachArena</code> sends the notice "You cannot reach the Monument Key right now." followed by "The vault needs a key." on a second line. While the player's UUID is in <code class="consolas">READING</code>, <code class="consolas">sync</code> sends no objective and no objective ping. After <code class="consolas">NOTICE_TICKS</code> (110 ticks, 5.5 seconds), if the player is still at <code class="consolas">ARENA</code>, the stage becomes <code class="consolas">KEY</code>.</p>
+<p>Everything reaches the client in one payload. <code class="consolas">MonumentQuest.sync</code> rebuilds the ping list and sends it on login, on every stage change and after every <code class="consolas">/ping</code> edit.</p>
+<table>
+<thead><tr><th>Payload id</th><th>Registrar version</th><th>Fields</th><th>Handler</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">strawberrymc:monument_cutscene</code></td><td>3</td><td><code class="consolas">min, max, entrance, vent, sensor</code></td><td><code class="consolas">MonumentCutscene.start</code></td></tr>
+<tr><td><code class="consolas">strawberrymc:vent_cutscene</code></td><td>1</td><td><code class="consolas">vent, lump</code></td><td><code class="consolas">VentCutscene.start</code></td></tr>
+<tr><td><code class="consolas">strawberrymc:sync_quest</code></td><td>2</td><td><code class="consolas">objective, announce, pings, notice</code></td><td><code class="consolas">QuestHud.receive</code></td></tr>
+</tbody>
+</table>
+
+<h2 id="hud">HUD</h2>
+<p><code class="consolas">QuestHud.onRenderGui</code> runs on <code class="consolas">RenderGuiEvent.Post</code> and returns when the GUI is hidden or any monument cutscene is active. It draws pings, then the objective panel, then the notice.</p>
+<table>
+<thead><tr><th>Element</th><th>Details</th></tr></thead>
+<tbody>
+<tr><td>Objective panel</td><td>Left edge, at one third of the screen height, drawn at scale 0.75. Background <code class="consolas">0xB0101826</code>, a 2-pixel cyan <code class="consolas">#00E5FF</code> bar on its left, "Objective" in pink <code class="consolas">#FF2E97</code> and the objective in white. An announced objective slides in from the edge over 0.5 seconds with a cubic ease out.</td></tr>
+<tr><td>Notice</td><td>Centerd at 62% of screen height, italic, first line white and second pink, on a <code class="consolas">#101826</code> backing. Fades in over 0.6 seconds and out over the final 0.8 of its 5.5 seconds.</td></tr>
+</tbody>
+</table>
+
+<h2 id="pings">Pings</h2>
+<p>A ping is <code class="consolas">Ping(id, pos, color, size, blink, label)</code>. <code class="consolas">drawPing</code> projects the world position onto the HUD by hand, which is why pings show through blocks.</p>
+<pre class="code-box"><code class="consolas">double depth = offset.x * forward.x() + offset.y * forward.y() + offset.z * forward.z();
+double right = -(offset.x * left.x() + offset.y * left.y() + offset.z * left.z());
+double upward = offset.x * up.x() + offset.y * up.y() + offset.z * up.z();
+int width = graphics.guiWidth(), height = graphics.guiHeight();
+double focal = (height / 2.0) / Math.tan(Math.toRadians(camera.getFov()) / 2);</code></pre>
+<ul>
+<li>Screen position is <code class="consolas">width / 2 + right / depth * focal</code> and <code class="consolas">height / 2 - upward / depth * focal</code>.</li>
+<li>With depth 0.05 or less, the ping is behind the camera and pushed towards the matching edge.</li>
+<li>Anything within 22 pixels of the edge, or behind the camera, is clamped along its direction from the screen center to that margin.</li>
+<li>The shape is one color: a rotated square ring of half-size <code class="consolas">7 * size * 1.4</code> and thickness 1.5, around a solid diamond of half-size <code class="consolas">7 * size * 0.6</code>.</li>
+<li>When <code class="consolas">blink</code> is true, the ping is hidden while <code class="consolas">time % 1.2 &gt; 0.85</code>: on for 0.85 seconds and off for 0.35.</li>
+<li>The text under it is <code class="consolas">label  Nm</code> in the same color. When clamped near the bottom edge, the text moves above the ping.</li>
+</ul>
+<p>The objective ping has id <code class="consolas">objective</code>, color <code class="consolas">#00E5FF</code>, size 1 and blink on.</p>
+
+<h2 id="commands">Debug commands</h2>
+<p>All three commands require <code class="consolas">Commands.LEVEL_GAMEMASTERS</code>. Pings made with <code class="consolas">/ping</code> belong to the player running the command and are kept in a static map, so they are not saved. A new ping has size 1, blink on, its id as label, and pink <code class="consolas">#FF2E97</code> as the default color.</p>
+<table>
+<thead><tr><th>Syntax</th><th>Effect</th><th>Feedback</th></tr></thead>
+<tbody>
+<tr><td><code class="consolas">/cutscene clear [targets]</code></td><td>Clears the seen flag and sets the stage to <code class="consolas">NONE</code>. For a player inside a monument it also rebuilds the vent, dome and rune.</td><td>"Cleared cutscene(s) for &lt;name&gt;" or "...for N players", plus " and reset the monument's vent and arena" or " and reset N monuments' vents and arenas".</td></tr>
+<tr><td><code class="consolas">/sensors activate</code>, <code class="consolas">/sensors deactivate</code></td><td>See <a href="page-prismatic-sensor-technical.html">Prismatic Sensor</a>.</td><td>"Activated N Prismatic Sensor(s)" or "Deactivated N Prismatic Sensor(s)".</td></tr>
+<tr><td><code class="consolas">/ping add &lt;id&gt; [pos] [color]</code></td><td>Places or replaces a ping at the given position or the command source.</td><td>"Placed ping &lt;id&gt; at x y z"</td></tr>
+<tr><td><code class="consolas">/ping move &lt;id&gt; &lt;pos&gt;</code></td><td>Moves a ping.</td><td>"Updated ping &lt;id&gt;"</td></tr>
+<tr><td><code class="consolas">/ping color &lt;id&gt; &lt;color&gt;</code></td><td>Sets its color.</td><td>"Updated ping &lt;id&gt;"</td></tr>
+<tr><td><code class="consolas">/ping size &lt;id&gt; &lt;0.25–4&gt;</code></td><td>Sets its size.</td><td>"Updated ping &lt;id&gt;"</td></tr>
+<tr><td><code class="consolas">/ping blink &lt;id&gt; &lt;true|false&gt;</code></td><td>Turns blinking on or off.</td><td>"Updated ping &lt;id&gt;"</td></tr>
+<tr><td><code class="consolas">/ping label &lt;id&gt; &lt;text&gt;</code></td><td>Sets its label (greedy string).</td><td>"Updated ping &lt;id&gt;"</td></tr>
+<tr><td><code class="consolas">/ping remove &lt;id&gt;</code></td><td>Removes it.</td><td>"Removed ping &lt;id&gt;"</td></tr>
+<tr><td><code class="consolas">/ping clear</code></td><td>Removes all of the player's pings.</td><td>"Removed N ping(s)"</td></tr>
+<tr><td><code class="consolas">/ping list</code></td><td>Lists the objective and pings with position, distance, color, size, blink and label.</td><td>Starts with "Objective: ..."</td></tr>
+<tr><td><code class="consolas">/ping objective none|arena|key</code></td><td>Sets the stage, pointing it at the monument the player is in.</td><td>"Objective set to ...". Fails with "Stand inside an ocean monument to point this objective at it" when there is no monument and no existing objective.</td></tr>
+</tbody>
+</table>
+<p>A color is <code class="consolas">#RRGGBB</code>, <code class="consolas">RRGGBB</code>, or one of these names:</p>
+<table>
+<thead><tr><th>Name</th><th>Color</th></tr></thead>
+<tbody>
+<tr><td>pink</td><td><code class="consolas">#FF2E97</code></td></tr>
+<tr><td>cyan</td><td><code class="consolas">#00E5FF</code></td></tr>
+<tr><td>lime</td><td><code class="consolas">#9DFF00</code></td></tr>
+<tr><td>gold</td><td><code class="consolas">#FFC800</code></td></tr>
+<tr><td>violet</td><td><code class="consolas">#9B5CFF</code></td></tr>
+<tr><td>orange</td><td><code class="consolas">#FF7A00</code></td></tr>
+<tr><td>red</td><td><code class="consolas">#FF3B3B</code></td></tr>
+<tr><td>white</td><td><code class="consolas">#FFFFFF</code></td></tr>
+</tbody>
+</table>
+<p>Any edit of an unknown id fails with "No ping called &lt;id&gt;".</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

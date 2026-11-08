@@ -633,6 +633,18 @@ li.wiki-plain{
     font-family:monospace, monospace;
     white-space:pre-wrap
 }
+.code-box.vscode-code{
+    border-color:#1f1f1f;
+    background:#1f1f1f;
+    color:#cccccc;
+    font-size:14px;
+    line-height:19px;
+    tab-size:4;
+    white-space:pre
+}
+.vscode-code code{
+    font-family:Consolas, Menlo, Monaco, 'Courier New', monospace
+}
 h1,
 h2{
     margin:1em 0 .25em;
@@ -707,6 +719,18 @@ th, td {
 th {
     background-color: #eaecf0;
     text-align: center;
+}
+td code,
+th code,
+p code,
+li code{
+    overflow-wrap:anywhere
+}
+@media (max-width:600px){
+    table{
+        display:block;
+        overflow-x:auto
+    }
 }
 /* Footer Styling */
 tfoot {

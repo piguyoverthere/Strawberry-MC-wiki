@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Voidstone [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Voidstone [technical]</h1>
+<h2 id="block-class">Block class</h2>
+<p>Voidstone is <code class="consolas">strawberrymc:voidstone</code>, registered in <code class="consolas">StrawberrymcModBlocks</code> as <code class="consolas">VoidstoneBlock</code>. All of its behavior is set in the constructor's property chain, plus one override that lets plants grow on it.</p>
+<pre class="code-box"><code class="consolas">public VoidstoneBlock(BlockBehaviour.Properties properties) {
+	super(properties.mapColor(MapColor.TERRACOTTA_BLACK).sound(SoundType.BONE_BLOCK).strength(7f).requiresCorrectToolForDrops().friction(0.4f).speedFactor(0.9f).instrument(NoteBlockInstrument.BASEDRUM));
+}
+
+@Override
+public TriState canSustainPlant(BlockState state, BlockGetter world, BlockPos pos, Direction direction, BlockState plant) {
+	return TriState.TRUE;
+}</code></pre>
+
+<h2 id="properties">Properties</h2>
+<table>
+<thead>
+<tr><th>Property</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Hardness</td><td>7</td></tr>
+<tr><td>Blast resistance</td><td>7</td></tr>
+<tr><td>Correct tool required for drops</td><td>Yes</td></tr>
+<tr><td>Friction</td><td>0.4</td></tr>
+<tr><td>Speed factor</td><td>0.9</td></tr>
+<tr><td>Map color</td><td>TERRACOTTA_BLACK</td></tr>
+<tr><td>Sound type</td><td>BONE_BLOCK</td></tr>
+<tr><td>Note block instrument</td><td>BASEDRUM</td></tr>
+<tr><td>Sustains plants</td><td>Always (<code class="consolas">TriState.TRUE</code>)</td></tr>
+<tr><td>Item</td><td>Fire resistant (<code class="consolas">new Item.Properties().fireResistant()</code> in <code class="consolas">StrawberrymcModItems</code>)</td></tr>
+</tbody>
+</table>
+
+<h2 id="tags-and-loot">Tags and loot</h2>
+<table>
+<thead>
+<tr><th>File</th><th>Effect</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">tags/block/mineable/pickaxe.json</code></td><td>Mined with a pickaxe</td></tr>
+<tr><td><code class="consolas">tags/block/needs_diamond_tool.json</code></td><td>Requires a diamond tier tool</td></tr>
+<tr><td><code class="consolas">tags/block/overworld_carver_replaceables.json</code></td><td>Cave and canyon carvers can cut through it</td></tr>
+<tr><td><code class="consolas">loot_table/blocks/voidstone.json</code></td><td>Drops one Voidstone, with the <code class="consolas">minecraft:survives_explosion</code> condition</td></tr>
+</tbody>
+</table>
+
+<h2 id="worldgen-use">Use in world generation</h2>
+<p>Voidstone is the rock of <a href="page-the-void-technical.html">The Void</a>. It enters the terrain in three places:</p>
+<ul>
+<li><code class="consolas">default_block</code> in <code class="consolas">noise_settings/void_dim.json</code>. Every position with positive final density becomes Voidstone, so the plain, mountains, islands, pillars and bridges are all made of it.</li>
+<li>The surface rule in the same file, which places Voidstone at floor depth in <a href="page-voidstone-peaks-technical.html">Voidstone Peaks</a>, <a href="page-abyssal-plains-technical.html">Abyssal Plains</a> and Echoing Deep.</li>
+<li>The <code class="consolas">barrier</code> state of the <code class="consolas">void_tears_pool</code> configured feature, which lines <a href="page-void-tears-technical.html">Void Tears</a> pools.</li>
+</ul>
+<p>The biome JSON files list the <code class="consolas">minecraft:cave</code>, <code class="consolas">minecraft:cave_extra_underground</code> and <code class="consolas">minecraft:canyon</code> carvers, and the carver tag above is what lets them open caves in it.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

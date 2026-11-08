@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Abyssal Plains [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Abyssal Plains [technical]</h1>
+<h2 id="overview">Overview</h2>
+<p>Abyssal Plains is the biome <code class="consolas">strawberrymc:abyssal_plains</code> in <a href="page-the-void-technical.html">The Void</a>. Its land is the dimension's base terrain, because the mountain functions in the <code class="consolas">void_terrain</code> datapack are scaled by <code class="consolas">peaks_mask</code>, which is 0 outside <a href="page-voidstone-peaks-technical.html">Voidstone Peaks</a>.</p>
+
+<h2 id="climate">Climate point</h2>
+<p>The biome is a single point in the dimension's <code class="consolas">multi_noise</code> biome source, in the pack's <code class="consolas">dimension/void_dim.json</code>. Its position also feeds <code class="consolas">peaks_mask</code> through the <code class="consolas">ABYSSAL</code> constant in <code class="consolas">gen.py</code>.</p>
+<table>
+<thead>
+<tr><th>Parameter</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>temperature</td><td>-0.5</td></tr>
+<tr><td>humidity</td><td>0</td></tr>
+<tr><td>continentalness</td><td>0</td></tr>
+<tr><td>erosion</td><td>0</td></tr>
+<tr><td>weirdness</td><td>0</td></tr>
+<tr><td>depth</td><td>0</td></tr>
+<tr><td>offset</td><td>0</td></tr>
+</tbody>
+</table>
+
+<h2 id="terrain">Terrain</h2>
+<p>With <code class="consolas">peaks_mask</code> at 0, the land comes from these density functions:</p>
+<table>
+<thead>
+<tr><th>Function</th><th>Definition</th><th>Result</th></tr>
+</thead>
+<tbody>
+<tr><td>ground</td><td>Gradient y=34 to y=94 (1 to -1), plus <code class="consolas">0.35 * void_ground</code>, plus <code class="consolas">0.08 * void_roughness</code></td><td>Uneven surface centerd on y=64</td></tr>
+<tr><td>underside</td><td>Gradient y=-25 to y=15 (-1 to 1), plus <code class="consolas">0.4 * void_underside</code></td><td>Ragged underside centerd on y=-5</td></tr>
+<tr><td>cracks</td><td><code class="consolas">12 * (|void_cracks| - (0.11 + 0.06 * void_crack_width))</code></td><td>Gaps of varying width through the slab</td></tr>
+<tr><td>pillars</td><td><code class="consolas">4 * void_pillars - 3.4</code> plus height gradients</td><td>Thin columns where <code class="consolas">void_pillars &gt; 0.85</code></td></tr>
+<tr><td>islands</td><td>Three layers with tops at y=166, y=112 and y=-30</td><td>Floating islands above and below the plain</td></tr>
+<tr><td>bridges</td><td>Two 3D noises near zero inside the island layers</td><td>Thin winding tubes</td></tr>
+</tbody>
+</table>
+<p>Each function is explained in full on <a href="page-the-void-technical.html">The Void</a>.</p>
+
+<h2 id="biome-data">Biome data</h2>
+<table>
+<thead>
+<tr><th>Field in abyssal_plains.json</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>has_precipitation</td><td>false</td></tr>
+<tr><td>temperature / downfall</td><td>0.5 / 0</td></tr>
+<tr><td>foliage_color / grass_color / water_color</td><td>#9E814D / #90814D / #3F76E4</td></tr>
+<tr><td>minecraft:visual/water_fog_color</td><td>#050533</td></tr>
+<tr><td>carvers</td><td>minecraft:cave, minecraft:cave_extra_underground, minecraft:canyon</td></tr>
+<tr><td>spawners</td><td>All categories empty</td></tr>
+</tbody>
+</table>
+
+<h2 id="features">Features</h2>
+<table>
+<thead>
+<tr><th>Feature</th><th>Step</th><th>Placement</th></tr>
+</thead>
+<tbody>
+<tr><td>minecraft:lake_lava_underground</td><td>lakes</td><td>Listed in the biome JSON</td></tr>
+<tr><td><a href="page-void-tears-technical.html">strawberrymc:void_tears_pool</a></td><td>lakes</td><td><code class="consolas">rarity_filter</code> chance 6, <code class="consolas">in_square</code>, WORLD_SURFACE_WG, <code class="consolas">biome</code></td></tr>
+</tbody>
+</table>
+<p>The surface rule places <a href="page-voidstone-technical.html">Voidstone</a> at floor depth.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>GlowrootGenerationProcedure [raw] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>GlowrootGenerationProcedure [raw]</h1>
+        <pre class="code-box vscode-code"><code class="consolas"><span style="color: #569CD6">package</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.LevelAccessor</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.tags.BlockTags</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.resources.Identifier</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.core.BlockPos</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">io.github.strawberrymc.init.StrawberrymcModBlocks</span>;
+
+<span style="color: #569CD6">public class</span> <span style="color: #4EC9B0">GlowrootGenerationProcedure</span> {
+	<span style="color: #569CD6">public static</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">execute</span>(<span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">x</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">y</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">z</span>) {
+		<span style="color: #C586C0">if</span> ((<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">getBlockState</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(x, y <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>, z))).<span style="color: #DCDCAA">is</span>(<span style="color: #9CDCFE">BlockTags</span>.<span style="color: #DCDCAA">create</span>(<span style="color: #9CDCFE">Identifier</span>.<span style="color: #DCDCAA">parse</span>(<span style="color: #CE9178">"minecraft:base_stone_overworld"</span>)))) {
+			<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(x, y <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>, z), <span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">GLOWROOT_TUBER_STONE</span>.<span style="color: #DCDCAA">get</span>().<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+			<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(x, y, z), <span style="color: #9CDCFE">StrawberrymcModBlocks</span>.<span style="color: #9CDCFE">GLOWROOT</span>.<span style="color: #DCDCAA">get</span>().<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
+		}
+	}
+}</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

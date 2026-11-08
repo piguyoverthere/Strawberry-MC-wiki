@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>TallFireParticleEmitterProcedure [raw] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>TallFireParticleEmitterProcedure [raw]</h1>
+        <pre class="code-box vscode-code"><code class="consolas"><span style="color: #569CD6">package</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.LevelAccessor</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.util.RandomSource</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.util.Mth</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.server.level.ServerLevel</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.core.particles.ParticleTypes</span>;
+
+<span style="color: #569CD6">public class</span> <span style="color: #4EC9B0">TallFireParticleEmitterProcedure</span> {
+	<span style="color: #569CD6">public static</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">execute</span>(<span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">x</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">y</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">z</span>) {
+		<span style="color: #C586C0">for</span> (<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">_i1</span> <span style="color: #D4D4D4">=</span> <span style="color: #B5CEA8">0</span>; <span style="color: #4EC9B0">_i1</span> <span style="color: #D4D4D4">&lt;</span> <span style="color: #9CDCFE">Mth</span>.<span style="color: #DCDCAA">nextInt</span>(<span style="color: #9CDCFE">RandomSource</span>.<span style="color: #DCDCAA">create</span>(), <span style="color: #B5CEA8">2</span>, <span style="color: #B5CEA8">5</span>); _i1<span style="color: #D4D4D4">++</span>) {
+			<span style="color: #C586C0">if</span> (world <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">ServerLevel</span> _level)
+				<span style="color: #9CDCFE">_level</span>.<span style="color: #DCDCAA">sendParticles</span>(<span style="color: #9CDCFE">ParticleTypes</span>.<span style="color: #9CDCFE">LAVA</span>, (x <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">0.5</span>), (y <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">0.5</span>), (z <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">0.5</span>), <span style="color: #B5CEA8">1</span>, <span style="color: #B5CEA8">0.5</span>, <span style="color: #B5CEA8">0.5</span>, <span style="color: #B5CEA8">0.5</span>, <span style="color: #B5CEA8">2</span>);
+		}
+	}
+}</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

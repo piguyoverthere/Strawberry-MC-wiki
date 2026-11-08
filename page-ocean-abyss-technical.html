@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Ocean Abyss [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Ocean Abyss [technical]</h1>
+<h2 id="overview">Overview</h2>
+<p>Ocean Abyss is the biome <code class="consolas">strawberrymc:ocean_abyss</code>, the deepest, furthest-from-shore part of deep oceans and the only biome where ocean monuments generate. It is defined as datapack JSON and added to the overworld by a mixin. Its lowered sea floor comes from edits to the vanilla density functions.</p>
+
+<h2 id="biome-json">Biome JSON</h2>
+<p>The biome is <code class="consolas">data/strawberrymc/worldgen/biome/ocean_abyss.json</code>. It is added to the tags <code class="consolas">minecraft:is_ocean</code>, <code class="consolas">minecraft:is_deep_ocean</code> and <code class="consolas">minecraft:is_overworld</code>.</p>
+<table>
+<thead>
+<tr><th>Field</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>has_precipitation</td><td>true</td></tr>
+<tr><td>temperature / downfall</td><td>0.5 / 0.5</td></tr>
+<tr><td>water_color</td><td>#1b3a6b</td></tr>
+<tr><td>minecraft:visual/sky_color</td><td>#7ba4ff</td></tr>
+<tr><td>minecraft:visual/water_fog_color</td><td>#06142e</td></tr>
+<tr><td>minecraft:visual/water_fog_end_distance</td><td>48.0</td></tr>
+<tr><td>Background music</td><td>music.creative, music.game, music.under_water, each with delay 12000 to 24000</td></tr>
+<tr><td>carvers</td><td>minecraft:cave, minecraft:cave_extra_underground, minecraft:canyon</td></tr>
+</tbody>
+</table>
+<h3 id="biome-features">Features by step</h3>
+<table>
+<thead>
+<tr><th>Step</th><th>Features (minecraft:)</th></tr>
+</thead>
+<tbody>
+<tr><td>lakes</td><td>lake_lava_underground, lake_lava_surface</td></tr>
+<tr><td>local_modifications</td><td>amethyst_geode</td></tr>
+<tr><td>underground_structures</td><td>monster_room, monster_room_deep</td></tr>
+<tr><td>underground_ores</td><td>ore_dirt, ore_gravel, ore_granite_upper, ore_granite_lower, ore_diorite_upper, ore_diorite_lower, ore_andesite_upper, ore_andesite_lower, ore_tuff, ore_coal_upper, ore_coal_lower, ore_iron_upper, ore_iron_middle, ore_iron_small, ore_gold, ore_gold_lower, ore_redstone, ore_redstone_lower, ore_diamond, ore_diamond_medium, ore_diamond_large, ore_diamond_buried, ore_lapis, ore_lapis_buried, ore_copper, underwater_magma, disk_sand, disk_clay, disk_gravel</td></tr>
+<tr><td>fluid_springs</td><td>spring_water, spring_lava</td></tr>
+<tr><td>vegetal_decoration</td><td>glow_lichen, trees_water, flower_default, patch_grass_badlands, brown_mushroom_normal, red_mushroom_normal, patch_pumpkin, patch_sugar_cane, patch_firefly_bush_near_water, seagrass_deep, kelp_cold</td></tr>
+<tr><td>top_layer_modification</td><td>freeze_top_layer, plus strawberrymc:abyss_lava_flood from a biome modifier</td></tr>
+</tbody>
+</table>
+<h3 id="biome-spawns">Spawners</h3>
+<table>
+<thead>
+<tr><th>Category</th><th>Entity</th><th>Weight</th><th>Group size</th></tr>
+</thead>
+<tbody>
+<tr><td>ambient</td><td>bat</td><td>10</td><td>8</td></tr>
+<tr><td>monster</td><td>spider</td><td>100</td><td>4</td></tr>
+<tr><td>monster</td><td>zombie</td><td>95</td><td>4</td></tr>
+<tr><td>monster</td><td>zombie_villager</td><td>5</td><td>1</td></tr>
+<tr><td>monster</td><td>skeleton</td><td>100</td><td>4</td></tr>
+<tr><td>monster</td><td>creeper</td><td>100</td><td>4</td></tr>
+<tr><td>monster</td><td>slime</td><td>100</td><td>4</td></tr>
+<tr><td>monster</td><td>enderman</td><td>10</td><td>1 to 4</td></tr>
+<tr><td>monster</td><td>witch</td><td>5</td><td>1</td></tr>
+<tr><td>monster</td><td>drowned</td><td>5</td><td>1</td></tr>
+<tr><td>underground_water_creature</td><td>glow_squid</td><td>10</td><td>4 to 6</td></tr>
+<tr><td>water_ambient</td><td>cod</td><td>10</td><td>3 to 6</td></tr>
+<tr><td>water_creature</td><td>squid</td><td>1</td><td>1 to 4</td></tr>
+<tr><td>water_creature</td><td>dolphin</td><td>1</td><td>1 to 2</td></tr>
+<tr><td>water_creature</td><td>nautilus</td><td>5</td><td>1</td></tr>
+</tbody>
+</table>
+
+<h2 id="climate">Climate mixin</h2>
+<p><code class="consolas">SurfaceBiomeDepthMixin</code> injects at the return of <code class="consolas">StrawberrymcModBiomes.modifyOverworldParameterPoints</code>. It adds the biome at the two depth points used for surface biomes, then gives it exclusive claim to its climate.</p>
+<pre class="code-box"><code class="consolas">private static final Climate.Parameter[] OCEAN_ABYSS_CLIMATE = {
+	Climate.Parameter.span(-0.45f, 1.0f), // temperature
+	Climate.Parameter.span(-1.0f, 1.0f), // humidity
+	Climate.Parameter.span(-1.05f, -0.7f), // continentalness
+	Climate.Parameter.span(-1.0f, 1.0f), // erosion
+	Climate.Parameter.span(-1.0f, 1.0f) // weirdness
+};</code></pre>
+<table>
+<thead>
+<tr><th>Parameter</th><th>Range</th></tr>
+</thead>
+<tbody>
+<tr><td>temperature</td><td>-0.45 to 1 (every climate except frozen)</td></tr>
+<tr><td>humidity</td><td>-1 to 1</td></tr>
+<tr><td>continentalness</td><td>-1.05 to -0.7</td></tr>
+<tr><td>erosion</td><td>-1 to 1</td></tr>
+<tr><td>depth</td><td>Points 0 and 1</td></tr>
+<tr><td>weirdness</td><td>-1 to 1</td></tr>
+<tr><td>offset</td><td>0</td></tr>
+</tbody>
+</table>
+<p>Vanilla already covers every climate value, so simply adding a biome would only tie with existing ones. For each biome in <code class="consolas">SURFACE_BIOMES</code>, the mixin takes every climate box the biome owns and runs <code class="consolas">subtract</code> against all other surface entries. <code class="consolas">subtract</code> splits a box into the pieces outside the claimed box, dimension by dimension, and returns nothing if it lies entirely inside. <code class="consolas">isSurface</code> limits the process to entries whose depth is the point 0 or 1, so cave biomes are left in place.</p>
+
+<h2 id="terrain-splines">Terrain spline edits</h2>
+<p>The mod overrides <code class="consolas">data/minecraft/worldgen/density_function/overworld/offset.json</code> and <code class="consolas">factor.json</code>. Each file keeps the vanilla expression and adds one spline on <code class="consolas">minecraft:overworld/continents</code> to it with a top-level <code class="consolas">minecraft:add</code>.</p>
+<table>
+<thead>
+<tr><th>Continents location</th><th>Added to offset</th><th>Added to factor</th></tr>
+</thead>
+<tbody>
+<tr><td>-1.1</td><td>0</td><td>0</td></tr>
+<tr><td>-1.06</td><td>-0.68</td><td>25</td></tr>
+<tr><td>-0.72</td><td>-0.68</td><td>25</td></tr>
+<tr><td>-0.68</td><td>0</td><td>0</td></tr>
+</tbody>
+</table>
+<p>All derivatives are 0. Inside the plateau from -1.06 to -0.72 the offset drops the whole floor and the large factor flattens it. The ramp from -0.72 to -0.68 straddles the biome's edge at continentalness -0.7, so the seabed falls away at the border of the biome.</p>
+
+<h2 id="lava-flood">Lava flood</h2>
+<p>Below y=-54 worldgen fills open space with lava instead of water, which would leave a layer of lava under the ocean, and lava springs can open into the water from the walls. <code class="consolas">AbyssLavaFlood</code> is a feature that turns that lava into water. The configured and placed features are both named <code class="consolas">abyss_lava_flood</code>, the placed feature has no placement modifiers so it runs once per chunk, and the biome modifier adds it in step <code class="consolas">top_layer_modification</code>, after every other feature.</p>
+<pre class="code-box"><code class="consolas">for (int x = minX; x &lt; minX + 16; x++) {
+	for (int z = minZ; z &lt; minZ + 16; z++) {
+		if (!level.getBiome(pos.set(x, BIOME_Y, z)).is(OCEAN_ABYSS))
+			continue;
+		for (int y = level.getMinY(); y &lt; seaLevel; y++) {
+			pos.set(x, y, z);
+			if (level.getBlockState(pos).is(Blocks.LAVA)) {
+				level.setBlock(pos, Blocks.WATER.defaultBlockState(), 2);
+				changed = true;
+			}
+		}
+	}
+}</code></pre>
+<p><code class="consolas">BIOME_Y</code> is -54, so the biome is read near the floor. Every lava block from the bottom of the world to sea level in a matching column becomes water.</p>
+
+<h2 id="monument">Ocean monument placement</h2>
+<p><code class="consolas">data/minecraft/worldgen/structure/monument.json</code> sets <code class="consolas">"biomes": "strawberrymc:ocean_abyss"</code>, step <code class="consolas">surface_structures</code>, and a full-box monster spawn override of guardians, weight 1, group size 2 to 4. The axolotl and underground water creature overrides are empty lists.</p>
+<p>Several mixins work together. The building's box is doubled by <code class="consolas">MonumentBuildingShellMixin</code> using <code class="consolas">MonumentShell</code>, giving a width of 116 blocks.</p>
+<table>
+<thead>
+<tr><th>Mixin</th><th>Target and injection</th><th>Job</th></tr>
+</thead>
+<tbody>
+<tr><td><code class="consolas">OceanMonumentFloorMixin</code></td><td><code class="consolas">OceanMonumentStructure.generatePieces</code>, TAIL</td><td>Lowers the monument to the sea floor</td></tr>
+<tr><td><code class="consolas">OceanMonumentFloorMixin</code></td><td><code class="consolas">regeneratePiecesAfterLoad</code>, RETURN</td><td>Keeps the saved height when pieces are rebuilt from disk</td></tr>
+<tr><td><code class="consolas">StructurePieceMoveMixin</code></td><td><code class="consolas">StructurePiece.move</code>, TAIL</td><td>Moves the building's rooms along with it</td></tr>
+<tr><td><code class="consolas">MonumentBuildingAccessor</code></td><td><code class="consolas">MonumentBuilding.childPieces</code></td><td>Reads the private list of rooms</td></tr>
+<tr><td><code class="consolas">MonumentBasinMixin</code></td><td><code class="consolas">Structure.adjustBoundingBox</code>, RETURN</td><td>Widens the box by 56 blocks each way so the basin can be placed</td></tr>
+<tr><td><code class="consolas">MonumentBasinMixin</code></td><td><code class="consolas">Structure.afterPlace</code>, HEAD</td><td>Digs the basin</td></tr>
+</tbody>
+</table>
+<h3 id="monument-floor">Lowering onto the floor</h3>
+<pre class="code-box"><code class="consolas">for (int i = 0; i &lt;= 4; i++) {
+	for (int j = 0; j &lt;= 4; j++) {
+		int x = box.minX() + (box.maxX() - box.minX()) * i / 4;
+		int z = box.minZ() + (box.maxZ() - box.minZ()) * j / 4;
+		int floor = context.chunkGenerator().getBaseHeight(x, z, Heightmap.Types.OCEAN_FLOOR_WG, context.heightAccessor(), context.randomState()) - 1;
+		lowestFloor = Math.min(lowestFloor, floor);
+	}
+}
+int dy = Math.max(lowestFloor, LOWEST_BASE_Y) - box.minY();
+if (dy &lt; 0)
+	builder.offsetPiecesVertically(dy);</code></pre>
+<p>The heightmap is sampled on a 5 by 5 grid across the footprint and the lowest floor wins. <code class="consolas">LOWEST_BASE_Y</code> is -58, which keeps a little deepslate over bedrock, as bedrock reaches up to y=-60. The monument only moves down. Pieces are rebuilt at their original height whenever a chunk loads from disk, so <code class="consolas">strawberrymc$keepSavedHeight</code> moves the rebuilt pieces to the height of the saved box.</p>
+<h3 id="monument-basin">Basin</h3>
+<table>
+<thead>
+<tr><th>Constant in MonumentBasinMixin</th><th>Value</th><th>Purpose</th></tr>
+</thead>
+<tbody>
+<tr><td>FLAT_RING</td><td>8</td><td>Width of the flat area around the monument</td></tr>
+<tr><td>BASIN_RADIUS</td><td>56</td><td>How far the slope reaches</td></tr>
+<tr><td>MAX_CAVE_FLOOD</td><td>16</td><td>Depth limit for flooding caves under the basin</td></tr>
+</tbody>
+</table>
+<pre class="code-box"><code class="consolas">double distance = Math.sqrt(dx * dx + dz * dz);
+if (distance &gt; BASIN_RADIUS)
+	continue;
+
+int floorY = monument.minY() + (int) Math.max(0, distance - FLAT_RING);</code></pre>
+<p>For each column outside the footprint and within the radius, the basin floor is level with the monument's base for 8 blocks, then climbs 1 block per block of distance. Everything from the basin floor to sea level that is not already water becomes water. Air directly below the basin floor is flooded for up to 15 blocks, so caves the basin opens up do not leave air pockets. Where the dig exposed new stone, the top block becomes gravel, if it is in <code class="consolas">BASE_STONE_OVERWORLD</code> and rests on something solid.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

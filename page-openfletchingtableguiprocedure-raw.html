@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>OpenFletchingTableGUIProcedure [raw] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>OpenFletchingTableGUIProcedure [raw]</h1>
+        <pre class="code-box vscode-code"><code class="consolas"><span style="color: #569CD6">package</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.neoforged.neoforge.event.entity.player.PlayerInteractEvent</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.neoforged.fml.common.EventBusSubscriber</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.neoforged.bus.api.SubscribeEvent</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.neoforged.bus.api.Event</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.block.Blocks</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.level.LevelAccessor</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.inventory.AbstractContainerMenu</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.entity.player.Player</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.entity.player.Inventory</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.entity.Entity</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.MenuProvider</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.world.InteractionHand</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.server.level.ServerPlayer</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.network.chat.Component</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.network.FriendlyByteBuf</span>;
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.minecraft.core.BlockPos</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">javax.annotation.Nullable</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">io.netty.buffer.Unpooled</span>;
+
+<span style="color: #569CD6">import</span> <span style="color: #D4D4D4">io.github.strawberrymc.world.inventory.FletchingTableGUIMenu</span>;
+
+@<span style="color: #4EC9B0">EventBusSubscriber</span>
+<span style="color: #569CD6">public class</span> <span style="color: #4EC9B0">OpenFletchingTableGUIProcedure</span> {
+	@<span style="color: #4EC9B0">SubscribeEvent</span>
+	<span style="color: #569CD6">public static</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">onRightClickBlock</span>(<span style="color: #4EC9B0">PlayerInteractEvent</span>.<span style="color: #4EC9B0">RightClickBlock</span> <span style="color: #9CDCFE">event</span>) {
+		<span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getHand</span>() <span style="color: #D4D4D4">!=</span> <span style="color: #9CDCFE">InteractionHand</span>.<span style="color: #9CDCFE">MAIN_HAND</span>)
+			<span style="color: #C586C0">return</span>;
+		<span style="color: #DCDCAA">execute</span>(event, <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getLevel</span>(), <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getPos</span>().<span style="color: #DCDCAA">getX</span>(), <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getPos</span>().<span style="color: #DCDCAA">getY</span>(), <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getPos</span>().<span style="color: #DCDCAA">getZ</span>(), <span style="color: #9CDCFE">event</span>.<span style="color: #DCDCAA">getEntity</span>());
+	}
+
+	<span style="color: #569CD6">public static</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">execute</span>(<span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">x</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">y</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">z</span>, <span style="color: #4EC9B0">Entity</span> <span style="color: #9CDCFE">entity</span>) {
+		<span style="color: #DCDCAA">execute</span>(<span style="color: #569CD6">null</span>, world, x, y, z, entity);
+	}
+
+	<span style="color: #569CD6">private static</span> <span style="color: #4EC9B0">void</span> <span style="color: #DCDCAA">execute</span>(@<span style="color: #4EC9B0">Nullable Event</span> <span style="color: #9CDCFE">event</span>, <span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">x</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">y</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">z</span>, <span style="color: #4EC9B0">Entity</span> <span style="color: #9CDCFE">entity</span>) {
+		<span style="color: #C586C0">if</span> (entity <span style="color: #D4D4D4">==</span> <span style="color: #569CD6">null</span>)
+			<span style="color: #C586C0">return</span>;
+		<span style="color: #C586C0">if</span> ((<span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">getBlockState</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(x, y, z))).<span style="color: #DCDCAA">getBlock</span>() <span style="color: #D4D4D4">==</span> <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">FLETCHING_TABLE</span>) {
+			<span style="color: #C586C0">if</span> (entity <span style="color: #569CD6">instanceof</span> <span style="color: #4EC9B0">ServerPlayer</span> _ent) {
+				<span style="color: #4EC9B0">BlockPos</span> <span style="color: #9CDCFE">_bpos</span> <span style="color: #D4D4D4">=</span> <span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(x, y, z);
+				<span style="color: #9CDCFE">_ent</span>.<span style="color: #DCDCAA">openMenu</span>(<span style="color: #C586C0">new</span> <span style="color: #DCDCAA">MenuProvider</span>() {
+					@<span style="color: #4EC9B0">Override</span>
+					<span style="color: #569CD6">public</span> <span style="color: #4EC9B0">Component</span> <span style="color: #DCDCAA">getDisplayName</span>() {
+						<span style="color: #C586C0">return</span> <span style="color: #9CDCFE">Component</span>.<span style="color: #DCDCAA">literal</span>(<span style="color: #CE9178">"FletchingTableGUI"</span>);
+					}
+
+					@<span style="color: #4EC9B0">Override</span>
+					<span style="color: #569CD6">public</span> <span style="color: #4EC9B0">boolean</span> <span style="color: #DCDCAA">shouldTriggerClientSideContainerClosingOnOpen</span>() {
+						<span style="color: #C586C0">return</span> <span style="color: #569CD6">false</span>;
+					}
+
+					@<span style="color: #4EC9B0">Override</span>
+					<span style="color: #569CD6">public</span> <span style="color: #4EC9B0">AbstractContainerMenu</span> <span style="color: #DCDCAA">createMenu</span>(<span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">id</span>, <span style="color: #4EC9B0">Inventory</span> <span style="color: #9CDCFE">inventory</span>, <span style="color: #4EC9B0">Player</span> <span style="color: #9CDCFE">player</span>) {
+						<span style="color: #C586C0">return new</span> <span style="color: #DCDCAA">FletchingTableGUIMenu</span>(id, inventory, <span style="color: #C586C0">new</span> <span style="color: #DCDCAA">FriendlyByteBuf</span>(<span style="color: #9CDCFE">Unpooled</span>.<span style="color: #DCDCAA">buffer</span>()).<span style="color: #DCDCAA">writeBlockPos</span>(_bpos));
+					}
+				}, _bpos);
+			}
+		}
+	}
+}</code></pre>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>

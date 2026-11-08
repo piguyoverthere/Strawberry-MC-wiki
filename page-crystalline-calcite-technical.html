@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Crystalline Calcite [technical] | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Crystalline Calcite [technical]</h1>
+<h2 id="block-class">Block class</h2>
+<p>Crystalline Calcite is <code class="consolas">strawberrymc:crystalline_calcite</code>, implemented by <code class="consolas">CrystallineCalciteBlock</code>. It is a directional half-thick layer that faces the side it was placed on: flat on floors, hanging on ceilings and upright on walls.</p>
+<pre class="code-box"><code class="consolas">public CrystallineCalciteBlock(BlockBehaviour.Properties properties) {
+	super(properties.sound(SoundType.CALCITE).strength(1f, 10f).noOcclusion().isRedstoneConductor((bs, br, bp) -&gt; false));
+	this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.UP));
+}</code></pre>
+
+<h2 id="properties">Properties</h2>
+<table>
+<thead>
+<tr><th>Property</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Hardness</td><td>1</td></tr>
+<tr><td>Blast resistance</td><td>10</td></tr>
+<tr><td>Sound type</td><td>CALCITE</td></tr>
+<tr><td>Occlusion</td><td>None (<code class="consolas">noOcclusion</code>)</td></tr>
+<tr><td>Redstone conductor</td><td>No</td></tr>
+<tr><td>Light dampening</td><td>0</td></tr>
+<tr><td>State property</td><td><code class="consolas">FACING</code>, all six directions, default UP</td></tr>
+<tr><td>Loot</td><td>Drops itself, with the <code class="consolas">minecraft:survives_explosion</code> condition</td></tr>
+</tbody>
+</table>
+
+<h2 id="shape">Shape and placement</h2>
+<p><code class="consolas">makeShapes</code> precomputes one 8-pixel-thick box per facing. <code class="consolas">getStateForPlacement</code> sets <code class="consolas">FACING</code> to the clicked face, and <code class="consolas">rotate</code> and <code class="consolas">mirror</code> transform it.</p>
+<pre class="code-box"><code class="consolas">return switch (state.getValue(FACING)) {
+	case DOWN -&gt; box(0, 8, 0, 16, 16, 16);
+	case NORTH -&gt; box(0, 0, 8, 16, 16, 16);
+	case SOUTH -&gt; box(0, 0, 0, 16, 16, 8);
+	case EAST -&gt; box(0, 0, 0, 8, 16, 16);
+	case WEST -&gt; box(8, 0, 0, 16, 16, 16);
+	default -&gt; box(0, 0, 0, 16, 8, 16);
+};</code></pre>
+
+<h2 id="model">Model</h2>
+<p>The blockstate file lists several randomly chosen variants for each facing, using rotations of the models <code class="consolas">crystalline_calcite</code>, <code class="consolas">crystalline_calcite_2</code> and <code class="consolas">crystalline_calcite_3</code>. These inherit from <code class="consolas">strawberrymc:custom/crystalline_calcite</code>, <code class="consolas">custom/crystalline_calcite_2</code> and <code class="consolas">custom/crystalline_calcite_3</code>.</p>
+
+<h2 id="worldgen">World generation</h2>
+<p>Crystalline Calcite is generated in <a href="page-crystal-hollows-technical.html">Crystal Hollows</a> in its default UP state.</p>
+<table>
+<thead>
+<tr><th>Source</th><th>Where it places the block</th></tr>
+</thead>
+<tbody>
+<tr><td>Biome surface rule in <code class="consolas">StrawberrymcModBiomes</code></td><td>Cave floors, as the ground block of the biome</td></tr>
+<tr><td><code class="consolas">CrystalHollowsCarver</code> crust pass</td><td>Any replaceable block with air directly above it</td></tr>
+<tr><td><a href="page-calcitemountaingenerationprocedure-raw.html">CalciteMountainGenerationProcedure [raw]</a></td><td>One block above the top of each calcite mound column, if that position is empty</td></tr>
+</tbody>
+</table>
+<pre class="code-box"><code class="consolas">if (above.isAir())
+	crust = crystalline;</code></pre>
+<h3 id="carving-rules">Interaction with carving</h3>
+<p>The cavern carver treats the block as carvable, explicitly checking for it, because the surface rule has already laid it on the floors of vanilla caves and it would otherwise be left floating over the cavern. Vanilla cave carvers do not count it as carvable, so the <code class="consolas">calcite_cleanup</code> feature in <code class="consolas">CrystalHollowsDecor</code> removes any Crystalline Calcite with an empty block below it, once per chunk in step <code class="consolas">raw_generation</code>.</p>
+<h3 id="feature-interactions">Other features that use it</h3>
+<ul>
+<li>It is in the tag <code class="consolas">#strawberrymc:hollows_ground</code>, so crystal patches and pools can replace it.</li>
+<li><code class="consolas">hollows_scattered_crystals</code> scans for it and places individual <a href="page-crystals-technical.html">crystals</a> in its position when a solid block is below.</li>
+</ul>
+        <script src="wiki-editor.js" defer=""></script>
+    </body></html>
