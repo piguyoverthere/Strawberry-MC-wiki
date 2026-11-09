@@ -31,7 +31,7 @@
   },
   "aadi": {
    "name": "aadi",
-   "role": "editor",
+   "role": "admin",
    "salt": "xIjXjLcR9Ck+EQ6dEwn14g==",
    "iterations": 310000,
    "hash": "bQR3H3aKsf1nilslw/mkQ5lUNLcVyInNTL5E10i870M=",
