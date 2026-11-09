@@ -208,8 +208,8 @@
    "votes": {
     "alex": {
      "name": "Alex",
-     "vote": "approve",
-     "source": "document"
+     "vote": "disapprove",
+     "date": "2026-11-09T02:29:04.964Z"
     },
     "zafar": {
      "name": "Zafar",
