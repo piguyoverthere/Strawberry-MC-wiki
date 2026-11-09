@@ -29,6 +29,21 @@
    "updated": "2026-11-09T20:53:20.133Z",
    "comments": [],
    "history": []
+  },
+  {
+   "id": "bug-3",
+   "number": 3,
+   "title": "WIKI: Sometimes comments send >1 time",
+   "description": "if you click the comment button twice then it sends twice instead of clicking once, send, then close",
+   "steps": "SEND A COMMENT AND PRESS BUTTON TWIVE WHILST LOADING",
+   "area": "wiki",
+   "status": "unresolved",
+   "severity": "major",
+   "reporter": "Eric",
+   "reported": "2026-11-09T21:26:37.757Z",
+   "updated": "2026-11-09T21:26:37.757Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
