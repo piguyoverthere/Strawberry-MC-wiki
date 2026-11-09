@@ -36,6 +36,14 @@
    "iterations": 310000,
    "hash": "bQR3H3aKsf1nilslw/mkQ5lUNLcVyInNTL5E10i870M=",
    "created": "2026-11-09T20:28:32.325Z"
+  },
+  "rishaan": {
+   "name": "Rishaan",
+   "role": "reviewer",
+   "salt": "WiCnGn0EJt3fFYCDY7NVDA==",
+   "iterations": 310000,
+   "hash": "CXe+cgBjIfdKV+qEzA3969wRwvC0VNGinQfh7rtUJLk=",
+   "created": "2026-11-09T22:21:46.695Z"
   }
  }
 }
