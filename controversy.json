@@ -1302,7 +1302,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "date": "2026-11-09T21:22:38.548Z"
+    }
+   }
   },
   {
    "id": "idea-doc-45",
