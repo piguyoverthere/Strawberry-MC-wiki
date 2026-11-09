@@ -1096,6 +1096,12 @@
      "name": "Eric",
      "vote": "disapprove",
      "date": "2026-11-07T04:19:40.528Z"
+    },
+    "aadi": {
+     "name": "aadi",
+     "vote": "disapprove",
+     "date": "2026-11-09T20:46:24.489Z",
+     "pending": true
     }
    },
    "replies": [
