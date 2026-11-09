@@ -59,6 +59,21 @@
    "updated": "2026-11-09T21:27:17.194Z",
    "comments": [],
    "history": []
+  },
+  {
+   "id": "bug-5",
+   "number": 5,
+   "title": "WIKI: Can review needs approval for approving ideas(ironic)",
+   "description": "can review can't approve approvals",
+   "steps": "approve ideas in can review",
+   "area": "wiki",
+   "status": "unresolved",
+   "severity": "minor",
+   "reporter": "Eric",
+   "reported": "2026-11-09T21:28:19.966Z",
+   "updated": "2026-11-09T21:28:19.966Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
