@@ -33,7 +33,7 @@
     </tbody>
 </table>
 
-<h2 id="pipeline">From source to execution</h2>
+<h2 id="pipeline">Source to execution</h2>
 <ol>
     <li><code class="consolas">ScripterBlockEntity.run</code> calls <code class="consolas">ComScriptParser.parse(script)</code>. The whole script, including nested blocks and every expression, is parsed before anything runs. The first <code class="consolas">SyntaxError</code> ends the attempt.</li>
     <li><code class="consolas">split</code> cuts the source into <code class="consolas">Piece</code> records (a line number and text) and drops comments.</li>
@@ -42,7 +42,7 @@
     <li>Timer and event blocks register listeners. Those listeners keep a reference to the same runner, so they share its variables.</li>
 </ol>
 
-<h2 id="splitter">The statement splitter</h2>
+<h2 id="splitter">Statement splitter</h2>
 <p><code class="consolas">ComScriptParser.split</code> is a single character loop that tracks the current line, the line a statement began on, and a bracket <code class="consolas">depth</code>. At each position it checks, in order: comment, boolean literal, string, bracket, semicolon, newline, then ordinary character.</p>
 
 <h3 id="splitter-comments">Comments</h3>
@@ -710,4 +710,5 @@ return Math.round(value * scale) / scale;</code></pre>
 <h3 id="errors-warning">Warning</h3>
 <p>The only warning is <code class="consolas">Warning: &lt;name&gt; already exists and was replaced</code>, logged by <code class="consolas">store new</code>.</p>
         <script src="wiki-editor.js" defer=""></script>
-    </body></html>
+    
+</body></html>
