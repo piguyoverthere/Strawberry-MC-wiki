@@ -828,7 +828,15 @@
      "vote": "approve",
      "source": "document"
     }
-   }
+   },
+   "replies": [
+    {
+     "author": "aadi",
+     "text": "ye, actuatedly",
+     "date": "2026-11-09T20:39:37.183Z",
+     "pending": true
+    }
+   ]
   },
   {
    "id": "idea-doc-26",
