@@ -1605,7 +1605,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "date": "2026-11-09T16:05:14.618Z"
+    }
+   }
   },
   {
    "id": "idea-doc-67",
