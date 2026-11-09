@@ -267,6 +267,7 @@ const pages = [
     { title: "Waypoints [technical]", href: "page-waypoints-technical.html", keywords: "waypoints [technical] technical code implementation" },
     { title: "ComScript [v1.1] prerelease notes", href: "page-comscript-v1-1-prerelease-notes.html", keywords: "comscript [v1.1] prerelease notes" },
     { title: "DEVELOPER CONTRACT", href: "page-developer-contract.html", keywords: "developer contract" },
+    { title: "[draft] Parabola Mode Mobs", href: "page-draft-parabola-mode-mobs.html", keywords: "parabola mode mobs eric aadi caleb solar god lunar render rend dragon sai zafar liver" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
