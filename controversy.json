@@ -4080,6 +4080,18 @@
      "source": "document"
     }
    }
+  },
+  {
+   "id": "idea-mw9qs6la-hbf7e",
+   "author": "aadi",
+   "title": "Wiki suggestions",
+   "description": "The wiki is missing the following:\n-Making ideas deletable by their owner\n-Reviewers should be able to freely comment and approve/disapprove things",
+   "comments": [],
+   "status": "",
+   "source": "site",
+   "created": "2026-11-09T20:57:05.374Z",
+   "votes": {},
+   "pending": true
   }
  ],
  "discussions": [
