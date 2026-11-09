@@ -227,7 +227,15 @@
      "vote": "disapprove",
      "date": "2026-11-09T02:29:10.312Z"
     }
-   }
+   },
+   "replies": [
+    {
+     "author": "aadi",
+     "text": "NONONONONONNONNONOnnononono",
+     "date": "2026-11-09T20:37:04.218Z",
+     "pending": true
+    }
+   ]
   },
   {
    "id": "idea-doc-8",
