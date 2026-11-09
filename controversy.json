@@ -3898,7 +3898,15 @@
      "vote": "approve",
      "date": "2026-11-09T22:30:26.490Z"
     }
-   }
+   },
+   "replies": [
+    {
+     "author": "Rishaan",
+     "text": "Hey this is already in the wiki",
+     "date": "2026-11-09T22:31:59.280Z",
+     "pending": true
+    }
+   ]
   },
   {
    "id": "idea-doc-215",
