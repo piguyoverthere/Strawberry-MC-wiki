@@ -28,6 +28,14 @@
    "iterations": 310000,
    "hash": "Bl9ijjhX7mDl36xiA3AK2cn1ptSTsTwBpWm4la0QWEU=",
    "created": "2026-11-07T17:00:16.200Z"
+  },
+  "aadi": {
+   "name": "aadi",
+   "role": "reviewer",
+   "salt": "xIjXjLcR9Ck+EQ6dEwn14g==",
+   "iterations": 310000,
+   "hash": "bQR3H3aKsf1nilslw/mkQ5lUNLcVyInNTL5E10i870M=",
+   "created": "2026-11-09T20:28:32.325Z"
   }
  }
 }
