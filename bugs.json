@@ -44,6 +44,21 @@
    "updated": "2026-11-09T21:26:37.757Z",
    "comments": [],
    "history": []
+  },
+  {
+   "id": "bug-4",
+   "number": 4,
+   "title": "WIKI: Unable to delete ideas that you own",
+   "description": "can't delete my own ideas",
+   "steps": "self explanatory",
+   "area": "wiki",
+   "status": "unresolved",
+   "severity": "major",
+   "reporter": "Eric",
+   "reported": "2026-11-09T21:27:17.194Z",
+   "updated": "2026-11-09T21:27:17.194Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
