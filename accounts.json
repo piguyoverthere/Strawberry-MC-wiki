@@ -44,6 +44,14 @@
    "iterations": 310000,
    "hash": "CXe+cgBjIfdKV+qEzA3969wRwvC0VNGinQfh7rtUJLk=",
    "created": "2026-11-09T22:21:46.695Z"
+  },
+  "sai": {
+   "name": "Sai",
+   "role": "reviewer",
+   "salt": "XOOnj+djmCaI/0qW6R2XLQ==",
+   "iterations": 310000,
+   "hash": "n4jpyskEI3lz8tzkTgvmKUjpZe8TZRT+sEMOhv/HAbw=",
+   "created": "2026-11-09T23:43:53.176Z"
   }
  }
 }
