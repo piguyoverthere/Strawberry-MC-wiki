@@ -70,6 +70,12 @@
      "name": "Zafar",
      "vote": "disapprove",
      "source": "document"
+    },
+    "aadi": {
+     "name": "aadi",
+     "vote": "approve",
+     "date": "2026-11-09T20:36:14.200Z",
+     "pending": true
     }
    }
   },
