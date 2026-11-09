@@ -4078,6 +4078,12 @@
      "name": "Sai",
      "vote": "disapprove",
      "source": "document"
+    },
+    "aadi": {
+     "name": "aadi",
+     "vote": "disapprove",
+     "date": "2026-11-09T20:57:57.184Z",
+     "pending": true
     }
    }
   },
