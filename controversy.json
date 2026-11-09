@@ -1211,7 +1211,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "date": "2026-11-09T21:21:47.015Z"
+    }
+   }
   },
   {
    "id": "idea-doc-41",
