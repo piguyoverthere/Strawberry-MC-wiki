@@ -80,6 +80,21 @@
    "updated": "2026-11-09T21:28:19.966Z",
    "comments": [],
    "history": []
+  },
+  {
+   "id": "bug-6",
+   "number": 6,
+   "title": "Many pages are incomplete or unresolved",
+   "description": "Please resolve unresolved pages",
+   "steps": "locate as many unresolved pages as possible\nresolve all",
+   "area": "wiki",
+   "status": "unresolved",
+   "severity": "major",
+   "reporter": "Alex",
+   "reported": "2026-11-09T22:36:18.234Z",
+   "updated": "2026-11-09T22:36:18.234Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
