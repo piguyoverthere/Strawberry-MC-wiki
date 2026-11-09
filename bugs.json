@@ -95,6 +95,21 @@
    "updated": "2026-11-09T22:36:18.234Z",
    "comments": [],
    "history": []
+  },
+  {
+   "id": "bug-7",
+   "number": 7,
+   "title": "No accept button for editors",
+   "description": "No editors can approve reviewer ideas",
+   "steps": "Add the button for editors",
+   "area": "wiki",
+   "status": "unresolved",
+   "severity": "minor",
+   "reporter": "Alex",
+   "reported": "2026-11-09T22:38:09.314Z",
+   "updated": "2026-11-09T22:38:09.314Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
