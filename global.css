@@ -1426,3 +1426,81 @@ body:not(.wiki-editing) .wiki-pending{
     background:#fee7e6;
     color:#9b1c1c
 }
+.nav-menu{
+    position:relative
+}
+.site-header nav .nav-menu-button{
+    padding:4px 6px;
+    border:0;
+    background:none;
+    color:#ffffff;
+    font:inherit;
+    text-shadow:0 1px 2px rgba(0,0,0,0.6);
+    cursor:pointer
+}
+.nav-menu-items{
+    position:absolute;
+    z-index:30;
+    top:100%;
+    left:0;
+    display:none;
+    min-width:190px;
+    padding:4px 0;
+    border:1px solid #5b8792;
+    border-radius:4px;
+    background-color:#ffffff;
+    box-shadow:0 4px 14px rgba(0,0,0,0.3)
+}
+.nav-menu:hover .nav-menu-items,
+.nav-menu:focus-within .nav-menu-items,
+.nav-menu-open .nav-menu-items{
+    display:block
+}
+.site-header nav .nav-menu-items a,
+.site-header nav .nav-menu-items a:visited{
+    display:block;
+    padding:7px 14px;
+    color:#173b45;
+    text-shadow:none;
+    white-space:nowrap
+}
+.site-header nav .nav-menu-items a:hover{
+    background-color:#e4f4f8
+}
+.site-header nav .nav-menu-items a[aria-current="page"]{
+    font-weight:bold
+}
+.wiki-todo-banner{
+    max-width:914px;
+    box-sizing:border-box;
+    margin:12px auto;
+    padding:8px 12px;
+    border:1px solid #c9a227;
+    border-radius:4px;
+    background-color:#fff6d6
+}
+.wiki-todo-banner button{
+    margin-left:6px
+}
+.idea-delete{
+    margin-top:8px;
+    color:#a4262c
+}
+.todo-list{
+    padding:0;
+    list-style:none
+}
+.todo-item{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:8px 16px;
+    padding:10px 0;
+    border-bottom:1px solid #c8ccd1
+}
+.todo-item ul{
+    margin:4px 0 0;
+    padding-left:20px;
+    font-size:.9em
+}

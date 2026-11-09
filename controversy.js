@@ -4,7 +4,8 @@
     const dataFile = "controversy.json";
     const ideasApp = document.querySelector("#ideas-app");
     const discussionsApp = document.querySelector("#discussions-app");
-    const app = ideasApp || discussionsApp;
+    const archivesApp = document.querySelector("#archives-app");
+    const app = ideasApp || discussionsApp || archivesApp;
     if (!app) {
         return;
     }
@@ -110,18 +111,22 @@
         return Boolean(window.wikiStore?.isReviewer());
     }
 
-    // Reviewers' votes, ideas, comments and replies wait for an admin before they count
+    // Reviewers' ideas, comments and replies wait for an admin or editor before they count
     const pendingMark = (role) => role === "reviewer" ? { pending: true } : {};
 
-    // A red "Needs review" line; admins also get Approve and Disapprove
+    function canReview() {
+        return Boolean(window.wikiStore?.canReview());
+    }
+
+    // A red "Needs review" line; admins and editors also get Approve and Disapprove
     function reviewBar(text, onApprove, onDisapprove) {
         return element("div", { className: "wiki-review-bar" },
             element("span", { text: `Needs review · ${text}` }),
-            isAdmin() ? element("button", { type: "button", className: "wiki-review-approve", text: "Approve", onclick: onApprove }) : null,
-            isAdmin() ? element("button", { type: "button", className: "wiki-review-disapprove", text: "Disapprove", onclick: onDisapprove }) : null);
+            canReview() ? element("button", { type: "button", className: "wiki-review-approve", text: "Approve", onclick: onApprove }) : null,
+            canReview() ? element("button", { type: "button", className: "wiki-review-disapprove", text: "Disapprove", onclick: onDisapprove }) : null);
     }
 
-    // An admin approving or disapproving a reviewer's change. change(fresh) returns false when it's no longer waiting.
+    // An admin or editor approving or disapproving a reviewer's change. change(fresh) returns false when it's no longer waiting.
     function moderate(approve, what, change) {
         requireSignIn("", (name) => save((fresh) => {
             if (change(fresh) === false) throw new Error("That change is no longer waiting for review. Reload the page.");
@@ -173,8 +178,8 @@
 
     // Commit a change to controversy.json and show the saved result straight away
     // (the live site takes a minute to publish it).
-    async function save(change, message) {
-        data = await window.wikiStore.updateJson(dataFile, change, message);
+    async function save(change, message, options) {
+        data = await window.wikiStore.updateJson(dataFile, change, message, options);
         data.ideas = data.ideas || [];
         data.discussions = data.discussions || [];
         render();
@@ -227,15 +232,14 @@
     function voteCounts(idea) {
         const votes = Object.values(idea.votes || {});
         return {
-            approve: votes.filter((vote) => vote.vote === "approve" && !vote.pending),
-            disapprove: votes.filter((vote) => vote.vote === "disapprove" && !vote.pending),
-            pending: votes.filter((vote) => vote.pending)
+            approve: votes.filter((vote) => vote.vote === "approve"),
+            disapprove: votes.filter((vote) => vote.vote === "disapprove")
         };
     }
 
     function vote(idea, choice) {
         requireSignIn(`${choice === "approve" ? "Approve" : "Disapprove"} "${idea.title}". Voting the same way again removes your vote.`, (name) =>
-            save((fresh, role) => {
+            save((fresh) => {
                 const target = (fresh.ideas || []).find((item) => item.id === idea.id);
                 if (!target) throw new Error("This idea no longer exists. Reload the page.");
                 target.votes = target.votes || {};
@@ -243,10 +247,33 @@
                 if (target.votes[key]?.vote === choice) {
                     delete target.votes[key];
                 } else {
-                    target.votes[key] = { name, vote: choice, date: new Date().toISOString(), ...pendingMark(role) };
+                    target.votes[key] = { name, vote: choice, date: new Date().toISOString() };
                 }
-            }, `${name} votes ${choice} on idea: ${idea.title}`)
+            }, `${name} votes ${choice} on idea: ${idea.title}`, { needsReview: false })
                 .then(() => { status.textContent = `Your vote on "${idea.title}" was saved.`; }));
+    }
+
+    // The person who posted an idea and admins can move it to the Archives page, and bring it back
+    function canDelete(idea) {
+        return signedIn() && (isAdmin() || nameKey(idea.author || "") === nameKey(window.wikiStore.getAuthor()));
+    }
+
+    function setArchived(idea, archived) {
+        if (archived && !window.confirm(`Delete "${idea.title}"? It moves to the Archives page and can be restored from there.`)) return;
+        requireSignIn("", (name) => save((fresh) => {
+            const target = (fresh.ideas || []).find((item) => item.id === idea.id);
+            if (!target) throw new Error("This idea no longer exists. Reload the page.");
+            if (archived) {
+                target.archived = true;
+                target.archivedBy = name;
+                target.archivedDate = new Date().toISOString();
+            } else {
+                delete target.archived;
+                delete target.archivedBy;
+                delete target.archivedDate;
+            }
+        }, `${name} ${archived ? "archives" : "restores"} idea: ${idea.title}`, { needsReview: false })
+            .then(() => { status.textContent = archived ? "Moved to Archives." : "Restored to the Ideas page."; }));
     }
 
     function comment(idea, text) {
@@ -296,7 +323,6 @@
         const voters = (list) => list.map((vote) => vote.name).join(", ");
         const votedAt = (vote) => vote.date ? ` (${new Date(vote.date).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })})` : "";
         const votersWithTimes = (list) => list.map((vote) => `${vote.name}${votedAt(vote)}`).join(", ");
-        const { pending } = voteCounts(idea);
         const card = element("article", { className: `idea-card${idea.pending ? " wiki-pending-item" : ""}`, id: idea.id },
             element("header", { className: "idea-header" },
                 element("h3", { text: idea.number ? `${idea.number}. ${idea.title}` : idea.title }),
@@ -376,33 +402,21 @@
             approve.length || disapprove.length
                 ? element("span", { className: "idea-voters", text: [approve.length ? `For: ${voters(approve)}` : "", disapprove.length ? `Against: ${voters(disapprove)}` : ""].filter(Boolean).join(" · ") })
                 : null));
-        for (const item of pending) {
-            const key = nameKey(item.name);
-            const what = `${item.name}'s vote on idea: ${idea.title}`;
-            card.append(element("div", { className: "wiki-pending-item idea-pending-vote" },
-                reviewBar(`${item.name} votes ${item.vote === "approve" ? "👍 approve" : "👎 disapprove"}`,
-                    () => moderate(true, what, (fresh) => {
-                        const target = fresh.ideas.find((other) => other.id === idea.id)?.votes?.[key];
-                        if (!target?.pending) return false;
-                        delete target.pending;
-                    }),
-                    () => moderate(false, what, (fresh) => {
-                        const votes = fresh.ideas.find((other) => other.id === idea.id)?.votes || {};
-                        if (!votes[key]?.pending) return false;
-                        delete votes[key];
-                    }))));
+        if (canDelete(idea)) {
+            card.append(element("button", { type: "button", className: "wiki-link-button idea-delete", text: "Delete idea", onclick: () => setArchived(idea, true) }));
         }
         return card;
     }
 
     function renderIdeas() {
-        const authors = [...new Set(data.ideas.map((idea) => idea.author))];
+        const activeIdeas = data.ideas.filter((idea) => !idea.archived);
+        const authors = [...new Set(activeIdeas.map((idea) => idea.author))];
         const toolbar = element("div", { className: "controversy-toolbar" },
             element("button", { type: "button", className: "wiki-primary-button", text: "+ Add idea", onclick: addIdea }),
             element("label", {}, "Person ",
                 element("select", { onchange: (event) => { ideaFilters.author = event.target.value; render(); } },
-                    element("option", { value: "", text: `Everyone (${data.ideas.length})` }),
-                    ...authors.map((author) => element("option", { value: author, selected: ideaFilters.author === author, text: `${author} (${data.ideas.filter((idea) => idea.author === author).length})` })))),
+                    element("option", { value: "", text: `Everyone (${activeIdeas.length})` }),
+                    ...authors.map((author) => element("option", { value: author, selected: ideaFilters.author === author, text: `${author} (${activeIdeas.filter((idea) => idea.author === author).length})` })))),
             element("label", {}, "Sort ",
                 element("select", { onchange: (event) => { ideaFilters.sort = event.target.value; render(); } },
                     ...[["document", "Document order"], ["approved", "Most approved"], ["disapproved", "Most disapproved"], ["newest", "Newest first"]]
@@ -414,7 +428,7 @@
         const list = element("div", { className: "idea-list" });
         function renderList() {
             const query = ideaFilters.query.trim().toLowerCase();
-            let ideas = data.ideas.map((idea, index) => ({ idea, index }))
+            let ideas = activeIdeas.map((idea, index) => ({ idea, index }))
                 .filter(({ idea }) => !ideaFilters.author || idea.author === ideaFilters.author)
                 .filter(({ idea }) => !query || `${idea.title} ${idea.description} ${idea.author}`.toLowerCase().includes(query));
             const score = (idea, kind) => voteCounts(idea)[kind].length;
@@ -538,8 +552,7 @@
     function renderDiscussions() {
         const groups = [
             ["Debates", data.discussions.filter((item) => item.kind === "debate" && !item.archived)],
-            ["Threads", data.discussions.filter((item) => item.kind === "thread" && !item.archived)],
-            ["Archive", data.discussions.filter((item) => item.archived)]
+            ["Threads", data.discussions.filter((item) => item.kind === "thread" && !item.archived)]
         ];
         const toolbar = element("div", { className: "controversy-toolbar" },
             isReviewer()
@@ -552,20 +565,57 @@
         discussionsApp.replaceChildren(toolbar, account, status, ...sections);
     }
 
+    // Archives page -------------------------------------------------------------------------------
+    function renderArchivedIdea(idea) {
+        const { approve, disapprove } = voteCounts(idea);
+        return element("article", { className: "idea-card", id: idea.id },
+            element("header", { className: "idea-header" },
+                element("h3", { text: idea.number ? `${idea.number}. ${idea.title}` : idea.title }),
+                element("span", { className: "idea-meta" },
+                    element("span", { className: "idea-author", text: idea.author }),
+                    " · ",
+                    idea.archivedDate ? timestamp(idea.archivedDate, "deleted ") : "deleted",
+                    idea.archivedBy ? ` by ${idea.archivedBy}` : "")),
+            idea.description ? element("div", { className: "idea-description" }, renderText(idea.description)) : null,
+            element("p", { className: "idea-meta", text: `👍 ${approve.length} · 👎 ${disapprove.length} · ${(idea.replies || []).length + (idea.comments || []).length} comments` }),
+            canDelete(idea) ? element("button", { type: "button", className: "wiki-primary-button", text: "Restore", onclick: () => setArchived(idea, false) }) : null);
+    }
+
+    function renderArchives() {
+        const ideas = data.ideas.filter((idea) => idea.archived);
+        const discussions = data.discussions.filter((item) => item.archived);
+        const section = (title, items) => items.length ? element("section", { className: "discussion-group" }, element("h2", { text: `${title} (${items.length})` }), ...items) : null;
+        archivesApp.replaceChildren(...[account, status,
+            section("Ideas", ideas.map(renderArchivedIdea)),
+            section("Debates and threads", discussions.map(renderDiscussion)),
+            ideas.length || discussions.length ? null : element("p", { text: "Nothing has been archived yet." })].filter(Boolean));
+    }
+
     function render() {
         renderAccount();
         if (ideasApp) renderIdeas();
+        else if (archivesApp) renderArchives();
         else renderDiscussions();
     }
 
-    loadData().then(render).catch((error) => {
+    loadData().then(() => {
+        const id = location.hash.slice(1);
+        // Old links to archived discussions and ideas still arrive
+        if (discussionsApp && data.discussions.some((item) => item.id === id && item.archived)) {
+            location.replace(`archives.html${location.hash}`);
+            return;
+        }
+        if (archivesApp && id) openDiscussions.add(id);
+        render();
+        if (archivesApp && id) document.getElementById(id)?.scrollIntoView({ block: "start" });
+    }).catch((error) => {
         app.replaceChildren(element("p", { className: "wiki-dialog-error", text: error.message }));
     });
 
     // Open a linked idea or discussion (page.html#id).
     window.addEventListener("hashchange", () => {
         const id = location.hash.slice(1);
-        if (discussionsApp && id) {
+        if ((discussionsApp || archivesApp) && id) {
             openDiscussions.add(id);
             render();
         }

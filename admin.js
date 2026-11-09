@@ -22,10 +22,10 @@
     const me = store.getAuthor();
     let accounts = {};
 
-    if (!store.isAdmin()) {
+    if (!store.canReview()) {
         app.replaceChildren(element("p", {}, store.isSignedIn()
-            ? "Only admins can use this panel."
-            : element("a", { href: store.loginHref() }, "Log in as an admin to use this panel.")));
+            ? "Only admins and editors can use this panel."
+            : element("a", { href: store.loginHref() }, "Log in as an admin or editor to use this panel.")));
         return;
     }
 
@@ -94,7 +94,7 @@
                     element("thead", {}, element("tr", {}, ...["Account", "Role", "Registered", "Status", "Block"].map((text) => element("th", { text })))),
                     element("tbody", {}, ...rows)))
                 : element("p", { text: "No accounts yet." }),
-            element("p", { className: "wiki-dialog-hint", text: "Admins: everything goes live, approve reviews, use this panel. Editors: everything goes live. Reviewers: changes wait for an admin, can't start threads, new pages are [draft] pages. Blocked reviewers can't log in or save until the block ends." }));
+            element("p", { className: "wiki-dialog-hint", text: "Admins: everything goes live, approve reviews, use this panel. Editors: everything goes live, approve reviews. Reviewers: votes count straight away, other changes wait for an admin or editor, can't start threads, new pages are [draft] pages. Blocked reviewers can't log in or save until the block ends." }));
     }
 
     function renderReviewPassword(isSet) {
@@ -117,13 +117,27 @@
             form);
     }
 
+    async function approveAll(event) {
+        if (!window.confirm("Approve everything waiting for review, including page edits and drafts?")) return;
+        event.target.disabled = true;
+        status.textContent = "Approving…";
+        try {
+            const count = await store.approveAllReviews();
+            status.textContent = `Approved ${count} item${count === 1 ? "" : "s"}. The list follows the live site, so they can take a minute to drop off.`;
+            queue = element("section", { className: "admin-section" }, element("h2", { text: "Waiting for review" }), element("p", { text: "Everything was approved." }));
+            render();
+        } catch (error) {
+            event.target.disabled = false;
+            status.textContent = `Could not approve everything: ${error.message}`;
+        }
+    }
+
     async function renderQueue() {
         const json = (file) => fetch(file, { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).catch(() => ({}));
         const [ideas, bugs, pages] = await Promise.all([json("controversy.json"), json("bugs.json"), json("pending-pages.json")]);
         const items = [];
-        for (const idea of ideas.ideas || []) {
+        for (const idea of (ideas.ideas || []).filter((item) => !item.archived)) {
             if (idea.pending) items.push([`New idea by ${idea.author}: ${idea.title}`, `ideas.html#${idea.id}`]);
-            for (const vote of Object.values(idea.votes || {})) if (vote.pending) items.push([`${vote.name}'s vote on ${idea.title}`, `ideas.html#${idea.id}`]);
             for (const reply of idea.replies || []) if (reply.pending) items.push([`Comment by ${reply.author} on ${idea.title}`, `ideas.html#${idea.id}`]);
         }
         for (const discussion of ideas.discussions || []) {
@@ -137,6 +151,9 @@
         return element("section", { className: "admin-section" },
             element("h2", { text: `Waiting for review (${items.length})` }),
             items.length
+                ? element("button", { type: "button", className: "wiki-review-approve", text: `Approve all (${items.length})`, onclick: approveAll })
+                : null,
+            items.length
                 ? element("ul", {}, ...items.map(([text, href]) => element("li", {}, element("a", { href, text }))))
                 : element("p", { text: "Nothing is waiting for review." }),
             element("p", { className: "wiki-dialog-hint", text: "Open an item to approve or disapprove it. The list follows the live site, so a review you just saved can take a minute to drop off." }));
@@ -146,10 +163,10 @@
     let reviewSection = renderReviewPassword(false);
 
     function render() {
-        app.replaceChildren(status, queue, renderAccounts(), reviewSection);
+        app.replaceChildren(...(store.isAdmin() ? [status, queue, renderAccounts(), reviewSection] : [status, queue]));
     }
 
-    Promise.all([store.readAccounts(), store.hasReviewPassword(), renderQueue()]).then(([data, reviewSet, queueSection]) => {
+    Promise.all(store.isAdmin() ? [store.readAccounts(), store.hasReviewPassword(), renderQueue()] : [{}, false, renderQueue()]).then(([data, reviewSet, queueSection]) => {
         accounts = data.accounts || {};
         reviewSection = renderReviewPassword(reviewSet);
         queue = queueSection;

@@ -3,6 +3,8 @@ const pages = [
     { title: "Ideas", href: "ideas.html", keywords: "mc controversy resolver ideas votes approve disapprove suggestions" },
     { title: "Threads & Debates", href: "discussions.html", keywords: "mc controversy resolver debates threads discussions archive" },
     { title: "PDF Documents", href: "documents.html", keywords: "pdf open source documents versions older history download mc controversy resolver" },
+    { title: "Archives", href: "archives.html", keywords: "archive archives deleted ideas old debates threads restore" },
+    { title: "To Do", href: "todo.html", keywords: "to do todo unresolved incomplete coming soon pages resolve unfinished" },
     { title: "Bug Tracker", href: "bugs.html", keywords: "bugs report issues crash broken status resolved confirmed reviewing unresolved intended critical major minor" },
     { title: "Log in", href: "login.html", keywords: "login sign in register account username password sign up" },
     { title: "Notifications", href: "notifications.html", keywords: "updates changes recent activity new pages edits votes approvals comments replies" },

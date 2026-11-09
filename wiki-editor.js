@@ -18,7 +18,7 @@
     const roleStorageKey = "strawberry-wiki-role";
     const sharedTokenFile = "wiki-token.json";
     const legacyEditableSelector = "h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, figcaption, summary";
-    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list, #ideas-app, #discussions-app, #notifications-app, #documents-app, #bugs-app, #login-app, #admin-app";
+    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list, #ideas-app, #discussions-app, #notifications-app, #documents-app, #archives-app, #todo-app, #bugs-app, #login-app, #admin-app";
     const allowedTags = new Set([
         "A", "ABBR", "B", "BLOCKQUOTE", "BR", "CAPTION", "CODE", "DEL", "DETAILS", "DIV", "EM", "FIGCAPTION",
         "FIGURE", "FOOTER", "H1", "H2", "H3", "H4", "H5", "H6", "HR", "I", "IMG", "INS", "KBD", "LI", "MARK",
@@ -352,39 +352,60 @@
         statusTimer = setTimeout(() => status.classList.remove("wiki-status-visible"), 8000);
     }).observe(status, { childList: true, characterData: true, subtree: true });
 
+    // The menus replace the header's plain links in the browser only; saved pages keep the links as written.
+    let originalNavMarkup = null;
+    const navMenus = [
+        ["Wiki", [["credits.html", "Credits"], ["page-bookmarked-pages.html", "Bookmarked Pages"], ["todo.html", "To Do"], ["bugs.html", "Bug Tracker"]]],
+        ["Community", [["news.html", "News"], ["ideas.html", "Ideas"], ["discussions.html", "Threads &amp; Debates"], ["notifications.html", "Notifications"], ["archives.html", "Archives"]]]
+    ];
+
+    function buildNavMenu(label, links) {
+        const menu = document.createElement("div");
+        menu.className = "nav-menu";
+        menu.dataset.wikiInjected = "";
+        menu.innerHTML = `<button type="button" class="nav-menu-button" aria-haspopup="true" aria-expanded="false">${label} ▾</button>
+            <div class="nav-menu-items">${links.map(([href, text]) => `<a href="${href}"${href === currentPage ? ' aria-current="page"' : ""}>${text}</a>`).join("")}</div>`;
+        const button = menu.querySelector("button");
+        button.addEventListener("click", () => {
+            const open = !menu.classList.contains("nav-menu-open");
+            closeNavMenus();
+            menu.classList.toggle("nav-menu-open", open);
+            button.setAttribute("aria-expanded", String(open));
+        });
+        return menu;
+    }
+
+    function closeNavMenus() {
+        for (const menu of document.querySelectorAll(".nav-menu-open")) {
+            menu.classList.remove("nav-menu-open");
+            menu.querySelector("button").setAttribute("aria-expanded", "false");
+        }
+    }
+
+    document.addEventListener("click", (event) => {
+        if (!event.target.closest(".nav-menu")) closeNavMenus();
+    });
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeNavMenus();
+    });
+
     if (header) {
         const nav = header.querySelector("nav");
         if (nav) {
+            originalNavMarkup = nav.innerHTML;
             const pdfLink = nav.querySelector('a[href$=".pdf"], a[href="documents.html"]');
-            if (!nav.querySelector('a[href="news.html"]')) {
-                const newsItem = document.createElement("span");
-                newsItem.dataset.wikiInjected = "";
-                newsItem.innerHTML = ' | <a href="news.html">News</a>';
-                nav.insertBefore(newsItem, pdfLink);
+            for (const node of [...nav.childNodes]) {
+                if (node.nodeType === Node.TEXT_NODE ? node.textContent.trim() === "|" : node.matches?.('a:not(.nav-button):not([href="home-index.html"])')) {
+                    node.remove();
+                }
             }
-            if (!nav.querySelector('a[href="ideas.html"]')) {
-                const ideasItem = document.createElement("span");
-                ideasItem.dataset.wikiInjected = "";
-                ideasItem.innerHTML = ' | <a href="ideas.html">Ideas</a> | <a href="discussions.html">Threads &amp; Debates</a>';
-                nav.insertBefore(ideasItem, pdfLink);
+            for (const node of [...nav.childNodes]) {
+                if (node.nodeType === Node.TEXT_NODE && node.textContent.includes("|")) {
+                    node.textContent = node.textContent.replace(/\|/g, "");
+                }
             }
-            if (!nav.querySelector('a[href="notifications.html"]')) {
-                const notificationsItem = document.createElement("span");
-                notificationsItem.dataset.wikiInjected = "";
-                notificationsItem.innerHTML = ' | <a href="notifications.html">Notifications</a>';
-                nav.insertBefore(notificationsItem, pdfLink);
-            }
-            if (!nav.querySelector('a[href="bugs.html"]')) {
-                const bugsItem = document.createElement("span");
-                bugsItem.dataset.wikiInjected = "";
-                bugsItem.innerHTML = ' | <a href="bugs.html">Bug Tracker</a>';
-                nav.insertBefore(bugsItem, pdfLink);
-            }
-            if (!nav.querySelector('a[href="page-bookmarked-pages.html"]')) {
-                const bookmarksItem = document.createElement("span");
-                bookmarksItem.dataset.wikiInjected = "";
-                bookmarksItem.innerHTML = ' | <a href="page-bookmarked-pages.html">Bookmarked Pages</a>';
-                nav.insertBefore(bookmarksItem, pdfLink);
+            for (const [label, links] of navMenus) {
+                nav.insertBefore(buildNavMenu(label, links), pdfLink);
             }
             // Every page except the home page gets a search box in the middle of the header.
             if (!document.querySelector(".site-search")) {
@@ -424,12 +445,12 @@
             accountLink.textContent = accountName ? `👤 ${accountName}` : "Log in";
             accountLink.title = accountName ? `Signed in as ${accountName} (${readRole()})` : "Log in or register";
             nav.append(accountLink);
-            if (readRole() === "admin") {
+            if (canReviewRole(readRole())) {
                 const adminLink = document.createElement("a");
                 adminLink.className = "nav-button wiki-admin-link";
                 adminLink.dataset.wikiInjected = "";
                 adminLink.href = "admin.html";
-                adminLink.textContent = "Admin";
+                adminLink.textContent = readRole() === "admin" ? "Admin" : "Review";
                 nav.append(adminLink);
             }
             if (accountName) {
@@ -1134,6 +1155,7 @@
     // <div class="wiki-pending"> that remembers the original. It shows in red until an admin approves it (the
     // change stays) or disapproves it (the original comes back).
     const pendingPagesFile = "pending-pages.json";
+    const todoFile = "todo.json";
     const pendingSelector = "div.wiki-pending";
     const draftPrefix = /^\[draft\]\s*/i;
 
@@ -1212,6 +1234,14 @@
         return output.join("\n");
     }
 
+    // Takes out the [UNRESOLVED] callouts and tags. "[UNRESOLVED: ... DO NOT CHANGE ...]" is a request from people, so it stays.
+    function stripUnresolvedNotes(markup) {
+        const keep = (match, note) => /do not change/i.test(note) ? match : "";
+        return markup
+            .replace(/[ \t]*<(p|footer)\b[^>]*>\s*(?:<(?:strong|b)>)?\s*(\[unresolved\b[^\]<]*\])(?:\s*The source[^<]*)?\s*(?:<\/(?:strong|b)>)?\s*<\/\1>[ \t]*(?:\r?\n)?/gi, (match, tag, note) => keep(match, note))
+            .replace(/[ \t]*(\[unresolved\b[^\]<]*\])/gi, keep);
+    }
+
     function pendingBlocks() {
         return [...root.querySelectorAll(pendingSelector)];
     }
@@ -1245,11 +1275,21 @@
         }, message);
     }
 
-    // Commits the page after an admin approved or disapproved changes
+    // "[draft] X" becomes "X" in search once the draft is approved
+    async function renameDraftInSearch(token, file, title) {
+        const searchFile = await getRepositoryFile(token, "search.js");
+        const line = searchFile?.text.split("\n").find((text) => text.includes(`href: ${JSON.stringify(file)}`));
+        if (line) {
+            const renamed = line.replace(`title: ${JSON.stringify(title)}`, `title: ${JSON.stringify(title.replace(draftPrefix, ""))}`);
+            await putRepositoryFile(token, "search.js", searchFile.text.replace(line, renamed), `Rename ${title} in search`, searchFile.sha);
+        }
+    }
+
+    // Commits the page after an admin or editor approved or disapproved changes
     async function commitReview(message, { approveDraft = false } = {}) {
         const token = readToken();
-        if (!token || readRole() !== "admin" || await checkAccount(token) !== "admin") {
-            throw new Error("Only admins can approve changes. Log in as an admin.");
+        if (!token || !canReviewRole(readRole()) || !canReviewRole(await checkAccount(token))) {
+            throw new Error("Only admins and editors can approve changes. Log in as one.");
         }
         const title = getCurrentTitle();
         if (approveDraft && draftPrefix.test(title)) {
@@ -1267,12 +1307,7 @@
             // The draft simply stays in this browser.
         }
         if (approveDraft && draftPrefix.test(title)) {
-            const searchFile = await getRepositoryFile(token, "search.js");
-            const line = searchFile?.text.split("\n").find((text) => text.includes(`href: ${JSON.stringify(targetFile)}`));
-            if (line) {
-                const renamed = line.replace(`title: ${JSON.stringify(title)}`, `title: ${JSON.stringify(title.replace(draftPrefix, ""))}`);
-                await putRepositoryFile(token, "search.js", searchFile.text.replace(line, renamed), `Rename ${title} in search`, searchFile.sha);
-            }
+            await renameDraftInSearch(token, targetFile, title);
         }
         if (!pendingBlocks().length) {
             await updatePendingPages(token, (pages) => { delete pages[targetFile]; }, `Update review queue for ${title.replace(draftPrefix, "")} page`);
@@ -1314,12 +1349,12 @@
         if (reviewBanner.hidden) {
             return;
         }
-        const admin = readRole() === "admin";
+        const admin = canReviewRole(readRole());
         reviewBanner.replaceChildren();
         const text = document.createElement("span");
         text.textContent = isDraft
-            ? `This is a draft page. ${blocks.length ? `${blocks.length} part${blocks.length === 1 ? "" : "s"} still need${blocks.length === 1 ? "s" : ""} an admin's approval.` : "Every part is approved; an admin can publish it."}`
-            : `${blocks.length} change${blocks.length === 1 ? "" : "s"} on this page ${blocks.length === 1 ? "is" : "are"} waiting for an admin's review and show${blocks.length === 1 ? "s" : ""} in red.`;
+            ? `This is a draft page. ${blocks.length ? `${blocks.length} part${blocks.length === 1 ? "" : "s"} still need${blocks.length === 1 ? "s" : ""} an admin's or editor's approval.` : "Every part is approved; an admin can publish it."}`
+            : `${blocks.length} change${blocks.length === 1 ? "" : "s"} on this page ${blocks.length === 1 ? "is" : "are"} waiting for an admin's or editor's review and show${blocks.length === 1 ? "s" : ""} in red.`;
         reviewBanner.append(text);
         if (admin) {
             const button = (label, className, onclick) => {
@@ -1388,7 +1423,7 @@
     }
 
     root.addEventListener("click", (event) => {
-        if (editing || readRole() !== "admin") return;
+        if (editing || !canReviewRole(readRole())) return;
         const block = event.target.closest(pendingSelector);
         if (block && root.contains(block) && !event.target.closest("a, button, input, select, textarea, summary")) {
             showReviewPopover(block);
@@ -1400,6 +1435,46 @@
         }
     });
     renderReviewState();
+
+    // Pages on the To Do list get a bar with a Resolve button ------------------------------------------------
+    if (!isNewPage && /^page-/.test(currentPage)) {
+        fetch(todoFile, { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).then((todo) => {
+            const entry = (todo.pages || []).find((page) => page.file === currentPage && !page.resolved);
+            if (!entry) return;
+            const bar = document.createElement("div");
+            bar.className = "wiki-todo-banner";
+            bar.dataset.wikiInjected = "";
+            bar.innerHTML = 'This page is marked incomplete and is on the <a href="todo.html">To Do list</a>. ';
+            if (canReviewRole(readRole())) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "wiki-review-approve";
+                button.textContent = "Resolve";
+                button.addEventListener("click", async () => {
+                    if (editing) {
+                        status.textContent = "Save or cancel your edits before resolving this page.";
+                        return;
+                    }
+                    if (!window.confirm(`Mark ${entry.title} as resolved? Its [UNRESOLVED] notes are removed from the page. [coming soon] notes stay.`)) return;
+                    button.disabled = true;
+                    try {
+                        await window.wikiStore.resolveTodoPage(entry.file, entry.title);
+                        savedContent = stripUnresolvedNotes(savedContent);
+                        applyContent(savedContent);
+                        bar.remove();
+                        status.textContent = "Resolved. The live site usually updates within a minute or two.";
+                    } catch (error) {
+                        button.disabled = false;
+                        status.textContent = `Could not resolve this page: ${error.message}`;
+                    }
+                });
+                bar.append(button);
+            }
+            root.before(bar);
+        }).catch(() => {
+            // The bar is a convenience; the page still works without it.
+        });
+    }
 
     function setEditing(value) {
         editing = value;
@@ -1531,6 +1606,10 @@
             if (child.tagName !== "NAV") {
                 child.remove();
             }
+        }
+        const savedNav = body.querySelector(".site-header nav");
+        if (savedNav && originalNavMarkup !== null) {
+            savedNav.innerHTML = originalNavMarkup;
         }
         body.querySelectorAll("[data-wiki-injected]").forEach((element) => element.remove());
         for (const element of [copy, head, body]) {
@@ -2477,7 +2556,10 @@
         for (let attempt = 0; ; attempt++) {
             const current = await getRepositoryFile(token, file);
             const data = current ? JSON.parse(current.text) : {};
-            change(data);
+            // A change that returns false found nothing to do, so nothing is committed.
+            if (change(data) === false) {
+                return data;
+            }
             const text = `${JSON.stringify(data, null, 1)}\n`;
             try {
                 await putRepositoryFile(token, file, text, message, current?.sha);
@@ -2523,6 +2605,13 @@
             // Not remembered; sign in again next time.
         }
     }
+
+    function canReviewRole(role) {
+        return role === "admin" || role === "editor";
+    }
+
+    // Saves already on their way; pressing a button twice while one is loading shouldn't post twice.
+    const savesInFlight = new Map();
 
     function requireAdmin() {
         if (readRole() !== "admin") {
@@ -2616,19 +2705,97 @@
         getRole: readRole,
         isAdmin: () => readRole() === "admin",
         isReviewer: () => readRole() === "reviewer",
+        canReview: () => canReviewRole(readRole()),
         // Sends people to the login page, coming back here afterwards
         loginHref(next = location.pathname.split("/").pop() + location.search + location.hash) {
             return `login.html?${new URLSearchParams({ next })}`;
         },
         // Read the JSON file from GitHub, apply change(data, role) and commit it, retrying if someone else saved first.
         // A reviewer's commit is marked as needing review.
-        async updateJson(file, change, message) {
-            const token = readToken();
-            if (!token || !readAccount()) {
-                throw new Error("Log in to save changes.");
+        updateJson(file, change, message, { needsReview = true } = {}) {
+            const key = `${file}\n${message}`;
+            if (!savesInFlight.has(key)) {
+                const saving = (async () => {
+                    const token = readToken();
+                    if (!token || !readAccount()) {
+                        throw new Error("Log in to save changes.");
+                    }
+                    const role = await checkAccount(token);
+                    return updateRepositoryJson(token, file, (data) => change(data, role), role === "reviewer" && needsReview ? `${message} (needs review)` : message);
+                })();
+                savesInFlight.set(key, saving.finally(() => savesInFlight.delete(key)));
             }
-            const role = await checkAccount(token);
-            return updateRepositoryJson(token, file, (data) => change(data, role), role === "reviewer" ? `${message} (needs review)` : message);
+            return savesInFlight.get(key);
+        },
+        // Approves everything waiting for review: ideas, votes, comments, replies, bug reports, page edits and drafts.
+        async approveAllReviews() {
+            const token = readToken();
+            if (!token || !readAccount() || !canReviewRole(await checkAccount(token))) {
+                throw new Error("Only admins and editors can approve changes.");
+            }
+            const name = readAccount();
+            const clearing = (collect) => (data) => {
+                const items = collect(data).filter((item) => item?.pending);
+                items.forEach((item) => delete item.pending);
+                counts.set(collect, items.length);
+                return items.length ? undefined : false;
+            };
+            const counts = new Map();
+            const controversy = (data) => [
+                ...(data.ideas || []).flatMap((idea) => [idea, ...Object.values(idea.votes || {}), ...(idea.replies || [])]),
+                ...(data.discussions || []).flatMap((discussion) => discussion.posts || [])
+            ];
+            const bugs = (data) => (data.bugs || []).flatMap((bug) => [bug, ...(bug.comments || [])]);
+            await updateRepositoryJson(token, "controversy.json", clearing(controversy), `${name} approves all waiting changes in ideas and threads`);
+            await updateRepositoryJson(token, "bugs.json", clearing(bugs), `${name} approves all waiting changes in bugs`);
+            const queued = JSON.parse((await getRepositoryFile(token, pendingPagesFile))?.text || "{}").pages || {};
+            for (const [file, entry] of Object.entries(queued)) {
+                const page = await getRepositoryFile(token, file);
+                if (!page) continue;
+                const doc = new DOMParser().parseFromString(page.text, "text/html");
+                const blocks = [...doc.querySelectorAll(pendingSelector)];
+                for (const block of blocks) {
+                    if (block.classList.contains("wiki-pending-removal")) block.remove();
+                    else block.replaceWith(...block.childNodes);
+                }
+                const heading = doc.querySelector("h1");
+                const draftTitle = heading && draftPrefix.test(heading.textContent.trim()) ? heading.textContent.trim() : "";
+                if (draftTitle) {
+                    heading.textContent = draftTitle.replace(draftPrefix, "");
+                    doc.title = doc.title.replace(draftPrefix, "");
+                }
+                if (blocks.length || draftTitle) {
+                    const pageHtml = `<!DOCTYPE html>\n${doc.documentElement.outerHTML}\n`.replace(/\r?\n/g, page.text.includes("\r\n") ? "\r\n" : "\n");
+                    await putRepositoryFile(token, file, pageHtml, `${name} approves all changes to ${(draftTitle || entry.title || file).replace(draftPrefix, "")} page`, page.sha);
+                }
+                if (draftTitle) await renameDraftInSearch(token, file, draftTitle);
+            }
+            if (Object.keys(queued).length) {
+                await updatePendingPages(token, (pages) => {
+                    Object.keys(queued).forEach((file) => delete pages[file]);
+                }, "Update review queue for all pages");
+            }
+            return (counts.get(controversy) || 0) + (counts.get(bugs) || 0) + Object.keys(queued).length;
+        },
+        // Takes a page off the To Do list and removes its [UNRESOLVED] notes
+        async resolveTodoPage(file, title) {
+            const token = readToken();
+            if (!token || !readAccount() || !canReviewRole(await checkAccount(token))) {
+                throw new Error("Only admins and editors can resolve pages.");
+            }
+            const page = await getRepositoryFile(token, file);
+            if (page) {
+                const cleaned = stripUnresolvedNotes(page.text);
+                if (cleaned !== page.text) {
+                    await putRepositoryFile(token, file, cleaned, `Remove unresolved notes from ${title} page`, page.sha);
+                }
+            }
+            const name = readAccount();
+            return updateRepositoryJson(token, todoFile, (data) => {
+                const entry = (data.pages || []).find((item) => item.file === file);
+                if (!entry || entry.resolved) return false;
+                entry.resolved = { by: name, date: new Date().toISOString() };
+            }, `${name} resolves page: ${title}`);
         },
         // Admin tools ---------------------------------------------------------------------------
         async readAccounts() {

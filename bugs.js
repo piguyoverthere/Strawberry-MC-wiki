@@ -77,7 +77,7 @@
         return signedIn() && !window.wikiStore.isReviewer();
     }
 
-    // Reviewers' reports and comments wait for an admin before they count
+    // Reviewers' reports and comments wait for an admin or editor before they count
     const pendingMark = (role) => role === "reviewer" ? { pending: true } : {};
 
     const status = element("p", { className: "controversy-status", role: "status", "aria-live": "polite" });
@@ -86,11 +86,11 @@
     function reviewBar(text, onApprove, onDisapprove) {
         return element("div", { className: "wiki-review-bar" },
             element("span", { text: `Needs review · ${text}` }),
-            isAdmin() ? element("button", { type: "button", className: "wiki-review-approve", text: "Approve", onclick: onApprove }) : null,
-            isAdmin() ? element("button", { type: "button", className: "wiki-review-disapprove", text: "Disapprove", onclick: onDisapprove }) : null);
+            window.wikiStore?.canReview() ? element("button", { type: "button", className: "wiki-review-approve", text: "Approve", onclick: onApprove }) : null,
+            window.wikiStore?.canReview() ? element("button", { type: "button", className: "wiki-review-disapprove", text: "Disapprove", onclick: onDisapprove }) : null);
     }
 
-    // An admin approving or disapproving a reviewer's change. change(fresh) returns false when it's no longer waiting.
+    // An admin or editor approving or disapproving a reviewer's change. change(fresh) returns false when it's no longer waiting.
     function moderate(approve, what, change) {
         const name = window.wikiStore.getAuthor();
         save((fresh) => {

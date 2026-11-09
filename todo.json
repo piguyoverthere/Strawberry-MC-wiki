@@ -1,0 +1,300 @@
+{
+ "pages": [
+  {
+   "file": "page-ancient-dyes.html",
+   "title": "Ancient Dyes",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[coming soon]"
+   ]
+  },
+  {
+   "file": "page-arrow-modifications.html",
+   "title": "Arrow Modifications",
+   "notes": [
+    "[Coming soon]",
+    "A Palline Bow has a 5% chance of breaking a non-[source text incomplete]",
+    "/strong> With a Breeze Rod shaft, creates a 2×2×1 area effect [source description incomplete]"
+   ]
+  },
+  {
+   "file": "page-ash-drops-rates.html",
+   "title": "Ash Drops Rates",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[coming soon]"
+   ]
+  },
+  {
+   "file": "page-ash.html",
+   "title": "Ash",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[coming soon]"
+   ]
+  },
+  {
+   "file": "page-brewing-effects-and-potions.html",
+   "title": "Brewing, Effects, And Potions",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final."
+   ]
+  },
+  {
+   "file": "page-burning.html",
+   "title": "Burning",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[coming soon]"
+   ]
+  },
+  {
+   "file": "page-creative-mode-inventory.html",
+   "title": "Creative Mode Inventory",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final."
+   ]
+  },
+  {
+   "file": "page-crimson-forest.html",
+   "title": "Crimson Forest",
+   "notes": [
+    "[UNRESOLVED] The source groups Crimson and Warped Forest details together; their biome-specific differences need review."
+   ]
+  },
+  {
+   "file": "page-desert-temples.html",
+   "title": "Desert Temples",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final."
+   ]
+  },
+  {
+   "file": "page-desert-villages.html",
+   "title": "Desert Villages",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final."
+   ]
+  },
+  {
+   "file": "page-dry-savanna-technical.html",
+   "title": "Dry Savanna [technical]",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[unresolved: more detail]"
+   ]
+  },
+  {
+   "file": "page-echo-shrine.html",
+   "title": "Echo Shrine",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[unresolved: more items]"
+   ]
+  },
+  {
+   "file": "page-echo-squid.html",
+   "title": "Echo Squid",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[unresolved: needs recipe]"
+   ]
+  },
+  {
+   "file": "page-elemental-dragons-wuxing.html",
+   "title": "Elemental Dragons (Wuxing)",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[unresolved: needs descriptions]"
+   ]
+  },
+  {
+   "file": "page-enchantments.html",
+   "title": "Enchantments",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[unresolved]",
+    "[UNRESOLVED] The source marks this topic as unresolved; review it before treating the details as final.",
+    "[unresolved: more animals]"
+   ]
+  },
+  {
+   "file": "page-forging-and-mechanics.html",
+   "title": "Forging And Mechanics",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[coming soon]"
+   ]
+  },
+  {
+   "file": "page-ice-temple.html",
+   "title": "Ice Temple",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final."
+   ]
+  },
+  {
+   "file": "page-icy-caves.html",
+   "title": "Icy Caves [Modifications from 26.4]",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[coming soon]"
+   ]
+  },
+  {
+   "file": "page-jungles.html",
+   "title": "Jungles",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[UNRESOLVED: ARUGUMENT. DO NOT CHANGE THIS SECTION UNTIL AADI AND ALE BOTH APPROVE]"
+   ]
+  },
+  {
+   "file": "page-lapis-golem.html",
+   "title": "Lapis Golem",
+   "notes": [
+    "[UNRESOLVED] The source describes the first phase's attacks, but does not explain later phases or several attack details.",
+    "h3 id=\"attack-1-description-incomplete\">Attack 1 (Description Incomplete)"
+   ]
+  },
+  {
+   "file": "page-main-end-island.html",
+   "title": "Main End Island",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[unresolved: more needed]"
+   ]
+  },
+  {
+   "file": "page-mancer.html",
+   "title": "Mancer",
+   "notes": [
+    "[better name coming soon]"
+   ]
+  },
+  {
+   "file": "page-metals.html",
+   "title": "Metals",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[coming soon]"
+   ]
+  },
+  {
+   "file": "page-methods-of-beating-game.html",
+   "title": "Methods of Beating Strawberry MC",
+   "notes": [
+    "[UNRESOLVED] The source marks this topic as unresolved; review it before treating the details as final.",
+    "[coming soon]"
+   ]
+  },
+  {
+   "file": "page-ores-and-minerals.html",
+   "title": "Ores And Minerals",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final."
+   ]
+  },
+  {
+   "file": "page-other-features.html",
+   "title": "Other Features",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final."
+   ]
+  },
+  {
+   "file": "page-outer-end-islands.html",
+   "title": "Outer End Islands",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[UNRESOLVED]",
+    "[UNRESOLVED: the source does not specify the number of variants]"
+   ]
+  },
+  {
+   "file": "page-parabola-mode-features.html",
+   "title": "Minor Parabola Mode Features",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[Unresolved: fill out chart]"
+   ]
+  },
+  {
+   "file": "page-parabola-mode.html",
+   "title": "Parabola Mode",
+   "notes": [
+    "[UNRESOLVED] The source ends before explaining what giving the UUID identifier to the raven does."
+   ]
+  },
+  {
+   "file": "page-potions.html",
+   "title": "Potions",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[UNRESOLVED] The source marks this topic as unresolved; review it before treating the details as final."
+   ]
+  },
+  {
+   "file": "page-realism-mode.html",
+   "title": "Realism Mode",
+   "notes": [
+    "[unresolved: This article is a work in progress. You can help by expanding it.]"
+   ]
+  },
+  {
+   "file": "page-rendering-changes.html",
+   "title": "Rendering Changes",
+   "notes": [
+    "[UNRESOLVED]",
+    "[Java edition mod coming soon]"
+   ]
+  },
+  {
+   "file": "page-savanna.html",
+   "title": "Savanna",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[unresolved: more detail]",
+    "[unresolved: rooms need description]"
+   ]
+  },
+  {
+   "file": "page-spells-for-chiseled-cauldrons.html",
+   "title": "Spells For Chiseled Cauldrons",
+   "notes": [
+    "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
+    "[coming soon]"
+   ]
+  },
+  {
+   "file": "page-warped-forest.html",
+   "title": "Warped Forest",
+   "notes": [
+    "[UNRESOLVED] The source groups Crimson and Warped Forest details together; their biome-specific differences need review."
+   ]
+  },
+  {
+   "file": "page-waypoints.html",
+   "title": "Waypoints",
+   "notes": [
+    "[UNRESOLVED]",
+    "/strong> The source begins this description with an incomplete reference to Superbiome generation",
+    "[name coming soon]"
+   ]
+  },
+  {
+   "file": "page-weather.html",
+   "title": "Weather",
+   "notes": [
+    "The source's stated occurrence rates are incomplete: it records a 0"
+   ]
+  },
+  {
+   "file": "page-wisp-technical.html",
+   "title": "Wisp [technical]",
+   "notes": [
+    "[coming soon]"
+   ]
+  }
+ ]
+}

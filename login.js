@@ -29,8 +29,8 @@
 
     const roleText = {
         admin: "You're an admin: everything you do goes live, you approve reviewers' changes, and you have the admin control panel.",
-        editor: "You're an editor: everything you do goes live straight away.",
-        reviewer: "You're a reviewer: your votes, comments, ideas, bug reports and page edits show in red until an admin approves them. You can reply in threads but not start new ones, and new pages you make are [draft] pages."
+        editor: "You're an editor: everything you do goes live straight away, and you approve reviewers' changes.",
+        reviewer: "You're a reviewer: your votes count straight away, but your comments, ideas, bug reports and page edits show in red until an admin or editor approves them. You can reply in threads but not start new ones, and new pages you make are [draft] pages."
     };
 
     function renderSignedIn(name) {
@@ -66,7 +66,7 @@
                 element("button", { type: "button", role: "tab", "aria-selected": String(register), className: register ? "login-tab-active" : "", onclick: () => renderForms("register") }, "Register")),
             field("Username", name, register ? "2 to 24 characters. This is the name your votes, posts and bug reports are saved under." : null),
             field("Wiki or review password", wikiPassword, register
-                ? "Admins and editors use the wiki password. Reviewers use the review password; their changes are checked by an admin before they count."
+                ? "Admins and editors use the wiki password. Reviewers use the review password; their changes are checked by an admin or editor before they count."
                 : "Admins and editors: the wiki password. Reviewers: the review password."),
             field(register ? "Personal password (choose one)" : "Personal password", personal,
                 register ? "At least 6 characters. Only you should know it. Don't reuse a password from another site." : null),
