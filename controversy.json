@@ -3892,7 +3892,13 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "date": "2026-11-09T22:30:26.490Z"
+    }
+   }
   },
   {
    "id": "idea-doc-215",
