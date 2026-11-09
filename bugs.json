@@ -14,6 +14,22 @@
    "updated": "2026-11-07T18:39:20.939Z",
    "comments": [],
    "history": []
+  },
+  {
+   "id": "bug-2",
+   "number": 2,
+   "title": "cave biomes like strawberrymc:crystal_hollows generate without being filled with water",
+   "description": "its supposed to fill",
+   "steps": "1 find an ocean abyss\n2 look at  the cliffs and find a crystal hollows\n3 it is air inside",
+   "area": "worldgen",
+   "status": "unresolved",
+   "severity": "minor",
+   "reporter": "aadi",
+   "reported": "2026-11-09T20:53:20.133Z",
+   "updated": "2026-11-09T20:53:20.133Z",
+   "comments": [],
+   "history": [],
+   "pending": true
   }
  ]
 }
