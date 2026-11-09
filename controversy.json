@@ -905,7 +905,15 @@
      "vote": "disapprove",
      "date": "2026-11-07T04:18:50.412Z"
     }
-   }
+   },
+   "replies": [
+    {
+     "author": "aadi",
+     "text": "NOO",
+     "date": "2026-11-09T20:45:04.024Z",
+     "pending": true
+    }
+   ]
   },
   {
    "id": "idea-doc-29",
