@@ -265,6 +265,7 @@ const pages = [
     { title: "Savanna [technical]", href: "page-savanna-technical.html", keywords: "savanna [technical] technical code implementation" },
     { title: "Terrain Generation [technical]", href: "page-terrain-generation-technical.html", keywords: "terrain generation [technical] technical code implementation" },
     { title: "Waypoints [technical]", href: "page-waypoints-technical.html", keywords: "waypoints [technical] technical code implementation" },
+    { title: "ComScript [v1.1] prerelease notes", href: "page-comscript-v1-1-prerelease-notes.html", keywords: "comscript [v1.1] prerelease notes" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
