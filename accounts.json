@@ -52,6 +52,14 @@
    "iterations": 310000,
    "hash": "n4jpyskEI3lz8tzkTgvmKUjpZe8TZRT+sEMOhv/HAbw=",
    "created": "2026-11-09T23:43:53.176Z"
+  },
+  "theodore": {
+   "name": "Theodore",
+   "role": "editor",
+   "salt": "us0B9EYPoB3eXN7vpjHHNQ==",
+   "iterations": 310000,
+   "hash": "2jDkDXlAJU2810CJy9dMqJwGzfos+30kMWIvu0EzblA=",
+   "created": "2026-11-10T16:58:02.236Z"
   }
  }
 }
