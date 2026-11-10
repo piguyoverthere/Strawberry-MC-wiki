@@ -66,11 +66,11 @@
    "description": "can't delete my own ideas",
    "steps": "self explanatory",
    "area": "wiki",
-   "status": "resolved",
+   "status": "unresolved",
    "severity": "major",
    "reporter": "Eric",
    "reported": "2026-11-09T21:27:17.194Z",
-   "updated": "2026-11-10T00:17:05.000Z",
+   "updated": "2026-11-10T02:08:14.714Z",
    "comments": [],
    "history": [
     {
@@ -79,6 +79,13 @@
      "field": "status",
      "from": "unresolved",
      "to": "resolved"
+    },
+    {
+     "author": "Alex",
+     "date": "2026-11-10T02:08:14.714Z",
+     "field": "status",
+     "from": "resolved",
+     "to": "unresolved"
     }
    ]
   },
