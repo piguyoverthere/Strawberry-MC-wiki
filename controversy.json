@@ -4252,7 +4252,13 @@
    "status": "",
    "source": "site",
    "created": "2026-11-10T17:26:48.137Z",
-   "votes": {}
+   "votes": {
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "approve",
+     "date": "2026-11-10T17:27:08.096Z"
+    }
+   }
   }
  ],
  "discussions": [
