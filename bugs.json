@@ -143,7 +143,7 @@
    "severity": "major",
    "reporter": "Alex",
    "reported": "2026-11-09T22:36:18.234Z",
-   "updated": "2026-11-10T03:04:34.431Z",
+   "updated": "2026-11-10T03:05:06.068Z",
    "comments": [
     {
      "author": "Alex",
@@ -154,6 +154,11 @@
      "author": "test reviewer",
      "date": "2026-11-10T03:04:34.431Z",
      "text": "bro its in the to do list"
+    },
+    {
+     "author": "Eric",
+     "date": "2026-11-10T03:05:06.068Z",
+     "text": "oops i commented on wrong account"
     }
    ],
    "history": [
