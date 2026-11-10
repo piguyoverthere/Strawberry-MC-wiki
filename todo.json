@@ -19,7 +19,11 @@
     "[Coming soon]",
     "A Palline Bow has a 5% chance of breaking a non-[source text incomplete]",
     "/strong> With a Breeze Rod shaft, creates a 2×2×1 area effect [source description incomplete]"
-   ]
+   ],
+   "resolved": {
+    "by": "aadi",
+    "date": "2026-11-10T20:42:24.526Z"
+   }
   },
   {
    "file": "page-ash-drops-rates.html",
