@@ -272,6 +272,7 @@ const pages = [
     { title: "DEVELOPER CONTRACT", href: "page-developer-contract.html", keywords: "developer contract" },
     { title: "[draft] Parabola Mode Mobs", href: "page-draft-parabola-mode-mobs.html", keywords: "parabola mode mobs eric aadi caleb solar god lunar render rend dragon sai zafar liver" },
     { title: "Sawmill", href: "page-draft-sawmill.html", keywords: "sawmill" },
+    { title: "ComScript: Terminal commands", href: "page-comscript-terminal-commands.html", keywords: "comscript: terminal commands" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
