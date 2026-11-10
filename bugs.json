@@ -278,10 +278,10 @@
    "steps": "Add table extending",
    "area": "wiki",
    "status": "reviewing",
-   "severity": "minor",
+   "severity": "major",
    "reporter": "Rishaan",
    "reported": "2026-11-10T20:51:58.371Z",
-   "updated": "2026-11-10T21:20:28.982Z",
+   "updated": "2026-11-10T21:20:39.041Z",
    "comments": [],
    "history": [
     {
@@ -290,6 +290,13 @@
      "field": "status",
      "from": "unresolved",
      "to": "reviewing"
+    },
+    {
+     "author": "Eric",
+     "date": "2026-11-10T21:20:39.041Z",
+     "field": "severity",
+     "from": "minor",
+     "to": "major"
     }
    ]
   }
