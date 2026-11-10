@@ -1504,3 +1504,163 @@ body:not(.wiki-editing) .wiki-pending{
     padding-left:20px;
     font-size:.9em
 }
+mark.wiki-annotation-mark{
+    background-color:#ffe58a;
+    color:inherit;
+    cursor:pointer
+}
+mark.wiki-annotation-pending{
+    background-color:#ffc9c5
+}
+.wiki-annotation-add{
+    position:absolute;
+    z-index:18;
+    padding:6px 10px;
+    border:1px solid #173b45;
+    border-radius:4px;
+    background:#173b45;
+    color:#ffffff;
+    cursor:pointer;
+    font:600 13px/1.2 Arial, Helvetica, sans-serif;
+    box-shadow:0 3px 10px rgba(0,0,0,0.3)
+}
+.wiki-annotation-popover{
+    position:absolute;
+    z-index:18;
+    box-sizing:border-box;
+    width:360px;
+    max-width:calc(100vw - 16px);
+    padding:12px;
+    border:1px solid #8aabb4;
+    border-radius:6px;
+    background:#ffffff;
+    box-shadow:0 6px 20px rgba(0,0,0,0.3);
+    font:14px/1.45 Arial, Helvetica, sans-serif
+}
+.wiki-annotation-close{
+    float:right;
+    border:0;
+    background:none;
+    cursor:pointer;
+    font-size:18px;
+    line-height:1
+}
+.wiki-annotations{
+    box-sizing:border-box;
+    max-width:980px;
+    margin:12px auto 0;
+    padding:12px 16px;
+    border:1px solid #a2a9b1;
+    background:#ffffff
+}
+.wiki-annotations summary{
+    cursor:pointer;
+    font-weight:bold
+}
+.wiki-annotation-card{
+    padding:10px 0;
+    border-top:1px solid #c8ccd1
+}
+.wiki-annotations summary + .wiki-annotation-card{
+    margin-top:10px
+}
+.wiki-annotation-popover .wiki-annotation-card{
+    padding:0;
+    border-top:0
+}
+.wiki-annotation-quote{
+    max-height:7em;
+    margin:0 0 8px;
+    padding:2px 0 2px 10px;
+    overflow:auto;
+    border-left:3px solid #e0b400;
+    color:#54595d;
+    white-space:pre-wrap
+}
+.wiki-annotation-item{
+    margin:8px 0
+}
+.wiki-annotation-text{
+    margin:2px 0;
+    white-space:pre-wrap
+}
+.wiki-mention{
+    padding:0 2px;
+    border-radius:3px;
+    background-color:#fde3a7;
+    font-weight:bold
+}
+.wiki-annotation-tasks{
+    margin:4px 0;
+    color:#a4262c;
+    font-size:.9em
+}
+.wiki-task-person{
+    margin-right:6px;
+    font-weight:bold
+}
+.wiki-task-done{
+    color:#14866d;
+    text-decoration:line-through
+}
+.wiki-annotation-reply textarea,
+.wiki-dialog textarea#wiki-annotation-input{
+    box-sizing:border-box;
+    width:100%
+}
+.wiki-mention-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+    margin:4px 0
+}
+.wiki-mention-list[hidden]{
+    display:none
+}
+.wiki-mention-list button{
+    padding:3px 8px;
+    border:1px solid #a2a9b1;
+    border-radius:4px;
+    background:#f8f9fa;
+    cursor:pointer
+}
+.nav-badge{
+    display:inline-block;
+    min-width:16px;
+    margin-left:5px;
+    padding:0 4px;
+    border-radius:9px;
+    background-color:#b3261e;
+    color:#ffffff;
+    font:700 11px/16px Arial, Helvetica, sans-serif;
+    text-align:center;
+    text-shadow:none
+}
+.notification-priority{
+    border-left:4px solid #e0a800;
+    background-color:#fff3c4
+}
+.notification-priority-label{
+    margin-left:8px;
+    padding:1px 6px;
+    border-radius:3px;
+    background-color:#e0a800;
+    color:#202122;
+    font-size:.85em;
+    font-weight:bold
+}
+.notification-tasks{
+    margin:16px 0;
+    padding:4px 14px 12px;
+    border:2px solid #e0a800;
+    border-radius:6px;
+    background-color:#fff8df
+}
+.notification-task{
+    padding:10px 0;
+    border-top:1px solid #ecd691
+}
+.notification-task p{
+    margin:4px 0 8px;
+    white-space:pre-wrap
+}

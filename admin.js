@@ -134,7 +134,7 @@
 
     async function renderQueue() {
         const json = (file) => fetch(file, { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).catch(() => ({}));
-        const [ideas, bugs, pages] = await Promise.all([json("controversy.json"), json("bugs.json"), json("pending-pages.json")]);
+        const [ideas, bugs, pages, annotations] = await Promise.all([json("controversy.json"), json("bugs.json"), json("pending-pages.json"), json("annotations.json")]);
         const items = [];
         for (const idea of (ideas.ideas || []).filter((item) => !item.archived)) {
             if (idea.pending) items.push([`New idea by ${idea.author}: ${idea.title}`, `ideas.html#${idea.id}`]);
@@ -146,6 +146,9 @@
         for (const bug of bugs.bugs || []) {
             if (bug.pending) items.push([`Bug report by ${bug.reporter}: ${bug.title}`, `bugs.html#${bug.id}`]);
             for (const comment of bug.comments || []) if (comment.pending) items.push([`Comment by ${comment.author} on bug ${bug.title}`, `bugs.html#${bug.id}`]);
+        }
+        for (const annotation of annotations.annotations || []) {
+            for (const item of [annotation, ...(annotation.replies || [])]) if (item.pending) items.push([`Comment by ${item.author} on ${annotation.pageTitle}`, `${annotation.page}#${annotation.id}`]);
         }
         for (const [file, page] of Object.entries(pages.pages || {})) items.push([`Page edits by ${page.by}: ${page.title}`, file]);
         return element("section", { className: "admin-section" },

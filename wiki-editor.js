@@ -215,6 +215,10 @@
     function serializeContent() {
         const template = document.createElement("template");
         template.innerHTML = sanitizeMarkup(root.innerHTML);
+        // Comment highlights are drawn in the browser and never saved into the page.
+        for (const mark of template.content.querySelectorAll("mark.wiki-annotation-mark")) {
+            mark.replaceWith(...mark.childNodes);
+        }
         // Typing over a code box's placeholder can drop its <code> wrapper, so put it back.
         for (const pre of template.content.querySelectorAll("pre.code-box")) {
             if (pre.childNodes.length !== 1 || pre.firstChild.nodeName !== "CODE") {
@@ -232,6 +236,7 @@
         for (const placeholder of root.querySelectorAll("span[data-wiki-island]")) {
             placeholder.replaceWith(islands[Number(placeholder.dataset.wikiIsland)]);
         }
+        document.dispatchEvent(new Event("wiki-content-changed"));
     }
 
     function applyLegacyDraft(draft) {
@@ -1478,6 +1483,7 @@
 
     function setEditing(value) {
         editing = value;
+        document.dispatchEvent(new Event("wiki-content-changed"));
         document.body.classList.toggle("wiki-editing", value);
         if (value) {
             root.contentEditable = "true";
@@ -2620,6 +2626,36 @@
         return readToken();
     }
 
+    // Comments that name this person with @ and aren't marked done yet
+    function annotationTasks(data, name) {
+        const key = accountKey(name);
+        return (data.annotations || []).filter((annotation) => !annotation.pending).flatMap((annotation) =>
+            [annotation, ...(annotation.replies || [])]
+                .filter((item) => !item.pending && (item.mentions || []).some((mention) => accountKey(mention) === key) && !item.done?.[key])
+                .map((item) => ({ annotation, item })));
+    }
+
+    // The number of waiting tasks next to Community and Notifications
+    if (header && readToken() && readAccount()) {
+        fetch("annotations.json", { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).then((data) => {
+            const count = annotationTasks(data, readAccount()).length;
+            if (!count) return;
+            const link = header.querySelector('.nav-menu a[href="notifications.html"]');
+            for (const target of [link, link?.closest(".nav-menu")?.querySelector("button")]) {
+                if (target) target.append(Object.assign(document.createElement("span"), { className: "nav-badge", textContent: String(count), title: `${count} priority task${count === 1 ? "" : "s"} for you` }));
+            }
+        }).catch(() => {
+            // The count is a convenience.
+        });
+    }
+
+    if (!isNewPage && /^(?:page|news)-/.test(currentPage)) {
+        const annotationScript = document.createElement("script");
+        annotationScript.src = "annotations.js";
+        annotationScript.dataset.wikiInjected = "";
+        document.body.append(annotationScript);
+    }
+
     window.wikiStore = {
         repositoryUrl: `https://github.com/${repository.owner}/${repository.name}`,
         roles,
@@ -2706,6 +2742,18 @@
         isAdmin: () => readRole() === "admin",
         isReviewer: () => readRole() === "reviewer",
         canReview: () => canReviewRole(readRole()),
+        isEditing: () => editing,
+        annotationTasks,
+        // itemId is the comment or reply that named this person
+        markTaskDone(annotationId, itemId) {
+            const name = readAccount();
+            return window.wikiStore.updateJson("annotations.json", (data) => {
+                const annotation = (data.annotations || []).find((entry) => entry.id === annotationId);
+                const item = annotation && [annotation, ...(annotation.replies || [])].find((entry) => entry.id === itemId);
+                if (!item) throw new Error("That task no longer exists. Reload the page.");
+                item.done = { ...item.done, [accountKey(name)]: new Date().toISOString() };
+            }, `${name} finishes a task from ${annotationId}`, { needsReview: false });
+        },
         // Sends people to the login page, coming back here afterwards
         loginHref(next = location.pathname.split("/").pop() + location.search + location.hash) {
             return `login.html?${new URLSearchParams({ next })}`;
@@ -2746,8 +2794,10 @@
                 ...(data.discussions || []).flatMap((discussion) => discussion.posts || [])
             ];
             const bugs = (data) => (data.bugs || []).flatMap((bug) => [bug, ...(bug.comments || [])]);
+            const annotations = (data) => (data.annotations || []).flatMap((annotation) => [annotation, ...(annotation.replies || [])]);
             await updateRepositoryJson(token, "controversy.json", clearing(controversy), `${name} approves all waiting changes in ideas and threads`);
             await updateRepositoryJson(token, "bugs.json", clearing(bugs), `${name} approves all waiting changes in bugs`);
+            await updateRepositoryJson(token, "annotations.json", clearing(annotations), `${name} approves all waiting changes in page comments`);
             const queued = JSON.parse((await getRepositoryFile(token, pendingPagesFile))?.text || "{}").pages || {};
             for (const [file, entry] of Object.entries(queued)) {
                 const page = await getRepositoryFile(token, file);
@@ -2775,7 +2825,7 @@
                     Object.keys(queued).forEach((file) => delete pages[file]);
                 }, "Update review queue for all pages");
             }
-            return (counts.get(controversy) || 0) + (counts.get(bugs) || 0) + Object.keys(queued).length;
+            return (counts.get(controversy) || 0) + (counts.get(bugs) || 0) + (counts.get(annotations) || 0) + Object.keys(queued).length;
         },
         // Takes a page off the To Do list and removes its [UNRESOLVED] notes
         async resolveTodoPage(file, title) {

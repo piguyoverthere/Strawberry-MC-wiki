@@ -17,6 +17,7 @@
         ["idea", "New ideas"],
         ["comment", "Idea comments"],
         ["thread", "Threads & debates"],
+        ["annotation", "Page comments"],
         ["bug", "Bugs"],
         ["review", "Reviews"],
         ["account", "Accounts"],
@@ -106,6 +107,10 @@
             return { type: "thread", who: match[1], text: ` started a ${match[2]}: `, target: match[3], href: discussionHref(match[3]) };
         if ((match = line.match(/^(.+?) (archives|restores) idea: (.+)$/))) return { type: "idea", who: match[1], text: match[2] === "archives" ? " moved to Archives: " : " restored an idea: ", target: match[3], href: "archives.html" };
         if ((match = line.match(/^(.+?) resolves page: (.+)$/))) return { type: "page-edit", who: match[1], text: " resolved ", target: match[2], page: true };
+        if ((match = line.match(/^(.+?) assigns (.+) on page: (.+)$/))) return { type: "annotation", who: match[1], text: ` assigned ${match[2]} a priority task on `, target: match[3], page: true, assigned: match[2].split(", ") };
+        if ((match = line.match(/^(.+?) comments on page: (.+)$/))) return { type: "annotation", who: match[1], text: " commented on ", target: match[2], page: true };
+        if ((match = line.match(/^(.+?) deletes a comment on page: (.+)$/))) return { type: "annotation", who: match[1], text: " deleted a comment on ", target: match[2], page: true };
+        if (/^.+ finishes a task from ann-/.test(line)) return null;
         if ((match = line.match(/^(.+?) reports bug: (.+)$/))) return { type: "bug", who: match[1], text: " reported a bug: ", target: match[2], href: bugHref(match[2]) };
         if ((match = line.match(/^(.+?) sets bug (status|severity) to (.+?): (.+)$/)))
             return { type: "bug", who: match[1], text: ` set ${match[2]} to ${match[3]} on `, target: match[4], href: bugHref(match[4]) };
@@ -113,6 +118,43 @@
         if ((match = line.match(/^Register account: (.+)$/))) return { type: "account", who: match[1], text: " joined the wiki", target: "", href: null };
         return { type: "site", text: "", target: line, href: null };
     }
+
+    function isForMe(update) {
+        const store = window.wikiStore;
+        if (!update.assigned || update.needsReview || !store?.isSignedIn()) return false;
+        const me = store.getAuthor().trim().toLowerCase();
+        return update.assigned.some((name) => name.trim().toLowerCase() === me);
+    }
+
+    // Priority tasks: comments on articles that named you with @
+    const tasksSection = element("section", { className: "notification-tasks", hidden: true });
+
+    function renderTasks(data) {
+        const store = window.wikiStore;
+        const tasks = store?.isSignedIn() ? store.annotationTasks(data, store.getAuthor()) : [];
+        tasksSection.hidden = !tasks.length;
+        tasksSection.replaceChildren(element("h2", {}, `⚑ Priority tasks for you (${tasks.length})`),
+            ...tasks.map(({ annotation, item }) => element("article", { className: "notification-task" },
+                element("div", {},
+                    element("strong", {}, item.author),
+                    " on ",
+                    element("a", { href: `${annotation.page}#${annotation.id}` }, annotation.pageTitle),
+                    element("span", { className: "notification-time" }, ` · ${formatTime(item.date)}`)),
+                element("blockquote", { className: "wiki-annotation-quote" }, annotation.quote),
+                element("p", {}, item.text),
+                element("button", {
+                    type: "button", className: "wiki-review-approve",
+                    onclick: (event) => {
+                        event.target.disabled = true;
+                        store.markTaskDone(annotation.id, item.id).then(renderTasks).catch((error) => {
+                            event.target.disabled = false;
+                            status.textContent = `Could not save: ${error.message}`;
+                        });
+                    }
+                }, "Mark done"))));
+    }
+
+    fetch("annotations.json", { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).then(renderTasks).catch(() => {});
 
     const lastSeen = readStorage(seenStorageKey);
     const filters = { type: "all", query: "" };
@@ -133,7 +175,7 @@
             type: "search", placeholder: "Search updates…", "aria-label": "Search updates",
             oninput: (event) => { filters.query = event.target.value.trim().toLowerCase(); render(); }
         }));
-    app.replaceChildren(toolbar, status, list, more);
+    app.replaceChildren(tasksSection, toolbar, status, list, more);
 
     function formatTime(value) {
         const date = new Date(value);
@@ -158,7 +200,7 @@
         list.replaceChildren(...shown.map((update) => {
             // Looked up here rather than when loading, since search.js may load after this script
             const href = update.page ? pageHref(update.target) : update.href;
-            return element("li", { className: `notification notification-${update.type}${update.vote ? ` notification-${update.vote}` : ""}${update.isNew ? " notification-new" : ""}` },
+            return element("li", { className: `notification notification-${update.type}${update.vote ? ` notification-${update.vote}` : ""}${update.isNew ? " notification-new" : ""}${isForMe(update) ? " notification-priority" : ""}` },
                 element("span", { className: `idea-badge notification-badge notification-badge-${update.type}` }, typeLabels[update.type]),
                 element("span", { className: "notification-text" },
                     update.who ? element("strong", {}, update.who) : null,
@@ -166,6 +208,7 @@
                     href ? element("a", { href }, update.target) : update.target,
                     update.count > 1 ? element("span", { className: "notification-count" }, ` ×${update.count}`) : null,
                     update.needsReview ? element("span", { className: "notification-review-label" }, "Needs review") : null,
+                    isForMe(update) ? element("span", { className: "notification-priority-label" }, "⚑ For you") : null,
                     update.isNew ? element("span", { className: "notification-new-label" }, "New") : null),
                 element("time", { className: "notification-time", datetime: update.date }, formatTime(update.date)));
         }));
