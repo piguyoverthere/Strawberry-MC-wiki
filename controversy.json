@@ -3892,7 +3892,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-10T17:00:59.112Z"
+    }
+   }
   },
   {
    "id": "idea-doc-214",
