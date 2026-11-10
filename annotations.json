@@ -58,7 +58,10 @@
    "mentions": [
     "Eric"
    ],
-   "replies": []
+   "replies": [],
+   "done": {
+    "eric": "2026-11-10T21:41:58.072Z"
+   }
   }
  ]
 }
