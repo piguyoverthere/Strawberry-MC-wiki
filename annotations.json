@@ -58,7 +58,15 @@
    "mentions": [
     "Eric"
    ],
-   "replies": [],
+   "replies": [
+    {
+     "id": "reply-mwb7tv9q-iz2ma",
+     "author": "Eric",
+     "text": "done",
+     "date": "2026-11-10T21:42:03.662Z",
+     "mentions": []
+    }
+   ],
    "done": {
     "eric": "2026-11-10T21:41:58.072Z"
    }
