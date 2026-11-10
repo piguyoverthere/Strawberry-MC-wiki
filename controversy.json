@@ -3732,7 +3732,10 @@
      "text": "NOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
      "date": "2026-11-10T18:59:50.649Z"
     }
-   ]
+   ],
+   "archived": true,
+   "archivedBy": "Eric",
+   "archivedDate": "2026-11-10T19:00:01.957Z"
   },
   {
    "id": "idea-doc-204",
