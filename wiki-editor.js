@@ -2569,6 +2569,7 @@
             const text = `${JSON.stringify(data, null, 1)}\n`;
             try {
                 await putRepositoryFile(token, file, text, message, current?.sha);
+                jsonSaves++;
                 return data;
             } catch (error) {
                 if (error.status === 401 || error.status === 403) {
@@ -2635,17 +2636,139 @@
                 .map((item) => ({ annotation, item })));
     }
 
-    // The number of waiting tasks next to Community and Notifications
+    // Live updates -------------------------------------------------------------------------------
+    // The published site can be minutes behind, so signed-in people ask GitHub directly. Asking with the
+    // file's ETag answers "304 nothing new", which GitHub doesn't count against the token's limit.
+    const signedInDelay = 4000;
+    const signedOutDelay = 20000;
+    const limitedDelay = 60000;
+    const watchers = new Map();
+    let jsonSaves = 0;
+
+    async function readLatestJson(file, watcher) {
+        const token = readToken();
+        if (!token) {
+            const response = await fetch(file, { cache: "no-cache" });
+            return response.ok ? response.text() : null;
+        }
+        const response = await fetch(`https://api.github.com/repos/${repository.owner}/${repository.name}/contents/${encodeURIComponent(file)}?ref=${repository.branch}`, {
+            cache: "no-store",
+            headers: {
+                Accept: "application/vnd.github+json",
+                Authorization: `Bearer ${token}`,
+                "X-GitHub-Api-Version": "2022-11-28",
+                ...(watcher.etag ? { "If-None-Match": watcher.etag } : {})
+            }
+        });
+        if (response.status === 304 || response.status === 404) {
+            return null;
+        }
+        if (!response.ok) {
+            throw new GitHubError(response.status, "");
+        }
+        watcher.etag = response.headers.get("ETag") || "";
+        const body = await response.json();
+        return body.content ? decodeBase64(body.content) : null;
+    }
+
+    async function pollJson(file, watcher) {
+        clearTimeout(watcher.timer);
+        if (watcher.busy) {
+            return;
+        }
+        let delay = readToken() ? signedInDelay : signedOutDelay;
+        if (!document.hidden) {
+            watcher.busy = true;
+            const savesBefore = jsonSaves;
+            try {
+                const text = await readLatestJson(file, watcher);
+                if (jsonSaves !== savesBefore) {
+                    // This answer may be from before our own save; ask again next time.
+                    watcher.etag = "";
+                } else if (text !== null && text !== watcher.text) {
+                    watcher.text = text;
+                    const data = JSON.parse(text);
+                    watcher.listeners.forEach((listener) => listener(data));
+                }
+            } catch (error) {
+                if (error instanceof GitHubError) {
+                    delay = limitedDelay;
+                }
+                // Otherwise the connection dropped for a moment; the next check tries again.
+            }
+            watcher.busy = false;
+        }
+        watcher.timer = setTimeout(() => pollJson(file, watcher), delay);
+    }
+
+    // Calls listener with the file's contents now and whenever someone changes it
+    function watchJson(file, listener) {
+        const existing = watchers.get(file);
+        if (existing) {
+            existing.listeners.push(listener);
+            if (existing.text) listener(JSON.parse(existing.text));
+            return;
+        }
+        const watcher = { listeners: [listener], etag: "", text: "", timer: 0, busy: false };
+        watchers.set(file, watcher);
+        pollJson(file, watcher);
+    }
+
+    function pollWatchersNow() {
+        if (!document.hidden) {
+            watchers.forEach((watcher, file) => pollJson(file, watcher));
+        }
+    }
+    document.addEventListener("visibilitychange", pollWatchersNow);
+    window.addEventListener("focus", pollWatchersNow);
+
+    // Redraws without losing what someone is halfway through typing
+    function keepInputs(containers, update) {
+        const fields = "textarea, input[type='text'], input[type='search'], input:not([type])";
+        const keyOf = (field, index) => {
+            const owner = field.closest("[id], [data-card-id]");
+            return `${index}|${owner?.id || owner?.dataset.cardId || ""}|${field.getAttribute("aria-label") || field.name || ""}`;
+        };
+        const active = document.activeElement;
+        const drafts = new Map();
+        let focused = null;
+        containers.forEach((container, index) => {
+            for (const field of container.querySelectorAll(fields)) {
+                if (field.value) drafts.set(keyOf(field, index), field.value);
+                if (field === active) focused = { key: keyOf(field, index), start: field.selectionStart, end: field.selectionEnd };
+            }
+        });
+        const scrollTop = window.scrollY;
+        update();
+        containers.forEach((container, index) => {
+            for (const field of container.querySelectorAll(fields)) {
+                const key = keyOf(field, index);
+                if (drafts.has(key)) field.value = drafts.get(key);
+                if (focused?.key === key) {
+                    field.focus({ preventScroll: true });
+                    field.setSelectionRange(focused.start, focused.end);
+                }
+            }
+        });
+        window.scrollTo(window.scrollX, scrollTop);
+    }
+
+    // The number of waiting tasks next to Community and Notifications, kept up to date
     if (header && readToken() && readAccount()) {
-        fetch("annotations.json", { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).then((data) => {
-            const count = annotationTasks(data, readAccount()).length;
-            if (!count) return;
+        let knownTasks = null;
+        watchJson("annotations.json", (data) => {
+            const tasks = annotationTasks(data, readAccount());
+            if (knownTasks !== null && tasks.length > knownTasks) {
+                const { annotation, item } = tasks.at(-1);
+                status.textContent = `New priority task from ${item.author} on ${annotation.pageTitle}.`;
+            }
+            knownTasks = tasks.length;
+            header.querySelectorAll(".nav-badge").forEach((badge) => badge.remove());
+            if (!tasks.length) return;
             const link = header.querySelector('.nav-menu a[href="notifications.html"]');
             for (const target of [link, link?.closest(".nav-menu")?.querySelector("button")]) {
-                if (target) target.append(Object.assign(document.createElement("span"), { className: "nav-badge", textContent: String(count), title: `${count} priority task${count === 1 ? "" : "s"} for you` }));
+                if (target) target.append(Object.assign(document.createElement("span"), { className: "nav-badge", textContent: String(tasks.length), title: `${tasks.length} priority task${tasks.length === 1 ? "" : "s"} for you` }));
             }
-        }).catch(() => {
-            // The count is a convenience.
         });
     }
 
@@ -2744,6 +2867,8 @@
         canReview: () => canReviewRole(readRole()),
         isEditing: () => editing,
         annotationTasks,
+        watchJson,
+        keepInputs,
         // itemId is the comment or reply that named this person
         markTaskDone(annotationId, itemId) {
             const name = readAccount();

@@ -154,11 +154,15 @@
                 }, "Mark done"))));
     }
 
-    fetch("annotations.json", { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).then(renderTasks).catch(() => {});
+    fetch("annotations.json", { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).then((data) => {
+        renderTasks(data);
+        if (window.wikiStore?.isSignedIn()) window.wikiStore.watchJson("annotations.json", renderTasks);
+    }).catch(() => {});
 
     const lastSeen = readStorage(seenStorageKey);
     const filters = { type: "all", query: "" };
     const updates = [];
+    const seenCommits = new Set();
     let page = 1;
     let finished = false;
     let loading = false;
@@ -217,6 +221,45 @@
         more.hidden = finished;
     }
 
+    // New updates appear at the top while the page is open. An unchanged list answers 304, which doesn't use up GitHub's limit.
+    let feedTag = "";
+
+    async function refreshFeed() {
+        let token = readStorage(tokenStorageKey);
+        try {
+            token = sessionStorage.getItem(tokenStorageKey) || token;
+        } catch {
+            // Storage blocked; use what was found.
+        }
+        if (document.hidden || loading || !token || !updates.length) return;
+        try {
+            const response = await fetch(`https://api.github.com/repos/${repository.owner}/${repository.name}/commits?sha=${repository.branch}&per_page=30`, {
+                cache: "no-store",
+                headers: { Accept: "application/vnd.github+json", Authorization: `Bearer ${token}`, ...(feedTag ? { "If-None-Match": feedTag } : {}) }
+            });
+            if (!response.ok) return;
+            feedTag = response.headers.get("ETag") || "";
+            const fresh = [];
+            for (const commit of await response.json()) {
+                if (seenCommits.has(commit.sha)) continue;
+                seenCommits.add(commit.sha);
+                const update = describe(commit.commit.message);
+                if (!update) continue;
+                const date = commit.commit.committer?.date || commit.commit.author?.date;
+                fresh.push({ ...update, message: commit.commit.message.split("\n")[0], date, isNew: true });
+                writeStorage(seenStorageKey, date > readStorage(seenStorageKey) ? date : readStorage(seenStorageKey));
+            }
+            if (fresh.length) {
+                updates.unshift(...fresh);
+                render();
+            }
+        } catch {
+            // The connection dropped for a moment; the next check tries again.
+        }
+    }
+
+    setInterval(refreshFeed, 6000);
+
     async function load() {
         if (loading || finished) return;
         loading = true;
@@ -236,6 +279,7 @@
                 const update = describe(commit.commit.message);
                 if (!update) continue;
                 const date = commit.commit.committer?.date || commit.commit.author?.date;
+                seenCommits.add(commit.sha);
                 updates.push({ ...update, message: commit.commit.message.split("\n")[0], date, isNew: Boolean(lastSeen) && date > lastSeen });
             }
             if (page === 1 && commits.length) {

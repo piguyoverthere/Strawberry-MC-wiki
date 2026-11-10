@@ -11,6 +11,8 @@
     }
 
     let data = { ideas: [], discussions: [] };
+    // Ideas opened with "Show more" stay open when someone else's post redraws the list
+    const expandedIdeas = new Set();
 
     function element(tag, options = {}, ...children) {
         const node = document.createElement(tag);
@@ -346,10 +348,12 @@
         // Long write-ups start folded so the list stays easy to scan.
         if ((idea.description || "").length > 450) {
             const body = card.querySelector(".idea-description");
-            body.classList.add("idea-collapsed");
-            const toggle = element("button", { type: "button", className: "wiki-link-button idea-more", text: "Show more" });
+            body.classList.toggle("idea-collapsed", !expandedIdeas.has(idea.id));
+            const toggle = element("button", { type: "button", className: "wiki-link-button idea-more", text: expandedIdeas.has(idea.id) ? "Show less" : "Show more" });
             toggle.addEventListener("click", () => {
                 const collapsed = body.classList.toggle("idea-collapsed");
+                if (collapsed) expandedIdeas.delete(idea.id);
+                else expandedIdeas.add(idea.id);
                 toggle.textContent = collapsed ? "Show more" : "Show less";
             });
             card.append(toggle);
@@ -608,6 +612,11 @@
         if (archivesApp && id) openDiscussions.add(id);
         render();
         if (archivesApp && id) document.getElementById(id)?.scrollIntoView({ block: "start" });
+        // Other people's votes, comments and replies appear without reloading
+        window.wikiStore?.watchJson(dataFile, (fresh) => {
+            data = { ...fresh, ideas: fresh.ideas || [], discussions: fresh.discussions || [] };
+            window.wikiStore.keepInputs([app], render);
+        });
     }).catch((error) => {
         app.replaceChildren(element("p", { className: "wiki-dialog-error", text: error.message }));
     });

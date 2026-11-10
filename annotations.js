@@ -404,6 +404,30 @@
 
     document.addEventListener("wiki-content-changed", render);
 
+    // Other people's comments appear without reloading. Redrawing highlights would clear a selection in progress, so wait for it.
+    let waitingToRedraw = false;
+
+    function redrawLive() {
+        waitingToRedraw = false;
+        store.keepInputs([section, popover], render);
+    }
+
+    function receiveLive(fresh) {
+        const before = JSON.stringify(onThisPage());
+        data = { annotations: fresh.annotations || [] };
+        if (JSON.stringify(onThisPage()) === before) return;
+        const selection = document.getSelection();
+        if (!selection.isCollapsed && root.contains(selection.anchorNode)) {
+            waitingToRedraw = true;
+            return;
+        }
+        redrawLive();
+    }
+
+    document.addEventListener("selectionchange", () => {
+        if (waitingToRedraw && document.getSelection().isCollapsed) redrawLive();
+    });
+
     Promise.all([
         fetch(dataFile, { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}),
         fetch("accounts.json", { cache: "no-cache" }).then((response) => response.ok ? response.json() : {})
@@ -411,6 +435,7 @@
         data = { annotations: annotationData.annotations || [] };
         accountNames = Object.values(accounts.accounts || {}).map((account) => account.name);
         render();
+        store.watchJson(dataFile, receiveLive);
         // Opening a link from Notifications (page.html#ann-…)
         const id = location.hash.slice(1);
         const mark = id.startsWith("ann-") ? root.querySelector(`mark[data-annotation-id="${id}"]`) : null;

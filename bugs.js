@@ -340,6 +340,10 @@
         })
         .then((loaded) => {
             data = loaded;
+            window.wikiStore?.watchJson(dataFile, (fresh) => {
+                data = fresh;
+                window.wikiStore.keepInputs([app], render);
+            });
             data.bugs = data.bugs || [];
             const id = location.hash.slice(1);
             if (id) {
