@@ -277,13 +277,21 @@
    "description": "Ok so how do you extend the table in the Edit page? is there a button or smth? this is a bug cuz i cant find anything",
    "steps": "Add table extending",
    "area": "wiki",
-   "status": "unresolved",
+   "status": "reviewing",
    "severity": "minor",
    "reporter": "Rishaan",
    "reported": "2026-11-10T20:51:58.371Z",
-   "updated": "2026-11-10T20:51:58.371Z",
+   "updated": "2026-11-10T21:20:28.982Z",
    "comments": [],
-   "history": []
+   "history": [
+    {
+     "author": "Eric",
+     "date": "2026-11-10T21:20:28.982Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "reviewing"
+    }
+   ]
   }
  ]
 }
