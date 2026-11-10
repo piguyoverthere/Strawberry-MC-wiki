@@ -726,11 +726,6 @@
    "status": "",
    "source": "document",
    "votes": {
-    "sai": {
-     "name": "Sai",
-     "vote": "approve",
-     "source": "document"
-    },
     "eric": {
      "name": "Eric",
      "vote": "approve",
