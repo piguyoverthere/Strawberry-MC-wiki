@@ -273,6 +273,7 @@ const pages = [
     { title: "[draft] Parabola Mode Mobs", href: "page-draft-parabola-mode-mobs.html", keywords: "parabola mode mobs eric aadi caleb solar god lunar render rend dragon sai zafar liver" },
     { title: "Sawmill", href: "page-draft-sawmill.html", keywords: "sawmill" },
     { title: "ComScript: Terminal commands", href: "page-comscript-terminal-commands.html", keywords: "comscript: terminal commands" },
+    { title: "SITE UPDATE: Comments now take less time to sync with others, allowing real-time", href: "news-eric-site-update-comments-now-take-less-time-to-sync-with-others-allowing-real-time.html", keywords: "site update: comments now take less time to sync with others allowing real-time" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
