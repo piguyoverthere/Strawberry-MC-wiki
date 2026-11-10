@@ -79,11 +79,11 @@
    "description": "can't delete my own ideas",
    "steps": "self explanatory",
    "area": "wiki",
-   "status": "unresolved",
+   "status": "resolved",
    "severity": "major",
    "reporter": "Eric",
    "reported": "2026-11-09T21:27:17.194Z",
-   "updated": "2026-11-10T02:08:14.714Z",
+   "updated": "2026-11-10T03:05:37.756Z",
    "comments": [],
    "history": [
     {
@@ -99,6 +99,13 @@
      "field": "status",
      "from": "resolved",
      "to": "unresolved"
+    },
+    {
+     "author": "Eric",
+     "date": "2026-11-10T03:05:37.756Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "resolved"
     }
    ]
   },
