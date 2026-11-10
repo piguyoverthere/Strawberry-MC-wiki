@@ -4002,7 +4002,10 @@
      "vote": "disapprove",
      "date": "2026-11-09T22:31:05.810Z"
     }
-   }
+   },
+   "archived": true,
+   "archivedBy": "Rishaan",
+   "archivedDate": "2026-11-10T17:01:01.639Z"
   },
   {
    "id": "idea-doc-218",
