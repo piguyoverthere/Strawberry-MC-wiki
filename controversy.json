@@ -3719,7 +3719,13 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "date": "2026-11-10T17:58:40.891Z"
+    }
+   }
   },
   {
    "id": "idea-doc-204",
