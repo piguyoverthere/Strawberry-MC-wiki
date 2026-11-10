@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>ComScript: Terminal commands | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="documents.html">Open PDF</a>
+            </nav>
+        </header>
+        <h1>ComScript: Terminal commands</h1>
+        <p>As you may already know, the Scripter block for ComScript has a native terminal that reports any building errors or can be used for running native <span class="consolas">alocate</span> commands.</p><h2>Attributes</h2><p>--force</p><p>--force forces a process to run, overriding all run conditions, warnings, errors, etc.</p><h2>Sub keywords</h2><h3><span class="consolas">:clear</span></h3><p><span class="consolas">&lt;keyword&gt;:clear</span> clears the terminal of previous text, including system logs, errors, warnings, or user command outputs/inputs. This command can only be used when no background processes are running, which can be paused or terminated with <span class="consolas">alo abort --force</span>.</p><p>:pop</p><p>&lt;keyword&gt;:pop applies the saved item to your workspace. For example, alo stash:pop stash1 --force discards all uncommitted changes and applies all changes in "stash1" to your workspace.&nbsp;</p><h2>Keywords</h2><h3><span class="consolas">alo</span></h3><p>All Alo commands regarding the system itself including the terminal start with the "alo" keyword.</p><h4><span class="consolas">alo terminal:&lt;mandatory action&gt;</span></h4><h4>alo stash {workspace:"opt workspace name", file:"opt file to selectively stash}, name:"stash name (required)"}</h4><p>alo stash temporarily stores all text within the specified file or if not specified, the terminal into a .md file stored in the level folder. Stashed changes are deleted after a session terminates, and need to be instanced by first popping/applying all changes with stash:pop, which restores all changes. A endemic attribute is alo stash --all, which stashes all changes in git syntax in a .md file, and can only be popped when you have no uncommitted changes. Discard to commit all changes before popping a change stash. Changes are automatically discarded if alo stash is run forcefully</p><h4>alo discard {workspace:"opt workspace name", file:"opt file to selectively discard from, if no file specified, discards all"}</h4><p>alo discard discards all uncommitted changes in your workspace <b>permanently</b>.</p><h4><span class="consolas"><span class="consolas">echo(#contents#)</span></span></h4><p>The <span class="consolas">echo()</span> command is used to output text in the terminal which can be useful for reading system outputs that are stored in alo variables. The following example retrieves the version of alo you are using.</p><pre class="code-box"><code class="consolas">echo(alo.getversion)</code></pre><p><br></p>
+        <script src="wiki-editor.js" defer=""></script>
+    
+
+</body></html>
