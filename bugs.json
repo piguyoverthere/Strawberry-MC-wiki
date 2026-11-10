@@ -325,13 +325,21 @@
    "description": "uum",
    "steps": "um",
    "area": "block",
-   "status": "unresolved",
+   "status": "resolved",
    "severity": "minor",
    "reporter": "Eric",
    "reported": "2026-11-10T23:44:27.274Z",
-   "updated": "2026-11-10T23:44:27.274Z",
+   "updated": "2026-11-10T23:44:34.766Z",
    "comments": [],
-   "history": []
+   "history": [
+    {
+     "author": "Eric",
+     "date": "2026-11-10T23:44:34.766Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "resolved"
+    }
+   ]
   }
  ]
 }
