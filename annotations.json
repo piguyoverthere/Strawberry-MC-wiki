@@ -44,6 +44,21 @@
     "Eric"
    ],
    "replies": []
+  },
+  {
+   "id": "ann-mwb5zlc4-hjtgq",
+   "page": "page-potions.html",
+   "pageTitle": "Potions",
+   "quote": "Any mob with this effect is immune to death.",
+   "prefix": "ions [technical].Invulnerability",
+   "suffix": "\n        Appendix: Related topic",
+   "author": "aadi",
+   "text": "@Eric please clarify how",
+   "date": "2026-11-10T20:50:31.492Z",
+   "mentions": [
+    "Eric"
+   ],
+   "replies": []
   }
  ]
 }
