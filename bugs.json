@@ -43,11 +43,11 @@
    "description": "if you click the comment button twice then it sends twice instead of clicking once, send, then close",
    "steps": "SEND A COMMENT AND PRESS BUTTON TWIVE WHILST LOADING",
    "area": "wiki",
-   "status": "unresolved",
+   "status": "resolved",
    "severity": "major",
    "reporter": "Eric",
    "reported": "2026-11-09T21:26:37.757Z",
-   "updated": "2026-11-10T02:08:52.186Z",
+   "updated": "2026-11-10T03:05:42.522Z",
    "comments": [
     {
      "author": "Alex",
@@ -69,6 +69,13 @@
      "field": "status",
      "from": "resolved",
      "to": "unresolved"
+    },
+    {
+     "author": "Eric",
+     "date": "2026-11-10T03:05:42.522Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "resolved"
     }
    ]
   },
