@@ -235,12 +235,13 @@
         const votes = Object.values(idea.votes || {});
         return {
             approve: votes.filter((vote) => vote.vote === "approve"),
-            disapprove: votes.filter((vote) => vote.vote === "disapprove")
+            disapprove: votes.filter((vote) => vote.vote === "disapprove"),
+            convince: votes.filter((vote) => vote.vote === "convince")
         };
     }
 
     function vote(idea, choice) {
-        requireSignIn(`${choice === "approve" ? "Approve" : "Disapprove"} "${idea.title}". Voting the same way again removes your vote.`, (name) =>
+        requireSignIn(`${{ approve: "Approve", disapprove: "Disapprove", convince: "Mark as needing convincing" }[choice]} "${idea.title}". Voting the same way again removes your vote.`, (name) =>
             save((fresh) => {
                 const target = (fresh.ideas || []).find((item) => item.id === idea.id);
                 if (!target) throw new Error("This idea no longer exists. Reload the page.");
@@ -319,7 +320,7 @@
     }
 
     function renderIdea(idea) {
-        const { approve, disapprove } = voteCounts(idea);
+        const { approve, disapprove, convince } = voteCounts(idea);
         const me = nameKey(window.wikiStore?.getAuthor() || "");
         const mine = me && idea.votes?.[me]?.vote;
         const voters = (list) => list.map((vote) => vote.name).join(", ");
@@ -403,8 +404,13 @@
                 title: disapprove.length ? `Disapproved by ${votersWithTimes(disapprove)}` : "No disapprovals yet",
                 onclick: () => vote(idea, "disapprove")
             }, `👎 Disapprove · ${disapprove.length}`),
-            approve.length || disapprove.length
-                ? element("span", { className: "idea-voters", text: [approve.length ? `For: ${voters(approve)}` : "", disapprove.length ? `Against: ${voters(disapprove)}` : ""].filter(Boolean).join(" · ") })
+            element("button", {
+                type: "button", className: "idea-vote idea-vote-convince", "aria-pressed": String(mine === "convince"),
+                title: convince.length ? `Needs convincing: ${votersWithTimes(convince)}` : "Not sure yet? Say the idea needs convincing",
+                onclick: () => vote(idea, "convince")
+            }, `🤔 Needs convincing · ${convince.length}`),
+            approve.length || disapprove.length || convince.length
+                ? element("span", { className: "idea-voters", text: [approve.length ? `For: ${voters(approve)}` : "", disapprove.length ? `Against: ${voters(disapprove)}` : "", convince.length ? `Needs convincing: ${voters(convince)}` : ""].filter(Boolean).join(" · ") })
                 : null));
         if (canDelete(idea)) {
             card.append(element("button", { type: "button", className: "wiki-link-button idea-delete", text: "Delete idea", onclick: () => setArchived(idea, true) }));
@@ -423,7 +429,7 @@
                     ...authors.map((author) => element("option", { value: author, selected: ideaFilters.author === author, text: `${author} (${activeIdeas.filter((idea) => idea.author === author).length})` })))),
             element("label", {}, "Sort ",
                 element("select", { onchange: (event) => { ideaFilters.sort = event.target.value; render(); } },
-                    ...[["document", "Document order"], ["approved", "Most approved"], ["disapproved", "Most disapproved"], ["newest", "Newest first"]]
+                    ...[["document", "Document order"], ["approved", "Most approved"], ["disapproved", "Most disapproved"], ["convince", "Most need convincing"], ["newest", "Newest first"]]
                         .map(([value, label]) => element("option", { value, selected: ideaFilters.sort === value, text: label })))),
             element("input", {
                 type: "search", placeholder: "Filter ideas…", value: ideaFilters.query, "aria-label": "Filter ideas",
@@ -438,6 +444,7 @@
             const score = (idea, kind) => voteCounts(idea)[kind].length;
             if (ideaFilters.sort === "approved") ideas.sort((a, b) => score(b.idea, "approve") - score(a.idea, "approve") || a.index - b.index);
             if (ideaFilters.sort === "disapproved") ideas.sort((a, b) => score(b.idea, "disapprove") - score(a.idea, "disapprove") || a.index - b.index);
+            if (ideaFilters.sort === "convince") ideas.sort((a, b) => score(b.idea, "convince") - score(a.idea, "convince") || a.index - b.index);
             if (ideaFilters.sort === "newest") ideas.sort((a, b) => b.index - a.index);
             list.replaceChildren(...(ideas.length ? ideas.map(({ idea }) => renderIdea(idea)) : [element("p", { text: "No ideas match." })]));
         }
@@ -571,7 +578,7 @@
 
     // Archives page -------------------------------------------------------------------------------
     function renderArchivedIdea(idea) {
-        const { approve, disapprove } = voteCounts(idea);
+        const { approve, disapprove, convince } = voteCounts(idea);
         return element("article", { className: "idea-card", id: idea.id },
             element("header", { className: "idea-header" },
                 element("h3", { text: idea.number ? `${idea.number}. ${idea.title}` : idea.title }),
@@ -581,7 +588,7 @@
                     idea.archivedDate ? timestamp(idea.archivedDate, "deleted ") : "deleted",
                     idea.archivedBy ? ` by ${idea.archivedBy}` : "")),
             idea.description ? element("div", { className: "idea-description" }, renderText(idea.description)) : null,
-            element("p", { className: "idea-meta", text: `👍 ${approve.length} · 👎 ${disapprove.length} · ${(idea.replies || []).length + (idea.comments || []).length} comments` }),
+            element("p", { className: "idea-meta", text: `👍 ${approve.length} · 👎 ${disapprove.length} · 🤔 ${convince.length} · ${(idea.replies || []).length + (idea.comments || []).length} comments` }),
             canDelete(idea) ? element("button", { type: "button", className: "wiki-primary-button", text: "Restore", onclick: () => setArchived(idea, false) }) : null);
     }
 
@@ -605,13 +612,19 @@
     loadData().then(() => {
         const id = location.hash.slice(1);
         // Old links to archived discussions and ideas still arrive
-        if (discussionsApp && data.discussions.some((item) => item.id === id && item.archived)) {
+        if ((discussionsApp && data.discussions.some((item) => item.id === id && item.archived)) ||
+            (ideasApp && data.ideas.some((item) => item.id === id && item.archived))) {
             location.replace(`archives.html${location.hash}`);
             return;
         }
         if (archivesApp && id) openDiscussions.add(id);
         render();
-        if (archivesApp && id) document.getElementById(id)?.scrollIntoView({ block: "start" });
+        // The list is drawn after the browser looked for the #id, so go to it now
+        if ((ideasApp || archivesApp) && id) {
+            const target = document.getElementById(id);
+            target?.classList.add("idea-card-linked");
+            target?.scrollIntoView({ block: "start" });
+        }
         // Other people's votes, comments and replies appear without reloading
         window.wikiStore?.watchJson(dataFile, (fresh) => {
             data = { ...fresh, ideas: fresh.ideas || [], discussions: fresh.discussions || [] };

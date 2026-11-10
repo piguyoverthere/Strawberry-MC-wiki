@@ -633,12 +633,18 @@
         </div>
         <div class="wiki-format-group">
             <button type="button" data-command="textBox" title="Insert a text box">+ Text box</button>
-            <button type="button" data-command="codeBox" title="Insert a code box">+ Code box</button>
+            <button type="button" data-command="codeBox" title="Insert a code box. To continue below it, press the down arrow at its end or Enter twice.">+ Code box</button>
             <button type="button" data-command="table" title="Insert a table">+ Table</button>
             <button type="button" data-command="rawHtml" title="Insert a block of raw HTML">+ HTML</button>
             <button type="button" data-command="link" title="Add a link">Link</button>
             <button type="button" data-command="image" title="Insert an image from a URL">Image</button>
             <button type="button" data-command="insertHorizontalRule" title="Insert a divider line">Divider</button>
+        </div>
+        <div class="wiki-format-group wiki-table-tools" hidden>
+            <button type="button" data-command="tableRowAdd" title="Add a row below this one">+ Row</button>
+            <button type="button" data-command="tableRowRemove" title="Remove this row">− Row</button>
+            <button type="button" data-command="tableColumnAdd" title="Add a column to the right of this one">+ Column</button>
+            <button type="button" data-command="tableColumnRemove" title="Remove this column">− Column</button>
         </div>
         <div class="wiki-format-group">
             <button type="button" data-command="clearFormatting" title="Clear formatting">Clear</button>
@@ -648,6 +654,8 @@
         </div>
     `;
     document.body.append(formatBar);
+    // Row and column buttons show while the cursor is in a table
+    const tableTools = formatBar.querySelector(".wiki-table-tools");
     const blockSelect = formatBar.querySelector('[data-command="block"]');
     const fontSelect = formatBar.querySelector('[data-command="font"]');
 
@@ -669,6 +677,7 @@
         savedRange = range.cloneRange();
 
         const start = range.startContainer.nodeType === Node.ELEMENT_NODE ? range.startContainer : range.startContainer.parentElement;
+        tableTools.hidden = !start.closest("td, th");
         const block = start.closest("h1, h2, h3, h4, blockquote, pre, p, li, td, th, div");
         const tag = block && root.contains(block) ? block.tagName.toLowerCase() : "p";
         blockSelect.value = [...blockSelect.options].some((option) => option.value === tag) ? tag : "p";
@@ -870,6 +879,115 @@
         return hasTextSelected() ? document.getSelection().toString() : "";
     }
 
+    function selectedCell() {
+        const selection = document.getSelection();
+        if (!selection.rangeCount) return null;
+        const node = selection.getRangeAt(0).startContainer;
+        const cell = (node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement).closest("td, th");
+        return cell && root.contains(cell) ? cell : null;
+    }
+
+    function emptyCell(tag) {
+        const cell = document.createElement(tag);
+        cell.append(document.createElement("br"));
+        return cell;
+    }
+
+    // Adds or removes the row or column the cursor is in
+    function editTable(command) {
+        const cell = selectedCell();
+        if (!cell) {
+            status.textContent = "Put the cursor in a table cell first.";
+            return;
+        }
+        const row = cell.parentElement;
+        const table = cell.closest("table");
+        const rows = [...table.rows];
+        const index = cell.cellIndex;
+        const width = Math.max(...rows.map((item) => item.cells.length));
+        if (command === "tableRowAdd") {
+            const added = document.createElement("tr");
+            for (let column = 0; column < width; column++) added.append(emptyCell("td"));
+            if (row.parentElement.tagName === "THEAD") {
+                const body = table.tBodies[0] || table.appendChild(document.createElement("tbody"));
+                body.prepend(added);
+            } else {
+                row.after(added);
+            }
+            placeCaret(added.cells[Math.min(index, width - 1)], 0);
+        } else if (command === "tableRowRemove") {
+            if (rows.length <= 1) {
+                status.textContent = "This is the table's only row. Select the whole table and delete it to remove it.";
+                return;
+            }
+            const neighbour = rows[rows.indexOf(row) + 1] || rows[rows.indexOf(row) - 1];
+            row.remove();
+            placeCaret(neighbour.cells[Math.min(index, neighbour.cells.length - 1)], 0);
+        } else if (command === "tableColumnAdd") {
+            for (const item of rows) {
+                const beside = item.cells[Math.min(index, item.cells.length - 1)];
+                const added = emptyCell(beside?.tagName.toLowerCase() || "td");
+                if (beside) beside.after(added);
+                else item.append(added);
+            }
+            placeCaret(row.cells[Math.min(index + 1, row.cells.length - 1)], 0);
+        } else {
+            if (width <= 1) {
+                status.textContent = "This is the table's only column. Select the whole table and delete it to remove it.";
+                return;
+            }
+            for (const item of rows) item.cells[index]?.remove();
+            placeCaret(row.cells[Math.min(index, row.cells.length - 1)], 0);
+        }
+        tableTools.hidden = !selectedCell();
+    }
+
+    // Code boxes, tables and text boxes swallow Enter, so the down arrow at their end (or Enter on an empty last line
+    // of a code box) moves on to a normal paragraph below, adding one if needed.
+    const boxSelector = "pre, table, .wiki-textbox";
+
+    function leaveBox(box) {
+        let next = box.nextElementSibling;
+        if (!next || next.matches(`${boxSelector}, .wiki-raw-html, [data-wiki-island], hr, h1, h2, h3, h4, h5, h6`)) {
+            next = document.createElement("p");
+            next.append(document.createElement("br"));
+            box.after(next);
+        }
+        placeCaret(next, 0);
+        next.scrollIntoView({ block: "nearest" });
+    }
+
+    function textOf(range) {
+        const holder = document.createElement("div");
+        holder.append(range.cloneContents());
+        holder.querySelectorAll("br").forEach((br) => br.replaceWith("\n"));
+        return holder.textContent;
+    }
+
+    root.addEventListener("keydown", (event) => {
+        if (!editing || event.isComposing || !["ArrowDown", "ArrowRight", "Enter"].includes(event.key) || event.shiftKey) return;
+        const selection = document.getSelection();
+        if (!selection.rangeCount || !selection.isCollapsed) return;
+        const range = selection.getRangeAt(0);
+        const box = (range.startContainer.nodeType === Node.ELEMENT_NODE ? range.startContainer : range.startContainer.parentElement).closest(boxSelector);
+        if (!box || !root.contains(box) || box.closest(".wiki-raw-html")) return;
+        const rest = document.createRange();
+        rest.setStart(range.endContainer, range.endOffset);
+        rest.setEnd(box, box.childNodes.length);
+        if (textOf(rest).replace(/\n$/, "") !== "") return;
+        if (event.key === "Enter") {
+            const before = document.createRange();
+            before.setStart(box, 0);
+            before.setEnd(range.startContainer, range.startOffset);
+            if (!box.matches("pre") || !textOf(before).endsWith("\n")) return;
+            event.preventDefault();
+            document.execCommand("delete");
+        } else {
+            event.preventDefault();
+        }
+        leaveBox(box);
+    });
+
     function runCommand(command, value) {
         if (!editing) {
             return;
@@ -912,6 +1030,12 @@
                 break;
             case "codeBox":
                 insertBlock(`<pre class="code-box"><code class="consolas">${escapeHtml(selectedText()) || "Code goes here"}</code></pre>`);
+                break;
+            case "tableRowAdd":
+            case "tableRowRemove":
+            case "tableColumnAdd":
+            case "tableColumnRemove":
+                editTable(command);
                 break;
             case "table":
                 insertBlock(`

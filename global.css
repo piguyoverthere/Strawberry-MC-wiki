@@ -1692,3 +1692,19 @@ mark.wiki-annotation-pending{
     padding:2px 0;
     break-inside:avoid
 }
+.idea-vote-convince[aria-pressed="true"]{
+    border-color:#b07d00;
+    background:#fff3c4;
+    color:#6b4c00
+}
+.notification-convince .notification-badge-vote{
+    background-color:#fff3c4
+}
+.idea-card{
+    scroll-margin-top:110px
+}
+.idea-card:target,
+.idea-card-linked{
+    outline:3px solid #e0a800;
+    outline-offset:4px
+}

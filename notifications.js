@@ -72,8 +72,8 @@
         return id ? `bugs.html#${id}` : "bugs.html";
     }
     function ideaHref(title) {
-        const id = controversy.ideas.get(title);
-        return id ? `ideas.html#${id}` : "ideas.html";
+        const idea = controversy.ideas.get(title);
+        return idea ? `${idea.archived ? "archives" : "ideas"}.html#${idea.id}` : "ideas.html";
     }
     function discussionHref(title) {
         const id = controversy.discussions.get(title);
@@ -98,8 +98,8 @@
         if ((match = line.match(/^Create (.+) page$/))) return { type: "page-new", text: "New page: ", target: match[1], page: true };
         if ((match = line.match(/^Update (.+) page$/))) return { type: "page-edit", text: "Page changed: ", target: match[1], page: true };
         if ((match = line.match(/^Add (.+) to news$/))) return { type: "news", text: "News article: ", target: match[1], href: "news.html" };
-        if ((match = line.match(/^(.+?) votes (approve|disapprove) on idea: (.+)$/)))
-            return { type: "vote", who: match[1], vote: match[2], text: ` ${match[2] === "approve" ? "approved" : "disapproved"} `, target: match[3], href: ideaHref(match[3]) };
+        if ((match = line.match(/^(.+?) votes (approve|disapprove|convince) on idea: (.+)$/)))
+            return { type: "vote", who: match[1], vote: match[2], text: ` ${{ approve: "approved", disapprove: "disapproved", convince: "said this needs convincing:" }[match[2]]} `, target: match[3], href: ideaHref(match[3]) };
         if ((match = line.match(/^(.+?) adds idea: (.+)$/))) return { type: "idea", who: match[1], text: " added an idea: ", target: match[2], href: ideaHref(match[2]) };
         if ((match = line.match(/^(.+?) comments on idea: (.+)$/))) return { type: "comment", who: match[1], text: " commented on ", target: match[2], href: ideaHref(match[2]) };
         if ((match = line.match(/^(.+?) replies in: (.+)$/))) return { type: "thread", who: match[1], text: " replied in ", target: match[2], href: discussionHref(match[2]) };
@@ -312,7 +312,7 @@
     Promise.all([json("controversy.json"), json("bugs.json")]).then(([ideas, bugs]) => {
         if (ideas) {
             controversy = {
-                ideas: new Map((ideas.ideas || []).map((idea) => [idea.title, idea.id])),
+                ideas: new Map((ideas.ideas || []).map((idea) => [idea.title, idea])),
                 discussions: new Map((ideas.discussions || []).map((discussion) => [discussion.title, discussion.id]))
             };
         }
