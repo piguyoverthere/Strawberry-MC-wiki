@@ -192,11 +192,11 @@
    "description": "No editors can approve reviewer ideas",
    "steps": "Add the button for editors",
    "area": "wiki",
-   "status": "unresolved",
+   "status": "resolved",
    "severity": "minor",
    "reporter": "Alex",
    "reported": "2026-11-09T22:38:09.314Z",
-   "updated": "2026-11-10T02:07:52.565Z",
+   "updated": "2026-11-10T03:05:27.074Z",
    "comments": [],
    "history": [
     {
@@ -212,6 +212,13 @@
      "field": "status",
      "from": "resolved",
      "to": "unresolved"
+    },
+    {
+     "author": "Eric",
+     "date": "2026-11-10T03:05:27.074Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "resolved"
     }
    ]
   }
