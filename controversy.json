@@ -853,7 +853,10 @@
      "vote": "disapprove",
      "date": "2026-11-10T19:16:47.246Z"
     }
-   }
+   },
+   "archived": true,
+   "archivedBy": "Alex",
+   "archivedDate": "2026-11-10T22:33:13.334Z"
   },
   {
    "id": "idea-doc-21",
