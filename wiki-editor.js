@@ -2952,8 +2952,8 @@
             }
             return (counts.get(controversy) || 0) + (counts.get(bugs) || 0) + (counts.get(annotations) || 0) + Object.keys(queued).length;
         },
-        // Replaces a PDF in the repository; its older versions stay in the commit history
-        async uploadDocument(file, blob, title) {
+        // Saves a PDF to the repository and returns the commit it was saved in
+        async uploadDocument(file, blob, message) {
             const token = readToken();
             if (!token || !readAccount() || !canReviewRole(await checkAccount(token))) {
                 throw new Error("Only admins and editors can upload documents.");
@@ -2964,12 +2964,13 @@
                 reader.onerror = () => reject(new Error("That file could not be read."));
                 reader.readAsDataURL(blob);
             });
-            const path = encodeURIComponent(file);
+            const path = file.split("/").map(encodeURIComponent).join("/");
             const existing = await githubRequest(token, `contents/${path}?ref=${repository.branch}`, { allowMissing: true });
-            await githubRequest(token, `contents/${path}`, {
+            const saved = await githubRequest(token, `contents/${path}`, {
                 method: "PUT",
-                body: { message: `${readAccount()} uploads a new version of ${title}`, content, branch: repository.branch, ...(existing?.sha ? { sha: existing.sha } : {}) }
+                body: { message, content, branch: repository.branch, ...(existing?.sha ? { sha: existing.sha } : {}) }
             });
+            return saved.commit.sha;
         },
         // Takes a page off the To Do list and removes its [UNRESOLVED] notes
         async resolveTodoPage(file, title) {

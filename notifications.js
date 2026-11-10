@@ -111,7 +111,9 @@
         if ((match = line.match(/^(.+?) comments on page: (.+)$/))) return { type: "annotation", who: match[1], text: " commented on ", target: match[2], page: true };
         if ((match = line.match(/^(.+?) deletes a comment on page: (.+)$/))) return { type: "annotation", who: match[1], text: " deleted a comment on ", target: match[2], page: true };
         if (/^.+ finishes a task from ann-/.test(line)) return null;
-        if ((match = line.match(/^(.+?) uploads a new version of (.+)$/))) return { type: "site", who: match[1], text: " uploaded a new version of ", target: match[2], href: "documents.html" };
+        if ((match = line.match(/^(.+?) uploads (a new|an older) version of (.+)$/))) return { type: "site", who: match[1], text: ` uploaded ${match[2]} version of `, target: match[3], href: "documents.html" };
+        if (/^.+ records the date of a version of /.test(line)) return null;
+        if ((match = line.match(/^(.+?) sets a version date of (.+)$/))) return { type: "site", who: match[1], text: " changed a version date of ", target: match[2], href: "documents.html" };
         if ((match = line.match(/^(.+?) reports bug: (.+)$/))) return { type: "bug", who: match[1], text: " reported a bug: ", target: match[2], href: bugHref(match[2]) };
         if ((match = line.match(/^(.+?) sets bug (status|severity) to (.+?): (.+)$/)))
             return { type: "bug", who: match[1], text: ` set ${match[2]} to ${match[3]} on `, target: match[4], href: bugHref(match[4]) };
