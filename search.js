@@ -274,6 +274,7 @@ const pages = [
     { title: "Sawmill", href: "page-draft-sawmill.html", keywords: "sawmill" },
     { title: "ComScript: Terminal commands", href: "page-comscript-terminal-commands.html", keywords: "comscript: terminal commands" },
     { title: "SITE UPDATE: Comments now take less time to sync with others, allowing real-time", href: "news-eric-site-update-comments-now-take-less-time-to-sync-with-others-allowing-real-time.html", keywords: "site update: comments now take less time to sync with others allowing real-time" },
+    { title: "Standardized grammar conventions for wiki pages", href: "page-standardized-grammar-conventions-for-wiki-pages.html", keywords: "standardized grammar conventions for wiki pages" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
