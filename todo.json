@@ -66,7 +66,11 @@
    "notes": [
     "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final.",
     "[coming soon]"
-   ]
+   ],
+   "resolved": {
+    "by": "aadi",
+    "date": "2026-11-10T20:53:28.860Z"
+   }
   },
   {
    "file": "page-creative-mode-inventory.html",
