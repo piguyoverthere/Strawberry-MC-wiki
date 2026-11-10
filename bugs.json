@@ -7,13 +7,21 @@
    "description": "most oceans are now clover glades",
    "steps": "generate world, /locate strawberrymc:clover_glades",
    "area": "worldgen",
-   "status": "unresolved",
+   "status": "confirmed",
    "severity": "major",
    "reporter": "Eric",
    "reported": "2026-11-07T18:39:20.939Z",
-   "updated": "2026-11-07T18:39:20.939Z",
+   "updated": "2026-11-10T03:05:54.058Z",
    "comments": [],
-   "history": []
+   "history": [
+    {
+     "author": "Eric",
+     "date": "2026-11-10T03:05:54.058Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "confirmed"
+    }
+   ]
   },
   {
    "id": "bug-2",
