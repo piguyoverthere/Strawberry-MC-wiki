@@ -54,7 +54,11 @@
    "title": "Brewing, Effects, And Potions",
    "notes": [
     "[UNRESOLVED] The source marks part of this topic as incomplete; review the notes before treating it as final."
-   ]
+   ],
+   "resolved": {
+    "by": "aadi",
+    "date": "2026-11-10T20:50:45.995Z"
+   }
   },
   {
    "file": "page-burning.html",
