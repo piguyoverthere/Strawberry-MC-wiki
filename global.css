@@ -1708,3 +1708,142 @@ mark.wiki-annotation-pending{
     outline:3px solid #e0a800;
     outline-offset:4px
 }
+.wiki-autolink{
+    text-decoration-style:dotted
+}
+.mc-diagram{
+    display:inline-flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px;
+    margin:10px 0;
+    padding:10px 12px;
+    border:2px solid #555555;
+    border-radius:3px;
+    background-color:#c6c6c6;
+    vertical-align:top
+}
+.mc-recipe-label{
+    flex-basis:100%;
+    color:#3f3f3f;
+    font:bold 12px/1.2 Arial, Helvetica, sans-serif
+}
+.mc-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 44px);
+    gap:2px
+}
+.mc-slot{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    box-sizing:border-box;
+    width:44px;
+    height:44px;
+    overflow:hidden;
+    border:2px solid;
+    border-color:#373737 #ffffff #ffffff #373737;
+    background-color:#8b8b8b;
+    color:#1b1b1b;
+    font:600 9px/1.05 Arial, Helvetica, sans-serif;
+    text-align:center;
+    word-break:break-word
+}
+.mc-slot-name{
+    padding:1px
+}
+.mc-output{
+    width:56px;
+    height:56px;
+    font-size:10px
+}
+.mc-count{
+    position:absolute;
+    right:2px;
+    bottom:0;
+    color:#ffffff;
+    font:bold 13px/1.2 Arial, Helvetica, sans-serif;
+    text-shadow:1px 1px 0 #3f3f3f
+}
+.mc-arrow{
+    color:#8b8b8b;
+    font-size:28px
+}
+.mc-blocks{
+    display:inline-block
+}
+.mc-block-grid{
+    display:inline-block;
+    border:1px solid #555555
+}
+.mc-block-row{
+    display:flex
+}
+.mc-block{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    box-sizing:border-box;
+    width:28px;
+    height:28px;
+    border:1px solid rgba(0,0,0,0.25);
+    color:#1b1b1b;
+    font:bold 10px/1 Arial, Helvetica, sans-serif
+}
+.mc-air{
+    border-color:transparent;
+    background-color:transparent
+}
+.mc-blocks figcaption{
+    margin-top:6px;
+    font-size:.9em
+}
+.mc-legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px 12px;
+    margin:8px 0 0;
+    padding:0;
+    list-style:none;
+    font-size:.85em
+}
+.mc-legend li{
+    display:flex;
+    align-items:center;
+    gap:5px
+}
+.mc-legend .mc-block{
+    width:18px;
+    height:18px;
+    font-size:8px
+}
+.mc-linked{
+    cursor:pointer
+}
+.mc-linked:hover{
+    outline:2px solid #ffffff
+}
+.wiki-recipe-inputs{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:4px;
+    margin-bottom:10px
+}
+.wiki-recipe-inputs input,
+.wiki-recipe-output input{
+    box-sizing:border-box;
+    min-width:0
+}
+.wiki-recipe-output{
+    display:flex;
+    gap:6px;
+    margin-bottom:8px
+}
+.wiki-recipe-output input[type="number"]{
+    width:70px
+}
+#wiki-blocks-rows{
+    box-sizing:border-box;
+    width:100%
+}

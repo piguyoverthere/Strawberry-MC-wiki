@@ -216,9 +216,10 @@
         const template = document.createElement("template");
         template.innerHTML = sanitizeMarkup(root.innerHTML);
         // Comment highlights are drawn in the browser and never saved into the page.
-        for (const mark of template.content.querySelectorAll("mark.wiki-annotation-mark")) {
+        for (const mark of template.content.querySelectorAll("mark.wiki-annotation-mark, a.wiki-autolink")) {
             mark.replaceWith(...mark.childNodes);
         }
+        template.content.querySelectorAll(".mc-linked").forEach((slot) => slot.classList.remove("mc-linked"));
         // Typing over a code box's placeholder can drop its <code> wrapper, so put it back.
         for (const pre of template.content.querySelectorAll("pre.code-box")) {
             if (pre.childNodes.length !== 1 || pre.firstChild.nodeName !== "CODE") {
@@ -327,6 +328,7 @@
             <div class="wiki-more-items">
                 <button type="button" data-action="download">Download HTML</button>
                 <button type="button" data-action="reset">Reset saved edits</button>
+                <button type="button" data-action="unresolved" hidden>Mark as unresolved</button>
             </div>
         </details>
     `;
@@ -489,6 +491,7 @@
     const commitButton = toolbar.querySelector('[data-action="commit"]');
     const downloadButton = toolbar.querySelector('[data-action="download"]');
     const resetButton = toolbar.querySelector('[data-action="reset"]');
+    const unresolvedButton = toolbar.querySelector('[data-action="unresolved"]');
     const bookmarkButton = document.createElement("button");
     bookmarkButton.type = "button";
     bookmarkButton.className = "wiki-bookmark-button";
@@ -611,20 +614,20 @@
             <button type="button" data-command="bold" title="Bold (Ctrl+B)" aria-label="Bold"><b>B</b></button>
             <button type="button" data-command="italic" title="Italic (Ctrl+I)" aria-label="Italic"><i>I</i></button>
             <button type="button" data-command="underline" title="Underline (Ctrl+U)" aria-label="Underline"><u>U</u></button>
-            <button type="button" data-command="strikeThrough" title="Strikethrough" aria-label="Strikethrough"><s>S</s></button>
-            <button type="button" data-command="superscript" title="Superscript" aria-label="Superscript">x<sup>2</sup></button>
-            <button type="button" data-command="subscript" title="Subscript" aria-label="Subscript">x<sub>2</sub></button>
-            <button type="button" data-command="inlineCode" title="Inline code" aria-label="Inline code"><span class="consolas">&lt;/&gt;</span></button>
+            <button type="button" data-command="strikeThrough" title="Strikethrough (Ctrl+Shift+X)" aria-label="Strikethrough"><s>S</s></button>
+            <button type="button" data-command="superscript" title="Superscript (Ctrl+Shift++ or Ctrl+.)" aria-label="Superscript">x<sup>2</sup></button>
+            <button type="button" data-command="subscript" title="Subscript (Ctrl+Shift+- or Ctrl+,)" aria-label="Subscript">x<sub>2</sub></button>
+            <button type="button" data-command="inlineCode" title="Inline code (Ctrl+E)" aria-label="Inline code"><span class="consolas">&lt;/&gt;</span></button>
         </div>
         <div class="wiki-format-group">
             <label class="wiki-color-control" title="Text color">A<input type="color" data-command="foreColor" value="#1f4b5a" aria-label="Text color"></label>
             <label class="wiki-color-control" title="Highlight color">🖍<input type="color" data-command="hiliteColor" value="#fff4c2" aria-label="Highlight color"></label>
         </div>
         <div class="wiki-format-group">
-            <button type="button" data-command="insertUnorderedList" title="Bullet list">• List</button>
-            <button type="button" data-command="insertOrderedList" title="Numbered list">1. List</button>
-            <button type="button" data-command="outdent" title="Decrease indent" aria-label="Decrease indent">Outdent</button>
-            <button type="button" data-command="indent" title="Increase indent" aria-label="Increase indent">Indent</button>
+            <button type="button" data-command="insertUnorderedList" title="Bullet list (Ctrl+Shift+8)">• List</button>
+            <button type="button" data-command="insertOrderedList" title="Numbered list (Ctrl+Shift+7)">1. List</button>
+            <button type="button" data-command="outdent" title="Decrease indent (Shift+Tab)" aria-label="Decrease indent">Outdent</button>
+            <button type="button" data-command="indent" title="Increase indent (Tab)" aria-label="Increase indent">Indent</button>
         </div>
         <div class="wiki-format-group">
             <button type="button" data-command="justifyLeft" title="Align left" aria-label="Align left">Left</button>
@@ -635,8 +638,10 @@
             <button type="button" data-command="textBox" title="Insert a text box">+ Text box</button>
             <button type="button" data-command="codeBox" title="Insert a code box. To continue below it, press the down arrow at its end or Enter twice.">+ Code box</button>
             <button type="button" data-command="table" title="Insert a table">+ Table</button>
+            <button type="button" data-command="recipe" title="Insert a crafting recipe">+ Recipe</button>
+            <button type="button" data-command="blocks" title="Insert a diagram made of blocks">+ Blocks</button>
             <button type="button" data-command="rawHtml" title="Insert a block of raw HTML">+ HTML</button>
-            <button type="button" data-command="link" title="Add a link">Link</button>
+            <button type="button" data-command="link" title="Add a link (Ctrl+K)">Link</button>
             <button type="button" data-command="image" title="Insert an image from a URL">Image</button>
             <button type="button" data-command="insertHorizontalRule" title="Insert a divider line">Divider</button>
         </div>
@@ -647,7 +652,7 @@
             <button type="button" data-command="tableColumnRemove" title="Remove this column">− Column</button>
         </div>
         <div class="wiki-format-group">
-            <button type="button" data-command="clearFormatting" title="Clear formatting">Clear</button>
+            <button type="button" data-command="clearFormatting" title="Clear formatting (Ctrl+\\)">Clear</button>
             <button type="button" data-command="removeAllStyles" title="Remove every style, including inline code, from the selection (or the whole page if nothing is selected)">Remove all styles</button>
             <button type="button" data-command="undo" title="Undo (Ctrl+Z)" aria-label="Undo">Undo</button>
             <button type="button" data-command="redo" title="Redo (Ctrl+Shift+Z)" aria-label="Redo">Redo</button>
@@ -988,11 +993,61 @@
         leaveBox(box);
     });
 
+    // Indenting inside a code box adds or removes four spaces at the start of each selected line, instead of
+    // the browser's indent, which splits the code box apart.
+    function codeBoxAt(selection) {
+        if (!selection.rangeCount) return null;
+        const node = selection.getRangeAt(0).startContainer;
+        const box = (node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement).closest("pre");
+        return box && root.contains(box) ? box : null;
+    }
+
+    function indentCodeLines(box, outdent) {
+        const range = document.getSelection().getRangeAt(0);
+        // Where each line starts: after a <br>, after a newline, or at the start of the box
+        const starts = [];
+        let lineStarting = true;
+        const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+        while (walker.nextNode()) {
+            const node = walker.currentNode;
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                if (node.tagName === "BR") lineStarting = true;
+                continue;
+            }
+            if (lineStarting) starts.push([node, 0]);
+            lineStarting = false;
+            for (let index = node.data.indexOf("\n"); index !== -1; index = node.data.indexOf("\n", index + 1)) {
+                if (index + 1 < node.data.length) starts.push([node, index + 1]);
+                else lineStarting = true;
+            }
+        }
+        // A line is selected when it starts before the selection ends and the next line starts after the selection starts
+        const isSelectionStart = ([node, offset]) => node === range.startContainer && offset === range.startOffset;
+        const selected = starts.filter((start, index) => {
+            const next = starts[index + 1];
+            return range.comparePoint(...start) <= 0 && (!next || (range.comparePoint(...next) >= 0 && !isSelectionStart(next)));
+        });
+        for (const [node, offset] of selected.reverse()) {
+            if (outdent) {
+                const spaces = node.data.slice(offset).match(/^( {1,4}|\t)/)?.[0].length || 0;
+                if (spaces) node.deleteData(offset, spaces);
+            } else {
+                node.insertData(offset, "    ");
+            }
+        }
+    }
+
     function runCommand(command, value) {
         if (!editing) {
             return;
         }
         restoreSelection();
+
+        const codeBox = (command === "indent" || command === "outdent") && codeBoxAt(document.getSelection());
+        if (codeBox) {
+            indentCodeLines(codeBox, command === "outdent");
+            return;
+        }
 
         switch (command) {
             case "block":
@@ -1024,6 +1079,12 @@
                 break;
             case "rawHtml":
                 openRawHtmlDialog(null);
+                break;
+            case "recipe":
+                openRecipeDialog(null);
+                break;
+            case "blocks":
+                openBlocksDialog(null);
                 break;
             case "textBox":
                 insertBlock(`<div class="wiki-textbox"><p>${escapeHtml(selectedText()) || "New text box"}</p></div>`);
@@ -1212,15 +1273,142 @@
     });
 
     function markRawBlocks(value) {
-        for (const block of root.querySelectorAll(".wiki-raw-html")) {
+        for (const block of root.querySelectorAll(".wiki-raw-html, .mc-diagram")) {
             if (value) {
                 block.contentEditable = "false";
-                block.title = "HTML block: click to edit its HTML";
+                block.title = block.matches(".mc-diagram") ? "Diagram: click to edit it" : "HTML block: click to edit its HTML";
             } else {
                 block.removeAttribute("contenteditable");
                 block.removeAttribute("title");
             }
         }
+    }
+
+    // Crafting recipes and block diagrams, drawn like the Minecraft Wiki's ---------------------------------------
+    // Everything is plain HTML (spans with a title and a background colour), so it saves like any other text.
+    const quoteAttribute = (text) => escapeHtml(text).replace(/"/g, "&quot;");
+
+    // Each item or block gets its own steady colour
+    function itemColor(name) {
+        let hash = 0;
+        for (const character of name.toLowerCase()) hash = (hash * 31 + character.charCodeAt(0)) % 360;
+        return `hsl(${hash}, 42%, 74%)`;
+    }
+
+    function slotMarkup(name, extraClass = "", count = 1) {
+        if (!name) return '<span class="mc-slot mc-empty"></span>';
+        return `<span class="mc-slot${extraClass}" title="${quoteAttribute(name)}" style="background-color: ${itemColor(name)}"><span class="mc-slot-name">${escapeHtml(name)}</span>${count > 1 ? `<span class="mc-count">${count}</span>` : ""}</span>`;
+    }
+
+    function recipeMarkup({ slots, output, count, shapeless }) {
+        return `<div class="mc-diagram mc-recipe"><span class="mc-recipe-label">${shapeless ? "Shapeless crafting" : "Crafting"}</span>`
+            + `<div class="mc-grid">${slots.map((name) => slotMarkup(name)).join("")}</div>`
+            + `<span class="mc-arrow">➜</span>${slotMarkup(output, " mc-output", count)}</div>`;
+    }
+
+    function blockLabel(name) {
+        const words = name.split(/\s+/).filter(Boolean);
+        return (words.length > 1 ? words.map((word) => word[0]).join("") : name).slice(0, 2);
+    }
+
+    function blocksMarkup({ rows, caption }) {
+        const names = [...new Set(rows.flat().filter(Boolean))];
+        const cell = (name) => name
+            ? `<span class="mc-block" title="${quoteAttribute(name)}" style="background-color: ${itemColor(name)}">${escapeHtml(blockLabel(name))}</span>`
+            : '<span class="mc-block mc-air"></span>';
+        return `<figure class="mc-diagram mc-blocks"><div class="mc-block-grid">${rows.map((row) => `<div class="mc-block-row">${row.map(cell).join("")}</div>`).join("")}</div>`
+            + (caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : "")
+            + `<ul class="mc-legend">${names.map((name) => `<li><span class="mc-block" style="background-color: ${itemColor(name)}">${escapeHtml(blockLabel(name))}</span>${escapeHtml(name)}</li>`).join("")}</ul></figure>`;
+    }
+
+    // Element names to pick from while typing an item
+    let elementNames = [];
+    const itemList = document.createElement("datalist");
+    itemList.id = "wiki-item-names";
+    itemList.dataset.wikiInjected = "";
+    document.body.append(itemList);
+
+    function placeDiagram(block, markup) {
+        if (block) {
+            const template = document.createElement("template");
+            template.innerHTML = markup;
+            block.replaceWith(template.content);
+        } else {
+            restoreSelection();
+            insertBlock(markup);
+            document.getSelection().removeAllRanges();
+        }
+        markRawBlocks(true);
+    }
+
+    function openDiagramDialog(heading, fields, onSave, block) {
+        const dialog = document.createElement("dialog");
+        dialog.className = "wiki-dialog wiki-diagram-dialog";
+        dialog.dataset.wikiInjected = "";
+        dialog.innerHTML = `<form method="dialog"><h2>${heading}</h2>${fields}
+            <div class="wiki-dialog-actions">
+                ${block ? '<button type="button" data-diagram="delete">Delete diagram</button>' : ""}
+                <button type="button" data-diagram="cancel">Cancel</button>
+                <button type="submit" class="wiki-primary">${block ? "Save" : "Insert"}</button>
+            </div></form>`;
+        document.body.append(dialog);
+        dialog.querySelector('[data-diagram="cancel"]').addEventListener("click", () => dialog.close());
+        dialog.querySelector('[data-diagram="delete"]')?.addEventListener("click", () => {
+            block.remove();
+            dialog.close();
+        });
+        dialog.querySelector("form").addEventListener("submit", (event) => {
+            event.preventDefault();
+            const markup = onSave(dialog);
+            if (markup) {
+                placeDiagram(block, markup);
+                dialog.close();
+            }
+        });
+        dialog.addEventListener("close", () => dialog.remove());
+        dialog.showModal();
+        return dialog;
+    }
+
+    function openRecipeDialog(block) {
+        const slots = block ? [...block.querySelectorAll(".mc-grid .mc-slot")].map((slot) => slot.title || "") : new Array(9).fill("");
+        const output = block?.querySelector(".mc-output");
+        const input = (value, label) => `<input list="wiki-item-names" value="${quoteAttribute(value)}" aria-label="${label}" placeholder="Empty">`;
+        openDiagramDialog(block ? "Edit crafting recipe" : "Insert crafting recipe",
+            `<p class="wiki-dialog-hint">Type an item in each square of the crafting grid. Leave squares empty for none.</p>
+            <div class="wiki-recipe-inputs">${slots.map((name, index) => input(name, `Square ${index + 1}`)).join("")}</div>
+            <label for="wiki-recipe-output">Makes</label>
+            <div class="wiki-recipe-output">${input(output?.title || "", "Result").replace("<input", '<input id="wiki-recipe-output" required')}
+                <input type="number" min="1" max="64" value="${Number(output?.querySelector(".mc-count")?.textContent) || 1}" aria-label="How many"></div>
+            <label class="wiki-checkbox"><input type="checkbox" name="shapeless"${block?.querySelector(".mc-recipe-label")?.textContent.startsWith("Shapeless") ? " checked" : ""}> Shapeless (items can go in any square)</label>`,
+            (dialog) => {
+                const fields = [...dialog.querySelectorAll(".wiki-recipe-inputs input")].map((field) => field.value.trim());
+                const result = dialog.querySelector("#wiki-recipe-output").value.trim();
+                if (!result || !fields.some(Boolean)) return "";
+                return recipeMarkup({
+                    slots: fields, output: result,
+                    count: Math.min(64, Math.max(1, Number(dialog.querySelector('input[type="number"]').value) || 1)),
+                    shapeless: dialog.querySelector('[name="shapeless"]').checked
+                });
+            }, block);
+    }
+
+    function openBlocksDialog(block) {
+        const rows = block
+            ? [...block.querySelectorAll(".mc-block-row")].map((row) => [...row.children].map((cell) => cell.title || "-").join(", ")).join("\n")
+            : "Stone, Stone, Stone\nStone, -, Stone\nStone, Stone, Stone";
+        openDiagramDialog(block ? "Edit block diagram" : "Insert block diagram",
+            `<label for="wiki-blocks-rows">Blocks, one row per line</label>
+            <textarea id="wiki-blocks-rows" rows="8" spellcheck="false" class="consolas">${escapeHtml(rows)}</textarea>
+            <p class="wiki-dialog-hint">Separate blocks with commas. Use - for an empty space. Each block gets its own colour and a key below the diagram.</p>
+            <label for="wiki-blocks-caption">Caption (optional)</label>
+            <input id="wiki-blocks-caption" value="${quoteAttribute(block?.querySelector("figcaption")?.textContent || "")}">`,
+            (dialog) => {
+                const parsed = dialog.querySelector("#wiki-blocks-rows").value.split("\n").map((line) => line.trim()).filter(Boolean)
+                    .map((line) => line.split(",").map((cell) => cell.trim()).map((cell) => cell === "-" ? "" : cell));
+                if (!parsed.length || !parsed.flat().some(Boolean)) return "";
+                return blocksMarkup({ rows: parsed.slice(0, 32).map((row) => row.slice(0, 32)), caption: dialog.querySelector("#wiki-blocks-caption").value.trim() });
+            }, block);
     }
 
     // Write or change a block of raw HTML. block is null for a new one.
@@ -1272,10 +1460,12 @@
     }
 
     root.addEventListener("click", (event) => {
-        const block = editing && event.target.closest(".wiki-raw-html");
+        const block = editing && event.target.closest(".wiki-raw-html, .mc-diagram");
         if (block && root.contains(block)) {
             event.preventDefault();
-            openRawHtmlDialog(block);
+            if (block.matches(".mc-recipe")) openRecipeDialog(block);
+            else if (block.matches(".mc-blocks")) openBlocksDialog(block);
+            else openRawHtmlDialog(block);
         }
     });
 
@@ -1364,6 +1554,12 @@
     }
 
     // Takes out the [UNRESOLVED] callouts and tags. "[UNRESOLVED: ... DO NOT CHANGE ...]" is a request from people, so it stays.
+    // The note goes straight after the page's title
+    function addUnresolvedNote(markup, note) {
+        const line = `<p><strong>${escapeHtml(note)}</strong></p>`;
+        return /<\/h1>/i.test(markup) ? markup.replace(/<\/h1>/i, (end) => `${end}\n        ${line}`) : `${line}\n${markup}`;
+    }
+
     function stripUnresolvedNotes(markup) {
         const keep = (match, note) => /do not change/i.test(note) ? match : "";
         return markup
@@ -1566,43 +1762,148 @@
     renderReviewState();
 
     // Pages on the To Do list get a bar with a Resolve button ------------------------------------------------
+    function showTodoBanner(entry) {
+        document.querySelector(".wiki-todo-banner")?.remove();
+        const bar = document.createElement("div");
+        bar.className = "wiki-todo-banner";
+        bar.dataset.wikiInjected = "";
+        bar.innerHTML = 'This page is marked incomplete and is on the <a href="todo.html">To Do list</a>. ';
+        if (canReviewRole(readRole())) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "wiki-review-approve";
+            button.textContent = "Resolve";
+            button.addEventListener("click", async () => {
+                if (editing) {
+                    status.textContent = "Save or cancel your edits before resolving this page.";
+                    return;
+                }
+                if (!window.confirm(`Mark ${entry.title} as resolved? Its [UNRESOLVED] notes are removed from the page. [coming soon] notes stay.`)) return;
+                button.disabled = true;
+                try {
+                    await window.wikiStore.resolveTodoPage(entry.file, entry.title);
+                    savedContent = stripUnresolvedNotes(savedContent);
+                    applyContent(savedContent);
+                    bar.remove();
+                    unresolvedButton.hidden = !canMarkUnresolved();
+                    status.textContent = "Resolved. The live site usually updates within a minute or two.";
+                } catch (error) {
+                    button.disabled = false;
+                    status.textContent = `Could not resolve this page: ${error.message}`;
+                }
+            });
+            bar.append(button);
+        }
+        root.before(bar);
+        unresolvedButton.hidden = true;
+    }
+
+    const canMarkUnresolved = () => !isNewPage && /^page-/.test(currentPage) && canReviewRole(readRole()) && !document.querySelector(".wiki-todo-banner");
+    unresolvedButton.hidden = !canMarkUnresolved();
     if (!isNewPage && /^page-/.test(currentPage)) {
         fetch(todoFile, { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).then((todo) => {
             const entry = (todo.pages || []).find((page) => page.file === currentPage && !page.resolved);
-            if (!entry) return;
-            const bar = document.createElement("div");
-            bar.className = "wiki-todo-banner";
-            bar.dataset.wikiInjected = "";
-            bar.innerHTML = 'This page is marked incomplete and is on the <a href="todo.html">To Do list</a>. ';
-            if (canReviewRole(readRole())) {
-                const button = document.createElement("button");
-                button.type = "button";
-                button.className = "wiki-review-approve";
-                button.textContent = "Resolve";
-                button.addEventListener("click", async () => {
-                    if (editing) {
-                        status.textContent = "Save or cancel your edits before resolving this page.";
-                        return;
-                    }
-                    if (!window.confirm(`Mark ${entry.title} as resolved? Its [UNRESOLVED] notes are removed from the page. [coming soon] notes stay.`)) return;
-                    button.disabled = true;
-                    try {
-                        await window.wikiStore.resolveTodoPage(entry.file, entry.title);
-                        savedContent = stripUnresolvedNotes(savedContent);
-                        applyContent(savedContent);
-                        bar.remove();
-                        status.textContent = "Resolved. The live site usually updates within a minute or two.";
-                    } catch (error) {
-                        button.disabled = false;
-                        status.textContent = `Could not resolve this page: ${error.message}`;
-                    }
-                });
-                bar.append(button);
-            }
-            root.before(bar);
+            if (entry) showTodoBanner(entry);
         }).catch(() => {
             // The bar is a convenience; the page still works without it.
         });
+    }
+
+    // Puts the page on the To Do list with a note at the top saying what's missing
+    unresolvedButton.addEventListener("click", async () => {
+        if (editing) {
+            status.textContent = "Save or cancel your edits first.";
+            return;
+        }
+        const reason = window.prompt("What is missing or unresolved on this page?", "This page is incomplete.");
+        if (reason === null || !reason.trim()) return;
+        const title = getCurrentTitle();
+        try {
+            status.textContent = "Saving…";
+            const note = await window.wikiStore.markUnresolved(currentPage, title, reason.trim());
+            savedContent = addUnresolvedNote(savedContent, note);
+            applyContent(savedContent);
+            showTodoBanner({ file: currentPage, title });
+            status.textContent = "This page is on the To Do list now. The live site usually updates within a minute or two.";
+        } catch (error) {
+            status.textContent = `Could not mark this page: ${error.message}`;
+        }
+    });
+
+    // Element names link to their pages ---------------------------------------------------------------------
+    // The links are added while reading and never saved, so new pages and new text are linked automatically.
+    const autolinkSkip = "a, h1, h2, h3, h4, h5, h6, pre, code, [data-wiki-island], .wiki-raw-html, .mc-diagram, .wiki-todo-banner";
+    let autolinkPattern = null;
+    const autolinkNames = new Map();
+
+    function elementFor(name) {
+        return autolinkNames.get(name.toLowerCase());
+    }
+
+    function clearAutolinks() {
+        root.querySelectorAll("a.wiki-autolink").forEach((link) => link.replaceWith(...link.childNodes));
+        root.querySelectorAll(".mc-linked").forEach((slot) => slot.classList.remove("mc-linked"));
+        root.normalize();
+    }
+
+    function applyAutolinks() {
+        clearAutolinks();
+        if (!autolinkPattern || editing) return;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+            acceptNode: (node) => node.parentElement.closest(autolinkSkip) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+        });
+        const nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        for (const node of nodes) {
+            const text = node.data;
+            const pieces = [];
+            let last = 0;
+            for (const match of text.matchAll(autolinkPattern)) {
+                const entry = elementFor(match[1]);
+                if (!entry || entry.page === targetFile || (entry.matchCase && !entry.labels.includes(match[1]))) continue;
+                pieces.push(text.slice(last, match.index));
+                const link = document.createElement("a");
+                link.className = "wiki-autolink";
+                link.href = entry.page;
+                link.title = entry.name;
+                link.textContent = match[0];
+                pieces.push(link);
+                last = match.index + match[0].length;
+            }
+            if (pieces.length) node.replaceWith(...pieces, text.slice(last));
+        }
+        // Recipe and block squares open the item's page
+        for (const slot of root.querySelectorAll(".mc-slot[title], .mc-block[title]")) {
+            const entry = elementFor(slot.title);
+            if (entry && entry.page !== targetFile) slot.classList.add("mc-linked");
+        }
+    }
+
+    root.addEventListener("click", (event) => {
+        const slot = !editing && event.target.closest(".mc-linked");
+        if (slot) location.href = elementFor(slot.title).page;
+    });
+
+    if (/^(?:page|news)-/.test(targetFile)) {
+        fetch("elements.json", { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).then((data) => {
+            const labels = [];
+            for (const entry of data.elements || []) {
+                entry.labels = [entry.name, ...(entry.aliases || [])];
+                for (const label of entry.labels) {
+                    autolinkNames.set(label.toLowerCase(), entry);
+                    labels.push(label);
+                }
+            }
+            elementNames = labels;
+            itemList.replaceChildren(...labels.map((label) => Object.assign(document.createElement("option"), { value: label })));
+            if (!labels.length) return;
+            const escaped = labels.sort((a, b) => b.length - a.length).map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+            autolinkPattern = new RegExp(`(?<![\\p{L}\\p{N}_])(${escaped.join("|")})(?:'s|es|s)?(?![\\p{L}\\p{N}_])`, "giu");
+            applyAutolinks();
+        }).catch(() => {
+            // Pages read fine without the links.
+        });
+        document.addEventListener("wiki-content-changed", applyAutolinks);
     }
 
     function setEditing(value) {
@@ -2566,6 +2867,65 @@
         }
     });
 
+    // Editing shortcuts. Ctrl is Cmd on a Mac. They're listed on the grammar conventions page.
+    const shortcuts = [
+        // [Ctrl, Shift, Alt, key code, command, value]. The code is the key's place on the keyboard, so Shift doesn't change it.
+        [true, false, false, "KeyB", "bold"],
+        [true, false, false, "KeyI", "italic"],
+        [true, false, false, "KeyU", "underline"],
+        [true, true, false, "KeyX", "strikeThrough"],
+        [true, true, false, "Equal", "superscript"],
+        [true, false, false, "Period", "superscript"],
+        [true, true, false, "Minus", "subscript"],
+        [true, false, false, "Comma", "subscript"],
+        [true, false, false, "KeyE", "inlineCode"],
+        [true, false, false, "KeyK", "link"],
+        [true, true, false, "Digit8", "insertUnorderedList"],
+        [true, true, false, "Digit7", "insertOrderedList"],
+        [true, false, false, "Backslash", "clearFormatting"],
+        [true, false, true, "Digit0", "block", "p"],
+        [true, false, true, "Digit1", "block", "h1"],
+        [true, false, true, "Digit2", "block", "h2"],
+        [true, false, true, "Digit3", "block", "h3"],
+        [true, false, true, "Digit4", "block", "h4"]
+    ];
+
+    // Some keyboards and tools report only the key, not its place on the keyboard
+    const keyNames = { Equal: ["=", "+"], Minus: ["-", "_"], Period: ["."], Comma: [","], Backslash: ["\\"], Digit8: ["8", "*"], Digit7: ["7", "&"] };
+
+    root.addEventListener("keydown", (event) => {
+        if (!editing || event.isComposing) return;
+        const ctrl = event.ctrlKey || event.metaKey;
+        const shortcut = shortcuts.find(([needsCtrl, shift, alt, code]) => needsCtrl === ctrl && shift === event.shiftKey && alt === event.altKey &&
+            (event.code ? code === event.code : (keyNames[code] || [code.slice(-1).toLowerCase()]).includes(event.key.toLowerCase())));
+        if (shortcut) {
+            event.preventDefault();
+            runCommand(shortcut[4], shortcut[5]);
+            return;
+        }
+        if (event.key !== "Tab" || ctrl || event.altKey) return;
+        const selection = document.getSelection();
+        const codeBox = codeBoxAt(selection);
+        const cell = selectedCell();
+        event.preventDefault();
+        if (codeBox) {
+            // Tab types four spaces; with several lines selected, or with Shift, it indents or outdents the lines
+            if (!event.shiftKey && selection.isCollapsed) document.execCommand("insertText", false, "    ");
+            else indentCodeLines(codeBox, event.shiftKey);
+        } else if (cell) {
+            // Tab moves between table cells, adding a row after the last one
+            const cells = [...cell.closest("table").querySelectorAll("th, td")];
+            const next = cells[cells.indexOf(cell) + (event.shiftKey ? -1 : 1)];
+            if (next) placeCaret(next, 0);
+            else if (!event.shiftKey) {
+                editTable("tableRowAdd");
+                placeCaret(cell.parentElement.nextElementSibling.cells[0], 0);
+            }
+        } else {
+            runCommand(event.shiftKey ? "outdent" : "indent");
+        }
+    });
+
     // A button to jump back up appears once the reader has scrolled down a long page.
     const backToTop = document.createElement("button");
     backToTop.type = "button";
@@ -3095,6 +3455,30 @@
                 body: { message, content, branch: repository.branch, ...(existing?.sha ? { sha: existing.sha } : {}) }
             });
             return saved.commit.sha;
+        },
+        // Adds an [UNRESOLVED] note to a page and puts it on the To Do list; returns the note
+        async markUnresolved(file, title, reason) {
+            const token = readToken();
+            if (!token || !readAccount() || !canReviewRole(await checkAccount(token))) {
+                throw new Error("Only admins and editors can mark pages as unresolved.");
+            }
+            const note = `[UNRESOLVED] ${reason}`;
+            const page = await getRepositoryFile(token, file);
+            if (!page) throw new Error("This page isn't on GitHub yet. Commit it first.");
+            const updated = addUnresolvedNote(page.text, note).replace(/\r?\n/g, page.text.includes("\r\n") ? "\r\n" : "\n");
+            await putRepositoryFile(token, file, updated, `Add unresolved note to ${title} page`, page.sha);
+            const name = readAccount();
+            await updateRepositoryJson(token, todoFile, (data) => {
+                data.pages = data.pages || [];
+                const entry = data.pages.find((item) => item.file === file);
+                if (entry) {
+                    delete entry.resolved;
+                    entry.notes = [...(entry.notes || []), note];
+                } else {
+                    data.pages.push({ file, title, notes: [note] });
+                }
+            }, `${name} marks ${title} as unresolved`);
+            return note;
         },
         // Takes a page off the To Do list and removes its [UNRESOLVED] notes
         async resolveTodoPage(file, title) {

@@ -89,7 +89,7 @@
 
     function describeLine(line) {
         let match;
-        if (/^Add .+ to search$|^Rename .+ in search$|^Update review queue for |^Remove unresolved notes from .+ page$/.test(line)) return null;
+        if (/^Add .+ to search$|^Rename .+ in search$|^Update review queue for |^Remove unresolved notes from .+ page$|^Add unresolved note to .+ page$/.test(line)) return null;
         if ((match = line.match(/^([^:]+?) (approves|disapproves) ((?:idea|bug): .+|all waiting changes in .+|comment by .+|reply by .+|.+'s vote on idea: .+|(?:a change|all changes) to .+ page|the draft .+ page)$/)))
             return { type: "review", who: match[1], text: ` ${match[2]} `, target: match[3], href: null, vote: match[2] === "approves" ? "approve" : "disapprove" };
         if ((match = line.match(/^([^:]+?) sets role of ([^:]+) to (admin|editor|reviewer)$/))) return { type: "account", who: match[1], text: ` made ${match[2]} ${match[3] === "admin" ? "an admin" : match[3] === "editor" ? "an editor" : "a reviewer"}`, target: "", href: null };
@@ -106,6 +106,7 @@
         if ((match = line.match(/^(.+?) starts (debate|thread): (.+)$/)))
             return { type: "thread", who: match[1], text: ` started a ${match[2]}: `, target: match[3], href: discussionHref(match[3]) };
         if ((match = line.match(/^(.+?) (archives|restores) idea: (.+)$/))) return { type: "idea", who: match[1], text: match[2] === "archives" ? " moved to Archives: " : " restored an idea: ", target: match[3], href: "archives.html" };
+        if ((match = line.match(/^(.+?) marks (.+) as unresolved$/))) return { type: "page-edit", who: match[1], text: " marked as unresolved: ", target: match[2], page: true };
         if ((match = line.match(/^(.+?) resolves page: (.+)$/))) return { type: "page-edit", who: match[1], text: " resolved ", target: match[2], page: true };
         if ((match = line.match(/^(.+?) assigns (.+) on page: (.+)$/))) return { type: "annotation", who: match[1], text: ` assigned ${match[2]} a priority task on `, target: match[3], page: true, assigned: match[2].split(", ") };
         if ((match = line.match(/^(.+?) comments on page: (.+)$/))) return { type: "annotation", who: match[1], text: " commented on ", target: match[2], page: true };

@@ -1,0 +1,377 @@
+{
+ "elements": [
+  {
+   "name": "Abandoned Belltower",
+   "page": "page-abandoned-belltower.html",
+   "technical": "page-abandoned-belltower-technical.html"
+  },
+  {
+   "name": "Cavalier Hives",
+   "page": "page-abandonned-cavalier-hive.html",
+   "technical": "page-cavalier-hives-technical.html"
+  },
+  {
+   "name": "Abyssal Plains",
+   "page": "page-abyssal-plains.html",
+   "technical": "page-abyssal-plains-technical.html"
+  },
+  {
+   "name": "Alpine Meadowlands",
+   "page": "page-alpine-meadowlands.html",
+   "technical": "page-alpine-meadowlands-technical.html"
+  },
+  {
+   "name": "Ash",
+   "page": "page-ash.html",
+   "technical": "page-ash-technical.html",
+   "matchCase": true
+  },
+  {
+   "name": "Burn Morels",
+   "page": "page-burn-morels.html",
+   "technical": "page-burn-morels-technical.html"
+  },
+  {
+   "name": "Cavalier Mud",
+   "page": "page-cavalier-mud.html",
+   "technical": "page-cavalier-mud-technical.html"
+  },
+  {
+   "name": "Chiseled Cauldrons",
+   "page": "page-chiseled-cauldrons.html",
+   "technical": "page-chiseled-cauldrons-technical.html"
+  },
+  {
+   "name": "Clover Glades",
+   "page": "page-clover-glades.html",
+   "technical": "page-clover-glades-technical.html"
+  },
+  {
+   "name": "Corrupted Angel",
+   "page": "page-corrupted-angel.html",
+   "technical": "page-corrupted-angel-technical.html"
+  },
+  {
+   "name": "Covenant Of Witches",
+   "page": "page-covenant-of-witches.html",
+   "technical": "page-covenant-of-witches-technical.html"
+  },
+  {
+   "name": "Crystal Hollows",
+   "page": "page-crystal-hollows.html",
+   "technical": "page-crystal-hollows-technical.html"
+  },
+  {
+   "name": "Crystalline Calcite",
+   "page": "page-crystalline-calcite.html",
+   "technical": "page-crystalline-calcite-technical.html"
+  },
+  {
+   "name": "Crystals",
+   "page": "page-crystals.html",
+   "technical": "page-crystals-technical.html",
+   "matchCase": true
+  },
+  {
+   "name": "Dappled Forests",
+   "page": "page-dappled-forests.html",
+   "technical": "page-dappled-forests-technical.html"
+  },
+  {
+   "name": "Deceiver's Trap",
+   "page": "page-deceivers-trap.html",
+   "technical": "page-deceivers-trap-technical.html"
+  },
+  {
+   "name": "Dechite Ore",
+   "page": "page-dechite.html",
+   "technical": "page-dechite-ore-technical.html",
+   "aliases": [
+    "Dechite"
+   ]
+  },
+  {
+   "name": "Dendrite Blocks",
+   "page": "page-dendrite.html",
+   "technical": "page-dendrite-blocks-technical.html"
+  },
+  {
+   "name": "Sawmill",
+   "page": "page-draft-sawmill.html",
+   "technical": "page-sawmill-technical.html"
+  },
+  {
+   "name": "Echo Shrine",
+   "page": "page-echo-shrine.html",
+   "technical": "page-echo-shrine-technical.html"
+  },
+  {
+   "name": "Echo Squid",
+   "page": "page-echo-squid.html",
+   "technical": "page-echo-squid-technical.html"
+  },
+  {
+   "name": "Eye of Render",
+   "page": "page-eye-of-render.html",
+   "technical": "page-eye-of-render-technical.html"
+  },
+  {
+   "name": "Garnet Nodule",
+   "page": "page-garnet-nodule.html",
+   "technical": "page-garnet-nodule-technical.html"
+  },
+  {
+   "name": "Ice Staff",
+   "page": "page-ice-staff.html",
+   "technical": "page-ice-staff-technical.html"
+  },
+  {
+   "name": "Ice Temple",
+   "page": "page-ice-temple.html",
+   "technical": "page-ice-temple-technical.html"
+  },
+  {
+   "name": "Inferno Wastelands",
+   "page": "page-inferno-wastelands.html",
+   "technical": "page-inferno-wastelands-technical.html"
+  },
+  {
+   "name": "Jungle Orchid",
+   "page": "page-jungle-orchid.html",
+   "technical": "page-jungle-orchid-technical.html"
+  },
+  {
+   "name": "Lapis Golem",
+   "page": "page-lapis-golem.html",
+   "technical": "page-lapis-golem-technical.html"
+  },
+  {
+   "name": "Malnourished",
+   "page": "page-malnourished.html",
+   "technical": "page-malnourished-technical.html"
+  },
+  {
+   "name": "Mancer",
+   "page": "page-mancer.html",
+   "technical": "page-mancer-technical.html",
+   "matchCase": true
+  },
+  {
+   "name": "Montane Jungles",
+   "page": "page-montane-jungles.html",
+   "technical": "page-montane-jungles-technical.html"
+  },
+  {
+   "name": "Mother Depth Worm",
+   "page": "page-mother-depth-worm.html",
+   "technical": "page-mother-depth-worm-technical.html"
+  },
+  {
+   "name": "Naturalist",
+   "page": "page-naturalist.html",
+   "technical": "page-naturalist-technical.html"
+  },
+  {
+   "name": "Oases",
+   "page": "page-oases.html",
+   "technical": "page-oases-technical.html",
+   "aliases": [
+    "Oasis"
+   ]
+  },
+  {
+   "name": "Phoenix",
+   "page": "page-phoenix.html",
+   "technical": "page-phoenix-technical.html",
+   "matchCase": true
+  },
+  {
+   "name": "Phoenix Eggs",
+   "page": "page-phoenix-eggs.html",
+   "technical": "page-phoenix-eggs-technical.html",
+   "aliases": [
+    "Phoenix Egg"
+   ]
+  },
+  {
+   "name": "Phoenix Nest",
+   "page": "page-phoenix-nest.html",
+   "technical": "page-phoenix-nest-technical.html"
+  },
+  {
+   "name": "Pistol Plant",
+   "page": "page-pistol-plant.html",
+   "technical": "page-pistol-plant-technical.html"
+  },
+  {
+   "name": "Prismatic Sensor",
+   "page": "page-prismatic-sensor.html",
+   "technical": "page-prismatic-sensor-technical.html"
+  },
+  {
+   "name": "Rock Lichen",
+   "page": "page-rock-lichen.html",
+   "technical": "page-rock-lichen-technical.html"
+  },
+  {
+   "name": "Rocky Beaches",
+   "page": "page-rocky-beaches.html",
+   "technical": "page-rocky-beaches-technical.html"
+  },
+  {
+   "name": "Shade",
+   "page": "page-shade.html",
+   "technical": "page-shade-technical.html",
+   "matchCase": true
+  },
+  {
+   "name": "Snatcher Grappling Hook",
+   "page": "page-snatcher-grappling-hook.html",
+   "technical": "page-snatcher-grappling-hook-technical.html"
+  },
+  {
+   "name": "Snatchling Cloak",
+   "page": "page-snatchling-cloak.html",
+   "technical": "page-snatchling-cloak-technical.html"
+  },
+  {
+   "name": "Snatchling",
+   "page": "page-warped-crimson-snatchling.html",
+   "technical": "page-snatchling-technical.html"
+  },
+  {
+   "name": "Snatcher",
+   "page": "page-warped-crimson-snatcher.html",
+   "technical": "page-snatcher-technical.html",
+   "aliases": [
+    "Warped Snatcher",
+    "Crimson Snatcher"
+   ]
+  },
+  {
+   "name": "Snowy Glade",
+   "page": "page-snowy-glade.html",
+   "technical": "page-snowy-glade-technical.html"
+  },
+  {
+   "name": "Spectral Scales",
+   "page": "page-spectral-scales.html",
+   "technical": "page-spectral-scales-technical.html"
+  },
+  {
+   "name": "Sulfur Caves",
+   "page": "page-sulfur-caves.html",
+   "technical": "page-sulfur-caves-technical.html"
+  },
+  {
+   "name": "Temple of Gods",
+   "page": "page-temple-of-gods.html",
+   "technical": "page-temple-of-gods-technical.html"
+  },
+  {
+   "name": "Void Carp",
+   "page": "page-void-carp.html",
+   "technical": "page-void-carp-technical.html"
+  },
+  {
+   "name": "Void Tears",
+   "page": "page-void-tears.html",
+   "technical": "page-void-tears-technical.html",
+   "aliases": [
+    "Void Tear"
+   ]
+  },
+  {
+   "name": "Voidal Abandoned Camp",
+   "page": "page-voidal-abandoned-camp.html",
+   "technical": "page-voidal-abandoned-camp-technical.html"
+  },
+  {
+   "name": "Abyss",
+   "page": "page-voidal-abyss.html",
+   "technical": "page-abyss-technical.html",
+   "matchCase": true
+  },
+  {
+   "name": "Voidal Shroud",
+   "page": "page-voidal-shroud.html",
+   "technical": "page-voidal-shroud-technical.html"
+  },
+  {
+   "name": "Voidstone Peaks",
+   "page": "page-voidstone-peaks.html",
+   "technical": "page-voidstone-peaks-technical.html"
+  },
+  {
+   "name": "The Void",
+   "page": "page-the-void.html",
+   "technical": "page-the-void-technical.html"
+  },
+  {
+   "name": "Eric",
+   "page": "page-eric.html",
+   "technical": "page-eric-technical.html",
+   "matchCase": true
+  },
+  {
+   "name": "Water Swiftness",
+   "page": "page-brewing-water-swiftness.html",
+   "technical": "page-water-swiftness-technical.html"
+  },
+  {
+   "name": "Mycquests",
+   "page": "page-mycquests.html",
+   "technical": "page-mycquests-technical.html"
+  },
+  {
+   "name": "Ancient Prismarine",
+   "page": "page-ancient-prismarine-technical.html"
+  },
+  {
+   "name": "Clovers",
+   "page": "page-clovers-technical.html",
+   "aliases": [
+    "Clover"
+   ]
+  },
+  {
+   "name": "Wisp",
+   "page": "page-wisp-technical.html"
+  },
+  {
+   "name": "Scripter",
+   "page": "page-scripter-technical.html"
+  },
+  {
+   "name": "Prismatic Vault",
+   "page": "page-prismatic-vault-technical.html"
+  },
+  {
+   "name": "Teargrass",
+   "page": "page-teargrass-technical.html"
+  },
+  {
+   "name": "Voidstone",
+   "page": "page-voidstone-technical.html"
+  },
+  {
+   "name": "Ocean Abyss",
+   "page": "page-ocean-abyss-technical.html"
+  },
+  {
+   "name": "Water Dragon",
+   "page": "page-water-dragon.html"
+  },
+  {
+   "name": "Fir",
+   "page": "page-fir-technical.html",
+   "aliases": [
+    "Fir Tree"
+   ]
+  },
+  {
+   "name": "P2 Piston Puzzle",
+   "page": "page-p2-piston-puzzle-technical.html"
+  }
+ ]
+}
