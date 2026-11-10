@@ -43,13 +43,21 @@
    "description": "if you click the comment button twice then it sends twice instead of clicking once, send, then close",
    "steps": "SEND A COMMENT AND PRESS BUTTON TWIVE WHILST LOADING",
    "area": "wiki",
-   "status": "unresolved",
+   "status": "resolved",
    "severity": "major",
    "reporter": "Eric",
    "reported": "2026-11-09T21:26:37.757Z",
-   "updated": "2026-11-09T21:26:37.757Z",
+   "updated": "2026-11-10T00:17:05.000Z",
    "comments": [],
-   "history": []
+   "history": [
+    {
+     "author": "Claude",
+     "date": "2026-11-10T00:17:05.000Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "resolved"
+    }
+   ]
   },
   {
    "id": "bug-4",
@@ -58,13 +66,21 @@
    "description": "can't delete my own ideas",
    "steps": "self explanatory",
    "area": "wiki",
-   "status": "unresolved",
+   "status": "resolved",
    "severity": "major",
    "reporter": "Eric",
    "reported": "2026-11-09T21:27:17.194Z",
-   "updated": "2026-11-09T21:27:17.194Z",
+   "updated": "2026-11-10T00:17:05.000Z",
    "comments": [],
-   "history": []
+   "history": [
+    {
+     "author": "Claude",
+     "date": "2026-11-10T00:17:05.000Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "resolved"
+    }
+   ]
   },
   {
    "id": "bug-5",
@@ -73,13 +89,21 @@
    "description": "can review can't approve approvals",
    "steps": "approve ideas in can review",
    "area": "wiki",
-   "status": "unresolved",
+   "status": "resolved",
    "severity": "minor",
    "reporter": "Eric",
    "reported": "2026-11-09T21:28:19.966Z",
-   "updated": "2026-11-09T21:28:19.966Z",
+   "updated": "2026-11-10T00:17:05.000Z",
    "comments": [],
-   "history": []
+   "history": [
+    {
+     "author": "Claude",
+     "date": "2026-11-10T00:17:05.000Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "resolved"
+    }
+   ]
   },
   {
    "id": "bug-6",
@@ -88,13 +112,21 @@
    "description": "Please resolve unresolved pages",
    "steps": "locate as many unresolved pages as possible\nresolve all",
    "area": "wiki",
-   "status": "unresolved",
+   "status": "resolved",
    "severity": "major",
    "reporter": "Alex",
    "reported": "2026-11-09T22:36:18.234Z",
-   "updated": "2026-11-09T22:36:18.234Z",
+   "updated": "2026-11-10T00:17:05.000Z",
    "comments": [],
-   "history": []
+   "history": [
+    {
+     "author": "Claude",
+     "date": "2026-11-10T00:17:05.000Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "resolved"
+    }
+   ]
   },
   {
    "id": "bug-7",
@@ -103,13 +135,21 @@
    "description": "No editors can approve reviewer ideas",
    "steps": "Add the button for editors",
    "area": "wiki",
-   "status": "unresolved",
+   "status": "resolved",
    "severity": "minor",
    "reporter": "Alex",
    "reported": "2026-11-09T22:38:09.314Z",
-   "updated": "2026-11-09T22:38:09.314Z",
+   "updated": "2026-11-10T00:17:05.000Z",
    "comments": [],
-   "history": []
+   "history": [
+    {
+     "author": "Claude",
+     "date": "2026-11-10T00:17:05.000Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "resolved"
+    }
+   ]
   }
  ]
 }
