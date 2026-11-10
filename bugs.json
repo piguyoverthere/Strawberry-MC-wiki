@@ -143,12 +143,18 @@
    "severity": "major",
    "reporter": "Alex",
    "reported": "2026-11-09T22:36:18.234Z",
-   "updated": "2026-11-10T02:07:48.280Z",
+   "updated": "2026-11-10T03:04:34.431Z",
    "comments": [
     {
      "author": "Alex",
      "date": "2026-11-10T02:07:42.235Z",
      "text": "This says that claude resolved this. Eric, please check I am unresolving this and all other bugs resolved by claude"
+    },
+    {
+     "author": "test reviewer",
+     "date": "2026-11-10T03:04:34.431Z",
+     "text": "bro its in the to do list",
+     "pending": true
     }
    ],
    "history": [
