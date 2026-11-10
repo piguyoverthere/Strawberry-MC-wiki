@@ -109,11 +109,11 @@
    "description": "can review can't approve approvals",
    "steps": "approve ideas in can review",
    "area": "wiki",
-   "status": "unresolved",
+   "status": "resolved",
    "severity": "minor",
    "reporter": "Eric",
    "reported": "2026-11-09T21:28:19.966Z",
-   "updated": "2026-11-10T02:08:03.633Z",
+   "updated": "2026-11-10T03:05:32.923Z",
    "comments": [],
    "history": [
     {
@@ -129,6 +129,13 @@
      "field": "status",
      "from": "resolved",
      "to": "unresolved"
+    },
+    {
+     "author": "Eric",
+     "date": "2026-11-10T03:05:32.923Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "resolved"
     }
    ]
   },
