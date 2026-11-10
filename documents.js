@@ -191,9 +191,28 @@
         }
     }
 
+    // PDF readers accept the "%PDF-" header anywhere in the first 1024 bytes, and some older PDFs have bytes before it.
+    async function whyNotPdf(file) {
+        const cloudHint = "If it's stored in iCloud or another cloud drive, download it to this device first.";
+        if (!file.size) return `the file is empty (0 bytes). ${cloudHint}`;
+        let bytes;
+        try {
+            bytes = new Uint8Array(await file.slice(0, 1024).arrayBuffer());
+        } catch {
+            return `this browser couldn't read the file. ${cloudHint}`;
+        }
+        const start = new TextDecoder("latin1").decode(bytes);
+        if (/%PDF-/i.test(start)) return "";
+        if (/^\s*<(?:!doctype|html)/i.test(start)) return "it's really a web page saved with a .pdf name, often a sign-in or download page.";
+        if (start.startsWith("PK")) return "it's really a ZIP or Word-style document with a .pdf name.";
+        const firstBytes = [...bytes.slice(0, 8)].map((byte) => byte.toString(16).padStart(2, "0")).join(" ");
+        return `there's no PDF header in the first 1024 bytes (it starts with ${firstBytes}).`;
+    }
+
     async function chooseUpload(pdf, chosen, button) {
-        if ((await chosen.slice(0, 5).text()) !== "%PDF-") {
-            status.textContent = `${chosen.name} isn't a PDF, so it wasn't uploaded.`;
+        const problem = await whyNotPdf(chosen);
+        if (problem) {
+            status.textContent = `${chosen.name} wasn't uploaded: ${problem}`;
             return;
         }
         if (chosen.size > maxUpload) {
