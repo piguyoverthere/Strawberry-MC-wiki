@@ -2671,7 +2671,13 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "date": "2026-11-10T19:08:45.746Z"
+    }
+   }
   },
   {
    "id": "idea-doc-116",
