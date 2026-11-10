@@ -317,6 +317,21 @@
      "to": "resolved"
     }
    ]
+  },
+  {
+   "id": "bug-9",
+   "number": 9,
+   "title": "cannot escape code box if code box is at end of paragraph",
+   "description": "uum",
+   "steps": "um",
+   "area": "block",
+   "status": "unresolved",
+   "severity": "minor",
+   "reporter": "Eric",
+   "reported": "2026-11-10T23:44:27.274Z",
+   "updated": "2026-11-10T23:44:27.274Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
