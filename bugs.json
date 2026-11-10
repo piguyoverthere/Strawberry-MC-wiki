@@ -112,11 +112,11 @@
    "description": "Please resolve unresolved pages",
    "steps": "locate as many unresolved pages as possible\nresolve all",
    "area": "wiki",
-   "status": "resolved",
+   "status": "unresolved",
    "severity": "major",
    "reporter": "Alex",
    "reported": "2026-11-09T22:36:18.234Z",
-   "updated": "2026-11-10T02:07:42.235Z",
+   "updated": "2026-11-10T02:07:48.280Z",
    "comments": [
     {
      "author": "Alex",
@@ -131,6 +131,13 @@
      "field": "status",
      "from": "unresolved",
      "to": "resolved"
+    },
+    {
+     "author": "Alex",
+     "date": "2026-11-10T02:07:48.280Z",
+     "field": "status",
+     "from": "resolved",
+     "to": "unresolved"
     }
    ]
   },
