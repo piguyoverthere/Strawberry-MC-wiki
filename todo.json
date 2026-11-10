@@ -88,7 +88,11 @@
    "title": "Crimson Forest",
    "notes": [
     "[UNRESOLVED] The source groups Crimson and Warped Forest details together; their biome-specific differences need review."
-   ]
+   ],
+   "resolved": {
+    "by": "aadi",
+    "date": "2026-11-10T21:04:18.799Z"
+   }
   },
   {
    "file": "page-desert-temples.html",
