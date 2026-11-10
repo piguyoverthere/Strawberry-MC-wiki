@@ -1664,3 +1664,10 @@ mark.wiki-annotation-pending{
     margin:4px 0 8px;
     white-space:pre-wrap
 }
+.pdf-upload button{
+    padding:8px 12px;
+    border:1px solid #5b8792;
+    border-radius:4px;
+    background:#ffffff;
+    cursor:pointer
+}

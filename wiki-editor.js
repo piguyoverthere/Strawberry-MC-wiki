@@ -2952,6 +2952,25 @@
             }
             return (counts.get(controversy) || 0) + (counts.get(bugs) || 0) + (counts.get(annotations) || 0) + Object.keys(queued).length;
         },
+        // Replaces a PDF in the repository; its older versions stay in the commit history
+        async uploadDocument(file, blob, title) {
+            const token = readToken();
+            if (!token || !readAccount() || !canReviewRole(await checkAccount(token))) {
+                throw new Error("Only admins and editors can upload documents.");
+            }
+            const content = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result).split(",")[1]);
+                reader.onerror = () => reject(new Error("That file could not be read."));
+                reader.readAsDataURL(blob);
+            });
+            const path = encodeURIComponent(file);
+            const existing = await githubRequest(token, `contents/${path}?ref=${repository.branch}`, { allowMissing: true });
+            await githubRequest(token, `contents/${path}`, {
+                method: "PUT",
+                body: { message: `${readAccount()} uploads a new version of ${title}`, content, branch: repository.branch, ...(existing?.sha ? { sha: existing.sha } : {}) }
+            });
+        },
         // Takes a page off the To Do list and removes its [UNRESOLVED] notes
         async resolveTodoPage(file, title) {
             const token = readToken();
