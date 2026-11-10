@@ -335,11 +335,6 @@
    "status": "",
    "source": "document",
    "votes": {
-    "sai": {
-     "name": "Sai",
-     "vote": "disapprove",
-     "source": "document"
-    },
     "zafar": {
      "name": "Zafar",
      "vote": "approve",
