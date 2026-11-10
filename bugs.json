@@ -269,6 +269,21 @@
      "to": "resolved"
     }
    ]
+  },
+  {
+   "id": "bug-8",
+   "number": 8,
+   "title": "Cant Extend table",
+   "description": "Ok so how do you extend the table in the Edit page? is there a button or smth? this is a bug cuz i cant find anything",
+   "steps": "Add table extending",
+   "area": "wiki",
+   "status": "unresolved",
+   "severity": "minor",
+   "reporter": "Rishaan",
+   "reported": "2026-11-10T20:51:58.371Z",
+   "updated": "2026-11-10T20:51:58.371Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
