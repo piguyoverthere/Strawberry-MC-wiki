@@ -1269,7 +1269,14 @@
      "vote": "disapprove",
      "source": "document"
     }
-   }
+   },
+   "replies": [
+    {
+     "author": "Eric",
+     "text": "BAD",
+     "date": "2026-11-10T19:09:59.613Z"
+    }
+   ]
   },
   {
    "id": "idea-doc-36",
