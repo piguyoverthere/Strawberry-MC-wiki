@@ -688,6 +688,23 @@
         blockSelect.value = [...blockSelect.options].some((option) => option.value === tag) ? tag : "p";
     });
 
+    // Where the cursor is now, read straight away (the selectionchange event that updates savedRange comes later)
+    function cursorRange() {
+        const selection = document.getSelection();
+        return selection.rangeCount > 0 && root.contains(selection.getRangeAt(0).commonAncestorContainer)
+            ? selection.getRangeAt(0).cloneRange()
+            : savedRange;
+    }
+
+    function selectRange(range) {
+        root.focus({ preventScroll: true });
+        if (range) {
+            const selection = document.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+    }
+
     function restoreSelection() {
         const selection = document.getSelection();
         const range = selection.rangeCount > 0 && root.contains(selection.getRangeAt(0).commonAncestorContainer)
@@ -851,14 +868,22 @@
         if (current && current.nodeType !== Node.ELEMENT_NODE) {
             current = current.parentElement;
         }
-        if (!current || current === root || !root.contains(current)) {
+        const cursor = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+        if (!current || !root.contains(current)) {
             current = null;
-        }
-        while (current && !current.parentElement.matches(".wiki-content, .main, section, footer, details")) {
-            current = current.parentElement;
+        } else if (current !== root) {
+            // Go after the paragraph or heading the cursor is in, keeping lists, tables and boxes whole. Pages pasted
+            // from Google Docs or Word wrap everything in one box, so stopping at the page's top level would put
+            // new blocks at the very end.
+            current = current.closest("ul, ol, table, pre, blockquote, figure, .mc-diagram, .wiki-raw-html, .wiki-textbox")
+                || current.closest("p, h1, h2, h3, h4, h5, h6, div, details, section, footer");
+            if (!current || !root.contains(current)) current = null;
         }
 
-        if (current) {
+        if (current === root && cursor) {
+            // The cursor sits between blocks, so put the new one right there
+            root.insertBefore(block, root.childNodes[cursor.endOffset] || null);
+        } else if (current) {
             current.after(block);
             if (current.matches("p") && !current.textContent.trim() && !current.querySelector("img, [data-wiki-island]")) {
                 current.remove();
@@ -1328,13 +1353,13 @@
     itemList.dataset.wikiInjected = "";
     document.body.append(itemList);
 
-    function placeDiagram(block, markup) {
+    function placeDiagram(block, markup, insertAt) {
         if (block) {
             const template = document.createElement("template");
             template.innerHTML = markup;
             block.replaceWith(template.content);
         } else {
-            restoreSelection();
+            selectRange(insertAt);
             insertBlock(markup);
             document.getSelection().removeAllRanges();
         }
@@ -1342,6 +1367,8 @@
     }
 
     function openDiagramDialog(heading, fields, onSave, block) {
+        // Typing in the dialog moves the cursor out of the page, so remember where it was
+        const insertAt = cursorRange();
         const dialog = document.createElement("dialog");
         dialog.className = "wiki-dialog wiki-diagram-dialog";
         dialog.dataset.wikiInjected = "";
@@ -1361,7 +1388,7 @@
             event.preventDefault();
             const markup = onSave(dialog);
             if (markup) {
-                placeDiagram(block, markup);
+                placeDiagram(block, markup, insertAt);
                 dialog.close();
             }
         });
@@ -1413,6 +1440,7 @@
 
     // Write or change a block of raw HTML. block is null for a new one.
     function openRawHtmlDialog(block) {
+        const insertAt = cursorRange();
         const dialog = document.createElement("dialog");
         dialog.className = "wiki-dialog wiki-raw-html-dialog";
         dialog.dataset.wikiInjected = "";
@@ -1446,7 +1474,7 @@
             if (block) {
                 block.innerHTML = markup;
             } else {
-                restoreSelection();
+                selectRange(insertAt);
                 insertBlock(`<div class="wiki-raw-html">${markup}</div>`);
                 markRawBlocks(true);
                 document.getSelection().removeAllRanges();
