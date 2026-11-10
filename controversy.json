@@ -4242,6 +4242,17 @@
      "date": "2026-11-09T21:24:04.561Z"
     }
    ]
+  },
+  {
+   "id": "idea-mwayplqh-zhtzm",
+   "author": "Rishaan",
+   "title": "Mobs can sit on cushions",
+   "description": "Just like with minecarts or boats, this allows mobs to sit down on cusion. (also villagers have a sit position)",
+   "comments": [],
+   "status": "",
+   "source": "site",
+   "created": "2026-11-10T17:26:48.137Z",
+   "votes": {}
   }
  ],
  "discussions": [
