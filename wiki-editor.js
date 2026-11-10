@@ -18,7 +18,7 @@
     const roleStorageKey = "strawberry-wiki-role";
     const sharedTokenFile = "wiki-token.json";
     const legacyEditableSelector = "h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, figcaption, summary";
-    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list, #ideas-app, #discussions-app, #notifications-app, #documents-app, #archives-app, #todo-app, #bugs-app, #login-app, #admin-app";
+    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list, #ideas-app, #discussions-app, #notifications-app, #documents-app, #archives-app, #todo-app, #all-pages-app, #bugs-app, #login-app, #admin-app";
     const allowedTags = new Set([
         "A", "ABBR", "B", "BLOCKQUOTE", "BR", "CAPTION", "CODE", "DEL", "DETAILS", "DIV", "EM", "FIGCAPTION",
         "FIGURE", "FOOTER", "H1", "H2", "H3", "H4", "H5", "H6", "HR", "I", "IMG", "INS", "KBD", "LI", "MARK",
@@ -360,7 +360,7 @@
     // The menus replace the header's plain links in the browser only; saved pages keep the links as written.
     let originalNavMarkup = null;
     const navMenus = [
-        ["Wiki", [["credits.html", "Credits"], ["page-bookmarked-pages.html", "Bookmarked Pages"], ["todo.html", "To Do"], ["bugs.html", "Bug Tracker"]]],
+        ["Wiki", [["all-pages.html", "All Pages"], ["credits.html", "Credits"], ["page-bookmarked-pages.html", "Bookmarked Pages"], ["todo.html", "To Do"], ["bugs.html", "Bug Tracker"]]],
         ["Community", [["news.html", "News"], ["ideas.html", "Ideas"], ["discussions.html", "Threads &amp; Debates"], ["notifications.html", "Notifications"], ["archives.html", "Archives"]]]
     ];
 

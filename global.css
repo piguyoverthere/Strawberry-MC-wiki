@@ -1671,3 +1671,24 @@ mark.wiki-annotation-pending{
     background:#ffffff;
     cursor:pointer
 }
+.all-pages-letters{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px 8px;
+    margin:12px 0;
+    font-weight:bold
+}
+.all-pages-group h2{
+    scroll-margin-top:90px
+}
+.all-pages-group ul{
+    margin:6px 0 0;
+    padding:0;
+    list-style:none;
+    column-width:280px;
+    column-gap:24px
+}
+.all-pages-group li{
+    padding:2px 0;
+    break-inside:avoid
+}
