@@ -1,4 +1,5 @@
 const newsArticles = [
+    { title: "SITE UPDATE: Comments now take less time to sync with others, allowing real-time", author: "Eric", date: "2026-11-09", href: "news-eric-site-update-comments-now-take-less-time-to-sync-with-others-allowing-real-time.html", summary: "yee foot" },
     { title: "Monthly Update on Development: November", author: "Eric", date: "2026-11-04", href: "news-eric-monthly-update-on-development-november.html", summary: "" },
 ];
 
