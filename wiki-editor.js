@@ -387,7 +387,7 @@
         <button type="button" data-action="edit">Edit page</button>
         <button type="button" data-action="save" disabled>Save edits</button>
         <button type="button" data-action="cancel" disabled>Cancel</button>
-        <button type="button" data-action="commit">Commit to GitHub</button>
+        <button type="button" data-action="commit" title="Commit to GitHub">Commit<span class="wiki-long-label"> to GitHub</span></button>
         <details class="wiki-more-menu">
             <summary title="More page tools">More</summary>
             <div class="wiki-more-items">
@@ -679,7 +679,7 @@
                 <option value="pre">Code block</option>
             </select>
             <select data-command="font" title="Font" aria-label="Font">
-                <option value="" disabled selected>Font…</option>
+                <option value="" disabled selected>Font</option>
                 <option value="default">Default</option>
                 <option value="roman" class="roman">Times New Roman</option>
                 <option value="consolas" class="consolas">Consolas</option>
@@ -695,47 +695,58 @@
             <button type="button" data-command="superscript" title="Superscript (Ctrl+Shift++ or Ctrl+.)" aria-label="Superscript">x<sup>2</sup></button>
             <button type="button" data-command="subscript" title="Subscript (Ctrl+Shift+- or Ctrl+,)" aria-label="Subscript">x<sub>2</sub></button>
             <button type="button" data-command="inlineCode" title="Inline code (Ctrl+E)" aria-label="Inline code"><span class="consolas">&lt;/&gt;</span></button>
-        </div>
-        <div class="wiki-format-group">
             <label class="wiki-color-control" title="Text color">A<input type="color" data-command="foreColor" value="#1f4b5a" aria-label="Text color"></label>
             <label class="wiki-color-control" title="Highlight color">🖍<input type="color" data-command="hiliteColor" value="#fff4c2" aria-label="Highlight color"></label>
         </div>
         <div class="wiki-format-group">
-            <button type="button" data-command="insertUnorderedList" title="Bullet list (Ctrl+Shift+8)">• List</button>
-            <button type="button" data-command="insertOrderedList" title="Numbered list (Ctrl+Shift+7)">1. List</button>
-            <button type="button" data-command="outdent" title="Decrease indent (Shift+Tab)" aria-label="Decrease indent">Outdent</button>
-            <button type="button" data-command="indent" title="Increase indent (Tab)" aria-label="Increase indent">Indent</button>
+            <button type="button" data-command="insertUnorderedList" title="Bullet list (Ctrl+Shift+8)" aria-label="Bullet list"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="2.5" cy="3.5" r="1.4" fill="currentColor"/><circle cx="2.5" cy="8" r="1.4" fill="currentColor"/><circle cx="2.5" cy="12.5" r="1.4" fill="currentColor"/><path d="M6 3.5h9M6 8h9M6 12.5h9" stroke="currentColor" stroke-width="1.6"/></svg></button>
+            <button type="button" data-command="insertOrderedList" title="Numbered list (Ctrl+Shift+7)" aria-label="Numbered list"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><text x="0" y="5.5" font-size="5.5" fill="currentColor" font-family="Arial">1</text><text x="0" y="10" font-size="5.5" fill="currentColor" font-family="Arial">2</text><text x="0" y="14.5" font-size="5.5" fill="currentColor" font-family="Arial">3</text><path d="M6 3.5h9M6 8h9M6 12.5h9" stroke="currentColor" stroke-width="1.6"/></svg></button>
+            <button type="button" data-command="outdent" title="Decrease indent (Shift+Tab)" aria-label="Decrease indent"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1 2h14M1 14h14M8 6h7M8 10h7" stroke="currentColor" stroke-width="1.6"/><path d="M5.5 5.2v5.6L1.5 8z" fill="currentColor"/></svg></button>
+            <button type="button" data-command="indent" title="Increase indent (Tab)" aria-label="Increase indent"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1 2h14M1 14h14M8 6h7M8 10h7" stroke="currentColor" stroke-width="1.6"/><path d="M1.5 5.2v5.6L5.5 8z" fill="currentColor"/></svg></button>
+            <div class="wiki-format-menu">
+                <button type="button" class="wiki-format-menu-toggle" aria-haspopup="true" aria-expanded="false" title="Alignment" aria-label="Alignment"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1 2.5h14M1 6.2h9M1 9.8h14M1 13.5h9" stroke="currentColor" stroke-width="1.6"/></svg><span aria-hidden="true">▾</span></button>
+                <div class="wiki-format-menu-items wiki-format-menu-narrow" hidden>
+                    <button type="button" data-command="justifyLeft"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1 2.5h14M1 6.2h9M1 9.8h14M1 13.5h9" stroke="currentColor" stroke-width="1.6"/></svg> Align left</button>
+                    <button type="button" data-command="justifyCenter"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1 2.5h14M3.5 6.2h9M1 9.8h14M3.5 13.5h9" stroke="currentColor" stroke-width="1.6"/></svg> Align center</button>
+                    <button type="button" data-command="justifyRight"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1 2.5h14M6 6.2h9M1 9.8h14M6 13.5h9" stroke="currentColor" stroke-width="1.6"/></svg> Align right</button>
+                </div>
+            </div>
         </div>
         <div class="wiki-format-group">
-            <button type="button" data-command="justifyLeft" title="Align left" aria-label="Align left">Left</button>
-            <button type="button" data-command="justifyCenter" title="Align center" aria-label="Align center">Center</button>
-            <button type="button" data-command="justifyRight" title="Align right" aria-label="Align right">Right</button>
-        </div>
-        <div class="wiki-format-group">
-            <button type="button" data-command="textBox" title="Insert a text box. To continue below it, press Enter twice at its end.">+ Text box</button>
-            <button type="button" data-command="warningBox" title="Insert a yellow warning box, or turn the text box the cursor is in yellow">+ Warning</button>
-            <button type="button" data-command="dangerBox" title="Insert a red danger box, or turn the text box the cursor is in red">+ Danger</button>
-            <button type="button" data-command="codeBox" title="Insert a code box. To continue below it, press the down arrow at its end or Enter twice.">+ Code box</button>
-            <button type="button" data-command="codeTabs" title="Insert a code box with Java and Pseudocode tabs, or add a Pseudocode tab to the code box the cursor is in">+ Java/Pseudocode</button>
-            <button type="button" data-command="table" title="Insert a table">+ Table</button>
-            <button type="button" data-command="recipe" title="Insert a crafting recipe">+ Recipe</button>
-            <button type="button" data-command="blocks" title="Insert a diagram made of blocks">+ Blocks</button>
-            <button type="button" data-command="rawHtml" title="Insert a block of raw HTML">+ HTML</button>
-            <button type="button" data-command="link" title="Add a link (Ctrl+K)">Link</button>
-            <button type="button" data-command="image" title="Insert an image from a URL">Image</button>
-            <button type="button" data-command="insertHorizontalRule" title="Insert a divider line">Divider</button>
+            <div class="wiki-format-menu">
+                <button type="button" class="wiki-format-menu-toggle" aria-haspopup="true" aria-expanded="false" title="Insert a box, table, diagram, image or divider">+ Insert ▾</button>
+                <div class="wiki-format-menu-items" hidden>
+                    <button type="button" data-command="textBox" title="To continue below it, press Enter twice at its end">Text box</button>
+                    <button type="button" data-command="warningBox" title="Or turn the text box the cursor is in yellow">⚠ Warning box</button>
+                    <button type="button" data-command="dangerBox" title="Or turn the text box the cursor is in red">⛔ Danger box</button>
+                    <button type="button" data-command="codeBox" title="To continue below it, press the down arrow at its end or Enter twice">Code box</button>
+                    <button type="button" data-command="codeTabs" title="Or add a Pseudocode tab to the code box the cursor is in">Code box with Java / Pseudocode tabs</button>
+                    <button type="button" data-command="table">Table</button>
+                    <button type="button" data-command="recipe">Crafting recipe</button>
+                    <button type="button" data-command="blocks">Block diagram</button>
+                    <button type="button" data-command="image" title="An image from a URL or a file in the wiki folder">Image</button>
+                    <button type="button" data-command="insertHorizontalRule">Divider line</button>
+                    <button type="button" data-command="rawHtml">Raw HTML block</button>
+                </div>
+            </div>
+            <button type="button" data-command="link" title="Add a link (Ctrl+K)" aria-label="Link"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M6.8 9.2a3 3 0 0 0 4.2 0l2.6-2.6a3 3 0 0 0-4.2-4.2L8.2 3.6M9.2 6.8a3 3 0 0 0-4.2 0L2.4 9.4a3 3 0 0 0 4.2 4.2l1.2-1.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
         </div>
         <div class="wiki-format-group wiki-table-tools" hidden>
             <button type="button" data-command="tableRowAdd" title="Add a row below this one">+ Row</button>
             <button type="button" data-command="tableRowRemove" title="Remove this row">− Row</button>
-            <button type="button" data-command="tableColumnAdd" title="Add a column to the right of this one">+ Column</button>
-            <button type="button" data-command="tableColumnRemove" title="Remove this column">− Column</button>
+            <button type="button" data-command="tableColumnAdd" title="Add a column to the right of this one">+ Col</button>
+            <button type="button" data-command="tableColumnRemove" title="Remove this column">− Col</button>
         </div>
         <div class="wiki-format-group">
-            <button type="button" data-command="clearFormatting" title="Clear formatting (Ctrl+\\)">Clear</button>
-            <button type="button" data-command="removeAllStyles" title="Remove every style, including inline code, from the selection (or the whole page if nothing is selected)">Remove all styles</button>
-            <button type="button" data-command="undo" title="Undo (Ctrl+Z)" aria-label="Undo">Undo</button>
-            <button type="button" data-command="redo" title="Redo (Ctrl+Shift+Z)" aria-label="Redo">Redo</button>
+            <div class="wiki-format-menu">
+                <button type="button" class="wiki-format-menu-toggle" aria-haspopup="true" aria-expanded="false" title="Remove formatting">Clear ▾</button>
+                <div class="wiki-format-menu-items" hidden>
+                    <button type="button" data-command="clearFormatting" title="Ctrl+\\">Clear formatting</button>
+                    <button type="button" data-command="removeAllStyles" title="Including inline code, from the selection (or the whole page if nothing is selected)">Remove all styles</button>
+                </div>
+            </div>
+            <button type="button" data-command="undo" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M5 3 1.5 6.5 5 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M2 6.5h7.5a4 4 0 0 1 0 8H6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+            <button type="button" data-command="redo" title="Redo (Ctrl+Shift+Z)" aria-label="Redo"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M11 3l3.5 3.5L11 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 6.5H6.5a4 4 0 0 0 0 8H10" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
         </div>
     `;
     document.body.append(formatBar);
@@ -1332,11 +1343,36 @@
         }
     });
 
+    // The Insert and Clear menus open above the bar and close once something in them is picked.
+    function closeFormatMenus(except) {
+        for (const menu of formatBar.querySelectorAll(".wiki-format-menu")) {
+            if (menu === except) continue;
+            menu.querySelector(".wiki-format-menu-items").hidden = true;
+            menu.querySelector(".wiki-format-menu-toggle").setAttribute("aria-expanded", "false");
+        }
+    }
+
     formatBar.addEventListener("click", (event) => {
+        const toggle = event.target.closest(".wiki-format-menu-toggle");
+        if (toggle) {
+            const menu = toggle.closest(".wiki-format-menu");
+            const items = menu.querySelector(".wiki-format-menu-items");
+            closeFormatMenus(menu);
+            items.hidden = !items.hidden;
+            toggle.setAttribute("aria-expanded", String(!items.hidden));
+            return;
+        }
         const button = event.target.closest("button[data-command]");
         if (button) {
+            closeFormatMenus();
             runCommand(button.dataset.command);
         }
+    });
+    document.addEventListener("click", (event) => {
+        if (!event.target.closest(".wiki-format-menu")) closeFormatMenus();
+    });
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeFormatMenus();
     });
 
     formatBar.addEventListener("change", (event) => {

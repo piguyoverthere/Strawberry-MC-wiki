@@ -241,6 +241,42 @@
         };
     }
 
+    // An idea is ready to be implemented once approvals minus disapprovals minus "needs convincing" votes have
+    // stayed above 2 for more than a day.
+    const readyMargin = 2;
+    const readyAfter = 24 * 60 * 60 * 1000;
+
+    function netScore(idea) {
+        const { approve, disapprove, convince } = voteCounts(idea);
+        return approve.length - disapprove.length - convince.length;
+    }
+
+    // When the score last rose above the margin. Votes save that moment on the idea; for ideas from before then,
+    // replay the current votes in date order (votes copied from the document count from when the idea was added).
+    function readySince(idea) {
+        if (netScore(idea) <= readyMargin) return null;
+        if (idea.readySince) return Date.parse(idea.readySince);
+        const added = Date.parse(idea.created || "") || 0;
+        const weight = { approve: 1, disapprove: -1, convince: -1 };
+        const votes = Object.values(idea.votes || {})
+            .map((item) => ({ weight: weight[item.vote] || 0, time: Date.parse(item.date || "") || added }))
+            .sort((a, b) => a.time - b.time);
+        let score = 0;
+        let since = null;
+        for (const item of votes) {
+            const before = score;
+            score += item.weight;
+            if (before <= readyMargin && score > readyMargin) since = item.time;
+            else if (score <= readyMargin) since = null;
+        }
+        return since;
+    }
+
+    function isReady(idea) {
+        const since = readySince(idea);
+        return since !== null && Date.now() - since > readyAfter;
+    }
+
     function vote(idea, choice) {
         requireSignIn(`${{ approve: "Approve", disapprove: "Disapprove", convince: "Mark as needing convincing" }[choice]} "${idea.title}". Voting the same way again removes your vote.`, (name) =>
             save((fresh) => {
@@ -252,6 +288,11 @@
                     delete target.votes[key];
                 } else {
                     target.votes[key] = { name, vote: choice, date: new Date().toISOString() };
+                }
+                if (netScore(target) <= readyMargin) {
+                    delete target.readySince;
+                } else if (!target.readySince) {
+                    target.readySince = new Date(readySince(target) ?? Date.now()).toISOString();
                 }
             }, `${name} votes ${choice} on idea: ${idea.title}`, { needsReview: false })
                 .then(() => { status.textContent = `Your vote on "${idea.title}" was saved.`; }));
@@ -353,12 +394,20 @@
         const voters = (list) => list.map((vote) => vote.name).join(", ");
         const votedAt = (vote) => vote.date ? ` (${new Date(vote.date).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })})` : "";
         const votersWithTimes = (list) => list.map((vote) => `${vote.name}${votedAt(vote)}`).join(", ");
-        const card = element("article", { className: `idea-card${idea.pending ? " wiki-pending-item" : ""}`, id: idea.id },
+        const ready = !idea.pending && isReady(idea);
+        const card = element("article", { className: `idea-card${idea.pending ? " wiki-pending-item" : ""}${ready ? " idea-ready" : ""}`, id: idea.id },
             element("header", { className: "idea-header" },
                 element("h3", { text: idea.number ? `${idea.number}. ${idea.title}` : idea.title }),
                 element("span", { className: "idea-meta" },
                     element("span", { className: "idea-author", text: idea.author }),
                     idea.status ? element("span", { className: `idea-badge idea-badge-${idea.status}`, text: idea.status }) : null,
+                    ready ? element("span", {
+                        className: "idea-badge idea-badge-ready",
+                        text: "✅ Ready to implement",
+                        title: `Approvals minus disapprovals and "needs convincing" votes have been above ${readyMargin} ${readySince(idea)
+                            ? `since ${new Date(readySince(idea)).toLocaleDateString("en-US", { dateStyle: "medium" })}`
+                            : "since the votes in the ideas document"}`
+                    }) : null,
                     " · ",
                     idea.source === "site" && idea.created ? timestamp(idea.created, "added ") : fromDocument(),
                     idea.edited ? " · " : null,
@@ -461,7 +510,7 @@
                     ...authors.map((author) => element("option", { value: author, selected: ideaFilters.author === author, text: `${author} (${activeIdeas.filter((idea) => idea.author === author).length})` })))),
             element("label", {}, "Sort ",
                 element("select", { onchange: (event) => { ideaFilters.sort = event.target.value; render(); } },
-                    ...[["document", "Document order"], ["approved", "Most approved"], ["disapproved", "Most disapproved"], ["convince", "Most need convincing"], ["newest", "Newest first"]]
+                    ...[["document", "Document order"], ["ready", "Ready to implement first"], ["approved", "Most approved"], ["disapproved", "Most disapproved"], ["convince", "Most need convincing"], ["newest", "Newest first"]]
                         .map(([value, label]) => element("option", { value, selected: ideaFilters.sort === value, text: label })))),
             element("input", {
                 type: "search", placeholder: "Filter ideas…", value: ideaFilters.query, "aria-label": "Filter ideas",
@@ -474,6 +523,7 @@
                 .filter(({ idea }) => !ideaFilters.author || idea.author === ideaFilters.author)
                 .filter(({ idea }) => !query || `${idea.title} ${idea.description} ${idea.author}`.toLowerCase().includes(query));
             const score = (idea, kind) => voteCounts(idea)[kind].length;
+            if (ideaFilters.sort === "ready") ideas.sort((a, b) => Number(isReady(b.idea)) - Number(isReady(a.idea)) || a.index - b.index);
             if (ideaFilters.sort === "approved") ideas.sort((a, b) => score(b.idea, "approve") - score(a.idea, "approve") || a.index - b.index);
             if (ideaFilters.sort === "disapproved") ideas.sort((a, b) => score(b.idea, "disapprove") - score(a.idea, "disapprove") || a.index - b.index);
             if (ideaFilters.sort === "convince") ideas.sort((a, b) => score(b.idea, "convince") - score(a.idea, "convince") || a.index - b.index);

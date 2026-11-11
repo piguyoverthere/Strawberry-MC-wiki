@@ -377,8 +377,9 @@ li.wiki-plain{
     left:0;
     display:flex;
     flex-wrap:wrap;
-    gap:6px 14px;
-    padding:8px 20px;
+    align-items:center;
+    gap:6px;
+    padding:6px 12px;
     border-top:1px solid #a2a9b1;
     background-color:#eaecf0;
     box-shadow:0 -3px 8px rgba(0,0,0,0.12)
@@ -389,15 +390,94 @@ li.wiki-plain{
 .wiki-format-group{
     display:flex;
     align-items:center;
+    gap:2px
+}
+.wiki-format-bar .wiki-editor-toolbar{
     gap:4px
+}
+.wiki-format-bar .wiki-editor-toolbar button,
+.wiki-format-bar .wiki-more-menu summary{
+    box-sizing:border-box;
+    height:30px;
+    padding:4px 8px;
+    font-size:13px
+}
+@media (max-width:1400px){
+    .wiki-format-bar .wiki-long-label{
+        display:none
+    }
+}
+.wiki-format-group[hidden]{
+    display:none
+}
+.wiki-format-bar select[data-command="block"]{
+    width:106px
+}
+.wiki-format-bar select[data-command="font"]{
+    width:64px
+}
+.wiki-format-group + .wiki-format-group{
+    padding-left:6px;
+    border-left:1px solid #c8ccd1
+}
+.wiki-format-bar button svg{
+    display:block;
+    margin:auto
+}
+.wiki-format-menu-toggle:has(svg){
+    display:flex;
+    align-items:center;
+    gap:2px
+}
+.wiki-format-bar .wiki-format-menu-items button svg{
+    display:inline-block;
+    margin:0 6px 0 0;
+    vertical-align:-3px
+}
+.wiki-format-menu-items.wiki-format-menu-narrow{
+    min-width:150px
+}
+.wiki-color-control input{
+    width:18px
+}
+.wiki-format-menu{
+    position:relative
+}
+.wiki-format-menu-items{
+    position:absolute;
+    z-index:20;
+    bottom:calc(100% + 6px);
+    left:0;
+    display:flex;
+    flex-direction:column;
+    min-width:220px;
+    padding:4px;
+    border:1px solid #a2a9b1;
+    border-radius:6px;
+    background:#ffffff;
+    box-shadow:0 4px 14px rgba(0,0,0,0.18)
+}
+.wiki-format-menu-items[hidden]{
+    display:none
+}
+.wiki-format-bar .wiki-format-menu-items button{
+    height:auto;
+    padding:7px 10px;
+    border:0;
+    border-radius:4px;
+    font-weight:normal;
+    text-align:left
+}
+.wiki-format-bar .wiki-format-menu-items button:hover{
+    background-color:#e4f4f8
 }
 .wiki-format-bar button,
 .wiki-format-bar select,
 .wiki-color-control{
     box-sizing:border-box;
-    min-width:32px;
-    height:32px;
-    padding:4px 8px;
+    min-width:28px;
+    height:30px;
+    padding:3px 6px;
     border:1px solid #4d7884;
     border-radius:5px;
     background-color:#ffffff;
@@ -884,6 +964,16 @@ tfoot {
     color:#202122;
     font-size:.8em;
     text-transform:capitalize
+}
+.idea-card.idea-ready{
+    border-color:#2e7d32;
+    border-left-width:6px;
+    background:#e8f5e9
+}
+.idea-badge-ready{
+    background:#2e7d32;
+    color:#ffffff;
+    text-transform:none
 }
 .idea-badge-resolved{
     background:#d5fdf4;
