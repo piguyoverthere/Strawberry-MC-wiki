@@ -1180,6 +1180,71 @@
         }
     }
 
+    // Moving nodes around knocks the cursor out of them, so put it back exactly where it was afterwards
+    function keepingCursor(move) {
+        const selection = document.getSelection();
+        const saved = selection.rangeCount ? (({ startContainer, startOffset, endContainer, endOffset }) =>
+            ({ startContainer, startOffset, endContainer, endOffset }))(selection.getRangeAt(0)) : null;
+        const result = move();
+        if (saved && root.contains(saved.startContainer) && root.contains(saved.endContainer)) {
+            const range = document.createRange();
+            range.setStart(saved.startContainer, saved.startOffset);
+            range.setEnd(saved.endContainer, saved.endOffset);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+        return result;
+    }
+
+    // Chrome indents a list item by wrapping it in a new list placed straight inside the old one. Move that list into
+    // the item above it (joining a sub-list already there), so sub-lists number on their own: 1, 2 then a, b.
+    function nestListsInItems() {
+        keepingCursor(() => nestLists());
+    }
+
+    function nestLists() {
+        for (const list of root.querySelectorAll(":is(ol, ul) > :is(ol, ul)")) {
+            const above = list.previousElementSibling;
+            if (above?.tagName !== "LI") continue;
+            const existing = above.lastElementChild;
+            if (existing?.tagName === list.tagName) {
+                existing.append(...list.childNodes);
+                list.remove();
+            } else {
+                above.append(list);
+            }
+        }
+    }
+
+    // Outdenting an item of a sub-list moves it up beside the item that held the sub-list; the items after it stay
+    // under it. Returns false when the cursor isn't in a sub-list item, so the browser's outdent runs instead.
+    function outdentListItem() {
+        return keepingCursor(moveListItemOut);
+    }
+
+    function moveListItemOut() {
+        const selection = document.getSelection();
+        if (!selection.rangeCount) return false;
+        const node = selection.getRangeAt(0).startContainer;
+        const item = (node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement).closest("li");
+        const list = item?.parentElement;
+        const outerItem = list?.parentElement;
+        if (!item || !root.contains(item) || outerItem?.tagName !== "LI" ||
+            !root.contains(selection.getRangeAt(0).endContainer) || !item.contains(selection.getRangeAt(0).endContainer)) {
+            return false;
+        }
+        const later = [...list.children].slice([...list.children].indexOf(item) + 1);
+        if (later.length) {
+            const existing = item.lastElementChild?.tagName === list.tagName ? item.lastElementChild : null;
+            const rest = existing || list.cloneNode(false);
+            rest.append(...later);
+            if (!existing) item.append(rest);
+        }
+        outerItem.after(item);
+        if (!list.children.length) list.remove();
+        return true;
+    }
+
     function runCommand(command, value) {
         if (!editing) {
             return;
@@ -1332,6 +1397,15 @@
             case "insertOrderedList":
                 document.execCommand(command);
                 unwrapListsFromParagraphs();
+                break;
+            case "outdent":
+                if (outdentListItem()) break;
+                document.execCommand(command);
+                nestListsInItems();
+                break;
+            case "indent":
+                document.execCommand(command);
+                nestListsInItems();
                 break;
             default:
                 document.execCommand(command);
