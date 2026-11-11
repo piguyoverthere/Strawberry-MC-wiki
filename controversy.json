@@ -3867,7 +3867,10 @@
      "vote": "disapprove",
      "source": "document"
     }
-   }
+   },
+   "archived": true,
+   "archivedBy": "Eric",
+   "archivedDate": "2026-11-11T00:16:53.259Z"
   },
   {
    "id": "idea-doc-194",
