@@ -105,6 +105,7 @@
         if ((match = line.match(/^(.+?) replies in: (.+)$/))) return { type: "thread", who: match[1], text: " replied in ", target: match[2], href: discussionHref(match[2]) };
         if ((match = line.match(/^(.+?) starts (debate|thread): (.+)$/)))
             return { type: "thread", who: match[1], text: ` started a ${match[2]}: `, target: match[3], href: discussionHref(match[3]) };
+        if ((match = line.match(/^(.+?) edits idea: (.+)$/))) return { type: "idea", who: match[1], text: " edited an idea: ", target: match[2], href: ideaHref(match[2]) };
         if ((match = line.match(/^(.+?) (archives|restores) idea: (.+)$/))) return { type: "idea", who: match[1], text: match[2] === "archives" ? " moved to Archives: " : " restored an idea: ", target: match[3], href: "archives.html" };
         if ((match = line.match(/^(.+?) marks (.+) as unresolved$/))) return { type: "page-edit", who: match[1], text: " marked as unresolved: ", target: match[2], page: true };
         if ((match = line.match(/^(.+?) resolves page: (.+)$/))) return { type: "page-edit", who: match[1], text: " resolved ", target: match[2], page: true };
@@ -313,7 +314,7 @@
     Promise.all([json("controversy.json"), json("bugs.json")]).then(([ideas, bugs]) => {
         if (ideas) {
             controversy = {
-                ideas: new Map((ideas.ideas || []).map((idea) => [idea.title, idea])),
+                ideas: new Map((ideas.ideas || []).flatMap((idea) => [idea.title, ...(idea.formerTitles || [])].map((title) => [title, idea]))),
                 discussions: new Map((ideas.discussions || []).map((discussion) => [discussion.title, discussion.id]))
             };
         }

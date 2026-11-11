@@ -205,6 +205,7 @@
             } else {
                 input = element("input", { id, type: "text", required: field.required, maxlength: 120 });
             }
+            if (field.value) input.value = field.value;
             inputs[field.name] = input;
             form.append(input);
             if (field.hint) form.append(element("p", { className: "wiki-dialog-hint", text: field.hint }));
@@ -259,6 +260,32 @@
     // The person who posted an idea and admins can move it to the Archives page, and bring it back
     function canDelete(idea) {
         return signedIn() && (isAdmin() || nameKey(idea.author || "") === nameKey(window.wikiStore.getAuthor()));
+    }
+
+    // The person who posted an idea and admins can change its name and details
+    function editIdea(idea) {
+        openFormDialog({
+            title: "Edit idea",
+            submitLabel: "Save changes",
+            fields: [
+                { name: "title", label: "Idea name", required: true, value: idea.title },
+                { name: "description", label: "Details", type: "textarea", rows: 10, value: idea.description || "", hint: "Start a line with \"- \" to make a bullet point." }
+            ],
+            onSubmit: (values) => {
+                if (values.title === idea.title && values.description === (idea.description || "")) return;
+                requireSignIn("", (name) => save((fresh) => {
+                    const target = (fresh.ideas || []).find((item) => item.id === idea.id);
+                    if (!target) throw new Error("This idea no longer exists. Reload the page.");
+                    // Old names are kept so notifications about the idea still link to it
+                    if (values.title !== target.title) target.formerTitles = [...new Set([...(target.formerTitles || []), target.title])];
+                    target.title = values.title;
+                    target.description = values.description;
+                    target.edited = new Date().toISOString();
+                    target.editedBy = name;
+                }, `${name} edits idea: ${values.title}`, { needsReview: false })
+                    .then(() => { status.textContent = `"${values.title}" was updated.`; }));
+            }
+        });
     }
 
     function setArchived(idea, archived) {
@@ -333,7 +360,10 @@
                     element("span", { className: "idea-author", text: idea.author }),
                     idea.status ? element("span", { className: `idea-badge idea-badge-${idea.status}`, text: idea.status }) : null,
                     " · ",
-                    idea.source === "site" && idea.created ? timestamp(idea.created, "added ") : fromDocument())),
+                    idea.source === "site" && idea.created ? timestamp(idea.created, "added ") : fromDocument(),
+                    idea.edited ? " · " : null,
+                    idea.edited ? timestamp(idea.edited, "edited ") : null,
+                    idea.edited && idea.editedBy ? ` by ${idea.editedBy}` : null)),
             idea.pending ? reviewBar(`new idea by ${idea.author}`,
                 () => moderate(true, `idea: ${idea.title}`, (fresh) => {
                     const target = fresh.ideas.find((item) => item.id === idea.id);
@@ -413,7 +443,9 @@
                 ? element("span", { className: "idea-voters", text: [approve.length ? `For: ${voters(approve)}` : "", disapprove.length ? `Against: ${voters(disapprove)}` : "", convince.length ? `Needs convincing: ${voters(convince)}` : ""].filter(Boolean).join(" · ") })
                 : null));
         if (canDelete(idea)) {
-            card.append(element("button", { type: "button", className: "wiki-link-button idea-delete", text: "Delete idea", onclick: () => setArchived(idea, true) }));
+            card.append(element("div", { className: "idea-owner-actions" },
+                element("button", { type: "button", className: "wiki-link-button", text: "Edit idea", onclick: () => editIdea(idea) }),
+                element("button", { type: "button", className: "wiki-link-button idea-delete", text: "Delete idea", onclick: () => setArchived(idea, true) })));
         }
         return card;
     }

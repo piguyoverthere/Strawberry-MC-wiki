@@ -1847,3 +1847,11 @@ mark.wiki-annotation-pending{
     box-sizing:border-box;
     width:100%
 }
+.idea-owner-actions{
+    display:flex;
+    gap:14px;
+    margin-top:8px
+}
+.idea-owner-actions .idea-delete{
+    margin-top:0
+}
