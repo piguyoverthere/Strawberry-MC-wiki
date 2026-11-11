@@ -3894,7 +3894,13 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "date": "2026-11-11T00:55:46.539Z"
+    }
+   }
   },
   {
    "id": "idea-doc-195",
