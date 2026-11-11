@@ -675,6 +675,8 @@
                 <option value="h2">Heading 2</option>
                 <option value="h3">Heading 3</option>
                 <option value="h4">Heading 4</option>
+                <option value="h5">Heading 5</option>
+                <option value="h6">Heading 6</option>
                 <option value="blockquote">Quote</option>
                 <option value="pre">Code block</option>
             </select>
@@ -774,7 +776,7 @@
 
         const start = range.startContainer.nodeType === Node.ELEMENT_NODE ? range.startContainer : range.startContainer.parentElement;
         tableTools.hidden = !start.closest("td, th");
-        const block = start.closest("h1, h2, h3, h4, blockquote, pre, p, li, td, th, div");
+        const block = start.closest("h1, h2, h3, h4, h5, h6, blockquote, pre, p, li, td, th, div");
         const tag = block && root.contains(block) ? block.tagName.toLowerCase() : "p";
         blockSelect.value = [...blockSelect.options].some((option) => option.value === tag) ? tag : "p";
     });
@@ -3218,7 +3220,9 @@
         [true, false, true, "Digit1", "block", "h1"],
         [true, false, true, "Digit2", "block", "h2"],
         [true, false, true, "Digit3", "block", "h3"],
-        [true, false, true, "Digit4", "block", "h4"]
+        [true, false, true, "Digit4", "block", "h4"],
+        [true, false, true, "Digit5", "block", "h5"],
+        [true, false, true, "Digit6", "block", "h6"]
     ];
 
     // Some keyboards and tools report only the key, not its place on the keyboard

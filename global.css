@@ -812,7 +812,8 @@ h2{
 }
 h3,
 h4,
-h5{
+h5,
+h6{
     margin:.3em 0 0;
     padding-top:.5em;
     color:#000000;
@@ -821,6 +822,20 @@ h5{
 }
 h3{
     font-size:1.2em
+}
+h4{
+    font-size:1em
+}
+h5,
+h6{
+    color:#0b2e6b;
+    font-style:italic
+}
+h5{
+    font-size:1em
+}
+h6{
+    font-size:.9em
 }
 a{
     color:#0645ad;
