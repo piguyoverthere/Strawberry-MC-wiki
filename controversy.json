@@ -3276,7 +3276,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "convince",
+     "date": "2026-11-11T17:53:56.574Z"
+    }
+   }
   },
   {
    "id": "idea-doc-138",
