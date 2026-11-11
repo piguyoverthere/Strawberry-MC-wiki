@@ -32,10 +32,11 @@
   "aadi": {
    "name": "aadi",
    "role": "admin",
-   "salt": "xIjXjLcR9Ck+EQ6dEwn14g==",
+   "salt": "MFYLYWbyIuLpDYg6B2szjQ==",
    "iterations": 310000,
-   "hash": "bQR3H3aKsf1nilslw/mkQ5lUNLcVyInNTL5E10i870M=",
-   "created": "2026-11-09T20:28:32.325Z"
+   "hash": "4QVny2rSSvUvW60HcyfN5C5isM1iUrXujpVVNJgF1rU=",
+   "created": "2026-11-09T20:28:32.325Z",
+   "mustChangePassword": true
   },
   "rishaan": {
    "name": "Rishaan",
