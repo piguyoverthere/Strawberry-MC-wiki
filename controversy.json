@@ -3204,7 +3204,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "convince",
+     "date": "2026-11-11T17:54:24.224Z"
+    }
+   }
   },
   {
    "id": "idea-doc-133",
