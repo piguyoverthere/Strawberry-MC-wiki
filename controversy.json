@@ -1080,8 +1080,8 @@
    "votes": {
     "eric": {
      "name": "Eric",
-     "vote": "disapprove",
-     "source": "document"
+     "vote": "convince",
+     "date": "2026-11-11T18:04:32.623Z"
     },
     "alex": {
      "name": "Alex",
