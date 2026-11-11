@@ -395,6 +395,12 @@
         </details>
     `;
     document.body.append(toolbar);
+    // The login page runs the site's sign-in, so nobody edits it from the browser
+    const lockedPages = ["login.html"];
+    const canEditPage = !lockedPages.includes(currentPage);
+    if (!canEditPage) {
+        toolbar.hidden = true;
+    }
 
     const moreMenu = toolbar.querySelector(".wiki-more-menu");
     moreMenu.addEventListener("click", (event) => {
@@ -2843,6 +2849,7 @@
     // Toolbar wiring ---------------------------------------------------------
 
     editButton.addEventListener("click", () => {
+        if (!canEditPage) return;
         setEditing(true);
         root.focus();
     });

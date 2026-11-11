@@ -1898,3 +1898,6 @@ html:not(.wiki-unlocked) body:not(.wiki-public):not(:has(#login-app)) > :not(.wi
     width:100%;
     margin-top:8px
 }
+.wiki-editor-toolbar[hidden]{
+    display:none !important
+}
