@@ -1593,6 +1593,20 @@ body:not(.wiki-editing) .wiki-pending{
 .admin-section{
     margin:0 0 24px
 }
+.admin-password-form{
+    display:grid;
+    gap:8px;
+    max-width:360px
+}
+.admin-password-form input{
+    padding:6px 8px;
+    border:1px solid #a2a9b1;
+    border-radius:2px;
+    font:inherit
+}
+.admin-password-form button{
+    justify-self:start
+}
 .admin-table-wrap{
     overflow-x:auto
 }

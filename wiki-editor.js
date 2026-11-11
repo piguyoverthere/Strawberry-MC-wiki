@@ -3939,6 +3939,23 @@
             const encrypted = await encryptToken(token, password);
             const existing = await getRepositoryFile(token, reviewTokenFile);
             await putRepositoryFile(token, reviewTokenFile, `${JSON.stringify(encrypted, null, 2)}\n`, `${readAccount()} sets the review password`, existing?.sha);
+        },
+        // Locks the shared GitHub token with a new wiki password (the one admins and editors log in with). The current
+        // password has to be right, so a browser left signed in can't be used to lock everyone else out.
+        async changeWikiPassword(current, password) {
+            const token = requireAdmin();
+            await checkAccount(token);
+            if (password.length < 12) {
+                throw new Error("Use at least 12 characters for the wiki password.");
+            }
+            const stored = await loadSharedToken();
+            if (!stored) {
+                throw new Error("No wiki password is set up yet. Use Commit to GitHub → Set up a wiki password first.");
+            }
+            const shared = await decryptToken(stored, current);
+            const encrypted = await encryptToken(shared, password);
+            const existing = await getRepositoryFile(token, sharedTokenFile);
+            await putRepositoryFile(token, sharedTokenFile, `${JSON.stringify(encrypted, null, 2)}\n`, `${readAccount()} changes the wiki password`, existing?.sha);
         }
     };
     document.dispatchEvent(new Event("wiki-store-ready"));

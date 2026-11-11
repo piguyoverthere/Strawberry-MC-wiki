@@ -117,6 +117,48 @@
             form);
     }
 
+    // The wiki password admins and editors log in with. Everyone needs the new one afterwards, so it asks twice.
+    function renderWikiPassword() {
+        const field = (label, autocomplete) => element("input", { type: "password", autocomplete, placeholder: label, "aria-label": label, required: true });
+        const current = field("Current wiki password", "current-password");
+        const next = field("New wiki password", "new-password");
+        const again = field("Type the new password again", "new-password");
+        const button = element("button", { type: "submit", className: "wiki-primary-button", text: "Change wiki password" });
+        const form = element("form", { className: "admin-password-form" }, current, next, again, button);
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (next.value !== again.value) {
+                status.textContent = "The two new passwords don't match.";
+                return;
+            }
+            if (next.value === current.value) {
+                status.textContent = "The new wiki password is the same as the current one.";
+                return;
+            }
+            if (next.value.length < 12) {
+                status.textContent = "Use at least 12 characters for the wiki password.";
+                return;
+            }
+            if (!window.confirm("Change the wiki password? Every admin and editor will need the new password the next time they log in.")) return;
+            if (!window.confirm("Are you sure? The old wiki password stops working in a minute or two. Make sure you can tell every admin and editor the new one.")) return;
+            button.disabled = true;
+            status.textContent = "Changing the wiki password…";
+            try {
+                await store.changeWikiPassword(current.value, next.value);
+                form.reset();
+                status.textContent = "The wiki password is changed. It works for logging in in a minute or two, once the site updates. Anyone already logged in stays logged in.";
+            } catch (error) {
+                status.textContent = `Could not change the wiki password: ${error.message}`;
+            } finally {
+                button.disabled = false;
+            }
+        });
+        return element("section", { className: "admin-section" },
+            element("h2", { text: "Wiki password" }),
+            element("p", {}, "Admins and editors log in with this password. Use at least 12 characters, ideally four or more random words: the locked file is public, so a short password can be guessed."),
+            form);
+    }
+
     async function approveAll(event) {
         if (!window.confirm("Approve everything waiting for review, including page edits and drafts?")) return;
         event.target.disabled = true;
@@ -164,9 +206,10 @@
 
     let queue = element("section", { className: "admin-section" }, element("p", { text: "Loading the review queue…" }));
     let reviewSection = renderReviewPassword(false);
+    const wikiPasswordSection = renderWikiPassword();
 
     function render() {
-        app.replaceChildren(...(store.isAdmin() ? [status, queue, renderAccounts(), reviewSection] : [status, queue]));
+        app.replaceChildren(...(store.isAdmin() ? [status, queue, renderAccounts(), wikiPasswordSection, reviewSection] : [status, queue]));
     }
 
     Promise.all(store.isAdmin() ? [store.readAccounts(), store.hasReviewPassword(), renderQueue()] : [{}, false, renderQueue()]).then(([data, reviewSet, queueSection]) => {
