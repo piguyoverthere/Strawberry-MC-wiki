@@ -101,6 +101,7 @@
         if ((match = line.match(/^(.+?) votes (approve|disapprove|convince) on idea: (.+)$/)))
             return { type: "vote", who: match[1], vote: match[2], text: ` ${{ approve: "approved", disapprove: "disapproved", convince: "said this needs convincing:" }[match[2]]} `, target: match[3], href: ideaHref(match[3]) };
         if ((match = line.match(/^(.+?) adds idea: (.+)$/))) return { type: "idea", who: match[1], text: " added an idea: ", target: match[2], href: ideaHref(match[2]) };
+        if ((match = line.match(/^(.+?) pings (.+) on idea: (.+)$/))) return { type: "comment", who: match[1], text: ` pinged ${match[2]} in a comment on `, target: match[3], href: ideaHref(match[3]), assigned: match[2].split(", ") };
         if ((match = line.match(/^(.+?) comments on idea: (.+)$/))) return { type: "comment", who: match[1], text: " commented on ", target: match[2], href: ideaHref(match[2]) };
         if ((match = line.match(/^(.+?) replies in: (.+)$/))) return { type: "thread", who: match[1], text: " replied in ", target: match[2], href: discussionHref(match[2]) };
         if ((match = line.match(/^(.+?) starts (debate|thread): (.+)$/)))

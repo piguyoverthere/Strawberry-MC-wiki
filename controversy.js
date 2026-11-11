@@ -402,15 +402,78 @@
             .then(() => { status.textContent = `"${idea.title}" is back on the Ideas tab.`; }));
     }
 
+    // "@name" in a comment pings that person: it shows highlighted as "For you" in their notifications.
+    let accountNames = [];
+    fetch("accounts.json", { cache: "no-cache" })
+        .then((response) => response.ok ? response.json() : {})
+        .then((accounts) => { accountNames = Object.values(accounts.accounts || {}).map((account) => account.name); })
+        .catch(() => {
+            // Comments still work without the list of people; @names just aren't recognised.
+        });
+
+    function mentionsIn(text) {
+        const found = [];
+        for (const name of [...accountNames].sort((a, b) => b.length - a.length)) {
+            const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            if (new RegExp(`(^|[^\\p{L}\\p{N}_])@${escaped}(?![\\p{L}\\p{N}_])`, "iu").test(text)) found.push(name);
+        }
+        return found;
+    }
+
+    // Marks each @name inside an already drawn comment
+    function highlightMentions(node, mentions) {
+        if (!mentions?.length) return node;
+        const pattern = new RegExp(`(@(?:${[...mentions].sort((a, b) => b.length - a.length).map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")}))`, "giu");
+        const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+        const texts = [];
+        while (walker.nextNode()) texts.push(walker.currentNode);
+        for (const text of texts) {
+            const parts = text.data.split(pattern);
+            if (parts.length < 2) continue;
+            text.replaceWith(...parts.map((part, index) => index % 2 ? element("span", { className: "wiki-mention", text: part }) : part));
+        }
+        return node;
+    }
+
+    // A list of matching people under the comment box while typing "@na"
+    function attachMentions(input) {
+        const list = element("div", { className: "wiki-mention-list", hidden: true });
+        const query = () => input.value.slice(0, input.selectionStart).match(/(?:^|\s)@([^@\n]{0,24})$/);
+        function choose(name) {
+            const before = input.value.slice(0, input.selectionStart).replace(/@([^@\n]{0,24})$/, `@${name} `);
+            input.value = before + input.value.slice(input.selectionStart);
+            input.selectionStart = input.selectionEnd = before.length;
+            input.focus();
+            list.hidden = true;
+        }
+        function matches() {
+            const typed = query();
+            return typed ? accountNames.filter((name) => name.toLowerCase().startsWith(typed[1].toLowerCase())).slice(0, 6) : [];
+        }
+        input.addEventListener("input", () => {
+            const names = matches();
+            list.hidden = !names.length;
+            list.replaceChildren(...names.map((name) => element("button", { type: "button", text: `@${name}`, onclick: () => choose(name) })));
+        });
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "Tab" && !list.hidden && matches().length) {
+                event.preventDefault();
+                choose(matches()[0]);
+            }
+        });
+        return list;
+    }
+
     function comment(idea, text) {
+        const mentions = mentionsIn(text);
         requireSignIn(`Comment on "${idea.title}".`, (name) =>
             save((fresh, role) => {
                 const target = (fresh.ideas || []).find((item) => item.id === idea.id);
                 if (!target) throw new Error("This idea no longer exists. Reload the page.");
                 target.replies = target.replies || [];
-                target.replies.push({ author: name, text, date: new Date().toISOString(), ...pendingMark(role) });
-            }, `${name} comments on idea: ${idea.title}`)
-                .then(() => { status.textContent = "Your comment was posted."; }));
+                target.replies.push({ author: name, text, date: new Date().toISOString(), ...(mentions.length ? { mentions } : {}), ...pendingMark(role) });
+            }, mentions.length ? `${name} pings ${mentions.join(", ")} on idea: ${idea.title}` : `${name} comments on idea: ${idea.title}`)
+                .then(() => { status.textContent = mentions.length ? `Your comment was posted and ${mentions.join(", ")} will see it in their notifications.` : "Your comment was posted."; }));
     }
 
     function addIdea() {
@@ -505,7 +568,7 @@
                 ...replies.map((item) => element("li", { className: item.pending ? "wiki-pending-item" : null },
                     element("div", { className: "idea-meta" },
                         element("span", { className: "idea-author", text: item.author }), " · ", timestamp(item.date)),
-                    element("div", { className: "idea-description" }, renderText(item.text)),
+                    highlightMentions(element("div", { className: "idea-description" }, renderText(item.text)), item.mentions),
                     item.pending ? reviewBar(`comment by ${item.author}`,
                         () => moderate(true, `comment by ${item.author} on idea: ${idea.title}`, (fresh) => {
                             const target = fresh.ideas.find((other) => other.id === idea.id)?.replies?.find(sameEntry(item));
@@ -519,14 +582,14 @@
                             list.splice(index, 1);
                         })) : null))));
         }
-        const commentInput = element("input", { type: "text", placeholder: "Add a comment…", maxlength: 2000, "aria-label": `Comment on ${idea.title}` });
+        const commentInput = element("input", { type: "text", placeholder: "Add a comment… type @ to ping someone", maxlength: 2000, "aria-label": `Comment on ${idea.title}` });
         card.append(element("form", {
             className: "idea-comment-form",
             onsubmit: (event) => {
                 event.preventDefault();
                 if (commentInput.value.trim()) comment(idea, commentInput.value.trim());
             }
-        }, commentInput, element("button", { type: "submit", text: "Comment" })));
+        }, commentInput, element("button", { type: "submit", text: "Comment" })), attachMentions(commentInput));
         card.append(element("div", { className: "idea-votes" },
             element("button", {
                 type: "button", className: "idea-vote idea-vote-approve", "aria-pressed": String(mine === "approve"),
