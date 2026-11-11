@@ -65,6 +65,11 @@
 			}
 		}
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// when a block is placed: turn fire next to other fire into tall fire
+when an entity places a block:
+    if the block is fire:
+        count how many of its 6 neighbours (east, west, up, down, south, north) are also fire
+        if at least 2 are fire, with a 50% chance:
+            replace it with tall fire</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

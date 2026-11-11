@@ -159,6 +159,24 @@
 			<span style="color: #9CDCFE">tx</span>.<span style="color: #DCDCAA">commit</span>();
 		}
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// when a living entity is about to take damage: if it is using an electricution item, shock it through its metal armour
+when any living entity is about to take damage:
+    if the item the entity is currently using has the strawberrymc:electricution enchantment:
+        spawn 2 angry villager, 2 enchanted hit and 2 gust particles around the entity
+        if its leggings are chainmail, golden, iron or copper leggings:
+            deal 2 strawberrymc:shocking damage to it
+        if its boots slot holds chainmail boots, or its leggings slot holds golden, iron or copper boots:
+            deal 1 strawberrymc:shocking damage to it
+        if its boots slot holds a chainmail helmet, or its leggings slot holds a golden, iron or copper helmet:
+            deal 1 strawberrymc:shocking damage to it
+        if its boots slot holds a chainmail chestplate, or its leggings slot holds a golden, iron or copper chestplate:
+            deal 3 strawberrymc:shocking damage to it
+        (note: as written, most of these checks look at the wrong slot, so only the leggings and chainmail boots checks can really match)
+        roll a 1 in 8 chance (does nothing)
+        1 in 8 chance:
+            pick a random armour slot from 100 to 103
+            drop a copy of the item in that slot at the entity's position (pickup delay 5 ticks)
+            empty that slot
+            play the item.shield.break sound</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

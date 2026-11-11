@@ -21,7 +21,8 @@
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">private static void addPack(AddPackFindersEvent event) {
 	event.addPackFinders(Identifier.fromNamespaceAndPath("strawberrymc", "monument_puzzles"), PackType.SERVER_DATA,
 			Component.literal("Strawberry MC monument puzzles"), PackSource.BUILT_IN, true, Pack.Position.TOP);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">when packs are being found:
+    add the built-in server data pack strawberrymc:monument_puzzles, titled "Strawberry MC monument puzzles", always enabled and placed at the top</code></pre></div>
 <p><code class="consolas">pack.mcmeta</code> sets <code class="consolas">min_format</code> and <code class="consolas">max_format</code> to 101.1, with the description "Strawberry MC Ocean Monument puzzle jigsaws".</p>
 <table>
 <thead><tr><th>Path under <code class="consolas">monument_puzzles/data/</code></th><th>Contents</th></tr></thead>
@@ -212,7 +213,16 @@ for pos in sorted(self.cells):
     block = {'pos': [Int(c) for c in pos], 'state': Int(index[key])}
     if nbt:
         block['nbt'] = nbt
-    blocks.append(block)</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+    blocks.append(block)</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">start with an empty palette, index and block list
+for each cell position, in sorted order:
+    get its block name, properties and nbt
+    key = the block name plus its sorted properties
+    if this key has not been seen before:
+        give it the next palette number
+        add a palette entry with the Name (and Properties, if any)
+    make a block entry with its pos and the palette number as its state
+    if the cell has nbt, attach it to the block entry
+    add the block entry to the list</code></pre></div>
 <table>
 <thead><tr><th>Function</th><th>Builds</th></tr></thead>
 <tbody>

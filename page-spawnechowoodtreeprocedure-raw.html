@@ -101,6 +101,27 @@
             }
         }
     }
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// grow an echowood tree: a 2x2 trunk, a leafy canopy and several branches
+if the block below is not end stone:
+    stop without placing anything
+height = 10 to 14
+use echowood log and echowood leaves (leaves set to persistent so they don't decay)
+for each level from the base up to height:
+    place logs in a 2x2 square
+canopy top = top of the trunk
+canopy bottom = 4 or 5 blocks below the canopy top
+for each layer from canopy bottom to 1 above canopy top:
+    radius is 2 on the bottom layer and the top two layers, otherwise 4
+    for each spot in the square of that radius around the 2x2 trunk:
+        if it is a corner, 60% chance to skip it
+        if the spot is empty, place leaves
+pick 4 to 6 branches
+for each branch:
+    start at a random trunk column, 0 to 2 blocks above the canopy bottom
+    pick a random direction (-1, 0 or 1 on x and z); if both are 0, skip this branch
+    length = 3 to 5
+    for each step along the branch:
+        place a log, rising 1 block every 2 steps
+        at the last step, fill empty spots around the tip with leaves in a small diamond (within 2 blocks)</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

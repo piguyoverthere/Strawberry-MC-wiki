@@ -105,7 +105,13 @@ if (density &gt;= 0)
 	return false;
 // Pillars flare out toward the floor and ceiling like they grew into the rock
 double edge = 2 * t - 1;
-return pillars[lx + 1][lz + 1] + 0.06 * noises.wobble.getValue(minX + lx, y, minZ + lz) &lt;= 0.5 - 0.22 * edge * edge;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+return pillars[lx + 1][lz + 1] + 0.06 * noises.wobble.getValue(minX + lx, y, minZ + lz) &lt;= 0.5 - 0.22 * edge * edge;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">work out how far up the cave this height is (0 at the floor, 1 at the ceiling)
+work out the shell value, which grows near the floor and ceiling
+density = -0.35 - 0.9 x cave noise + 1.3 x shell squared + 2.5 x (1 - w)
+if density is 0 or more:
+    return false (this spot stays solid)
+// pillars flare out toward the floor and ceiling
+return true if the pillar value plus a small wobble noise is at most 0.5 - 0.22 x (distance from the middle height) squared</code></pre></div>
 <table>
 <thead>
 <tr><th>Term</th><th>Meaning</th></tr>
@@ -130,7 +136,12 @@ if (above.isAir())
 	crust = crystalline;
 else if (above.is(crystalline.getBlock()) || shape.air(lx, y - 1, lz) || shape.air(lx - 1, y, lz) || shape.air(lx + 1, y, lz)
 		|| shape.air(lx, y, lz - 1) || shape.air(lx, y, lz + 1))
-	crust = calcite;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	crust = calcite;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">look at the block above
+if it is air:
+    the crust is crystalline
+else if it is the crystalline block, or there is open air below, or to any of the 4 sides:
+    the crust is calcite
+otherwise there is no crust</code></pre></div>
 <p>The pass runs from one block above the ceiling down to y=-52. A replaceable block with air above becomes Crystalline Calcite. A block under Crystalline Calcite, or one with air beneath or beside it, becomes calcite. Running top-down means a floor block is already crystalline when the block under it is reached. <code class="consolas">Shape.air</code> reads the chunk for positions inside it and calls <code class="consolas">open</code> for positions in the neighboring chunk.</p>
 
 <h2 id="features">Placed features</h2>
@@ -167,7 +178,11 @@ else if (above.is(crystalline.getBlock()) || shape.air(lx, y - 1, lz) || shape.a
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">r = (radius * (1 + (0.5 * Math.pow(Math.min(Math.abs((((2 * i) / h) - 1)), 1), 4))));
 reach = (Math.round(r) + 1);
 cx = (x + (lean_x * i));
-cz = (z + (lean_z * i));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+cz = (z + (lean_z * i));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">r = radius * (1 + 0.5 * (distance of layer i from the middle of height h, from 0 to 1) ^ 4)
+    (so the column is wider near the top and bottom)
+reach = r rounded + 1
+center x = x + lean x * i
+center z = z + lean z * i</code></pre></div>
 <p>The flare factor is 1 at mid height and 1.5 at the ends. A position belongs to the column when its offset, dotted with each of three unit normals 120 degrees apart, is at most <code class="consolas">r / 2</code>.</p>
 <h3 id="calcite-mountain">calcite_mountain</h3>
 <p><a href="page-calcitemountaingenerationprocedure-raw.html">CalciteMountainGenerationProcedure [raw]</a> builds a mound. The radius is an integer from 7 to 13 and the height is from 0.8 to 1.6 times the radius.</p>
@@ -177,7 +192,12 @@ if (top &gt;= 0) {
 	while ((k &gt; -12) &amp;&amp; (world.isEmptyBlock(BlockPos.containing((x + dx), (y + k), (z + dz))))) {
 		world.setBlock(BlockPos.containing((x + dx), (y + k), (z + dz)), Blocks.CALCITE.defaultBlockState(), 3);
 		k = (k - 1);
-	}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">work out the top of the column: height times (1 - distance) to the power 1.4, plus a random -0.6 to 1.2, rounded
+if the top is not below the start:
+    starting at the top, going down:
+        while above 12 below the start and the block is empty:
+            place calcite
+            move down 1</code></pre></div>
 <p>Each column fills with calcite down through empty space, to at most 12 blocks below the origin, which skirts the mound over uneven floors. If the block above the top is empty it receives a Crystalline Calcite cap.</p>
 <h3 id="hollows-geode">hollows_geode</h3>
 <table>
@@ -245,7 +265,8 @@ fog.renderDistanceStart = Math.min(fog.renderDistanceStart, FOG_START);
 fog.renderDistanceEnd = Math.min(fog.renderDistanceEnd, FOG_END);
 // No sky or clouds show through gaps in the cavern; they're drawn in the fog colour
 fog.skyEnd = 0;
-fog.cloudEnd = 0;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+fog.cloudEnd = 0;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">pull the environmental and render-distance fog start and end in to at most FOG_START and FOG_END
+set the sky and cloud end distance to 0, so no sky or clouds show through gaps in the cavern</code></pre></div>
 <p><code class="consolas">FOG_START</code> is 20 and <code class="consolas">FOG_END</code> is 72.</p>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

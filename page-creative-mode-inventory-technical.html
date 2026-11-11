@@ -22,7 +22,11 @@
 		() -&gt; CreativeModeTab.builder().title(Component.translatable("item_group.strawberrymc.debug")).icon(() -&gt; new ItemStack(Blocks.COMMAND_BLOCK)).displayItems((parameters, tabData) -&gt; {
 			tabData.accept(StrawberrymcModBlocks.OASIS_SPAWNER.get().asItem());
 			// ... remaining entries
-		}).withSearchBar().build());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+		}).withSearchBar().build());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">register a creative tab "debug":
+    title: item_group.strawberrymc.debug
+    icon: command block
+    contents: OASIS_SPAWNER, ... (remaining entries)
+    with a search bar</code></pre></div>
 <table>
 <thead>
 <tr><th>Order</th><th>Item ID</th></tr>
@@ -72,7 +76,10 @@
 public void onPlace(BlockState blockstate, Level world, BlockPos pos, BlockState oldState, boolean moving) {
 	super.onPlace(blockstate, world, pos, oldState, moving);
 	world.scheduleTick(pos, this, 10);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">create the tall fire block:
+    gravel sounds, hardness 1, blast resistance 10, no collision, not a redstone conductor, replaceable
+when it is placed:
+    schedule a block tick in 10 ticks</code></pre></div>
 <table>
 <thead>
 <tr><th>Property</th><th>Value</th></tr>
@@ -95,7 +102,8 @@ public void onPlace(BlockState blockstate, Level world, BlockPos pos, BlockState
 <p><a href="page-tallfirenaturaligniterprocedure-raw.html">TallFireNaturalIgniterProcedure [raw]</a> subscribes to <code class="consolas">BlockEvent.EntityPlaceEvent</code>. When the placed position is fire, it counts how many of the six neighbors are also fire:</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">if (fire_tracking &gt;= 2 &amp;&amp; Math.random() &lt; 0.5) {
 	world.setBlock(BlockPos.containing(x, y, z), StrawberrymcModBlocks.TALL_FIRE.get().defaultBlockState(), 3);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if at least 2 neighbouring blocks are fire, with a 50% chance:
+    replace this block with tall fire</code></pre></div>
 <p>At least 2 adjacent fire blocks gives a 50% chance of conversion.</p>
 <h3 id="tall-fire-element">Element procedures</h3>
 <p><code class="consolas">TallFire.mod.json</code> names four trigger procedures. <code class="consolas">TallFireBlock</code> overrides only <code class="consolas">onPlace</code>, <code class="consolas">propagatesSkylightDown</code>, <code class="consolas">getLightDampening</code>, <code class="consolas">getVisualShape</code> and <code class="consolas">getCloneItemStack</code>, and no class calls these four procedures, so their code runs only if invoked directly.</p>

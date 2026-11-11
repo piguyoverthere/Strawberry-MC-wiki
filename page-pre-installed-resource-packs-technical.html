@@ -20,7 +20,8 @@
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">private static void addPack(AddPackFindersEvent event) {
 	event.addPackFinders(Identifier.fromNamespaceAndPath("strawberrymc", "comscript"), PackType.CLIENT_RESOURCES, Component.literal("Strawberry MC ComScript"),
 		PackSource.BUILT_IN, true, Pack.Position.TOP);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">add the built-in client resource pack strawberrymc:comscript, named "Strawberry MC ComScript"
+turn it on by default and put it at the top of the pack list</code></pre></div>
 <p>Every registration passes the same trailing arguments:</p>
 <ul>
 <li><code class="consolas">PackSource.BUILT_IN</code> marks the pack as supplied by the game rather than by the player.</li>

@@ -87,6 +87,20 @@
 			}
 		}
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// when a player right-clicks a clover mat with bone meal: maybe spread it to a neighbouring block
+when a player right-clicks a block with their main hand:
+    run this procedure at the clicked block
+
+if the clicked block is CLOVER_MAT and the player's held item is bone meal:
+    1 in 3 chance (pick a random number from 1 to 3, succeed on 2):
+        pick a random direction from 1 to 4
+        if direction is 1 (north), the block to the north is air and the block below it is in the minecraft:dirt tag:
+            place a CLOVER_MAT there
+            spawn 5 composter particles at the clicked block
+        if direction is 3 (south): same check and placement to the south
+        if direction is 2 (east): same check and placement to the east
+        if direction is 4 (west): same check and placement to the west
+    if the player is not in creative mode:
+        use up 1 bone meal from their held stack</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

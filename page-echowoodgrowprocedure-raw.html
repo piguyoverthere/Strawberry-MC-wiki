@@ -65,6 +65,13 @@
     <span style="color: #569CD6">private static</span> <span style="color: #4EC9B0">boolean</span> <span style="color: #DCDCAA">checkSapling</span>(<span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">checkX</span>, <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">checkY</span>, <span style="color: #4EC9B0">int</span> <span style="color: #9CDCFE">checkZ</span>, <span style="color: #4EC9B0">Block</span> <span style="color: #9CDCFE">saplingBlock</span>) {
         <span style="color: #C586C0">return</span> <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">getBlockState</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(checkX, checkY, checkZ)).<span style="color: #DCDCAA">getBlock</span>() <span style="color: #D4D4D4">==</span> saplingBlock;
     }
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// when an echowood sapling ticks: grow a tree if it is part of a 2x2 square
+5% chance to continue, otherwise stop
+check the 4 possible 2x2 squares that include this sapling:
+    if all 4 blocks of one of them are echowood saplings:
+        remember that square's north-west corner
+if a 2x2 square of saplings was found:
+    replace the 4 saplings with air
+    run SpawnEchowoodTreeProcedure at the square's corner</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

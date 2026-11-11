@@ -54,7 +54,9 @@
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">int dy = Math.max(lowestFloor, LOWEST_BASE_Y) - box.minY();
 // Only ever move down; vanilla height is fine wherever the floor is higher
 if (dy &lt; 0)
-	builder.offsetPiecesVertically(dy);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	builder.offsetPiecesVertically(dy);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">shift = the higher of the lowest floor and LOWEST_BASE_Y, minus the monument's current bottom
+if the shift is negative:
+    move all the monument pieces down by that much (it only ever moves down)</code></pre></div>
 <p><code class="consolas">LOWEST_BASE_Y</code> is -58. Bedrock reaches y=-60, so this leaves some deepslate under the monument. Monument pieces are regenerated at y=39 whenever a chunk is loaded from disk, so a second injection at <code class="consolas">RETURN</code> of <code class="consolas">regeneratePiecesAfterLoad</code> moves every rebuilt piece by the difference between the saved and rebuilt <code class="consolas">minY</code>.</p>
 
 <h2 id="basin">Basin</h2>
@@ -76,7 +78,12 @@ double distance = Math.sqrt(dx * dx + dz * dz);
 if (distance &gt; BASIN_RADIUS)
 	continue;
 
-int floorY = monument.minY() + (int) Math.max(0, distance - FLAT_RING);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+int floorY = monument.minY() + (int) Math.max(0, distance - FLAT_RING);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">work out the horizontal distance from this column to the monument's footprint
+if the column is inside the footprint:
+    skip it (the monument already fills it with water)
+if the distance is more than BASIN_RADIUS:
+    skip it
+floor height = the monument's bottom, plus how far the column is beyond FLAT_RING (never below the bottom)</code></pre></div>
 <p>The floor therefore rises one block per block of distance after the flat ring. Per column, in order:</p>
 <ol>
 <li>Every non-water block from <code class="consolas">floorY</code> up to sea level becomes water, and the column is marked as dug.</li>
@@ -107,7 +114,9 @@ int floorY = monument.minY() + (int) Math.max(0, distance - FLAT_RING);</code></
 ((MonumentBuildingAccessor) building).strawberrymc$getChildPieces().clear();
 BoundingBox box = building.getBoundingBox();
 building.postProcess(recorder(recorded, box), null, null, RandomSource.create(0), new BoundingBox(-64, -64, -64, 128, 128, 128),
-	new ChunkPos(0, 0), BlockPos.ZERO);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	new ChunkPos(0, 0), BlockPos.ZERO);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">create a vanilla ocean monument building with a fixed seed and the chosen orientation
+remove all its rooms so only the hollow outer shell is left
+build it into the recorder, covering an area from -64 to 128 on each axis</code></pre></div>
 <p>The fake world is a <code class="consolas">java.lang.reflect.Proxy</code> of <code class="consolas">WorldGenLevel</code>. It handles these methods:</p>
 <ul>
 <li><code class="consolas">setBlock</code> writes the state into a flat array, indexed by vanilla-scale local position.</li>
@@ -134,7 +143,17 @@ if (pillar != null) {
 for (int y = box.minY(); y &lt; top; y++) {
 	BlockState state = recording.get(lx, (y - box.minY()) / SCALE, lz);
 	if (state == null)
-		state = y &lt; box.minY() + SCALE ? FLOOR : y &lt; seaLevel ? WATER : Blocks.AIR.defaultBlockState();</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+		state = y &lt; box.minY() + SCALE ? FLOOR : y &lt; seaLevel ? WATER : Blocks.AIR.defaultBlockState();</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">work out the local column (lx, lz) in the recording by dividing by SCALE
+// vanilla's support pillars reach down to the sea floor
+if the recording has a pillar block just below this column:
+    starting one block below the monument's bottom:
+    while above the world's bottom + 1 and the block there is replaceable:
+        place the pillar block
+        move one block down
+for each height y from the monument's bottom up to the top:
+    look up the recorded block for this position (scaled by SCALE)
+    if there is no recorded block:
+        use FLOOR for the lowest SCALE layers, water below sea level, otherwise air</code></pre></div>
 <p><code class="consolas">top</code> is <code class="consolas">max(seaLevel, minY + 46)</code>. <code class="consolas">FLOOR</code> is <code class="consolas">minecraft:prismarine_bricks</code>, so the hollow interior has a floor two blocks thick and water above it. <code class="consolas">isReplaceable</code> accepts air, liquids, seagrass, tall seagrass, kelp and kelp plant. After the shell, <code class="consolas">buildGazebo</code>, <code class="consolas">buildArena</code> and <code class="consolas">buildSensors</code> run in that order.</p>
 <h3 id="shell-layout">The Layout record</h3>
 <p><code class="consolas">MonumentShell.Layout(box, orientation, floorY)</code> holds every position used by the server and sent to the client. <code class="consolas">floorY</code>, the top of the roof and the height of the gazebo floor, equals <code class="consolas">box.minY() + 2 * (roofTop + 1)</code>. Local coordinates put the entrance at z=0 and are converted by <code class="consolas">world(x, y, z)</code>.</p>
@@ -181,7 +200,18 @@ for (int t = 0; t &lt;= JET_HIT - JET_START + 20; t += 2) {
 	io.github.strawberrymc.StrawberrymcMod.queueServerWork(JET_START + t, () -&gt; jet(level, layout, tick));
 }
 io.github.strawberrymc.StrawberrymcMod.queueServerWork(JET_HIT, () -&gt; shatter(level, layout));
-io.github.strawberrymc.StrawberrymcMod.queueServerWork(VENT_CUTSCENE_TICKS, () -&gt; ERUPTING.remove(vent));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+io.github.strawberrymc.StrawberrymcMod.queueServerWork(VENT_CUTSCENE_TICKS, () -&gt; ERUPTING.remove(vent));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">mark the vent as erupting
+for each player in the level:
+    if they are within CUTSCENE_RANGE of the vent:
+        tell their game to play the vent cutscene (vent and lump centre)
+        protect them with MonumentIntro.protect for VENT_CUTSCENE_TICKS
+play the upward bubble column sound at the vent (volume 2, pitch 0.6)
+every 2 ticks from JET_START until 20 ticks after JET_HIT:
+    run jet for that moment
+at JET_HIT ticks:
+    run shatter
+at VENT_CUTSCENE_TICKS:
+    stop marking the vent as erupting</code></pre></div>
 <p><code class="consolas">CUTSCENE_RANGE</code> is 48 blocks. In <code class="consolas">jet</code>, the jet's height is <code class="consolas">min(1, tick / 40) * (domeTip.y - vent.y)</code>, 5 blocks at full height. Every half block up the jet it sends <code class="consolas">minecraft:bubble_column_up</code> (6 particles, spread 0.6/0.2/0.6, speed 0.1) and <code class="consolas">minecraft:cloud</code> (2 particles, spread 0.4/0.2/0.4, speed 0.02). The top gets 10 <code class="consolas">minecraft:bubble_pop</code> (spread 0.7/0.3/0.7, speed 0.05).</p>
 <table>
 <thead><tr><th>Tick</th><th>Seconds</th><th>Server</th><th>Camera (<code class="consolas">VentCutscene</code>)</th></tr></thead>
@@ -258,7 +288,14 @@ double free = freeDistance(framing.anchor(), framing.desired());
 double frameTicks = Math.max(0, time - lastFrameTime);
 lastFrameTime = time;
 clipDistance = free &lt; clipDistance ? free : clipDistance + (free - clipDistance) * Math.min(1, CLIP_RECOVERY * frameTicks);
-Shot view = lookingAt(clipFrom(framing.anchor(), framing.desired(), clipDistance), framing.target());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+Shot view = lookingAt(clipFrom(framing.anchor(), framing.desired(), clipDistance), framing.target());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// the line of sight shrinks instantly when blocked and grows back smoothly
+measure how far the camera can see from the anchor towards its desired position
+work out how many ticks passed since the last frame
+if the free distance is shorter than the current clip distance:
+    snap the clip distance to it
+else:
+    move the clip distance towards it by CLIP_RECOVERY per tick (at most all the way)
+place the camera at the clip distance along that line and look at the target</code></pre></div>
 <p><code class="consolas">freeDistance</code> uses <code class="consolas">ClipContext.Block.VISUAL</code> and <code class="consolas">Fluid.NONE</code>, with <code class="consolas">CLIP_MARGIN</code> 1.0 and <code class="consolas">MIN_DISTANCE</code> 3.0. <code class="consolas">CLIP_RECOVERY</code> is 0.12 of the remaining distance per tick. <code class="consolas">clipDistance</code> resets at each new shot.</p>
 <p><code class="consolas">CutsceneCameraMixin</code> injects at <code class="consolas">TAIL</code> of <code class="consolas">Camera.alignWithEntity</code> and applies the shot, with the arena cutscene taking priority, then the vent cutscene, then the entrance cutscene. <code class="consolas">CutsceneNightVisionMixin</code> overrides <code class="consolas">GameRenderer.getNightVisionScale</code> with the cutscene's fade strength, avoiding vanilla's flicker as the effect runs out.</p>
 <p>The chime <code class="consolas">strawberrymc:monument_chime</code> (master category, streamed) lives in the built-in client resource pack <code class="consolas">monument_cutscene</code>, registered always-on at the top of the pack list by <code class="consolas">MonumentIntro.addPack</code> and titled "Strawberry MC monument cutscene". Keeping it there stops MCreator's generated <code class="consolas">sounds.json</code> from overwriting it. The same pack carries the <code class="consolas">sensor_glyph</code> and <code class="consolas">rune_funnel</code> particle definitions.</p>
@@ -288,7 +325,19 @@ if (layout == null)
 if (state.stage() == Stage.NONE)
 	setStage(player, Stage.ARENA, layout);
 else if (layout.onArena(player.position()) &amp;&amp; READING.add(player.getUUID()))
-	reachArena(player, layout);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	reachArena(player, layout);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">get the player's quest state
+if a quest stage is active and the player is more than ABORT_DISTANCE from the objective:
+    reset the stage to NONE (dropping the quest and its ping)
+    stop
+if the stage is KEY:
+    stop
+find the monument layout the player is in (PrismaticSensors.monumentAt)
+if the player is not in a monument:
+    stop
+if the stage is NONE:
+    set the stage to ARENA for this monument
+else if the player is on the arena and has not been marked as READING yet:
+    mark them and call reachArena</code></pre></div>
 <p><code class="consolas">ABORT_DISTANCE</code> is 400 blocks. <code class="consolas">Layout.onArena</code> is true within radius 14 of the vault's center and from the vault's y to 6 above it.</p>
 <p><code class="consolas">reachArena</code> sends the notice "You cannot reach the Monument Key right now." followed by "The vault needs a key." on a second line. While the player's UUID is in <code class="consolas">READING</code>, <code class="consolas">sync</code> sends no objective and no objective ping. After <code class="consolas">NOTICE_TICKS</code> (110 ticks, 5.5 seconds), if the player is still at <code class="consolas">ARENA</code>, the stage becomes <code class="consolas">KEY</code>.</p>
 <p>Everything reaches the client in one payload. <code class="consolas">MonumentQuest.sync</code> rebuilds the ping list and sends it on login, on every stage change and after every <code class="consolas">/ping</code> edit.</p>
@@ -317,7 +366,12 @@ else if (layout.onArena(player.position()) &amp;&amp; READING.add(player.getUUID
 double right = -(offset.x * left.x() + offset.y * left.y() + offset.z * left.z());
 double upward = offset.x * up.x() + offset.y * up.y() + offset.z * up.z();
 int width = graphics.guiWidth(), height = graphics.guiHeight();
-double focal = (height / 2.0) / Math.tan(Math.toRadians(camera.getFov()) / 2);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+double focal = (height / 2.0) / Math.tan(Math.toRadians(camera.getFov()) / 2);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">project the offset onto the camera's directions:
+    depth = how far it is in front of the camera
+    right = how far it is to the right
+    upward = how far it is above
+get the screen width and height
+work out the focal length from half the screen height and the camera's field of view</code></pre></div>
 <ul>
 <li>Screen position is <code class="consolas">width / 2 + right / depth * focal</code> and <code class="consolas">height / 2 - upward / depth * focal</code>.</li>
 <li>With depth 0.05 or less, the ping is behind the camera and pushed towards the matching edge.</li>

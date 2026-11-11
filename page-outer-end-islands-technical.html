@@ -60,7 +60,9 @@
 <p>The projectile is discarded once it is in the ground. <code class="consolas">onHitEntity</code> passes the hit entity and the projectile's owner to <a href="page-recoverypearlfetchprocedure-raw.html">RecoveryPearlFetchProcedure [raw]</a>, which teleports the hit entity to the owner's position.</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">_ent.teleportTo(_tx, _ty, _tz);
 if (_ent instanceof ServerPlayer _serverPlayer)
-	_serverPlayer.connection.teleport(_tx, _ty, _tz, _ent.getYRot(), _ent.getXRot());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	_serverPlayer.connection.teleport(_tx, _ty, _tz, _ent.getYRot(), _ent.getXRot());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">teleport the entity to (_tx, _ty, _tz)
+if it is a player:
+    also tell their client about the teleport, keeping their facing direction</code></pre></div>
 <p>The entity's rotation is kept, and a hit player also receives the matching connection teleport.</p>
 
 <h2 id="invulnerability">Invulnerability effect</h2>
@@ -74,7 +76,10 @@ long lastTime = COOLDOWN_MAP.getOrDefault(entity, 0L);
 
 if (currentTime - lastTime &gt;= 10) {
     COOLDOWN_MAP.put(entity, currentTime);
-    entity.playSound(SoundEvents.SHIELD_BLOCK.value(), 1.0F, 1.0F);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+    entity.playSound(SoundEvents.SHIELD_BLOCK.value(), 1.0F, 1.0F);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">block the effect from being applied
+if at least 10 ticks have passed since this entity last blocked an effect:
+    remember the current time for this entity
+    play the shield block sound</code></pre></div>
 <p>On the server, the handler then sends 20 <code class="consolas">strawberrymc:invulnerability_particle</code> at mid-height with a spread of 0.5 on each axis and speed 0.05. The particle element has a <code class="consolas">maxAge</code> of 35 and gravity -1.7.</p>
 <h3 id="invulnerability-honey">Honey cure</h3>
 <p><code class="consolas">InvulnerabilityMobEffect.modifyItemComponents</code> handles <code class="consolas">ModifyDefaultComponentsEvent</code>. It copies <code class="consolas">Consumables.HONEY_BOTTLE</code>, adds a <code class="consolas">RemoveStatusEffectsConsumeEffect</code> for Invulnerability, and sets the result as the honey bottle's <code class="consolas">DataComponents.CONSUMABLE</code>.</p>
@@ -97,6 +102,8 @@ if (currentTime - lastTime &gt;= 10) {
     int stepY = by + (l / 2);
     BlockPos branchPos = BlockPos.containing(bx + (dx * l), stepY, bz + (dz * l));
     world.setBlock(branchPos, log, 3);
-</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">for each step l from 1 to the branch length:
+    rise 1 block for every 2 steps outward
+    place a log at the branch start + l steps in direction (dx, dz) at that height</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

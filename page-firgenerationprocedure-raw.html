@@ -86,6 +86,22 @@
         <span style="color: #9CDCFE">io</span>.<span style="color: #9CDCFE">github</span>.<span style="color: #9CDCFE">strawberrymc</span>.<span style="color: #9CDCFE">FirTreeFinisher</span>.<span style="color: #DCDCAA">finish</span>(world, <span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(x, y, z));
     }
 }
-</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// grow a tall fir tree with spruce logs and leaves
+if there is no world: stop
+pick a trunk height from 18 to 25
+build the trunk of spruce logs that tall
+for each of the 4 sides at the base:
+    60% chance: place a spruce wood root
+start foliage 3 or 4 blocks up
+for each layer from there up to 2 below the top:
+    on even layers the radius is (height - layer) / 6.5 rounded up; on odd layers it is 1
+    the radius is at least 1
+    for each spot within the radius around the trunk (not the trunk itself):
+        on the corners: skip with 80% chance if radius is over 1, or 50% chance if radius is 1
+        skip with 35% chance for an airy look
+        if the spot is empty: place spruce leaves
+for each block from 2 below the top to 3 above it:
+    if empty: place spruce leaves as the spire
+run FirTreeFinisher.finish to connect fences and set leaf distances so the leaves don't decay</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

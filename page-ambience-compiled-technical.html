@@ -19,7 +19,8 @@
 <h2 id="sound-events">Sound events</h2>
 <p><code class="consolas">StrawberrymcModSounds</code> registers the events in a <code class="consolas">DeferredRegister</code> for <code class="consolas">Registries.SOUND_EVENT</code>. <code class="consolas">StrawberrymcMod</code> attaches that register to the mod event bus. Both are created with <code class="consolas">SoundEvent.createVariableRangeEvent</code>.</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public static final DeferredHolder&lt;SoundEvent, SoundEvent&gt; VOID_AMB_01 = REGISTRY.register("void_amb_01", () -&gt; SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("strawberrymc", "void_amb_01")));
-public static final DeferredHolder&lt;SoundEvent, SoundEvent&gt; VOID_AMB_02 = REGISTRY.register("void_amb_02", () -&gt; SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("strawberrymc", "void_amb_02")));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+public static final DeferredHolder&lt;SoundEvent, SoundEvent&gt; VOID_AMB_02 = REGISTRY.register("void_amb_02", () -&gt; SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("strawberrymc", "void_amb_02")));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">register sound event void_amb_01 (strawberrymc:void_amb_01)
+register sound event void_amb_02 (strawberrymc:void_amb_02)</code></pre></div>
 <table>
 <thead>
 <tr><th>Event ID</th><th>Field</th><th>Sound file</th><th>Stream</th></tr>

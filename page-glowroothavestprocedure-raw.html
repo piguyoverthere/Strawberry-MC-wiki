@@ -60,6 +60,9 @@
 			<span style="color: #C586C0">return</span> <span style="color: #9CDCFE">ItemUtil</span>.<span style="color: #DCDCAA">getStack</span>(itemHandler, slotID);
 		<span style="color: #C586C0">return</span> <span style="color: #9CDCFE">ItemStack</span>.<span style="color: #9CDCFE">EMPTY</span>;
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if the item used is a hoe (tag minecraft:hoes):
+    replace the block with stone
+    play the item.crop.plant sound
+    drop a glowroot tuber at the block (pickup delay 10 ticks)</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

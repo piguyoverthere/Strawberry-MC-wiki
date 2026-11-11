@@ -48,7 +48,17 @@ else if (wall)
 else if (depth == Layout.TANK_DEPTH + 1)
 	state = random.nextFloat() &lt; 0.3F ? Blocks.GRAVEL.defaultBlockState() : Blocks.SAND.defaultBlockState();
 else
-	state = Blocks.WATER.defaultBlockState();</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	state = Blocks.WATER.defaultBlockState();</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if this is the top layer (depth 0):
+    use dark prismarine for walls, glass otherwise
+else if this is the bottom layer (TANK_DEPTH + 2):
+    use prismarine bricks
+else if this is a wall:
+    at depth 4, on a scattered pattern of spots, use a sea lantern
+    otherwise use prismarine bricks
+else if this is the tank floor (TANK_DEPTH + 1):
+    30% chance of gravel, otherwise sand
+else:
+    fill with water</code></pre></div>
 <table>
 <thead><tr><th>Depth below the glass</th><th>Inside (distance up to 14.2)</th><th>Wall (14.2 to 15.2)</th></tr></thead>
 <tbody>
@@ -79,7 +89,11 @@ frame.setItem(new net.minecraft.world.item.ItemStack(io.github.strawberrymc.init
 ((io.github.strawberrymc.custommixin.ItemFrameAccessor) frame).strawberrymc$setFixed(true);
 frame.setInvulnerable(true);
 frame.addTag(MonumentArena.RUNE_FRAME_TAG);
-level.addFreshEntity(frame);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+level.addFreshEntity(frame);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">create an item frame at the layout's rune frame spot, facing up
+put a prismatic rune in it
+make it fixed (can't be changed) and invulnerable
+tag it with MonumentArena.RUNE_FRAME_TAG
+add it to the world</code></pre></div>
 <p><code class="consolas">ItemFrameAccessor</code> exposes the frame's private <code class="consolas">fixed</code> field. The tag is <code class="consolas">strawberrymc.rune_frame</code>. <code class="consolas">MonumentArena</code> also cancels <code class="consolas">PlayerInteractEvent.EntityInteract</code> and <code class="consolas">AttackEntityEvent</code> on a tagged frame for any player not in creative mode.</p>
 <p>Nine fish are spawned with a random source seeded from the arena's center: 6 <code class="consolas">minecraft:tropical_fish</code> and 3 <code class="consolas">minecraft:cod</code>. Each is placed 2 to 12 blocks from the center at a random angle, 2 to 6 blocks below the glass, using <code class="consolas">EntitySpawnReason.STRUCTURE</code>. All are marked as persistent.</p>
 
@@ -112,7 +126,7 @@ level.addFreshEntity(frame);</code></pre><pre class="code-box" data-tab="Pseudoc
 </table>
 <h3 id="cutscene-funnel">Funnel particle</h3>
 <p>Each glyph starts in a ring around the vault, at radius 1.2 to 2.8 and 1.2 to 2.2 above it. The server sends it with count 0, so the three offset arguments arrive at the client as the particle's velocity. The particle uses them as its destination, the frame's center lowered by 0.35.</p>
-<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">level.sendParticles(RUNE_FUNNEL.get(), true, true, x, vault.getY() + 1.2 + level.getRandom().nextDouble(), z, 0, target.x, target.y, target.z, 1.0);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">level.sendParticles(RUNE_FUNNEL.get(), true, true, x, vault.getY() + 1.2 + level.getRandom().nextDouble(), z, 0, target.x, target.y, target.z, 1.0);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">spawn a RUNE_FUNNEL particle (always visible, even from far away) at a random height 1.2 to 2.2 above the vault, moving towards the target</code></pre></div>
 <p><code class="consolas">QuestHud.RuneFunnel</code> registers the sprites from <code class="consolas">rune_funnel.json</code>, the same 26 <code class="consolas">minecraft:sga_*</code> glyph sprites as the sensor glyph. Lifetime is 40 to 54 ticks, size 0.12 to 0.18, block light 15, with no physics. Its position is computed from <code class="consolas">p = age / lifetime</code>.</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">float p = (float) age / lifetime;
 double r = radius * (1 - p * p * (3 - 2 * p));
@@ -122,7 +136,13 @@ z = targetZ + Math.sin(angle) * r;
 y = Mth.lerp(Math.pow(p, 1.4), startY, targetY);
 this.rCol = 0.2F + 0.6F * p;
 this.gCol = 0.55F + 0.4F * p;
-setAlpha(Math.min(1, Math.min(p / 0.15F, (1 - p) / 0.1F)));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+setAlpha(Math.min(1, Math.min(p / 0.15F, (1 - p) / 0.1F)));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">progress = age / lifetime (0 to 1)
+shrink the radius smoothly from full to 0 as progress goes on
+spin the angle 1.25 turns over the lifetime
+set x and z on a circle of that radius around the target
+move y from the start height to the target height, easing in
+shift the colour: red from 0.2 to 0.8, green from 0.55 to 0.95
+fade in over the first 15% and fade out over the last 10%</code></pre></div>
 <p>Blue stays at 1.0, so the color moves from <code class="consolas">(0.2, 0.55, 1.0)</code> to <code class="consolas">(0.8, 0.95, 1.0)</code> as the glyph descends. The type is registered with <code class="consolas">new SimpleParticleType(true)</code>.</p>
 <h3 id="cutscene-rune">The floating rune</h3>
 <p><code class="consolas">MonumentArena.release</code> does nothing if the frame is missing or empty. Otherwise it copies the frame's stack, clears the frame and its glowing tag, and spawns an <code class="consolas">ItemEntity</code> at the frame's center.</p>
@@ -130,14 +150,22 @@ setAlpha(Math.min(1, Math.min(p / 0.15F, (1 - p) / 0.1F)));</code></pre><pre cla
 floating.setNeverPickUp();
 floating.setUnlimitedLifetime();
 floating.setGlowingTag(true);
-floating.addTag(RISING_RUNE_TAG);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+floating.addTag(RISING_RUNE_TAG);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">make the floating item:
+    have no gravity
+    never be picked up
+    never despawn
+    glow
+    tagged RISING_RUNE_TAG</code></pre></div>
 <p>The tag is <code class="consolas">strawberrymc.rising_rune</code>. For each tick <code class="consolas">t</code> from 1 to 90, the server queues a position of <code class="consolas">start.y + (topY - start.y) * ease(t / 90)</code>, where <code class="consolas">topY</code> is the vault's y minus 0.6 and <code class="consolas">ease</code> is smoothstep. After the final tick the rune stays floating just under the glass, and the vault answers with "The vault is already open".</p>
 <h3 id="cutscene-camera">Camera</h3>
 <p><code class="consolas">ArenaCutscene.start</code> ignores the packet if the entrance or vent cutscene is playing. The frame position is the bottom center of the frame's block, and the surface is the vault's y minus 0.6. The camera's starting angle is the direction from the frame to the player, so the view comes from the side the player is standing on. Before tick 30 and from tick 218, <code class="consolas">currentShot</code> returns null and the camera stays on the player.</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">double angle = startAngle + Math.toRadians(40) * (time - CUT_IN) / (CUT_OUT - CUT_IN);
 Vec3 desired = new Vec3(frame.x + Math.cos(angle) * DISTANCE, frame.y + 1.0 + rise * 0.6, frame.z + Math.sin(angle) * DISTANCE);
 // Keep a clear line of sight from just above the frame
-Vec3 anchor = new Vec3(frame.x, desired.y, frame.z).add(0, 0.5, 0);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+Vec3 anchor = new Vec3(frame.x, desired.y, frame.z).add(0, 0.5, 0);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">swing the camera angle 40 degrees around the frame between CUT_IN and CUT_OUT
+the desired camera spot is DISTANCE away at that angle, 1 block above the frame plus 0.6 x rise
+// keep a clear line of sight from just above the frame
+the anchor point is above the frame centre, at the camera height plus 0.5</code></pre></div>
 <table>
 <thead><tr><th>Value</th><th>Detail</th></tr></thead>
 <tbody>

@@ -158,6 +158,43 @@
 	<span style="color: #569CD6">private static</span> <span style="color: #4EC9B0">Entity</span> <span style="color: #DCDCAA">findEntityInWorldRange</span>(<span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">Class</span>&lt;<span style="color: #569CD6">? extends</span> <span style="color: #4EC9B0">Entity</span>&gt; <span style="color: #9CDCFE">clazz</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">x</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">y</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">z</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">range</span>) {
 		<span style="color: #C586C0">return</span> (Entity) <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">getEntitiesOfClass</span>(clazz, <span style="color: #9CDCFE">AABB</span>.<span style="color: #DCDCAA">ofSize</span>(<span style="color: #C586C0">new</span> <span style="color: #DCDCAA">Vec3</span>(x, y, z), range, range, range), e <span style="color: #569CD6">-&gt; true</span>).<span style="color: #DCDCAA">stream</span>().<span style="color: #DCDCAA">sorted</span>(<span style="color: #9CDCFE">Comparator</span>.<span style="color: #DCDCAA">comparingDouble</span>(e <span style="color: #569CD6">-&gt;</span> <span style="color: #9CDCFE">e</span>.<span style="color: #DCDCAA">distanceToSqr</span>(x, y, z))).<span style="color: #DCDCAA">findFirst</span>().<span style="color: #DCDCAA">orElse</span>(<span style="color: #569CD6">null</span>);
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// every tick for each arrow: stamp its shooter, show trail particles, trigger landing effects and steer echo-tipped arrows
+when any entity ticks:
+    if the entity is not an arrow:
+        stop
+    if the arrow has no shooter stamp yet and a player is within 4 blocks:
+        save the nearest player's name as "shooter_name"
+        mark the arrow as "has_shooter_stamp"
+    while the arrow is moving:
+        if its shaft is "blaze": spawn 1 small flame particle at the arrow
+        if its shaft is "breeze": spawn 1 small gust particle
+        if its fletching is "phantom": spawn 1 ash particle
+    if the arrow has stopped moving and has not had its "ground_impact" yet:
+        mark "ground_impact" as done
+        if the shaft is "blaze":
+            if the tip is "gold":
+                run command "fill ~-3 ~-3 ~-3 ~3 ~3 ~3 air replace water"
+            else:
+                run command "fill ~-1 ~-2 ~-1 ~1 ~2 ~1 minecraft:fire replace minecraft:air"
+            set every entity within 1 block on fire for 10 seconds
+            spawn 5 lava particles spread 3 blocks
+            play the entity.generic.explode sound
+        if the tip is "sponge" and the shaft is not "aqua":
+            if the tip is "gold" (never true here, since it is sponge):
+                run command "fill ~-3 ~-3 ~-3 ~3 ~3 ~3 air replace water"
+            else:
+                run command "fill ~-2 ~-2 ~-2 ~2 ~2 ~2 air replace water" (soak up water in a 5x5x5 area)
+        if the tip is "gunpowder" and the shaft is not "aqua":
+            make an explosion of power 1.5 at the arrow
+            spawn 1 explosion emitter particle
+    if the fletching is "phantom" and the arrow is moving and not in water:
+        speed the arrow up by 1.3% (multiply its velocity by 1.013)
+    if the tip is "echo":
+        find the nearest living entity within 12 blocks as the echo target
+        if there is one and the arrow is moving:
+            if the target is not the shooter (by name) and is more than 4 blocks away:
+                nudge the arrow's velocity toward the target:
+                    add (target offset) / (distance * 0.13) on each axis, plus 1 extra upward
+                spawn 1 sculk soul particle 1 block above the target</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

@@ -54,7 +54,9 @@
 public void modify(Holder&lt;Biome&gt; biome, Phase phase, ModifiableBiomeInfo.BiomeInfo.Builder builder) {
 	if (phase == Phase.MODIFY &amp;&amp; this.biomes.contains(biome))
 		builder.getClimateSettings().setTemperature(this.temperature);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">when modifying biomes:
+    if this is the modify phase and the biome is one of this modifier's biomes:
+        set the biome's temperature to this modifier's temperature</code></pre></div>
 <p>The record <code class="consolas">SetTemperatureBiomeModifier</code> takes a biome holder set and a float through its <code class="consolas">MapCodec</code>.</p>
 
 <h2 id="climate">Climate</h2>
@@ -94,6 +96,9 @@ if (!level.getBlockState(ground).is(BlockTags.SUBSTRATE_OVERWORLD)) {
 }
 
 DetermineRandFirProcedure.execute(level, ground.getX(), ground.getY(), ground.getZ());
-return true;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+return true;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if the ground block is not overworld ground (grass, dirt, podzol, moss or mud):
+    return false
+run DetermineRandFirProcedure at the ground
+return true</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

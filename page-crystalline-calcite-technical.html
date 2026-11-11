@@ -18,7 +18,10 @@
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public CrystallineCalciteBlock(BlockBehaviour.Properties properties) {
 	super(properties.sound(SoundType.CALCITE).strength(1f, 10f).noOcclusion().isRedstoneConductor((bs, br, bp) -&gt; false));
 	this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.UP));
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">crystalline calcite block:
+    calcite sounds, hardness 1, blast resistance 10
+    see-through (no occlusion) and does not conduct redstone
+    faces up by default</code></pre></div>
 
 <h2 id="properties">Properties</h2>
 <table>
@@ -46,7 +49,13 @@
 	case EAST -&gt; box(0, 0, 0, 8, 16, 16);
 	case WEST -&gt; box(8, 0, 0, 16, 16, 16);
 	default -&gt; box(0, 0, 0, 16, 8, 16);
-};</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+};</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">choose the hitbox by which way the block faces:
+    down: the top half
+    north: the south half
+    south: the north half
+    east: the west half
+    west: the east half
+    otherwise (up): the bottom half</code></pre></div>
 
 <h2 id="model">Model</h2>
 <p>The blockstate file lists several randomly chosen variants for each facing, using rotations of the models <code class="consolas">crystalline_calcite</code>, <code class="consolas">crystalline_calcite_2</code> and <code class="consolas">crystalline_calcite_3</code>. These inherit from <code class="consolas">strawberrymc:custom/crystalline_calcite</code>, <code class="consolas">custom/crystalline_calcite_2</code> and <code class="consolas">custom/crystalline_calcite_3</code>.</p>
@@ -64,7 +73,8 @@
 </tbody>
 </table>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">if (above.isAir())
-	crust = crystalline;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	crust = crystalline;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if the block above is air:
+    use the crystalline block for the crust</code></pre></div>
 <h3 id="carving-rules">Interaction with carving</h3>
 <p>The cavern carver treats the block as carvable, explicitly checking for it, because the surface rule has already laid it on the floors of vanilla caves and it would otherwise be left floating over the cavern. Vanilla cave carvers do not count it as carvable, so the <code class="consolas">calcite_cleanup</code> feature in <code class="consolas">CrystalHollowsDecor</code> removes any Crystalline Calcite with an empty block below it, once per chunk in step <code class="consolas">raw_generation</code>.</p>
 <h3 id="feature-interactions">Other features that use it</h3>

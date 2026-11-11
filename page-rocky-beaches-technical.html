@@ -49,7 +49,7 @@
 </ol>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public static void execute(LevelAccessor world, double x, double y, double z) {
 	world.setBlock(BlockPos.containing(x, y + 1, z), StrawberrymcModBlocks.GLOWROOT.get().defaultBlockState(), 3);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">place glowroot on the block above</code></pre></div>
 <p><a href="page-glowroothavestprocedure-raw.html">GlowrootHavestProcedure [raw]</a> is a standalone procedure that no block or item calls. When executed with a hoe in slot 98 of the passed item stack's item capability, it replaces the block with stone, plays <code class="consolas">item.crop.plant</code> and spawns one tuber.</p>
 
 <h2 id="worldgen">World generation</h2>
@@ -71,7 +71,9 @@
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">if ((world.getBlockState(BlockPos.containing(x, y - 1, z))).is(BlockTags.create(Identifier.parse("minecraft:base_stone_overworld")))) {
 	world.setBlock(BlockPos.containing(x, y - 1, z), StrawberrymcModBlocks.GLOWROOT_TUBER_STONE.get().defaultBlockState(), 3);
 	world.setBlock(BlockPos.containing(x, y, z), StrawberrymcModBlocks.GLOWROOT.get().defaultBlockState(), 3);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if the block below is overworld base stone:
+    replace the block below with GLOWROOT_TUBER_STONE
+    place GLOWROOT here</code></pre></div>
 <p><code class="consolas">onPlace</code> is called when a block is set in a <code class="consolas">LevelChunk</code>. <code class="consolas">ProtoChunk.setBlockState</code>, which chunk generation writes through, does not call it.</p>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

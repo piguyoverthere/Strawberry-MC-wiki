@@ -115,6 +115,34 @@
             }
         }
     }
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// grow a slightly curved palm tree with a bushy crown and drooping fronds
+height = 8 + random 0 to 5 (so 8 to 13 blocks)
+use PALM_LOG for the trunk and PALM_LEAVES (made persistent so they never decay) for the leaves
+pick a random lean direction: tiltX and tiltZ each -1, 0 or 1
+
+trunk:
+for each level from 0 to height - 1:
+    place a palm log at the current column
+    if this is level 3 or higher, 35% chance:
+        shift the column one step in the lean direction
+
+crown core (topPos = the top log):
+place leaves 1 and 2 blocks above the top log
+for each of the 8 surrounding positions (4 sides and 4 diagonals):
+    place leaves beside the block 1 above the top
+    60% chance: also place leaves beside the block 2 above the top
+
+fronds:
+for each of the 8 directions (4 sides and 4 diagonals):
+    length = 2 to 3 for diagonals, 3 to 4 for straight sides
+    for each step from 1 to length:
+        if this is the first step: set the height offset to 1 or 2 above the top
+        else if this is the last step: lower the height offset by 1
+        place leaves at step blocks out in this direction, at that height
+        50% chance: place leaves just below it
+        for straight directions only, 40% chance: place leaves one block to the side
+        if this is the last step (the tip):
+            hang 1 to 2 leaves straight down from it
+            for each hanging leaf, 30% chance: also place leaves one block to the side</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

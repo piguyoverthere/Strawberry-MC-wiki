@@ -122,6 +122,29 @@
 		}
 		<span style="color: #C586C0">return</span> <span style="color: #B5CEA8">0</span>;
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// work out the fletching table's output arrow from the tip, shaft and fletching slots
+start with no tip, shaft or fletching chosen
+take a copy of the item in slot 4 (the arrow slot) as the output arrow
+if slot 4 holds arrows and has at least 5 of them:
+    if slot 0 (tip) has at least 5 of:
+        sponge: tip is "sponge"
+        raw gold: tip is "gold"
+        prismarine shard: tip is "prismarine"
+        echo shard: tip is "echo"
+        amethyst shard: tip is "amethyst"
+        tnt: tip is "gunpowder"
+    if slot 1 (shaft) has at least 5 of:
+        blaze rod: shaft is "blaze"
+        breeze rod: shaft is "breeze"
+    if slot 2 (fletching) has at least 5 phantom membranes:
+        fletching is "phantom"
+    if any of tip, shaft or fletching was chosen:
+        write each chosen one onto the output arrow's custom data as "tip", "shaft" and "fletching"
+        put 5 of the output arrow into slot 3 (the result slot)
+    else:
+        empty slot 3
+
+getAmountInGUISlot(slot):
+    return how many items are in that slot of the player's open menu, or 0</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

@@ -33,7 +33,9 @@
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public AquamarineCrystalBlock(BlockBehaviour.Properties properties) {
 	super(properties.sound(SoundType.AMETHYST_CLUSTER).strength(1.5f).lightLevel(s -&gt; 10).noOcclusion().isRedstoneConductor((bs, br, bp) -&gt; false));
 	this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(WATERLOGGED, false));
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">create the aquamarine crystal block:
+    amethyst cluster sounds, strength 1.5, light level 10, not see-through-blocking, does not conduct redstone
+    by default it faces north and is not waterlogged</code></pre></div>
 <h3 id="cluster-states">States and placement</h3>
 <p>Clusters have a <code class="consolas">FACING</code> property with all six directions and a <code class="consolas">WATERLOGGED</code> boolean. <code class="consolas">getStateForPlacement</code> sets the facing to the clicked face and waterlogs the block when placed in water. <code class="consolas">updateShape</code> schedules a water tick while waterlogged, and <code class="consolas">getFluidState</code> returns a water source in that state.</p>
 <h3 id="cluster-shape">Shape and light</h3>
@@ -44,7 +46,13 @@
 	case UP -&gt; box(3, 0, 3, 13, 13, 13);
 	case DOWN -&gt; box(3, 3, 3, 13, 16, 13);
 	default -&gt; box(3, 3, 0, 13, 13, 13);
-};</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+};</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">choose the hitbox by the way the crystal faces:
+    north: box from (3,3,3) to (13,13,16)
+    east: box from (0,3,3) to (13,13,13)
+    west: box from (3,3,3) to (16,13,13)
+    up: box from (3,0,3) to (13,13,13)
+    down: box from (3,3,3) to (13,16,13)
+    otherwise (south): box from (3,3,0) to (13,13,13)</code></pre></div>
 <p>The collision box is a 10 by 10 pixel prism, 13 pixels long. <code class="consolas">getVisualShape</code> returns an empty shape, <code class="consolas">getLightDampening</code> returns 0, and <code class="consolas">propagatesSkylightDown</code> is true when the block is not waterlogged.</p>
 <h3 id="cluster-model">Model</h3>
 <p>Each cluster's block model has the parent <code class="consolas">strawberrymc:custom/crystal_cluster</code>. The blockstate rotates it by facing: north 0, east y 90, south y 180, west y 270, up x 270 and down x 90.</p>
@@ -97,6 +105,13 @@ if (pick == 1) {
 	mat = StrawberrymcModBlocks.AQUAMARINE_BLOCK.get().defaultBlockState();
 } else {
 	mat = StrawberrymcModBlocks.ROSE_QUARTZ_BLOCK.get().defaultBlockState();
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">pick a random number from 1 to 6:
+    1: amethyst block
+    2: GARNET_BLOCK
+    3: DENDRITE_BLOCK
+    4: CITRINE_BLOCK
+    5: AQUAMARINE_BLOCK
+    6: ROSE_QUARTZ_BLOCK
+use that block as the crystal material</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

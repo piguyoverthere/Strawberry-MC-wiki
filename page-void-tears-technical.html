@@ -30,7 +30,10 @@
 <h2 id="fluid">VoidTearsFluid</h2>
 <p><code class="consolas">VoidTearsFluid</code> extends <code class="consolas">BaseFlowingFluid</code>. A shared <code class="consolas">PROPERTIES</code> object links the type, both fluids and the liquid block, with an explosion resistance of 100 and a tick rate of 4. Drips use the <code class="consolas">SQUID_INK</code> particle.</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public static final BaseFlowingFluid.Properties PROPERTIES = new BaseFlowingFluid.Properties(() -&gt; StrawberrymcModFluidTypes.VOID_TEARS_TYPE.get(), () -&gt; StrawberrymcModFluids.VOID_TEARS.get(),
-		() -&gt; StrawberrymcModFluids.FLOWING_VOID_TEARS.get()).explosionResistance(100f).tickRate(4).block(() -&gt; (LiquidBlock) StrawberrymcModBlocks.VOID_TEARS.get());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+		() -&gt; StrawberrymcModFluids.FLOWING_VOID_TEARS.get()).explosionResistance(100f).tickRate(4).block(() -&gt; (LiquidBlock) StrawberrymcModBlocks.VOID_TEARS.get());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">void tears fluid properties:
+    fluid type VOID_TEARS_TYPE, still fluid VOID_TEARS, flowing fluid FLOWING_VOID_TEARS
+    explosion resistance 100, flows every 4 ticks
+    its block is the VOID_TEARS liquid block</code></pre></div>
 <p><code class="consolas">Source</code> always reports amount 8 and <code class="consolas">isSource</code> true. <code class="consolas">Flowing</code> adds the <code class="consolas">LEVEL</code> property to its state and reports that level as its amount.</p>
 
 <h2 id="fluid-type">VoidTearsFluidType</h2>
@@ -53,7 +56,9 @@
 public boolean move(LivingEntity entity, Vec3 movementVector, double gravity) {
 	entity.travelInWater(movementVector, gravity, entity.getDeltaMovement().y &lt;= 0, entity.getY());
 	return true;
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">when an entity moves through this fluid:
+    move it the way it moves in water
+    return true</code></pre></div>
 
 <h2 id="block">VoidTearsBlock</h2>
 <p><code class="consolas">VoidTearsBlock</code> extends <code class="consolas">LiquidBlock</code>.</p>
@@ -83,7 +88,12 @@ public void neighborChanged(BlockState blockstate, Level world, BlockPos pos, Bl
 public void entityInside(BlockState blockstate, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier insideBlockEffectApplier, boolean isPrecise) {
 	super.entityInside(blockstate, world, pos, entity, insideBlockEffectApplier, isPrecise);
 	VoidTearsDamageApplyProcedure.execute(world, entity);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">when a neighbouring block changes:
+    do the normal neighbour update
+    run VoidTearHissProcedure at this block
+when an entity is inside the block:
+    do the normal behaviour
+    run VoidTearsDamageApplyProcedure on that entity</code></pre></div>
 
 <h2 id="procedures">Procedures</h2>
 <h3 id="damage-procedure">Damage</h3>
@@ -95,7 +105,8 @@ public void entityInside(BlockState blockstate, Level world, BlockPos pos, Entit
 			_ent.hurtServer(_serverLevel, new DamageSource(world.holderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, Identifier.parse("strawberrymc:void_tear_damage")))), 5);
 		}
 	}
-});</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+});</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">after 20 ticks (1 second):
+    deal 5 strawberrymc:void_tear_damage damage to the entity</code></pre></div>
 <p>The damage type is defined in <code class="consolas">damage_type/void_tear_damage.json</code>:</p>
 <table>
 <thead>
@@ -116,7 +127,9 @@ public void entityInside(BlockState blockstate, Level world, BlockPos pos, Entit
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">fluidFogColor.set(0f, 0f, 0.0666666667f, fluidFogColor.w);
 
 fogData.environmentalStart = 0f;
-fogData.environmentalEnd = Math.min(48f, renderDistance);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+fogData.environmentalEnd = Math.min(48f, renderDistance);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">set the fog colour to very dark blue (red 0, green 0, blue about 0.067)
+make the fog start right at the camera
+make the fog end at 48 blocks, or the render distance if that is shorter</code></pre></div>
 
 <h2 id="pool-feature">Pool feature</h2>
 <p>Pools are placed in <a href="page-the-void-technical.html">The Void</a> by three files in the <code class="consolas">void_terrain</code> datapack:</p>

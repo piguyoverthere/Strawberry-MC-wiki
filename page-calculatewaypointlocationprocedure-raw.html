@@ -73,6 +73,17 @@
         <span style="color: #C586C0">return new</span> <span style="color: #DCDCAA">PredictionResult</span>(<span style="color: #569CD6">true</span>, <span style="color: #C586C0">new</span> <span style="color: #DCDCAA">BlockPos</span>(blockX, predictedY, blockZ));
     }
 }
-</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// predict whether a rare plant feature generates in a chunk, and where
+predictRareVegetalLocation(world seed, chunk x, chunk z, rarity chance):
+    make a world-generation random generator (Xoroshiro)
+    seed it with the decoration seed for this chunk's corner block
+    take one random long from it and use it to seed a second "filter" generator
+    if the filter generator's random number from 0 to rarity chance - 1 is not 0 (so 1 in rarity chance passes):
+        return "not present" at position 0, 0, 0
+    pick a random x offset 0 to 15 and z offset 0 to 15 from the first generator
+    block x = chunk x * 16 + x offset
+    block z = chunk z * 16 + z offset
+    use y = 64 as a rough height guess
+    return "present" at block x, 64, block z</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

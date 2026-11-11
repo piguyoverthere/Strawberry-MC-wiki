@@ -28,7 +28,11 @@ if (filterRandom.nextInt(rarityChance) != 0) {
 }
 
 int offsetX = random.nextInt(16);
-int offsetZ = random.nextInt(16);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+int offsetZ = random.nextInt(16);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">set up a world-gen random seeded from the world seed and this chunk's position (the decoration seed)
+take the next random number as a salt and make a second filter random from it
+if the filter random doesn't roll 0 out of rarityChance (a 1 in rarityChance chance):
+    return no structure here
+pick a random x offset and z offset from 0 to 15 within the chunk</code></pre></div>
 <ol>
 <li>A <code class="consolas">WorldgenRandom</code> over <code class="consolas">XoroshiroRandomSource</code> receives the decoration seed for the chunk's block coordinates.</li>
 <li>One <code class="consolas">nextLong</code> seeds a separate filter random, which rolls <code class="consolas">nextInt(rarityChance)</code>. Any result other than 0 means no feature.</li>

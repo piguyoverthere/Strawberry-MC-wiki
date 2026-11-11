@@ -99,6 +99,20 @@
 			}
 		}
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// grow a tilted, three-sided crystal column from the floor up to the ceiling
+pick a random number from 1 to 6 to choose the material:
+    1: amethyst block, 2: GARNET_BLOCK, 3: DENDRITE_BLOCK, 4: CITRINE_BLOCK, 5: AQUAMARINE_BLOCK, 6: ROSE_QUARTZ_BLOCK
+count how many empty blocks there are straight up from the position (stop at 120) as the height
+if the height is at least 8 and less than 120:
+    pick a random lean in x and z (from -5 to 5, divided by height + 3)
+    pick a radius from 3 to 5
+    pick a random rotation and work out 3 side directions 120 degrees apart (a triangle)
+    for each layer from 3 below the start to 3 above the ceiling:
+        make the radius wider near the ends of the column (up to 1.5 times) and normal in the middle
+        shift the layer's centre by the lean times the layer number
+        for each block in a square around the centre:
+            if the block is inside the triangle formed by the 3 sides:
+                if the block is air or overworld base stone:
+                    place the chosen crystal block there</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

@@ -23,7 +23,10 @@ if (!level.getBlockState(ground).is(BlockTags.SUBSTRATE_OVERWORLD)) {
 }
 
 DetermineRandFirProcedure.execute(level, ground.getX(), ground.getY(), ground.getZ());
-return true;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+return true;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if the block below is not overworld ground (substrate_overworld):
+    stop without placing anything
+run DetermineRandFirProcedure at the ground block
+return true</code></pre></div>
 
 <h2 id="variant-selection">Variant selection</h2>
 <p><a href="page-determinerandfirprocedure-raw.html">DetermineRandFirProcedure [raw]</a> makes up to two rolls of an integer from 1 to 100.</p>
@@ -37,7 +40,15 @@ if (randint &lt; 85) {
 	} else {
 		FirSnagGenerationProcedure.execute(world, x, y, z);
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">pick a random number from 1 to 100
+if it is under 85 (about 84%):
+    run FirGenerationProcedure
+else:
+    pick a new random number from 1 to 100
+    if it is under 60 (about 59%):
+        run DeadFirGenerationProcedure
+    else:
+        run FirSnagGenerationProcedure</code></pre></div>
 <table>
 <thead>
 <tr><th>Variant</th><th>Procedure</th><th>Chance</th></tr>
@@ -54,7 +65,8 @@ if (randint &lt; 85) {
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">if (Math.random() &lt; 0.6) world.setBlock(BlockPos.containing(x + 1, y, z), Blocks.SPRUCE_WOOD.defaultBlockState(), 3);
 if (Math.random() &lt; 0.6) world.setBlock(BlockPos.containing(x - 1, y, z), Blocks.SPRUCE_WOOD.defaultBlockState(), 3);
 if (Math.random() &lt; 0.6) world.setBlock(BlockPos.containing(x, y, z + 1), Blocks.SPRUCE_WOOD.defaultBlockState(), 3);
-if (Math.random() &lt; 0.6) world.setBlock(BlockPos.containing(x, y, z - 1), Blocks.SPRUCE_WOOD.defaultBlockState(), 3);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+if (Math.random() &lt; 0.6) world.setBlock(BlockPos.containing(x, y, z - 1), Blocks.SPRUCE_WOOD.defaultBlockState(), 3);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">for each of the 4 sides of the base:
+    60% chance to place spruce wood as a root</code></pre></div>
 
 <h2 id="fir-procedure">FirGenerationProcedure</h2>
 <h3 id="fir-foliage">Foliage</h3>
@@ -68,7 +80,12 @@ if (isWideTier) {
     radius = 1;
 }
 
-if (radius &lt; 1) radius = 1;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+if (radius &lt; 1) radius = 1;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">every other layer (even layers) is a wide tier
+if this is a wide tier:
+    the radius is (height - layer) / 6.5, rounded up
+else:
+    the radius is 1
+the radius is at least 1</code></pre></div>
 <p>Dividing the remaining height by 6.5 narrows the tree toward the top, and the widest tier reaches 4 blocks from the trunk. Each position in the square other than the center is then filtered:</p>
 <table>
 <thead>
@@ -96,7 +113,13 @@ for (int[] dir : directions) {
         if (!world.isEmptyBlock(branchPos)) break;
         world.setBlock(branchPos, Blocks.SPRUCE_FENCE.defaultBlockState(), 3);
     }
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">for each of the 4 sides:
+    65% chance to skip this side (no branch)
+    pick a length from 1 to the radius
+    for each step outward along that length:
+        if the spot is not empty:
+            stop this branch
+        place a spruce fence</code></pre></div>
 <p>Each direction on each tier has a 65% chance of no branch, and a branch is from 1 to <code class="consolas">radius</code> blocks long, stopping at the first occupied block. The spire is a loop from <code class="consolas">height - 2</code> to <code class="consolas">height + 1</code> placing spruce fences in empty positions, with a 40% chance of skipping each one for a broken look. It ends by calling <code class="consolas">FirTreeFinisher.finish</code>.</p>
 
 <h2 id="snag-procedure">FirSnagGenerationProcedure</h2>
@@ -105,7 +128,10 @@ for (int[] dir : directions) {
     if (i &gt; height - 4 &amp;&amp; Math.random() &lt; 0.3) continue;
 
     world.setBlock(BlockPos.containing(x, y + i, z), Blocks.SPRUCE_LOG.defaultBlockState(), 3);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">for each level from 0 to height - 1:
+    if this is one of the top 3 levels, 30% chance:
+        skip it (leave a gap)
+    place a spruce log here</code></pre></div>
 
 <h2 id="finisher">FirTreeFinisher</h2>
 <p>The procedures place blocks one by one with default states. During world generation nothing updates them afterwards, so fences would never connect and every leaf would keep distance 7, making it decay. <code class="consolas">FirTreeFinisher.finish</code> fixes the finished tree the way vanilla tree features do.</p>
@@ -127,7 +153,12 @@ for (int[] dir : directions) {
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">Integer distance = distances.get(pos);
 BlockState fixed = distance != null ? state.setValue(LeavesBlock.DISTANCE, distance) : state.setValue(LeavesBlock.PERSISTENT, true);
 if (fixed != state)
-	world.setBlock(pos, fixed, 2);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	world.setBlock(pos, fixed, 2);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if a leaf distance was worked out for this position:
+    set the leaves' distance to it
+else:
+    make the leaves persistent
+if that changed the block:
+    update it in the world</code></pre></div>
         
         <script src="wiki-editor.js" defer=""></script>
     

@@ -57,6 +57,21 @@
 		}
 	}
 }
-</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// when a vanilla crop is broken, track wear on the farmland underneath
+when a block is broken:
+    if it is carrots, potatoes, wheat, beetroots, torchflower crop or pitcher crop:
+        look at the block below it
+        if it is vanilla farmland:
+            replace it with FARMLAND_STRAWBERRY
+        if it is FARMLAND_STRAWBERRY:
+            next USES = current USES + 1, or 0 if it was already 5
+            set its USES to the next value
+            if USES was 5:
+                turn it into POOR_FARMLAND
+        if it is FERTILE_FARMLAND:
+            next USES = current USES + 1, or 0 if it was already 5
+            set its USES (using FarmlandStrawberryBlock.USES) to the next value
+            if USES was 5:
+                turn it into POOR_FARMLAND</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

@@ -178,6 +178,38 @@
             <span style="color: #9CDCFE">SpawnPalmTreeProcedureProcedure</span>.<span style="color: #DCDCAA">execute</span>(world, treeX, treeY <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>, treeZ);
         }
     }
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// spawn an oasis: a few overlapping pools ringed by sandy, muddy banks and palm trees
+replace the origin block with air
+50% chance: stop without building anything
+if no village is found within 100 chunks of the origin:
+    stop
+pick large or small at random (50/50); base radius is 5 if large, else 3
+pick 2 or 3 pools; each gets a random centre near the origin and a radius of base radius + 0 to 2
+for each column within (base radius * 2 + 10) blocks of the origin:
+    for each pool:
+        work out a slightly randomised (noisy) edge, shrinking the radius by up to 1.2
+        track whether the column is inside any pool, how deep inside it is, and how far it is from the nearest pool edge
+    if the column is inside a pool:
+        clear 4 blocks of air from the origin height upward
+        depth is 1, or 2 if more than 1 block inside the edge, or 3 if more than 2.5 blocks inside
+        fill that many blocks below the surface with water
+        put sand under the water, then fill any empty space below with sand (up to 15 blocks below the origin)
+    else if the column is within 10 blocks of water:
+        within 4 blocks of water: always place a bank
+        further out: place a bank with chance ((10 - distance) / 6) squared, so banks fade out naturally
+        if placing a bank (one block below the origin, flush with the water):
+            clear 3 blocks of air above it
+            if the spot is in a wavy mud-patch pattern and a 60% chance passes: use mud
+            else if within 2 blocks of water: 80% sand, otherwise grass block
+            else: 40% sand, otherwise grass block
+            fill empty space below with sand (if the bank is sand) or dirt, up to 15 blocks below the origin
+            if the bank is grass and the block above is empty:
+                plant a fern (15% chance) or short grass (next 20%)
+                beyond 4 blocks from water these chances are cut to 30% of normal
+pick the number of palm trees: 3 to 5 if large, 1 to 2 if small
+for each tree:
+    pick a random angle and go (base radius + 3) blocks out from the centre
+    start 2 blocks above the origin and move down through air (at most to 5 below the origin)
+    run SpawnPalmTreeProcedureProcedure on top of the ground found</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

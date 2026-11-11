@@ -22,7 +22,10 @@ public InteractionResult useOn(UseOnContext context) {
 	super.useOn(context);
 	SmiteHandlerProcedure.execute(context.getLevel(), context.getClickedPos().getX(), context.getClickedPos().getY(), context.getClickedPos().getZ(), context.getPlayer(), context.getItemInHand());
 	return InteractionResult.SUCCESS;
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">when the item is used on a block:
+    do the normal use behaviour
+    run SmiteHandlerProcedure with the clicked block's position, the player and the held item
+    return success</code></pre></div>
 <p><code class="consolas">useOn</code> returns <code class="consolas">InteractionResult.SUCCESS</code> for every block, so the hand-swing happens on any right-clicked block, while the spell itself only runs on a cauldron.</p>
 <h2 id="smite-handler">SmiteHandlerProcedure</h2>
 <p><a href="page-smitehandlerprocedure-raw.html">SmiteHandlerProcedure [raw]</a> (element <code class="consolas">elements/SmiteHandler.mod.json</code>) returns immediately if the entity is null, which covers a <code class="consolas">useOn</code> call without a player. It then requires the block at the clicked position to be <code class="consolas">StrawberrymcModBlocks.CHISELED_CAULDRON</code>. When that passes, it runs these steps in order:</p>
@@ -41,7 +44,9 @@ for (Entity entityiterator : world.getEntitiesOfClass(Entity.class, new AABB(_ce
 			LightningBolt entityToSpawn = EntityType.LIGHTNING_BOLT.create(_level, EntitySpawnReason.TRIGGERED);
 			entityToSpawn.snapTo(Vec3.atBottomCenterOf(BlockPos.containing(entityiterator.getX(), entityiterator.getY(), entityiterator.getZ())));;
 			_level.addFreshEntity(entityToSpawn);
-		}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+		}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">for each entity within a 10-block-wide box around the cauldron, nearest first:
+    if it is not the player casting the spell:
+        spawn a lightning bolt at its feet</code></pre></div>
 <p>Each target receives a <code class="consolas">LightningBolt</code> at the bottom center of the block it occupies, created with <code class="consolas">EntitySpawnReason.TRIGGERED</code>, and the sound <code class="consolas">entity.arrow.hit_player</code> in <code class="consolas">SoundSource.MASTER</code> at the target's position.</p>
 <h3 id="side-handling">Client and server handling</h3>
 <p><code class="consolas">useOn</code> runs on both logical sides, so the procedure branches per call: sounds use <code class="consolas">playSound(null, ...)</code> on the server and <code class="consolas">playLocalSound</code> on the client, while lightning and particles are limited to <code class="consolas">ServerLevel</code>.</p>
@@ -51,7 +56,9 @@ for (Entity entityiterator : world.getEntitiesOfClass(Entity.class, new AABB(_ce
 	if (world instanceof ServerLevel _level)
 		_level.sendParticles(ParticleTypes.ANGRY_VILLAGER, x, (y + 1), z, 1, Math.cos(Angle), 0, Math.sin(Angle), 1);
 	Angle = Angle + 10;
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">repeat 36 times:
+    on the server: spawn one angry villager particle 1 block above the position, moving in the direction of the current angle
+    increase the angle by 10</code></pre></div>
 <h3 id="consumption">Consumption</h3>
 <p>The stack shrinks by one when the entity is not a <code class="consolas">Player</code> in <code class="consolas">GameType.CREATIVE</code>. Because this sits inside the cauldron check, right-clicking any other block leaves the vial intact.</p>
         <script src="wiki-editor.js" defer=""></script>

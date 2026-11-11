@@ -56,6 +56,15 @@
 			dx <span style="color: #D4D4D4">=</span> (dx <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>);
 		}
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// build a rounded calcite mound topped with crystalline calcite
+pick a radius from 7 to 13
+pick a height from 0.8x to 1.6x the radius
+for each column within the radius around the centre:
+    distance = how far out the column is, as a fraction of the radius
+    if inside the circle:
+        top = height * (1 - distance)^1.4, plus a random -0.6 to 1.2, rounded
+        if top is 0 or more:
+            from the top downward, fill empty blocks with calcite until hitting a solid block or 12 below
+            if the block just above the top is empty: place crystalline calcite there</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

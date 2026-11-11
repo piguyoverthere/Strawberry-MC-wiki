@@ -21,7 +21,9 @@
 public void onPlace(BlockState blockstate, Level world, BlockPos pos, BlockState oldState, boolean moving) {
 	super.onPlace(blockstate, world, pos, oldState, moving);
 	OasisSpawnProcedure.execute(world, pos.getX(), pos.getY(), pos.getZ());
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">when this block is placed:
+    do the normal placement
+    run OasisSpawnProcedure at its position</code></pre></div>
 <p>The spawner is the only caller of the procedure. No configured feature, structure or biome modifier places the block.</p>
 
 <h2 id="order">Order of operations</h2>
@@ -58,7 +60,11 @@ for (int i = 0; i &lt; numPools; i++) {
     pools[i][0] = random.nextInt(baseRadius) - (baseRadius / 2);
     pools[i][1] = random.nextInt(baseRadius) - (baseRadius / 2);
     pools[i][2] = baseRadius + random.nextInt(3);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">pick large or small at random (50/50); base radius is 5 if large, else 3
+pick 2 or 3 pools
+for each pool:
+    pick a centre x and z offset near the origin (within about half the base radius)
+    set its radius to base radius + 0 to 2</code></pre></div>
 
 <h2 id="column-scan">Column scan</h2>
 <p>For each column, the procedure measures the distance to every pool center and subtracts <code class="consolas">random.nextFloat() * 1.2f</code> from that pool's radius, which roughens the shoreline. A column is water if it falls inside any pool. It records <code class="consolas">maxInsideDist</code>, the deepest it sits inside a pool, and <code class="consolas">minDistToWaterEdge</code>, the smallest distance outside one.</p>
@@ -76,7 +82,9 @@ for (int i = 0; i &lt; numPools; i++) {
     float chance = (10.0f - (float)minDistToWaterEdge) / 6.0f;
     // Squaring the chance makes the fade-out look much more natural and scattered
     if (random.nextFloat() &gt; (chance * chance)) placeBank = false;
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if the distance to the water's edge is more than 4:
+    the chance is (10 - distance) / 6
+    keep the bank only with chance squared (squaring makes the fade-out look more natural and scattered)</code></pre></div>
 <p>A bank block sits at <code class="consolas">y-1</code>, flush with the water surface, and blocks at offsets 0 to 2 above the origin level are cleared first.</p>
 <table>
 <thead>

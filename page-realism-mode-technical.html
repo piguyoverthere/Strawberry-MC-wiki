@@ -18,7 +18,7 @@
 <h2 id="registration">Registration</h2>
 <p>The items are declared in the MCreator elements <code class="consolas">FlintShard.mod.json</code> and <code class="consolas">PlantFiber.mod.json</code>, and the generated <code class="consolas">StrawberrymcModItems</code> registers each one against its own item class.</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">PLANT_FIBER = register("plant_fiber", PlantFiberItem::new);
-FLINT_SHARD = register("flint_shard", FlintShardItem::new);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+FLINT_SHARD = register("flint_shard", FlintShardItem::new);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">register the items: plant fiber, flint shard</code></pre></div>
 <table>
 <thead>
 <tr><th>Property</th><th>Flint Shard</th><th>Plant Fiber</th></tr>
@@ -40,7 +40,7 @@ FLINT_SHARD = register("flint_shard", FlintShardItem::new);</code></pre><pre cla
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">@Override
 public float getDestroySpeed(ItemStack itemstack, BlockState state) {
 	return 1.2f;
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">the tool always mines every block at speed 1.2</code></pre></div>
 <p><code class="consolas">PlantFiberItem</code> has a <code class="consolas">toolType</code> of 1.0, which needs no override, so its class only forwards <code class="consolas">Item.Properties</code> to the superclass.</p>
 
 <h3 id="flint-recipe">Flint recipe</h3>

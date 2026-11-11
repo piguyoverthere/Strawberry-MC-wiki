@@ -40,6 +40,11 @@
         <span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">random</span>() <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">0.6</span>) <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(x, y, z <span style="color: #D4D4D4">+</span> <span style="color: #B5CEA8">1</span>), <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">SPRUCE_WOOD</span>.<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
         <span style="color: #C586C0">if</span> (<span style="color: #9CDCFE">Math</span>.<span style="color: #DCDCAA">random</span>() <span style="color: #D4D4D4">&lt;</span> <span style="color: #B5CEA8">0.6</span>) <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">setBlock</span>(<span style="color: #9CDCFE">BlockPos</span>.<span style="color: #DCDCAA">containing</span>(x, y, z <span style="color: #D4D4D4">-</span> <span style="color: #B5CEA8">1</span>), <span style="color: #9CDCFE">Blocks</span>.<span style="color: #9CDCFE">SPRUCE_WOOD</span>.<span style="color: #DCDCAA">defaultBlockState</span>(), <span style="color: #B5CEA8">3</span>);
     }
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">height = 18 to 25
+for each block of the trunk from the bottom up:
+    if it is in the top 3 blocks, 30% chance to skip it (jagged, snapped top)
+    place a spruce log
+for each of the 4 sides at the base:
+    60% chance to place spruce wood (a root)</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

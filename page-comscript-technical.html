@@ -65,7 +65,14 @@
 		j++;
 	}
 	return text.length();
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">find where a quoted string ends, starting at the opening quote:
+    remember which quote opened it
+    move forward one character at a time:
+        if inside a single-quoted string and the character is a backslash:
+            skip it and the next character
+        if the character closes the string (a matching ' for single quotes, any quote character otherwise):
+            return the position just after it
+    if never closed, return the end of the text</code></pre></div>
 <p>A backslash only skips the following character inside single quotes, and the backslash stays in the value. Double-quoted text uses the <code class="consolas">&amp;quot;</code> token for a quote. An unterminated string extends to the end of the source. Strings may span lines.</p>
 
 <h3 id="splitter-booleans">Boolean literals</h3>
@@ -80,7 +87,14 @@
 	line++;
 	i++;
 	continue;
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if a line break is reached outside any brackets:
+    if there is unfinished text on the line:
+        if it looks like an old-style run ( ... ):
+            throw a syntax error "Put more than one statement after run in { }, not ( )"
+        else:
+            throw a syntax error "Missing ; at the end of the line"
+    move to the next line
+    skip the line break and keep reading</code></pre></div>
 <p><code class="consolas">OLD_RUN</code> is the pattern <code class="consolas">(?s).*\brun\s*\(.*\)</code>. At the end of the source, a positive depth gives <code class="consolas">Missing closing bracket</code> and unfinished text gives <code class="consolas">Missing ; at the end of the line</code>.</p>
 
 <h3 id="splitter-semicolons">Semicolons and tokens</h3>
@@ -150,7 +164,15 @@ mark add relative &lt;selector&gt; [&lt;~ ~ ~&gt;]</code></pre>
 		offset = text.indexOf(words.get(i + k), offset) + words.get(i + k).length();
 	i += 4;
 	continue;
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if the word is "if" or "unless" and the next word is "comp":
+    if there are not 4 more words after it:
+        fail with the syntax error "if comp needs &lt;value1&gt; &lt;operator&gt; &lt;value2&gt;"
+    the operator is the 3rd word after it
+    if the operator is not one of ComScriptSyntax.COMPARISONS:
+        fail with "Unknown comparison ... (use ==, !=, &lt;, &gt;, &lt;= or &gt;=)"
+    add a comparison: negated if the word was "unless", value 1, operator, value 2
+    move the text position past those 4 words
+    skip ahead 4 words and continue with the next word</code></pre></div>
 <p>Each compared value is exactly one word. A value containing spaces must be wrapped in brackets, such as <code class="consolas">($a + 1)</code>, because bracket depth keeps it as one word.</p>
 <p>After the loop:</p>
 <ul>
@@ -241,7 +263,13 @@ primary        := "(" comparison ")" | number | string | "&lt;true;&gt;" | "&lt;
 	if (value == null)
 		throw ScriptError.undefined(variable.name());
 	yield value;
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">for a variable:
+    look up its value by name
+    if it has no value and its name is a bare fetcher (like isDownfall, which needs no brackets):
+        get the value from ComScriptFetchers instead
+    if there is still no value:
+        throw an "undefined" error
+    use that value</code></pre></div>
 <p>A variable takes priority over a bracketless fetcher with the same name.</p>
 
 <h3 id="expression-numeric">Numeric rules</h3>
@@ -257,7 +285,15 @@ case "/%":
 	return integers ? (Object) Math.floorMod((Long) a, (Long) b) : x - Math.floor(x / y) * y;
 case "^":
 	double result = Math.pow(x, y);
-	return integers &amp;&amp; y &gt;= 0 &amp;&amp; Math.abs(result) &lt; 9.0E18 ? (Object) (long) result : result;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	return integers &amp;&amp; y &gt;= 0 &amp;&amp; Math.abs(result) &lt; 9.0E18 ? (Object) (long) result : result;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">for "/" (division with no remainder):
+    if dividing by 0, return 0
+    if both are integers, return the rounded-down division; otherwise the normal division
+for "/%" (remainder):
+    if dividing by 0, return 0
+    if both are integers, return the floor remainder; otherwise x minus the rounded-down quotient times y
+for "^" (power):
+    work out x to the power y
+    if both are integers, y is not negative and the result is small enough, return it as an integer; otherwise as a decimal</code></pre></div>
 <ul>
     <li>Integer division rounds toward negative infinity, so <code class="consolas">-7 / 2</code> is -4.</li>
     <li>The integer remainder takes the divisor's sign. The float remainder is <code class="consolas">x - floor(x / y) * y</code>.</li>
@@ -280,7 +316,14 @@ case "^":
 		return rounded.scale() &lt;= 0 ? rounded.toBigInteger().toString() : rounded.toPlainString();
 	}
 	return String.valueOf(value);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">format a value as text:
+    if it is a decimal number:
+        if it is NaN or infinite:
+            return it as is
+        round to 10 decimal places and drop trailing zeros (so sin(30) shows as 0.5)
+        if nothing is left after the decimal point, return it as a whole number
+        otherwise return the plain decimal
+    otherwise return the value as text</code></pre></div>
 
 <h3 id="expression-functions">Function dispatch</h3>
 <p><code class="consolas">call</code> checks <code class="consolas">ComScriptFetchers.NAMES</code> first, because fetchers need unevaluated arguments for bare player names. <code class="consolas">online</code> is handled next for the same reason. Everything else evaluates all its arguments and then goes through <code class="consolas">random.N.rand</code> and a <code class="consolas">switch</code>. A wrong argument count gives <code class="consolas">name() takes N value(s), got M</code>, with <code class="consolas">value</code> singular for one.</p>
@@ -316,7 +359,12 @@ return min + (long) Math.floor(env.random().nextDouble() * (max - min + 1));
 // random.N.rand
 double value = min + env.random().nextDouble() * (max - min);
 double scale = Math.pow(10, places);
-return Math.round(value * scale) / scale;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+return Math.round(value * scale) / scale;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// random.randint and random.n.randint
+return a random whole number from min to max (both included)
+
+// random.N.rand
+pick a random decimal between min and max
+round it to the given number of decimal places and return it</code></pre></div>
 <p><code class="consolas">Online(Steve)</code> uses the word as a name when no variable of that name exists. <code class="consolas">font</code> parses the style's JSON, deep-copies it and sets its <code class="consolas">text</code> property. If the stored JSON is not an object, it starts from an empty object.</p>
 
 <h3 id="expression-conversions">Binary and integer strings</h3>
@@ -331,7 +379,16 @@ return Math.round(value * scale) / scale;</code></pre><pre class="code-box" data
 	for (byte b : format(value).getBytes(StandardCharsets.UTF_8))
 		bits.append(String.format("%8s", Integer.toBinaryString(b &amp; 0xFF)).replace(' ', '0'));
 	return bits.toString();
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">toBinary(value, raw text):
+    if the raw text is only 0s and 1s:
+        return it as is
+    if the value is a whole number:
+        return it in binary
+    if the value is true/false:
+        return "1" or "0"
+    otherwise:
+        turn the formatted value into UTF-8 bytes
+        return each byte as 8 binary digits, joined together</code></pre></div>
 <p><code class="consolas">toInteger</code> trims a string, reads it in base 2 if it is made of 0s and 1s and is longer than one character, and otherwise parses it as a <code class="consolas">double</code> and truncates.</p>
 
 <h2 id="variables-implementation">Variables</h2>
@@ -364,7 +421,13 @@ return Math.round(value * scale) / scale;</code></pre><pre class="code-box" data
 	}
 	matcher.appendTail(out);
 	return ComScriptSyntax.substituteTokens(out.toString());
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">fill in variables in a line of text:
+    for each $variable found in the text:
+        look up its value
+        if it is not defined:
+            throw an "undefined $name" error
+        replace it with the formatted value (ComScriptExpression.format)
+    return the result with tokens substituted (ComScriptSyntax.substituteTokens)</code></pre></div>
 <p>Commands are sent to the game after this substitution alone. Expressions and function calls inside command text are not evaluated, so a value has to be stored first and then placed with <code class="consolas">$name</code>. The same applies to <code class="consolas">font()</code>.</p>
 
 <h2 id="token-substitution">Token substitution</h2>
@@ -415,7 +478,17 @@ return Math.round(value * scale) / scale;</code></pre><pre class="code-box" data
 			scripter.log(ScripterBlockEntity.ERROR, statement.line(), "Error: " + e);
 		}
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">runBody(statements, source):
+    for each statement:
+        use up 1 from the step budget; if it runs out, stop the whole run
+        mark this statement's line as the current line
+        try to execute the statement (it may change the source for later statements)
+        if it fails with a script error:
+            log the error message on that line
+        if it is a stop-the-run signal:
+            pass it on (stop)
+        if any other error happens:
+            log "Error: " plus the error on that line</code></pre></div>
 <p>A failed statement is logged and the next one runs. <code class="consolas">currentLine</code> is what gives command output its line number.</p>
 
 <h3 id="runner-source">Source propagation</h3>
@@ -437,7 +510,16 @@ return Math.round(value * scale) / scale;</code></pre><pre class="code-box" data
 	else
 		for (CommandSourceStack context : contexts(fill(execute.subcommands()), source))
 			runBody(execute.body(), context);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">for an execute statement:
+    for each comparison in its condition:
+        work out the left and right values
+        if the comparison fails (or passes, when it is negated):
+            stop and return the source unchanged
+    if it has no subcommands:
+        run the body once with the current source
+    else:
+        for each context produced by the subcommands (e.g. as / at):
+            run the body in that context</code></pre></div>
 <p>The order matters:</p>
 <ol>
     <li>All comparisons are evaluated first, once, in written order, against the source the statement started with, wherever they appear among the subcommands.</li>
@@ -462,7 +544,12 @@ return Math.round(value * scale) / scale;</code></pre><pre class="code-box" data
 		CALLBACKS.remove(id);
 	}
 	return found;
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// collect each context produced by a set of execute subcommands
+take a new callback id
+register an empty list under that id
+run "execute &lt;subcommands&gt; run &lt;ComScript.CALLBACK_COMMAND&gt; &lt;id&gt;", which adds each resulting context to the list
+always unregister the id afterwards
+return the collected contexts</code></pre></div>
 <p>The block does not run inside the callback, because commands run there would be queued until after the whole <code class="consolas">execute</code> finished. Collecting the contexts first keeps the block in order with the statements around it. Commands are sent with <code class="consolas">performPrefixedCommand</code>, and a failing subcommand reports through the terminal like any command.</p>
 
 <h2 id="timers-implementation">Timers</h2>
@@ -479,9 +566,18 @@ return Math.round(value * scale) / scale;</code></pre><pre class="code-box" data
 	String describe() {
 		return !isTimer() ? event : interval() == 1 ? "every tick" : "every " + interval() + " ticks";
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">a listener remembers: its event name, body, command source, runner and start time
+
+is it a timer?
+    yes if the event name is empty or starts with a digit
+interval:
+    1 if the event name is empty, otherwise the number in the name + 1
+describe it:
+    if not a timer: the event name
+    else if the interval is 1: "every tick"
+    else: "every &lt;interval&gt; ticks"</code></pre></div>
 <p><code class="consolas">*{ }</code> has an interval of 1 tick. <code class="consolas">*N{ }</code> skips N ticks between runs, for an interval of N + 1 ticks, up to N = 999999999. Each server tick, <code class="consolas">serverTick</code> iterates a copy of the listener list and runs a timer when this holds:</p>
-<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">(level.getGameTime() - listener.started()) % listener.interval() == 0</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">(level.getGameTime() - listener.started()) % listener.interval() == 0</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">the listener fires when the ticks since it started are an exact multiple of its interval</code></pre></div>
 <p><code class="consolas">started</code> is the game time at registration, so each timer has its own phase. A timer runs with the source it had when registered, which includes any earlier <code class="consolas">mark</code> and any <code class="consolas">execute</code> context around it.</p>
 <p>Because registration is an ordinary statement, it obeys the flow around it. Inside <code class="consolas">if comp</code> it registers conditionally. Inside <code class="consolas">execute as @a at @s run { }</code> it registers once per context. Inside a timer or event body, it registers another listener each time that body runs, with no limit on the number of listeners. Listeners added during a tick are first examined on the next one, because the loop uses a copy.</p>
 
@@ -511,7 +607,16 @@ return Math.round(value * scale) / scale;</code></pre><pre class="code-box" data
 					listener.runner().run(listener.body(), source);
 					scripter.currentLine = -1;
 				}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">fire(level, event, position, entity, details):
+    for each scripter that is listening:
+        if it is in this level and not removed:
+            for each of its listeners:
+                if the listener is for this event:
+                    run commands from the listener's source, moved to the event position
+                    if there is an entity, run as that entity
+                    add the event details to the listener's variables
+                    run the listener's body
+                    clear the scripter's current line</code></pre></div>
 <p>Only Scripters in the event's level are notified. The join handler calls <code class="consolas">fire</code> once for every level on the server, so Scripters in all dimensions hear it. The source keeps the listener's own dimension and takes the player's coordinates. The detail variables are written into the runner's normal variable map and remain there after the event.</p>
 
 <h2 id="fetchers">Native fetchers</h2>
@@ -531,7 +636,14 @@ return Math.round(value * scale) / scale;</code></pre><pre class="code-box" data
 	} catch (CommandSyntaxException e) {
 		throw new ScriptError("Error: " + e.getMessage());
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// find the entities an argument refers to
+if the argument is a variable name that is not defined:
+    use its name as the selector text
+else:
+    evaluate the argument; use its selector text, or its value formatted as text
+parse the text as an entity selector and return the matching entities
+if parsing fails:
+    fail with the script error "Error: " plus the message</code></pre></div>
 <p>An entity argument is a selector, a player name (quoted or bare), or a variable holding either. Single-entity fetchers use the first match and fail with <code class="consolas">Error: No entity matched &lt;argument&gt;</code>. Position arguments must be numbers and are converted with <code class="consolas">BlockPos.containing</code>.</p>
 <p>The fetchers marked "loaded" below use <code class="consolas">loadedPosition</code>, which fails with <code class="consolas">Error: the chunk at x, y, z isn't loaded</code>.</p>
 
@@ -598,7 +710,7 @@ return Math.round(value * scale) / scale;</code></pre><pre class="code-box" data
 </table>
 <p>The climate fetchers do not require a loaded chunk. They sample the noise directly:</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">Climate.TargetPoint point = level.getChunkSource().randomState().sampler()
-	.sample(QuartPos.fromBlock(pos.getX()), QuartPos.fromBlock(pos.getY()), QuartPos.fromBlock(pos.getZ()));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	.sample(QuartPos.fromBlock(pos.getX()), QuartPos.fromBlock(pos.getY()), QuartPos.fromBlock(pos.getZ()));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">sample the world's climate (temperature, humidity and so on) at this position</code></pre></div>
 <p>The result is converted with <code class="consolas">Climate.unquantizeCoord</code>.</p>
 
 <h3 id="fetchers-world">World fetchers</h3>

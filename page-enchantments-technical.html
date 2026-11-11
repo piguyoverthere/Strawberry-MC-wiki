@@ -61,7 +61,7 @@
 <h2 id="shock-procedure">EntityShockProcedure</h2>
 <p>The procedure subscribes to <code class="consolas">LivingDamageEvent.Pre</code>, so it runs each time a living entity takes damage. <code class="consolas">entity</code> is the entity being damaged. The gate reads the enchantment level on that entity's item in use from <code class="consolas">getUseItem()</code>, looked up through the registry with <code class="consolas">strawberrymc:electricution</code>:</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">if ((entity instanceof LivingEntity _entUseItem0 ? _entUseItem0.getUseItem() : ItemStack.EMPTY)
-		.getEnchantmentLevel(world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse("strawberrymc:electricution")))) &gt; 0) {</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+		.getEnchantmentLevel(world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse("strawberrymc:electricution")))) &gt; 0) {</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if the item the entity is using has the strawberrymc:electricution enchantment:</code></pre></div>
 <p>The effect therefore applies to a damaged entity that is actively using an item with Shocking. Any level above 0 behaves the same, because the level value is only compared with 0.</p>
 <h3 id="shock-order">Order of effects</h3>
 <ol>
@@ -93,7 +93,8 @@ if (world instanceof ServerLevel _level) {
 	ItemEntity entityToSpawn = new ItemEntity(_level, x, y, z, (getEntitySlot(entity, (int) shockSlotDrop)));
 	entityToSpawn.setPickUpDelay(5);
 	_level.addFreshEntity(entityToSpawn);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">pick an armour slot from 100 to 103 at random
+on the server: drop a copy of the item in that slot of the entity at the position, with a 5-tick pickup delay</code></pre></div>
 
 <h2 id="damage-type">Damage type</h2>
 <p><code class="consolas">data/strawberrymc/damage_type/shocking.json</code>, generated from <code class="consolas">Shocking.mod.json</code>, defines the source used by the armor checks.</p>

@@ -26,7 +26,8 @@
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">private static void addPack(AddPackFindersEvent event) {
 	event.addPackFinders(Identifier.fromNamespaceAndPath("strawberrymc", "void_terrain"), PackType.SERVER_DATA, Component.literal("Strawberry MC Void terrain"),
 			PackSource.BUILT_IN, true, Pack.Position.TOP);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">addPack:
+    add the built-in server data pack strawberrymc:void_terrain ("Strawberry MC Void terrain"), always enabled, at the top of the pack list</code></pre></div>
 
 <h2 id="gen-py-pipeline">The gen.py pipeline</h2>
 <p><code class="consolas">gen.py</code> is run from the <code class="consolas">java</code> folder with <code class="consolas">python3 tools/void_terrain/gen.py</code>. It defines small helpers that build density function JSON (<code class="consolas">noise</code>, <code class="consolas">add</code>, <code class="consolas">mul</code>, <code class="consolas">mn</code>, <code class="consolas">mx</code>, <code class="consolas">ab</code>, <code class="consolas">grad</code>, <code class="consolas">sq</code>, <code class="consolas">clamp</code>, <code class="consolas">df</code>), then runs in this order:</p>

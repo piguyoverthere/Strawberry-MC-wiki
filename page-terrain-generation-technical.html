@@ -23,7 +23,9 @@
 		Climate.ParameterList&lt;T&gt; originalList = existingProvider.apply(lookup);
 		return StrawberrymcModBiomes.adaptPresetParameterList(idArg, originalList, lookup);
 	}
-};</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+};</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">replace the preset's biome source provider with one that:
+    builds the original biome parameter list
+    returns it adapted by StrawberrymcModBiomes.adaptPresetParameterList</code></pre></div>
 <p><code class="consolas">adaptPresetParameterList</code> returns the list unchanged until <code class="consolas">FMLCommonSetupEvent</code> has set <code class="consolas">BOOTSTRAP_VALIDATION_PASSED</code>. After that, the Overworld list goes to <code class="consolas">modifyOverworldParameterPoints</code>, and the Nether list is returned unchanged.</p>
 
 <h3 id="parameter-points">Parameter points</h3>
@@ -56,7 +58,12 @@ for (int i = 0; i &lt; from.length; i++) {
 		Climate.Parameter[] above = rest.clone();
 		above[i] = new Climate.Parameter(cut[i].max(), rest[i].max());
 		pieces.add(above);
-	}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">start with an empty list of pieces and a copy of the original climate ranges
+for each climate parameter:
+    if the original range starts below the cut's range:
+        add a piece covering just the part below the cut for this parameter
+    if the original range ends above the cut's range:
+        add a piece covering just the part above the cut for this parameter</code></pre></div>
 
 <h2 id="surface-rules">Surface rules</h2>
 <p>At <code class="consolas">ServerAboutToStartEvent</code>, <code class="consolas">StrawberrymcModBiomes.onServerAboutToStart</code> walks the <code class="consolas">LEVEL_STEM</code> registry. For every Overworld or Nether stem using a <code class="consolas">NoiseBasedChunkGenerator</code>, it stores the dimension type on the generator's settings through <code class="consolas">StrawberrymcModNoiseGeneratorSettings</code>.</p>

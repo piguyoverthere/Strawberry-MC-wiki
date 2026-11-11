@@ -19,12 +19,12 @@
 <h2 id="registration">Registration</h2>
 <p><code class="consolas">StrawberrymcModItems</code> registers the item with a method reference to its class:</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">GARNET_NODULE = register("garnet_nodule", GarnetNoduleItem::new);
-GARNET = register("garnet", GarnetItem::new);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+GARNET = register("garnet", GarnetItem::new);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">register the items: garnet nodule (GarnetNoduleItem), garnet (GarnetItem)</code></pre></div>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public class GarnetNoduleItem extends Item {
 	public GarnetNoduleItem(Item.Properties properties) {
 		super(properties);
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">garnet nodule is a plain item with no special behaviour</code></pre></div>
 <p>The class adds no behavior, so the item uses default <code class="consolas">Item</code> properties. Its sibling <code class="consolas">strawberrymc:garnet</code> is written the same way in <code class="consolas">GarnetItem</code>.</p>
 
 <h2 id="properties">Properties</h2>

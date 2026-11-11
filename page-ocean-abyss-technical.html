@@ -80,7 +80,12 @@
 	Climate.Parameter.span(-1.05f, -0.7f), // continentalness
 	Climate.Parameter.span(-1.0f, 1.0f), // erosion
 	Climate.Parameter.span(-1.0f, 1.0f) // weirdness
-};</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+};</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">the Ocean Abyss climate ranges:
+    temperature -0.45 to 1.0
+    humidity -1.0 to 1.0
+    continentalness -1.05 to -0.7
+    erosion -1.0 to 1.0
+    weirdness -1.0 to 1.0</code></pre></div>
 <table>
 <thead>
 <tr><th>Parameter</th><th>Range</th></tr>
@@ -126,7 +131,13 @@
 			}
 		}
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">for each column x, z in the 16x16 chunk:
+    if the biome there is not ocean abyss:
+        skip this column
+    for each height from the world's bottom up to sea level:
+        if the block is lava:
+            replace it with water
+            remember that something changed</code></pre></div>
 <p><code class="consolas">BIOME_Y</code> is -54, so the biome is read near the floor. Every lava block from the bottom of the world to sea level in a matching column becomes water.</p>
 
 <h2 id="monument">Ocean monument placement</h2>
@@ -156,7 +167,12 @@
 }
 int dy = Math.max(lowestFloor, LOWEST_BASE_Y) - box.minY();
 if (dy &lt; 0)
-	builder.offsetPiecesVertically(dy);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	builder.offsetPiecesVertically(dy);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">for each point in a 5 by 5 grid spread evenly over the structure's area:
+    find the ocean floor height there
+    keep the lowest floor found
+work out how far the structure must move so its bottom sits at the lowest floor (but not below LOWEST_BASE_Y)
+if that means moving down:
+    lower all pieces by that amount</code></pre></div>
 <p>The heightmap is sampled on a 5 by 5 grid across the footprint and the lowest floor wins. <code class="consolas">LOWEST_BASE_Y</code> is -58, which keeps a little deepslate over bedrock, as bedrock reaches up to y=-60. The monument only moves down. Pieces are rebuilt at their original height whenever a chunk loads from disk, so <code class="consolas">strawberrymc$keepSavedHeight</code> moves the rebuilt pieces to the height of the saved box.</p>
 <h3 id="monument-basin">Basin</h3>
 <table>
@@ -173,7 +189,10 @@ if (dy &lt; 0)
 if (distance &gt; BASIN_RADIUS)
 	continue;
 
-int floorY = monument.minY() + (int) Math.max(0, distance - FLAT_RING);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+int floorY = monument.minY() + (int) Math.max(0, distance - FLAT_RING);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">distance = horizontal distance from the centre
+if distance is more than BASIN_RADIUS:
+    skip this column
+the floor height is the monument's bottom plus how far past FLAT_RING this column is (never below the bottom)</code></pre></div>
 <p>For each column outside the footprint and within the radius, the basin floor is level with the monument's base for 8 blocks, then climbs 1 block per block of distance. Everything from the basin floor to sea level that is not already water becomes water. Air directly below the basin floor is flooded for up to 15 blocks, so caves the basin opens up do not leave air pockets. Where the dig exposed new stone, the top block becomes gravel, if it is in <code class="consolas">BASE_STONE_OVERWORLD</code> and rests on something solid.</p>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

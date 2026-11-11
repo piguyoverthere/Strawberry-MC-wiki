@@ -81,6 +81,17 @@
 			}
 		}
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// smite spell: strike every nearby entity with lightning when used on a chiseled cauldron
+if the block is a CHISELED_CAULDRON:
+    play the item.bucket.empty sound at the cauldron
+    for each entity within a 10-block-wide box around the cauldron, nearest first:
+        if it is not the player casting the spell:
+            spawn a lightning bolt at its feet
+            play the entity.arrow.hit_player sound at its position
+    repeat 36 times:
+        spawn 1 angry villager particle 1 block above the cauldron, pushed outward in the direction of the current angle
+        increase the angle by 10
+    if the player is not in creative mode:
+        use up 1 of the item</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

@@ -60,6 +60,20 @@
             }
         }
     }
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// when a crop is broken, wear down the farmland under it
+if the broken block is in the crops tag:
+    look at the block below it
+    if it is FARMLAND_STRAWBERRY:
+        read its stored HarvestCount (0 if missing)
+        if HarvestCount is 3 or more:
+            turn it into POOR_FARMLAND
+        else:
+            add 1 to HarvestCount
+    else if it is FERTILE_FARMLAND:
+        read its stored HarvestCount (0 if missing)
+        if HarvestCount is 3 or more:
+            turn it into FARMLAND_STRAWBERRY
+        else:
+            add 1 to HarvestCount</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

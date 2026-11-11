@@ -33,7 +33,7 @@
 <p>Both are defined by MCreator elements (<code class="consolas">AncientPrismarine.mod.json</code>, <code class="consolas">CrackedPrismarine.mod.json</code>) and registered in <code class="consolas">StrawberrymcModBlocks</code> and <code class="consolas">StrawberrymcModItems</code>.</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public AncientPrismarineBlock(BlockBehaviour.Properties properties) {
 	super(properties.strength(1.5f, 6f).requiresCorrectToolForDrops());
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">create the ancient prismarine block with hardness 1.5, blast resistance 6, and requiring the correct tool to drop</code></pre></div>
 <p>Ancient Prismarine's loot table, <code class="consolas">data/strawberrymc/loot_table/blocks/ancient_prismarine.json</code>, rolls once with a <code class="consolas">minecraft:survives_explosion</code> condition and drops the block's own item.</p>
 
 <h2 id="vent-cap">Ancient Prismarine in the monument</h2>
@@ -44,13 +44,18 @@
 		for (int dz = -1; dz &lt;= 1; dz++)
 			cap.add(new BlockPos(centerX() + dx, floorY, centerZ() + dz));
 	return cap;
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">vent cap:
+    for each x offset from -1 to 1:
+        for each z offset from -1 to 1:
+            add the position at the vent's center plus that offset, on the floor level
+    return those 9 positions (a 3x3 square)</code></pre></div>
 <p>Beneath it is a 3x3 shaft of water, 3 deep, with <code class="consolas">minecraft:soul_sand</code> at depth 4, so a bubble column rises once the cap is removed.</p>
 <h3 id="exemption">Exemption from the sensors</h3>
 <p><code class="consolas">PrismaticSensors.isExempt</code> returns true for Ancient Prismarine, for both breaking and placing. It is the only block a survival player can change inside a monument with active <a href="page-prismatic-sensor-technical.html">Prismatic Sensors</a>.</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">private static boolean isExempt(@Nullable Player player, BlockState state) {
 	return player == null || player.isCreative() || player.isSpectator() || state.is(StrawberrymcModBlocks.ANCIENT_PRISMARINE.get());
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">isExempt(player, block):
+    return true if there is no player, the player is in creative or spectator, or the block is ancient prismarine</code></pre></div>
 <h3 id="trigger">Vent trigger</h3>
 <p>After an exempt break, <code class="consolas">onBreak</code> calls <code class="consolas">checkVent</code> whenever the broken block is Ancient Prismarine. The rest of the sequence is on <a href="page-ocean-monument-technical.html">Ocean Monument</a>.</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">private static void checkVent(ServerLevel level, BlockPos pos) {
@@ -59,7 +64,13 @@
 		return;
 	// Only once: after the jet the dome is gone
 	if (!level.getBlockState(layout.lumpCenter()).is(StrawberrymcModBlocks.CRACKED_PRISMARINE.get()))
-		return;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+		return;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">to check the vent at a position:
+    find the monument at this position
+    if there is none, or the position is not in the vent cap, or the vent is already erupting:
+        stop
+    // only once: after the jet the dome is gone
+    if the lump centre is no longer cracked prismarine:
+        stop</code></pre></div>
 <p>Any one of the 9 cap blocks starts the eruption. Further cap blocks broken during it, or after the dome is gone, do nothing.</p>
 
 <h2 id="dome">Cracked Prismarine in the monument</h2>
@@ -69,7 +80,11 @@ for (int dy = 0; dy &lt;= DOME_DEPTH; dy++)
 	for (int dx = -r; dx &lt;= r; dx++)
 		for (int dz = -r; dz &lt;= r; dz++)
 			if (dx * dx + dz * dz + dy * dy &lt;= DOME_RADIUS * DOME_RADIUS)
-				lump.add(new BlockPos(centerX() + dx, domeTop() - dy, centerZ() + dz));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+				lump.add(new BlockPos(centerX() + dx, domeTop() - dy, centerZ() + dz));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">r = DOME_RADIUS rounded up
+for each depth dy from 0 to DOME_DEPTH:
+    for each dx and dz from -r to r:
+        if (dx, dy, dz) is within DOME_RADIUS of the center:
+            add the position (center x + dx, dome top - dy, center z + dz) to the lump</code></pre></div>
 <table>
 <thead><tr><th>Height</th><th><code class="consolas">dy</code></th><th>Blocks</th></tr></thead>
 <tbody>

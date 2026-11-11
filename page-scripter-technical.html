@@ -36,7 +36,8 @@
 public static final DeferredBlock&lt;ScripterBlock&gt; SCRIPTER = BLOCKS.registerBlock("scripter", ScripterBlock::new,
 	() -&gt; BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLACK).requiresCorrectToolForDrops().strength(-1.0F, 3600000.0F).noLootTable());
 public static final DeferredItem&lt;Item&gt; SCRIPTER_ITEM = ITEMS.registerItem("scripter", properties -&gt; new GameMasterBlockItem(SCRIPTER.get(), properties),
-	() -&gt; new Item.Properties().rarity(Rarity.EPIC).useBlockDescriptionPrefix());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	() -&gt; new Item.Properties().rarity(Rarity.EPIC).useBlockDescriptionPrefix());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">register the scripter block: black, unbreakable in survival (strength -1, blast resistance 3600000), drops nothing
+register the scripter item: a game-master block item (like a command block) with epic rarity</code></pre></div>
 <p>The block's id is <code class="consolas">strawberrymc:scripter</code>. It has a destroy strength of -1.0, a blast resistance of 3600000.0 and no loot table. The item is an epic-rarity <code class="consolas">GameMasterBlockItem</code>, added to the <code class="consolas">OP_BLOCKS</code> creative tab only when <code class="consolas">event.hasPermissions()</code> is true.</p>
 
 <h3 id="registration-resources">Resource pack</h3>
@@ -81,7 +82,13 @@ protected void neighborChanged(BlockState state, Level level, BlockPos pos, Bloc
 		if (powered)
 			level.scheduleTick(pos, this, 1);
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">when a neighbouring block changes:
+    on the client, or if this isn't a scripter: stop
+    check whether the block is receiving redstone power
+    if that differs from the scripter's stored powered state:
+        store the new state
+        if it just became powered:
+            schedule a tick 1 tick later (runs once per rising edge, like a command block)</code></pre></div>
 <p>The last known power state is kept in the block entity and saved as <code class="consolas">Powered</code>, so reloading a powered Scripter does not count as a new edge. A change from unpowered to powered schedules a block tick 1 tick later, and <code class="consolas">tick</code> calls <code class="consolas">scripter.run()</code>. A falling edge only updates the stored state. Power is examined only in <code class="consolas">neighborChanged</code>, so a Scripter placed where it is already powered runs on its first neighbor update that sees the signal.</p>
 
 <h3 id="block-use">Opening the editor</h3>
@@ -157,7 +164,21 @@ switch (action) {
 	case RUN -&gt; scripter.run();
 	case STOP -&gt; scripter.stop(true);
 	case CLEAR_TERMINAL -&gt; scripter.clearLog();
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if the sender is not a player allowed to use game master blocks:
+    stop
+if the block position is not loaded or is not a Scripter block:
+    stop
+read the requested action (SAVE, RUN, STOP or CLEAR_TERMINAL)
+if the action is not CLEAR_TERMINAL:
+    store the sent script in the scripter
+if SAVE:
+    sync the scripter to clients
+if RUN:
+    run the script
+if STOP:
+    stop the script
+if CLEAR_TERMINAL:
+    clear the terminal log</code></pre></div>
 <p><code class="consolas">floorMod</code> keeps any received integer inside the enum. The handler loads nothing: a position that is not loaded is ignored.</p>
 
 <h2 id="lifecycle">Run and stop lifecycle</h2>
@@ -180,25 +201,34 @@ switch (action) {
 	// Every-tick output is sent to the client a few times a second, not every tick
 	if (scripter.needsSync &amp;&amp; level.getGameTime() % 5 == 0)
 		scripter.sync();
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">serverTick(scripter):
+    for each listener:
+        if it is a timer and its interval has passed since it started:
+            run its body
+    clear the current line
+    if the output needs syncing and the game time is a multiple of 5 ticks:
+        send it to the client</code></pre></div>
 <p>Timer and event internals are covered in <a href="page-comscript-technical.html">ComScript technical details</a>.</p>
 
 <h3 id="lifecycle-source">The command source</h3>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">private CommandSourceStack createSource(ServerLevel level) {
 	return new CommandSourceStack(output, Vec3.atCenterOf(worldPosition), Vec2.ZERO, level, LevelBasedPermissionSet.GAMEMASTER, "Scripter",
 		Component.literal("Scripter"), level.getServer(), null);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">create a command source for the scripter:
+    at the center of the scripter block, with gamemaster permission level, named "Scripter"</code></pre></div>
 <p>A script starts at the center of the block, with zero rotation, named <code class="consolas">Scripter</code>, and with no entity. <code class="consolas">@s</code> therefore has nothing to match until an <code class="consolas">execute as</code> or an event supplies an entity.</p>
 
 <h2 id="terminal">Terminal and log</h2>
 <p><code class="consolas">log(level, line, text)</code> splits the text on newlines and stores each part with this prefix:</p>
-<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">String prefix = "[" + LocalTime.now().format(TIME) + "] " + (line &gt; 0 ? "Line " + line + ": " : "");</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">String prefix = "[" + LocalTime.now().format(TIME) + "] " + (line &gt; 0 ? "Line " + line + ": " : "");</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">prefix = "[current time] "
+if there is a line number, add "Line &lt;line&gt;: "</code></pre></div>
 <p>Entries over the limit of 200 are dropped from the oldest end, and <code class="consolas">needsSync</code> is set. During a main run the terminal syncs at the end of the run. Timer and event output is sent when the game time is a multiple of 5.</p>
 
 <h3 id="terminal-output">Command output</h3>
 <p>The source's <code class="consolas">CommandSource</code> accepts success and failure messages and does not inform admins. Each message is logged at <code class="consolas">currentLine</code>, as an error when vanilla's failure style is present:</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">boolean failed = TextColor.fromLegacyFormat(ChatFormatting.RED).equals(message.getStyle().getColor());
-log(failed ? ERROR : INFO, currentLine, message.getString());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+log(failed ? ERROR : INFO, currentLine, message.getString());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if the message is red, it is a failure
+log the message on the current line as ERROR if it failed, otherwise INFO</code></pre></div>
 
 <h3 id="terminal-colours">Log colors</h3>
 <table>
@@ -289,7 +319,12 @@ log(failed ? ERROR : INFO, currentLine, message.getString());</code></pre><pre c
 	while (undo.size() &gt; 200)
 		undo.removeLast();
 	redo.clear();
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">remember the current state for undo:
+    if this is not typing, or more than 1 second has passed since the last edit, or the undo list is empty:
+        save the text and cursor position to the undo list
+    record the last edit time (only while typing)
+    keep at most 200 undo steps, dropping the oldest
+    clear the redo list</code></pre></div>
 
 <h3 id="editor-mouse">Mouse</h3>
 <ul>
@@ -365,7 +400,14 @@ else if (ComScriptSyntax.KEYWORDS.contains(word) || word.equals("mod"))
 else if (ComScriptSyntax.SUBCOMMANDS.contains(word))
 	color = SUBCOMMAND;
 else if (statementStart &amp;&amp; (commands.contains(word) || word.equals("store")))
-	color = COMMAND;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	color = COMMAND;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if the word is a function call (ComScriptSyntax.isFunction) or a bare fetcher (ComScriptFetchers.BARE):
+    color it as FUNCTION
+else if it is a keyword (ComScriptSyntax.KEYWORDS) or "mod":
+    color it as KEYWORD
+else if it is a subcommand (ComScriptSyntax.SUBCOMMANDS):
+    color it as SUBCOMMAND
+else if it starts a statement and is a command or "store":
+    color it as COMMAND</code></pre></div>
 <p>After a word, <code class="consolas">statementStart</code> is true only if the word was <code class="consolas">run</code>, <code class="consolas">local:</code> or <code class="consolas">global:</code>, so the command after <code class="consolas">run</code> is colored as a command.</p>
 <table>
     <thead>

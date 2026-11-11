@@ -168,6 +168,47 @@
 			});
 		}
 	}
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// when an arrow hits something: apply its tip's and shaft's effects
+if the arrow's tip is "amethyst":
+    if the thing hit is a living entity:
+        deal 3 extra arrow damage to it
+    else if the block at the hit spot is in the tag mod:amethyst_shard_pierceable:
+        replace the block with air
+        if the block there is in the tag mod:vegetation:
+            play the big dripleaf break sound
+            spawn 5 falling spore blossom particles
+        else:
+            play the glass break sound
+            spawn 5 splash particles
+if the arrow's tip is "gunpowder":
+    make a small explosion of power 1.5 at the hit spot
+    spawn an explosion emitter particle
+if the arrow's shaft is "sponge":
+    if the tip is "gold":
+        remove all water in a 7x7x7 cube around the hit spot
+    else:
+        remove all water in a 5x5x5 cube around the hit spot
+if the arrow's tip is "prismarine":
+    if the entity hit is underwater:
+        multiply its motion by 1.6
+if the arrow's shaft is "blaze":
+    if the tip is "gold":
+        fill air with fire in a 5x5x5 cube around the hit spot
+    else:
+        fill air with fire in a 3 wide, 5 tall, 3 deep area around the hit spot
+    set every entity within 1 block on fire for 12 seconds
+    spawn 7 lava particles
+    play the generic explosion sound
+if the arrow's shaft is "breeze":
+    for each entity within 1.5 blocks, except the arrow itself:
+        if the tip is "gold":
+            launch it away from the hit spot (horizontal push x0.4) and upward with speed 1.2
+        else:
+            launch it away from the hit spot (horizontal push x0.3) and upward with speed 1.1
+    show a wind burst particle
+    play the generic explosion sound
+    after 1 tick:
+        if the entity hit is living:
+            launch it straight up with speed 1.3 if the tip is "gold", otherwise 1.2</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

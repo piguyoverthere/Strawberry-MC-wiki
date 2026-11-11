@@ -75,7 +75,12 @@ for (int i = 0; i &lt; height; i++) {
         currentX += tiltX;
         currentZ += tiltZ;
     }
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">pick a height from 8 to 13
+pick a tilt of -1, 0 or 1 in x and in z
+for each block up the trunk:
+    place a log at the current position
+    from the 4th block up, 35% chance:
+        shift the trunk one step in the tilt direction</code></pre></div>
 
 <h2 id="palm-blocks">Palm blocks</h2>
 <table>
@@ -110,7 +115,8 @@ for (int i = 0; i &lt; height; i++) {
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">if ((world.getBlockState(BlockPos.containing(x, y, z))).getBlock() == Blocks.SAND
 		|| (world.getBlockState(BlockPos.containing(x, y, z))).getBlock() == Blocks.RED_SAND) {
 	world.setBlock(BlockPos.containing(x, y + 1, z), StrawberrymcModBlocks.PALM_SAPLING.get().defaultBlockState(), 3);
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">if the block is sand or red sand:
+    place a palm sapling on top of it</code></pre></div>
 <h3 id="coconut-throwing">Throwing</h3>
 <p>The item's use animation is <code class="consolas">BLOCK</code> with a use duration of 1 tick. <code class="consolas">use</code> starts the action if the player is in creative mode or <code class="consolas">findAmmo</code> finds a coconut in the inventory. <code class="consolas">releaseUsing</code> calls <code class="consolas">CoconutProjectileEntity.shoot</code> and removes one coconut outside creative mode.</p>
 <table>

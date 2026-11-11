@@ -46,7 +46,8 @@
 <h2 id="placement">Where they are</h2>
 <p><code class="consolas">MonumentShell.buildSensors</code> runs after the shell, gazebo and arena. Positions come from <code class="consolas">Layout.sensors()</code>, at local coordinates with the entrance at z=0.</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">// Pedestal spots in the hall (local, double scale, entrance at z=0), one per quadrant
-private static final int[][] SENSOR_SPOTS = {{38, 52}, {77, 52}, {38, 82}, {77, 82}};</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+private static final int[][] SENSOR_SPOTS = {{38, 52}, {77, 52}, {38, 82}, {77, 82}};</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// pedestal spots in the hall (local, double scale, entrance at z=0), one per quadrant
+SENSOR_SPOTS = (38, 52), (77, 52), (38, 82), (77, 82)</code></pre></div>
 <p>Each sensor is at <code class="consolas">box.minY() + 5</code>, on the 2-block floor plus a 3-block pedestal. The pedestal is 3x3x3 <code class="consolas">minecraft:dark_prismarine</code>, with <code class="consolas">minecraft:sea_lantern</code> in the four corners of its top layer.</p>
 
 <h2 id="protection">Protection</h2>
@@ -58,7 +59,13 @@ private static final int[][] SENSOR_SPOTS = {{38, 52}, {77, 52}, {38, 82}, {77, 
 		return null;
 	BlockPos sensor = layout.sensorFor(pos);
 	return level.isLoaded(sensor) &amp;&amp; level.getBlockState(sensor).is(StrawberrymcModBlocks.PRISMATIC_SENSOR.get()) ? sensor : null;
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">guardingSensor(level, position):
+    find the monument at this position; if none, return nothing
+    find the sensor position that guards this position
+    if that spot is loaded and holds a prismatic sensor:
+        return it
+    else:
+        return nothing</code></pre></div>
 <p>The block at the sensor's position is the only state. A quadrant is protected only when that block is loaded and is the active sensor. Swapping it for the deactivated block lifts the protection for that quadrant.</p>
 <h3 id="protection-events">Events</h3>
 <p><code class="consolas">PrismaticSensors.init</code> registers <code class="consolas">onBreak</code> for <code class="consolas">BreakBlockEvent</code> and <code class="consolas">onPlace</code> for <code class="consolas">BlockEvent.EntityPlaceEvent</code>. Both run only on a <code class="consolas">ServerLevel</code>. <code class="consolas">onPlace</code> runs only when the placing entity is a <code class="consolas">Player</code>.</p>
@@ -77,12 +84,21 @@ private static void onBreak(BreakBlockEvent event) {
 			refuse(level, sensor, pos);
 		}
 		return;
-	}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">a block break is exempt if there is no player, the player is in creative or spectator mode, or the block is ancient prismarine
+when a block is broken:
+    only run on the server
+    if the break is not exempt:
+        find a sensor guarding this position (guardingSensor)
+        if there is one:
+            cancel the break
+            run refuse for that sensor and position
+        stop</code></pre></div>
 <p>The order is: exemption check, then sensor lookup, then cancel. <a href="page-ancient-prismarine-technical.html">Ancient Prismarine</a> is exempt whether it is being broken or placed. After an exempt break of Ancient Prismarine, <code class="consolas">onBreak</code> goes on to the vent check described on <a href="page-ocean-monument-technical.html">Ocean Monument</a>.</p>
 <h3 id="protection-refuse">Refusal feedback</h3>
 <p>Cancelling the event leaves the block where it was, with no drop. <code class="consolas">refuse</code> then plays its feedback at the refused block, on the server, so every nearby player sees it.</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">level.sendParticles(ParticleTypes.ENCHANT, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 24, 0.4, 0.4, 0.4, 1.0);
-level.playSound(null, pos, SoundEvents.CONDUIT_ATTACK_TARGET, SoundSource.BLOCKS, 0.6F, 1.6F);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+level.playSound(null, pos, SoundEvents.CONDUIT_ATTACK_TARGET, SoundSource.BLOCKS, 0.6F, 1.6F);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">spawn 24 enchant particles at the center of the block, spread 0.4
+play the conduit attack target sound (volume 0.6, pitch 1.6)</code></pre></div>
 
 <h2 id="command">Switching sensors</h2>
 <p><code class="consolas">PrismaticSensors.registerCommands</code> adds <code class="consolas">/sensors</code>, which requires <code class="consolas">Commands.LEVEL_GAMEMASTERS</code>. The command resolves the monument at the command source's position and replaces each loaded sensor position with <code class="consolas">Block.UPDATE_ALL</code>.</p>
@@ -100,7 +116,9 @@ level.playSound(null, pos, SoundEvents.CONDUIT_ATTACK_TARGET, SoundSource.BLOCKS
 <p>Random block ticks would reach a single sensor only every few seconds, so <code class="consolas">SensorParticles</code> finds them directly on <code class="consolas">ClientTickEvent.Post</code>. Every 20 ticks (1 second) <code class="consolas">scan</code> rebuilds a list of positions. It covers 3 chunks around the player (7x7 chunks) and 3 sections above and below the player's section. Sections that are all air, or whose palette cannot contain the block, are skipped before any per-block loop.</p>
 <div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">LevelChunkSection section = chunk.getSection(index);
 if (section.hasOnlyAir() || !section.getStates().maybeHas(state -&gt; state.is(sensor)))
-	continue;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+	continue;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">get this chunk section
+if it is all air or cannot contain a sensor block:
+    skip to the next section</code></pre></div>
 <p>On every tick, each listed position that is still an active sensor spawns <code class="consolas">(int) 0.6F + (random &lt; 0.6 ? 1 : 0)</code> glyphs, which averages 0.6 per tick, or 12 per second, per sensor. Deactivated sensors fail the block check and spawn none. The game does not spawn glyphs while paused.</p>
 <h3 id="particles-spawn">Spawning</h3>
 <p>The particle type is <code class="consolas">strawberrymc:sensor_glyph</code>, registered in <code class="consolas">PrismaticSensors.PARTICLES</code>. Its definition is <code class="consolas">sensor_glyph.json</code> in the built-in <code class="consolas">monument_cutscene</code> resource pack and lists the 26 enchanting glyph sprites <code class="consolas">minecraft:sga_a</code> to <code class="consolas">minecraft:sga_z</code>.</p>
@@ -110,7 +128,10 @@ if (section.hasOnlyAir() || !section.getStates().maybeHas(state -&gt; state.is(s
 double tx = -nz, tz = nx;
 double x = pos.getX() + 0.5 + nx * 0.52 + tx * (across - 0.5);
 double z = pos.getZ() + 0.5 + nz * 0.52 + tz * (across - 0.5);
-level.addParticle(PrismaticSensors.SENSOR_GLYPH.get(), x, pos.getY() + up, z, nx, 0.5 - across, nz);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+level.addParticle(PrismaticSensors.SENSOR_GLYPH.get(), x, pos.getY() + up, z, nx, 0.5 - across, nz);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">get the side's outward direction (x and z)
+get the direction running along that side
+x, z = the block's center, pushed 0.52 out through the side, then shifted along the side by (across - 0.5)
+spawn a SENSOR_GLYPH particle there at height up, moving outward with sideways target 0.5 - across</code></pre></div>
 <h3 id="particles-motion">Motion</h3>
 <p><code class="consolas">SensorParticles.Glyph</code> extends <code class="consolas">SingleQuadParticle</code>, has no physics or gravity, and draws in the translucent layer at block light 15. Lifetime is 60 to 84 ticks (3 to 4.2 seconds). Size is 0.06 to 0.11. Color is <code class="consolas">(0.55, 0.9, 1.0)</code> multiplied by a brightness of 0.85 to 1.0. Position is computed from the particle's age fraction <code class="consolas">t</code>, not integrated from velocity.</p>
 <table>

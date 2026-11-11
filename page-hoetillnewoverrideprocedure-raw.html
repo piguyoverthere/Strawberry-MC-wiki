@@ -66,6 +66,15 @@
             }
         }
     }
-}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">// till dirt into strawberry farmland instead of vanilla farmland
+if the player's main-hand item is any hoe:
+    if the target block is dirt, grass block or dirt path:
+        if the block above is empty:
+            cancel the vanilla tilling
+            replace the block with FARMLAND_STRAWBERRY
+            on the server: play the hoe till sound
+            if the player is not in creative mode:
+                damage the hoe by 1
+                swing the player's arm</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>
