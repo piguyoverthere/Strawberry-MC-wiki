@@ -1901,3 +1901,7 @@ html:not(.wiki-unlocked) body:not(.wiki-public):not(:has(#login-app)) > :not(.wi
 .wiki-editor-toolbar[hidden]{
     display:none !important
 }
+/* The login page stands on its own, without the wiki's menus and search */
+body:has(#login-app) .site-header{
+    display:none
+}
