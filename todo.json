@@ -643,6 +643,13 @@
    "notes": [
     "[UNRESOLVED] This technical page hasn't been written yet."
    ]
+  },
+  {
+   "file": "page-comscript-terminal-commands.html",
+   "title": "ComScript: Terminal commands",
+   "notes": [
+    "[UNRESOLVED] toml config support details"
+   ]
   }
  ]
 }
