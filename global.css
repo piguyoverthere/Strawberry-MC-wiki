@@ -659,7 +659,8 @@ li.wiki-plain{
     background:#eaecf0;
     color:#000000;
     font-family:monospace, monospace;
-    white-space:pre-wrap
+    tab-size:4;
+    white-space:pre
 }
 .code-box.vscode-code{
     border-color:#1f1f1f;
@@ -685,21 +686,28 @@ li.wiki-plain{
 .code-tab-bar button{
     padding:4px 12px;
     border:1px solid #c8ccd1;
+    border-top:3px solid transparent;
     border-bottom:none;
     border-radius:4px 4px 0 0;
-    background:#f8f9fa;
-    color:#202122;
+    background:#c8ccd1;
+    color:#54595d;
     font:inherit;
     font-size:.9em;
     cursor:pointer
 }
+.code-tab-bar button:hover{
+    color:#202122
+}
 .code-tab-bar button[aria-pressed="true"]{
     border-color:#eaecf0;
+    border-top-color:#3366cc;
     background:#eaecf0;
+    color:#202122;
     font-weight:bold
 }
 .code-tabs:has(> .vscode-code:not([hidden])) .code-tab-bar button[aria-pressed="true"]{
     border-color:#1f1f1f;
+    border-top-color:#3c8ce6;
     background:#1f1f1f;
     color:#ffffff
 }
