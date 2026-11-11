@@ -50,12 +50,175 @@
             }, "Sign out")));
     }
 
+    function finish(name) {
+        if (next) {
+            location.href = next;
+        } else {
+            location.reload();
+        }
+        renderSignedIn(name);
+    }
+
+    // After logging in with a temporary password from an admin, choose your own
+    function renderNewPassword(name, intro) {
+        const personal = element("input", { id: "login-new-password", type: "password", required: true, minlength: 6, autocomplete: "new-password" });
+        const confirm = element("input", { id: "login-new-confirm", type: "password", required: true, autocomplete: "new-password" });
+        const error = element("p", { className: "wiki-dialog-error", role: "alert" });
+        const submit = element("button", { type: "submit", className: "wiki-primary-button" }, "Save new password");
+        const form = element("form", { className: "login-card" },
+            element("p", { text: intro }),
+            field("New personal password", personal, "At least 6 characters. Only you should know it."),
+            field("Type it again", confirm),
+            error,
+            element("p", { className: "login-actions" }, submit));
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            error.textContent = "";
+            if (personal.value !== confirm.value) {
+                error.textContent = "The two passwords don't match.";
+                return;
+            }
+            submit.disabled = true;
+            try {
+                await store.changePersonalPassword(personal.value);
+                finish(name);
+            } catch (failure) {
+                error.textContent = failure.message;
+                submit.disabled = false;
+            }
+        });
+        app.replaceChildren(form);
+        document.querySelector("h1").textContent = "Choose a new password";
+        personal.focus();
+    }
+
+    // After registering with an email address: type in the code that was sent to it
+    function renderEmailCode(name, email) {
+        const code = element("input", { id: "login-email-code", inputmode: "numeric", autocomplete: "one-time-code", maxlength: 6, required: true });
+        const error = element("p", { className: "wiki-dialog-error", role: "alert" });
+        const submit = element("button", { type: "submit", className: "wiki-primary-button" }, "Confirm email");
+        const form = element("form", { className: "login-card" },
+            element("p", { text: `Your account is ready. We sent a 6-digit code to ${email} (check your spam folder too). Type it in to confirm the address, so you can reset your personal password if you forget it.` }),
+            field("Code", code),
+            error,
+            element("p", { className: "login-actions" }, submit,
+                element("button", { type: "button", className: "wiki-link-button", onclick: () => finish(name) }, "Skip for now")));
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            error.textContent = "";
+            submit.disabled = true;
+            try {
+                await store.finishEmailConfirm(code.value);
+                finish(name);
+            } catch (failure) {
+                error.textContent = failure.message;
+                submit.disabled = false;
+            }
+        });
+        app.replaceChildren(form);
+        document.querySelector("h1").textContent = "Confirm your email";
+        code.focus();
+    }
+
+    // Forgot the personal password: a code to the account's email, or a request for an admin
+    function renderForgot(emailReady) {
+        const name = element("input", { id: "login-name", type: "text", required: true, maxlength: 24, autocomplete: "username" });
+        const wikiPassword = element("input", { id: "login-wiki-password", type: "password", required: true, autocomplete: "off" });
+        const error = element("p", { className: "wiki-dialog-error", role: "alert" });
+        const emailButton = emailReady ? element("button", { type: "submit", className: "wiki-primary-button", value: "email" }, "Email me a code") : null;
+        const adminButton = element("button", { type: emailReady ? "button" : "submit", className: emailReady ? "wiki-link-button" : "wiki-primary-button", value: "admin" }, "Ask an admin instead");
+        const form = element("form", { className: "login-card" },
+            element("p", { text: emailReady
+                ? "If you confirmed an email address, we'll send a code to it. Otherwise, ask an admin: they'll set a temporary password and tell you it."
+                : "Ask an admin: they'll set a temporary password for you and tell you it. You'll choose a new one when you log in with it." }),
+            field("Username", name),
+            field("Wiki or review password", wikiPassword, "The shared password you registered with. It's needed to reach the accounts list."),
+            error,
+            element("p", { className: "login-actions" }, emailButton, adminButton,
+                element("button", { type: "button", className: "wiki-link-button", onclick: () => renderForms("login") }, "Back to log in")));
+        async function askAdmin() {
+            error.textContent = "";
+            if (!form.reportValidity()) return;
+            adminButton.disabled = true;
+            try {
+                const found = await store.requestPasswordReset(name.value, wikiPassword.value);
+                app.replaceChildren(element("div", { className: "login-card" },
+                    element("p", { text: `Done. An admin will see that ${found} needs a password reset on the Admin page, set a temporary password and tell you it. You'll choose a new one when you log in with it.` }),
+                    element("button", { type: "button", className: "wiki-link-button", onclick: () => renderForms("login") }, "Back to log in")));
+            } catch (failure) {
+                error.textContent = failure.message;
+                adminButton.disabled = false;
+            }
+        }
+        if (emailReady) adminButton.addEventListener("click", askAdmin);
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (!emailReady) {
+                askAdmin();
+                return;
+            }
+            error.textContent = "";
+            emailButton.disabled = true;
+            try {
+                const sentTo = await store.startPasswordReset(name.value, wikiPassword.value);
+                renderResetCode(sentTo);
+            } catch (failure) {
+                error.textContent = failure.message;
+                emailButton.disabled = false;
+            }
+        });
+        app.replaceChildren(form);
+        document.querySelector("h1").textContent = "Forgot your password";
+        name.focus();
+    }
+
+    function renderResetCode(sentTo) {
+        const code = element("input", { id: "login-reset-code", inputmode: "numeric", autocomplete: "one-time-code", maxlength: 6, required: true });
+        const personal = element("input", { id: "login-new-password", type: "password", required: true, minlength: 6, autocomplete: "new-password" });
+        const confirm = element("input", { id: "login-new-confirm", type: "password", required: true, autocomplete: "new-password" });
+        const remember = element("input", { id: "login-remember", type: "checkbox", checked: true });
+        const error = element("p", { className: "wiki-dialog-error", role: "alert" });
+        const submit = element("button", { type: "submit", className: "wiki-primary-button" }, "Set new password");
+        const form = element("form", { className: "login-card" },
+            element("p", { text: `We sent a 6-digit code to ${sentTo}. It works for 15 minutes; check your spam folder too.` }),
+            field("Code", code),
+            field("New personal password", personal, "At least 6 characters."),
+            field("Type it again", confirm),
+            element("label", { className: "wiki-checkbox" }, remember, " Remember me on this device"),
+            error,
+            element("p", { className: "login-actions" }, submit));
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            error.textContent = "";
+            if (personal.value !== confirm.value) {
+                error.textContent = "The two passwords don't match.";
+                return;
+            }
+            submit.disabled = true;
+            try {
+                const signedIn = await store.finishPasswordReset(code.value, personal.value, remember.checked);
+                finish(signedIn.name);
+            } catch (failure) {
+                error.textContent = failure.message;
+                submit.disabled = false;
+            }
+        });
+        app.replaceChildren(form);
+        code.focus();
+    }
+
     function renderForms(mode) {
         const register = mode === "register";
         const name = element("input", { id: "login-name", type: "text", required: true, maxlength: 24, autocomplete: "username" });
         const wikiPassword = element("input", { id: "login-wiki-password", type: "password", required: true, autocomplete: "off" });
         const personal = element("input", { id: "login-personal-password", type: "password", required: true, minlength: register ? 6 : null, autocomplete: register ? "new-password" : "current-password" });
         const confirm = register ? element("input", { id: "login-confirm", type: "password", required: true, autocomplete: "new-password" }) : null;
+        const email = register ? element("input", { id: "login-email", type: "email", maxlength: 254, autocomplete: "email" }) : null;
+        const emailField = email ? field("Email address (optional)", email, "Only used to send you a code if you forget your personal password. It's saved locked, never in the public files.") : null;
+        if (emailField) {
+            emailField.hidden = true;
+            store.emailReady().then((ready) => { emailField.hidden = !ready; });
+        }
         const remember = element("input", { id: "login-remember", type: "checkbox", checked: true });
         const error = element("p", { className: "wiki-dialog-error", role: "alert" });
         const submit = element("button", { type: "submit", className: "wiki-primary-button" }, register ? "Register" : "Log in");
@@ -71,10 +234,15 @@
             field(register ? "Personal password (choose one)" : "Personal password", personal,
                 register ? "At least 6 characters. Only you should know it. Don't reuse a password from another site." : null),
             confirm ? field("Confirm personal password", confirm) : null,
+            emailField,
             element("label", { className: "wiki-checkbox" }, remember, " Remember me on this device"),
             element("p", { className: "wiki-dialog-hint" }, "Untick this on a shared computer, and you're signed out when you close the tab."),
             error,
-            element("p", { className: "login-actions" }, submit));
+            element("p", { className: "login-actions" }, submit,
+                register ? null : element("button", {
+                    type: "button", className: "wiki-link-button",
+                    onclick: async () => renderForgot(await store.emailReady())
+                }, "Forgot your personal password?")));
 
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
@@ -89,12 +257,20 @@
                 const signedIn = register
                     ? await store.register(name.value, wikiPassword.value, personal.value, remember.checked)
                     : await store.login(name.value, wikiPassword.value, personal.value, remember.checked);
-                if (next) {
-                    location.href = next;
-                } else {
-                    location.reload();
+                if (signedIn.mustChangePassword) {
+                    renderNewPassword(signedIn.name, "You logged in with a temporary password from an admin. Choose your own personal password now.");
+                    return;
                 }
-                renderSignedIn(signedIn.name);
+                if (email?.value.trim() && !emailField.hidden) {
+                    try {
+                        await store.startEmailConfirm(email.value);
+                        renderEmailCode(signedIn.name, email.value.trim());
+                        return;
+                    } catch (failure) {
+                        window.alert(`Your account is ready, but the email couldn't be sent: ${failure.message} You can add it later with Confirm email in the top bar.`);
+                    }
+                }
+                finish(signedIn.name);
             } catch (failure) {
                 error.textContent = failure.message;
                 submit.disabled = false;

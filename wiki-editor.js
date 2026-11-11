@@ -3672,6 +3672,115 @@
         document.body.append(annotationScript);
     }
 
+    // Password recovery ---------------------------------------------------------------------------
+    // Email addresses are saved locked with a key made from the shared GitHub token, so the public repository never
+    // shows them (anyone who can log in could still unlock them). Codes are sent through EmailJS, set up by an admin
+    // on the Admin page; its template uses {{to_email}}, {{to_name}}, {{code}} and {{purpose}}.
+    const emailConfigFile = "email-config.json";
+    const emailStateKey = "strawberry-wiki-email-confirmed";
+
+    function emailKey(token) {
+        return deriveKey(token, new TextEncoder().encode("strawberry-wiki-email"), 100000);
+    }
+
+    async function lockEmail(token, email) {
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const data = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await emailKey(token), new TextEncoder().encode(email)));
+        return { iv: bytesToBase64(iv), data: bytesToBase64(data) };
+    }
+
+    async function unlockEmail(token, locked) {
+        try {
+            const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: base64ToBytes(locked.iv) }, await emailKey(token), base64ToBytes(locked.data));
+            return new TextDecoder().decode(plain);
+        } catch {
+            throw new Error("This account's email address can't be read any more. Ask an admin instead.");
+        }
+    }
+
+    async function loadEmailConfig() {
+        try {
+            const response = await fetch(emailConfigFile, { cache: "no-cache" });
+            const config = response.ok ? await response.json() : null;
+            return config?.serviceId && config.templateId && config.publicKey ? config : null;
+        } catch {
+            return null;
+        }
+    }
+
+    const validEmail = (email) => email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const maskEmail = (email) => email.replace(/^(.)[^@]*(@.*)$/, "$1•••$2");
+
+    async function sendCode(email, name, purpose) {
+        const config = await loadEmailConfig();
+        if (!config) {
+            throw new Error("Email isn't set up on this wiki yet. Ask an admin.");
+        }
+        const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1000000).padStart(6, "0");
+        const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                service_id: config.serviceId, template_id: config.templateId, user_id: config.publicKey,
+                template_params: { to_email: email, to_name: name, code, purpose, site: "Strawberry MC wiki" }
+            })
+        });
+        if (!response.ok) {
+            throw new Error(`The email could not be sent: ${(await response.text().catch(() => "")) || response.status}`);
+        }
+        return code;
+    }
+
+    // A code sent by email waits here to be typed in. It lives only in this tab, for 15 minutes and 5 tries.
+    let pendingCode = null;
+    function checkCode(kind, code) {
+        if (!pendingCode || pendingCode.kind !== kind || Date.now() > pendingCode.expires) {
+            pendingCode = null;
+            throw new Error("That code has run out. Ask for a new one.");
+        }
+        if (code.trim() !== pendingCode.code) {
+            if (++pendingCode.tries >= 5) {
+                pendingCode = null;
+                throw new Error("Too many wrong codes. Ask for a new one.");
+            }
+            throw new Error("That code isn't right. Check the email and try again.");
+        }
+        const done = pendingCode;
+        pendingCode = null;
+        return done;
+    }
+
+    function rememberEmailState(name, confirmed) {
+        try {
+            sessionStorage.setItem(emailStateKey, `${accountKey(name)}:${confirmed ? "yes" : "no"}`);
+        } catch {
+            // Asked again on the next page.
+        }
+    }
+
+    async function setPersonalPassword(token, name, password, message, { mustChange = false } = {}) {
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const hash = await hashPersonalPassword(password, salt, accountIterations);
+        let account = null;
+        await updateRepositoryJson(token, accountsFile, (data) => {
+            account = data.accounts?.[accountKey(name)];
+            if (!account) {
+                throw new Error(`There's no account named "${name}".`);
+            }
+            Object.assign(account, { salt: bytesToBase64(salt), iterations: accountIterations, hash });
+            delete account.resetRequested;
+            if (mustChange) account.mustChangePassword = true;
+            else delete account.mustChangePassword;
+        }, message);
+        return account;
+    }
+
+    function requirePersonalPassword(password) {
+        if (password.length < 6) {
+            throw new Error("Personal passwords need at least 6 characters.");
+        }
+    }
+
     window.wikiStore = {
         repositoryUrl: `https://github.com/${repository.owner}/${repository.name}`,
         roles,
@@ -3714,7 +3823,7 @@
                 throw new Error(blocked);
             }
             rememberSignIn(token, account.name, role, remember);
-            return { name: account.name, role };
+            return { name: account.name, role, mustChangePassword: Boolean(account.mustChangePassword) };
         },
         async register(name, password, personalPassword, remember = false) {
             name = name.trim().replace(/\s+/g, " ");
@@ -3956,7 +4065,207 @@
             const encrypted = await encryptToken(shared, password);
             const existing = await getRepositoryFile(token, sharedTokenFile);
             await putRepositoryFile(token, sharedTokenFile, `${JSON.stringify(encrypted, null, 2)}\n`, `${readAccount()} changes the wiki password`, existing?.sha);
+        },
+
+        // Password recovery
+        emailReady: async () => Boolean(await loadEmailConfig()),
+        readEmailConfig: loadEmailConfig,
+        async setEmailConfig(config) {
+            const token = requireAdmin();
+            await checkAccount(token);
+            const clean = Object.fromEntries(["serviceId", "templateId", "publicKey"].map((key) => [key, String(config[key] || "").trim()]));
+            if (Object.values(clean).some((value) => !/^[\w-]{3,64}$/.test(value))) {
+                throw new Error("Fill in the service ID, template ID and public key exactly as EmailJS shows them.");
+            }
+            const existing = await getRepositoryFile(token, emailConfigFile);
+            await putRepositoryFile(token, emailConfigFile, `${JSON.stringify(clean, null, 2)}\n`, `${readAccount()} sets up email for password recovery`, existing?.sha);
+        },
+        // Whether the signed-in account has a confirmed email address (checked once per tab)
+        async hasConfirmedEmail() {
+            const name = readAccount();
+            const token = readToken();
+            if (!token || !name) return false;
+            try {
+                const saved = sessionStorage.getItem(emailStateKey);
+                if (saved?.startsWith(`${accountKey(name)}:`)) return saved.endsWith(":yes");
+            } catch {
+                // Check the accounts file instead.
+            }
+            const account = (await readAccounts(token)).accounts?.[accountKey(name)];
+            const confirmed = Boolean(account?.emailConfirmed);
+            rememberEmailState(name, confirmed);
+            return confirmed;
+        },
+        async startEmailConfirm(email) {
+            const token = readToken();
+            const name = readAccount();
+            if (!token || !name) {
+                throw new Error("Log in first.");
+            }
+            email = email.trim();
+            if (!validEmail(email)) {
+                throw new Error("That doesn't look like an email address.");
+            }
+            const code = await sendCode(email, name, "confirm your email address");
+            pendingCode = { kind: "confirm", code, email, expires: Date.now() + 15 * 60 * 1000, tries: 0 };
+        },
+        async finishEmailConfirm(code) {
+            const token = readToken();
+            const name = readAccount();
+            const { email } = checkCode("confirm", code);
+            const locked = await lockEmail(token, email);
+            await updateRepositoryJson(token, accountsFile, (data) => {
+                const account = data.accounts?.[accountKey(name)];
+                if (!account) {
+                    throw new Error("Your account no longer exists. Log in again.");
+                }
+                account.email = locked;
+                account.emailConfirmed = new Date().toISOString();
+            }, `${name} confirms an email address`);
+            rememberEmailState(name, true);
+        },
+        // Forgot your personal password: a code goes to the account's confirmed email address
+        async startPasswordReset(name, password) {
+            const { token, kind } = await unlockEither(password);
+            const account = (await readAccounts(token)).accounts?.[accountKey(name)];
+            if (!account) {
+                throw new Error(`There's no account named "${name}".`);
+            }
+            if (kind === "review" && (account.role || "editor") !== "reviewer") {
+                throw new Error("Admins and editors use the wiki password, not the review password.");
+            }
+            if (!account.email || !account.emailConfirmed) {
+                throw new Error(`${account.name} has no confirmed email address. Use "Ask an admin" instead.`);
+            }
+            const email = await unlockEmail(token, account.email);
+            const code = await sendCode(email, account.name, "reset your personal password");
+            pendingCode = { kind: "reset", code, name: account.name, token, expires: Date.now() + 15 * 60 * 1000, tries: 0 };
+            return maskEmail(email);
+        },
+        async finishPasswordReset(code, personalPassword, remember = false) {
+            requirePersonalPassword(personalPassword);
+            const { name, token } = checkCode("reset", code);
+            const account = await setPersonalPassword(token, name, personalPassword, `Reset personal password: ${name}`);
+            const blocked = blockedMessage(account);
+            if (blocked) {
+                throw new Error(`Your new password is saved, but ${blocked}`);
+            }
+            const role = account.role || "editor";
+            rememberSignIn(token, account.name, role, remember);
+            return { name: account.name, role };
+        },
+        // Forgot your personal password without an email address: an admin sets a temporary one
+        async requestPasswordReset(name, password) {
+            const { token } = await unlockEither(password);
+            const found = (await readAccounts(token)).accounts?.[accountKey(name)]?.name;
+            if (!found) {
+                throw new Error(`There's no account named "${name}".`);
+            }
+            await updateRepositoryJson(token, accountsFile, (data) => {
+                const account = data.accounts?.[accountKey(name)];
+                if (!account) {
+                    throw new Error(`There's no account named "${name}".`);
+                }
+                if (account.resetRequested) return false;
+                account.resetRequested = new Date().toISOString();
+            }, `${found} asks an admin to reset their password`);
+            return found;
+        },
+        async setTemporaryPassword(name, password) {
+            const token = requireAdmin();
+            await checkAccount(token);
+            requirePersonalPassword(password);
+            await setPersonalPassword(token, name, password, `${readAccount()} resets the password of: ${name}`, { mustChange: true });
+        },
+        async changePersonalPassword(password) {
+            const token = readToken();
+            const name = readAccount();
+            if (!token || !name) {
+                throw new Error("Log in first.");
+            }
+            requirePersonalPassword(password);
+            await setPersonalPassword(token, name, password, `${name} changes their personal password`);
         }
     };
     document.dispatchEvent(new Event("wiki-store-ready"));
+
+    // While signed in without a confirmed email address, a button in the top bar offers to add one, for getting back
+    // in after forgetting the personal password.
+    function openConfirmEmailDialog(button) {
+        const dialog = createDialog(`
+            <form method="dialog">
+                <h2>Confirm your email address</h2>
+                <p class="wiki-dialog-hint">If you forget your personal password, a code sent to this address lets you set a new one.
+                    It's saved locked, so it never shows in the public files.</p>
+                <label for="wiki-confirm-email">Email address</label>
+                <input id="wiki-confirm-email" type="email" required autocomplete="email" maxlength="254">
+                <div class="wiki-confirm-code" hidden>
+                    <label for="wiki-confirm-code">The 6-digit code we emailed you</label>
+                    <input id="wiki-confirm-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+                </div>
+                <p class="wiki-dialog-error" role="alert"></p>
+                <div class="wiki-dialog-actions">
+                    <button type="button" value="cancel">Not now</button>
+                    <button type="submit" class="wiki-primary">Send code</button>
+                </div>
+            </form>
+        `);
+        const form = dialog.querySelector("form");
+        const email = dialog.querySelector("#wiki-confirm-email");
+        const codeBox = dialog.querySelector(".wiki-confirm-code");
+        const code = dialog.querySelector("#wiki-confirm-code");
+        const error = dialog.querySelector(".wiki-dialog-error");
+        const submit = dialog.querySelector('button[type="submit"]');
+        dialog.addEventListener("close", () => dialog.remove());
+        email.addEventListener("input", () => {
+            // A different address needs a new code
+            codeBox.hidden = true;
+            submit.textContent = "Send code";
+        });
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            error.textContent = "";
+            submit.disabled = true;
+            try {
+                if (codeBox.hidden) {
+                    await window.wikiStore.startEmailConfirm(email.value);
+                    codeBox.hidden = false;
+                    submit.textContent = "Confirm";
+                    code.focus();
+                    error.textContent = "Code sent. It can take a minute to arrive; check your spam folder too.";
+                } else {
+                    await window.wikiStore.finishEmailConfirm(code.value);
+                    dialog.close();
+                    button?.remove();
+                    status.textContent = "Your email address is confirmed.";
+                }
+            } catch (failure) {
+                error.textContent = failure.message;
+            } finally {
+                submit.disabled = false;
+            }
+        });
+        dialog.showModal();
+        email.focus();
+    }
+
+    (async () => {
+        const nav = document.querySelector(".site-header nav");
+        if (!nav || !readToken() || !readAccount() || lockedPages.includes(currentPage)) return;
+        try {
+            if (!(await loadEmailConfig()) || await window.wikiStore.hasConfirmedEmail()) return;
+        } catch {
+            return;
+        }
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "nav-button wiki-confirm-email-button";
+        button.dataset.wikiInjected = "";
+        button.textContent = "✉ Confirm email";
+        button.title = "Add an email address so you can reset your personal password if you forget it";
+        button.addEventListener("click", () => openConfirmEmailDialog(button));
+        const signOut = nav.querySelector(".wiki-sign-out-button");
+        if (signOut) signOut.before(button);
+        else nav.append(button);
+    })();
 })();

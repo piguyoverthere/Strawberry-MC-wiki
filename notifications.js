@@ -94,6 +94,11 @@
             return { type: "review", who: match[1], text: ` ${match[2]} `, target: match[3], href: null, vote: match[2] === "approves" ? "approve" : "disapprove" };
         if ((match = line.match(/^([^:]+?) sets role of ([^:]+) to (admin|editor|reviewer)$/))) return { type: "account", who: match[1], text: ` made ${match[2]} ${match[3] === "admin" ? "an admin" : match[3] === "editor" ? "an editor" : "a reviewer"}`, target: "", href: null };
         if ((match = line.match(/^([^:]+?) (blocks [^:]+ until .+|unblocks [^:]+)$/))) return { type: "account", who: match[1], text: ` ${match[2]}`, target: "", href: null };
+        if (/^.+ confirms an email address$|^Reset personal password: |^.+ changes their personal password$/.test(line)) return null;
+        if ((match = line.match(/^([^:]+?) changes the wiki password$/))) return { type: "account", who: match[1], text: " changed the wiki password", target: "", href: null };
+        if ((match = line.match(/^([^:]+?) sets up email for password recovery$/))) return { type: "account", who: match[1], text: " set up email for password recovery", target: "", href: null };
+        if ((match = line.match(/^([^:]+?) asks an admin to reset their password$/))) return { type: "account", who: match[1], text: " asked an admin to reset their password", target: "", href: "admin.html" };
+        if ((match = line.match(/^([^:]+?) resets the password of: (.+)$/))) return { type: "account", who: match[1], text: ` reset the password of ${match[2]}`, target: "", href: null };
         if ((match = line.match(/^([^:]+?) sets the review password$/))) return { type: "account", who: match[1], text: " set the review password", target: "", href: null };
         if ((match = line.match(/^Create (.+) page$/))) return { type: "page-new", text: "New page: ", target: match[1], page: true };
         if ((match = line.match(/^Update (.+) page$/))) return { type: "page-edit", text: "Page changed: ", target: match[1], page: true };

@@ -76,6 +76,7 @@
                     : element("select", { "aria-label": `Role of ${account.name}`, onchange: (event) => setRole(key, event.target.value) },
                         ...store.roles.map((value) => element("option", { value, selected: value === role, text: value })))),
                 element("td", { text: account.created ? formatTime(account.created) : "" }),
+                element("td", { text: account.emailConfirmed ? "✓ Confirmed" : "—" }),
                 element("td", {}, blocked ? element("span", { className: "admin-blocked", text: `Blocked until ${formatTime(account.blockedUntil)}` }) : "Active"),
                 element("td", { className: "admin-actions" }, role !== "reviewer"
                     ? element("span", { className: "idea-meta", text: "Only reviewers can be blocked" })
@@ -91,7 +92,7 @@
             element("h2", { text: "Accounts" }),
             rows.length
                 ? element("div", { className: "admin-table-wrap" }, element("table", { className: "admin-table" },
-                    element("thead", {}, element("tr", {}, ...["Account", "Role", "Registered", "Status", "Block"].map((text) => element("th", { text })))),
+                    element("thead", {}, element("tr", {}, ...["Account", "Role", "Registered", "Email", "Status", "Block"].map((text) => element("th", { text })))),
                     element("tbody", {}, ...rows)))
                 : element("p", { text: "No accounts yet." }),
             element("p", { className: "wiki-dialog-hint", text: "Admins: everything goes live, approve reviews, use this panel. Editors: everything goes live, approve reviews. Reviewers: votes count straight away, other changes wait for an admin or editor, can't start threads, new pages are [draft] pages. Blocked reviewers can't log in or save until the block ends." }));
@@ -159,6 +160,66 @@
             form);
     }
 
+    // People who forgot their personal password and asked an admin. The temporary password is replaced by one of
+    // their own the next time they log in.
+    function renderResetRequests() {
+        const waiting = Object.values(accounts).filter((account) => account.resetRequested)
+            .sort((a, b) => a.resetRequested.localeCompare(b.resetRequested));
+        async function reset(account) {
+            const password = window.prompt(`Temporary password for ${account.name} (at least 6 characters). Tell it to them yourself; they'll choose their own when they log in.`);
+            if (!password) return;
+            if (window.prompt(`Type the temporary password for ${account.name} again`) !== password) {
+                status.textContent = "The two temporary passwords don't match. Nothing was changed.";
+                return;
+            }
+            status.textContent = "Saving…";
+            try {
+                await store.setTemporaryPassword(account.name, password);
+                accounts = (await store.readAccounts()).accounts || {};
+                render();
+                status.textContent = `${account.name} has a temporary password now. Tell it to them; they'll pick a new one when they log in.`;
+            } catch (error) {
+                status.textContent = `Could not reset the password: ${error.message}`;
+            }
+        }
+        return element("section", { className: "admin-section" },
+            element("h2", { text: `Password reset requests (${waiting.length})` }),
+            waiting.length
+                ? element("ul", {}, ...waiting.map((account) => element("li", {},
+                    element("strong", { text: account.name }), ` asked ${formatTime(account.resetRequested)} `,
+                    element("button", { type: "button", text: "Set temporary password", onclick: () => reset(account) }))))
+                : element("p", { text: "Nobody is waiting for a password reset." }),
+            element("p", { className: "wiki-dialog-hint", text: "People with a confirmed email address can reset their own password from the login page. The others land here." }));
+    }
+
+    // EmailJS sends the codes for confirming email addresses and resetting passwords
+    function renderEmailSettings(config) {
+        const input = (name, label) => element("input", { type: "text", name, placeholder: label, "aria-label": label, value: config?.[name] || "", required: true, autocomplete: "off", spellcheck: "false" });
+        const inputs = [input("serviceId", "Service ID"), input("templateId", "Template ID"), input("publicKey", "Public key")];
+        const form = element("form", { className: "admin-password-form" }, ...inputs, element("button", { type: "submit", className: "wiki-primary-button", text: "Save email settings" }));
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            status.textContent = "Saving…";
+            try {
+                await store.setEmailConfig(Object.fromEntries(inputs.map((field) => [field.name, field.value])));
+                status.textContent = "Email settings saved. The email options appear for everyone in a minute or two, once the site updates.";
+            } catch (error) {
+                status.textContent = `Could not save: ${error.message}`;
+            }
+        });
+        return element("section", { className: "admin-section" },
+            element("h2", { text: "Email for password recovery" }),
+            element("p", {}, config
+                ? "Email is set up: people can confirm an email address and reset their own password with a code."
+                : "Not set up yet: the email options stay hidden until it is. Password resets go through the requests list above."),
+            element("ol", {},
+                element("li", {}, "Make a free account at ", element("a", { href: "https://www.emailjs.com/", target: "_blank", rel: "noopener", text: "emailjs.com" }), " and add an email service (for example your Gmail). Copy its Service ID."),
+                element("li", {}, "Make an email template. Set its To Email to {{to_email}}, its subject to something like \"Your Strawberry MC wiki code\", and its message to: Hi {{to_name}}, your code to {{purpose}} is {{code}}. Copy its Template ID."),
+                element("li", {}, "Under Account, copy your Public Key, and add this site's address to the allowed origins if EmailJS asks."),
+                element("li", {}, "Paste all three here. They're saved in the public email-config.json, which is how EmailJS is meant to be used, but it means someone could use them to send emails through your account, so keep the free plan's limits.")),
+            form);
+    }
+
     async function approveAll(event) {
         if (!window.confirm("Approve everything waiting for review, including page edits and drafts?")) return;
         event.target.disabled = true;
@@ -207,14 +268,16 @@
     let queue = element("section", { className: "admin-section" }, element("p", { text: "Loading the review queue…" }));
     let reviewSection = renderReviewPassword(false);
     const wikiPasswordSection = renderWikiPassword();
+    let emailSection = renderEmailSettings(null);
 
     function render() {
-        app.replaceChildren(...(store.isAdmin() ? [status, queue, renderAccounts(), wikiPasswordSection, reviewSection] : [status, queue]));
+        app.replaceChildren(...(store.isAdmin() ? [status, queue, renderResetRequests(), renderAccounts(), wikiPasswordSection, reviewSection, emailSection] : [status, queue]));
     }
 
-    Promise.all(store.isAdmin() ? [store.readAccounts(), store.hasReviewPassword(), renderQueue()] : [{}, false, renderQueue()]).then(([data, reviewSet, queueSection]) => {
+    Promise.all(store.isAdmin() ? [store.readAccounts(), store.hasReviewPassword(), renderQueue(), store.readEmailConfig()] : [{}, false, renderQueue(), null]).then(([data, reviewSet, queueSection, emailConfig]) => {
         accounts = data.accounts || {};
         reviewSection = renderReviewPassword(reviewSet);
+        emailSection = renderEmailSettings(emailConfig);
         queue = queueSection;
         render();
     }).catch((error) => {
