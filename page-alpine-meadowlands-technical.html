@@ -50,11 +50,11 @@
 
 <h2 id="runtime-temperature">Runtime temperature override</h2>
 <p>A biome below 0.15 receives snow layers and snowfall. To keep the file's value of 0.1 from causing snow without editing MCreator's generated biome, the mod registers a custom biome modifier type, <code class="consolas">strawberrymc:set_temperature</code>. The file <code class="consolas">biome_modifier/alpine_meadow_no_snow.json</code> applies it with temperature 0.5.</p>
-<pre class="code-box"><code class="consolas">@Override
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">@Override
 public void modify(Holder&lt;Biome&gt; biome, Phase phase, ModifiableBiomeInfo.BiomeInfo.Builder builder) {
 	if (phase == Phase.MODIFY &amp;&amp; this.biomes.contains(biome))
 		builder.getClimateSettings().setTemperature(this.temperature);
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>The record <code class="consolas">SetTemperatureBiomeModifier</code> takes a biome holder set and a float through its <code class="consolas">MapCodec</code>.</p>
 
 <h2 id="climate">Climate</h2>
@@ -88,12 +88,12 @@ public void modify(Holder&lt;Biome&gt; biome, Phase phase, ModifiableBiomeInfo.B
 </tbody>
 </table>
 <p>Each chunk makes one attempt at a random surface position. <code class="consolas">FirTree.place</code> takes the block below the origin and continues only if it is in <code class="consolas">BlockTags.SUBSTRATE_OVERWORLD</code>. The tree itself is described on <a href="page-fir-technical.html">Fir</a>, and the choice of tree is made by <a href="page-determinerandfirprocedure-raw.html">DetermineRandFirProcedure [raw]</a>.</p>
-<pre class="code-box"><code class="consolas">// substrate_overworld covers grass, dirt, podzol, moss and mud (DIRT alone no longer includes grass)
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">// substrate_overworld covers grass, dirt, podzol, moss and mud (DIRT alone no longer includes grass)
 if (!level.getBlockState(ground).is(BlockTags.SUBSTRATE_OVERWORLD)) {
     return false;
 }
 
 DetermineRandFirProcedure.execute(level, ground.getX(), ground.getY(), ground.getZ());
-return true;</code></pre>
+return true;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

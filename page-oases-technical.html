@@ -17,11 +17,11 @@
 
 <h2 id="spawner-block">Oasis Spawner block</h2>
 <p><code class="consolas">OasisSpawnerBlock</code> is an MCreator element (<code class="consolas">elements/OasisSpawner.mod.json</code>) with hardness 1, resistance 10 and gravel sounds. It sits in the <code class="consolas">Debug</code> creative tab, and its loot table has no pools, so it drops nothing. Its only behavior is the <code class="consolas">onPlace</code> override:</p>
-<pre class="code-box"><code class="consolas">@Override
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">@Override
 public void onPlace(BlockState blockstate, Level world, BlockPos pos, BlockState oldState, boolean moving) {
 	super.onPlace(blockstate, world, pos, oldState, moving);
 	OasisSpawnProcedure.execute(world, pos.getX(), pos.getY(), pos.getZ());
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>The spawner is the only caller of the procedure. No configured feature, structure or biome modifier places the block.</p>
 
 <h2 id="order">Order of operations</h2>
@@ -48,7 +48,7 @@ public void onPlace(BlockState blockstate, Level world, BlockPos pos, BlockState
 <tr><td>Palm trees</td><td>3 to 5</td><td>1 or 2</td></tr>
 </tbody>
 </table>
-<pre class="code-box"><code class="consolas">boolean isLarge = random.nextBoolean();
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">boolean isLarge = random.nextBoolean();
 int baseRadius = isLarge ? 5 : 3;
 
 int numPools = 2 + random.nextInt(2);
@@ -58,7 +58,7 @@ for (int i = 0; i &lt; numPools; i++) {
     pools[i][0] = random.nextInt(baseRadius) - (baseRadius / 2);
     pools[i][1] = random.nextInt(baseRadius) - (baseRadius / 2);
     pools[i][2] = baseRadius + random.nextInt(3);
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 
 <h2 id="column-scan">Column scan</h2>
 <p>For each column, the procedure measures the distance to every pool center and subtracts <code class="consolas">random.nextFloat() * 1.2f</code> from that pool's radius, which roughens the shoreline. A column is water if it falls inside any pool. It records <code class="consolas">maxInsideDist</code>, the deepest it sits inside a pool, and <code class="consolas">minDistToWaterEdge</code>, the smallest distance outside one.</p>
@@ -72,11 +72,11 @@ for (int i = 0; i &lt; numPools; i++) {
 
 <h3 id="bank-columns">Bank columns</h3>
 <p>Columns within 10 blocks of water may become bank. Up to 4 blocks away the bank is always placed. Beyond that the chance fades with the square of the remaining distance:</p>
-<pre class="code-box"><code class="consolas">if (minDistToWaterEdge &gt; 4.0) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">if (minDistToWaterEdge &gt; 4.0) {
     float chance = (10.0f - (float)minDistToWaterEdge) / 6.0f;
     // Squaring the chance makes the fade-out look much more natural and scattered
     if (random.nextFloat() &gt; (chance * chance)) placeBank = false;
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>A bank block sits at <code class="consolas">y-1</code>, flush with the water surface, and blocks at offsets 0 to 2 above the origin level are cleared first.</p>
 <table>
 <thead>

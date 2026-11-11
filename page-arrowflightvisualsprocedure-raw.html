@@ -13,7 +13,7 @@
             </nav>
         </header>
         <h1>ArrowFlightVisualsProcedure [raw]</h1>
-        <pre class="code-box vscode-code"><code class="consolas"><span style="color: #569CD6">package</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures</span>;
+        <div class="code-tabs"><pre class="code-box vscode-code" data-tab="Java"><code class="consolas"><span style="color: #569CD6">package</span> <span style="color: #D4D4D4">io.github.strawberrymc.procedures</span>;
 
 <span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.neoforged.neoforge.event.tick.EntityTickEvent</span>;
 <span style="color: #569CD6">import</span> <span style="color: #D4D4D4">net.neoforged.fml.common.EventBusSubscriber</span>;
@@ -158,6 +158,6 @@
 	<span style="color: #569CD6">private static</span> <span style="color: #4EC9B0">Entity</span> <span style="color: #DCDCAA">findEntityInWorldRange</span>(<span style="color: #4EC9B0">LevelAccessor</span> <span style="color: #9CDCFE">world</span>, <span style="color: #4EC9B0">Class</span>&lt;<span style="color: #569CD6">? extends</span> <span style="color: #4EC9B0">Entity</span>&gt; <span style="color: #9CDCFE">clazz</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">x</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">y</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">z</span>, <span style="color: #4EC9B0">double</span> <span style="color: #9CDCFE">range</span>) {
 		<span style="color: #C586C0">return</span> (Entity) <span style="color: #9CDCFE">world</span>.<span style="color: #DCDCAA">getEntitiesOfClass</span>(clazz, <span style="color: #9CDCFE">AABB</span>.<span style="color: #DCDCAA">ofSize</span>(<span style="color: #C586C0">new</span> <span style="color: #DCDCAA">Vec3</span>(x, y, z), range, range, range), e <span style="color: #569CD6">-&gt; true</span>).<span style="color: #DCDCAA">stream</span>().<span style="color: #DCDCAA">sorted</span>(<span style="color: #9CDCFE">Comparator</span>.<span style="color: #DCDCAA">comparingDouble</span>(e <span style="color: #569CD6">-&gt;</span> <span style="color: #9CDCFE">e</span>.<span style="color: #DCDCAA">distanceToSqr</span>(x, y, z))).<span style="color: #DCDCAA">findFirst</span>().<span style="color: #DCDCAA">orElse</span>(<span style="color: #569CD6">null</span>);
 	}
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

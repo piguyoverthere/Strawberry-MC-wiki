@@ -10,7 +10,7 @@
     const dataFile = "annotations.json";
     const page = decodeURIComponent(location.pathname).split("/").pop();
     const markClass = "wiki-annotation-mark";
-    const excluded = "[data-wiki-island], .wiki-raw-html";
+    const excluded = "[data-wiki-island], [data-wiki-injected], .wiki-raw-html";
     const contextLength = 32;
     const maxQuote = 1000;
     let data = { annotations: [] };

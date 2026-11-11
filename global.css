@@ -341,6 +341,34 @@ li.wiki-plain{
     border-radius:6px;
     background:#f7fbfc
 }
+.wiki-textbox.wiki-warning,
+.wiki-textbox.wiki-danger{
+    border-left-width:6px
+}
+.wiki-textbox.wiki-warning{
+    border-color:#c99a06;
+    background:#fff8d6;
+    color:#3d2f00
+}
+.wiki-textbox.wiki-danger{
+    border-color:#c62828;
+    background:#fdecea;
+    color:#4a0d0d
+}
+.wiki-textbox.wiki-warning::before,
+.wiki-textbox.wiki-danger::before{
+    display:block;
+    margin-top:8px;
+    font-weight:bold
+}
+.wiki-textbox.wiki-warning::before{
+    content:"⚠ Warning";
+    color:#7a5c00
+}
+.wiki-textbox.wiki-danger::before{
+    content:"⛔ Danger";
+    color:#b71c1c
+}
 .wiki-format-bar{
     position:fixed;
     z-index:10;
@@ -641,6 +669,39 @@ li.wiki-plain{
     line-height:19px;
     tab-size:4;
     white-space:pre
+}
+.code-tabs{
+    margin:12px 0
+}
+.code-tabs > .code-box{
+    margin-top:0;
+    border-top-left-radius:0
+}
+.code-tab-bar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:2px
+}
+.code-tab-bar button{
+    padding:4px 12px;
+    border:1px solid #c8ccd1;
+    border-bottom:none;
+    border-radius:4px 4px 0 0;
+    background:#f8f9fa;
+    color:#202122;
+    font:inherit;
+    font-size:.9em;
+    cursor:pointer
+}
+.code-tab-bar button[aria-pressed="true"]{
+    border-color:#eaecf0;
+    background:#eaecf0;
+    font-weight:bold
+}
+.code-tabs:has(> .vscode-code:not([hidden])) .code-tab-bar button[aria-pressed="true"]{
+    border-color:#1f1f1f;
+    background:#1f1f1f;
+    color:#ffffff
 }
 .vscode-code code{
     font-family:Consolas, Menlo, Monaco, 'Courier New', monospace

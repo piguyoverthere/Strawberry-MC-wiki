@@ -20,8 +20,8 @@
 
 <h3 id="biome-source-preset">Biome source preset</h3>
 <p><code class="consolas">BiomeSourcePresetMixin</code> targets <code class="consolas">MultiNoiseBiomeSourceParameterList.Preset</code> and injects at the end of its constructor. For the identifiers <code class="consolas">minecraft:overworld</code> and <code class="consolas">minecraft:nether</code>, it replaces the preset's <code class="consolas">provider</code> field with a provider that runs the original one first and passes the result through the mod.</p>
-<pre class="code-box"><code class="consolas">Climate.ParameterList&lt;T&gt; originalList = existingProvider.apply(lookup);
-return StrawberrymcModBiomes.adaptPresetParameterList(idArg, originalList, lookup);</code></pre>
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">Climate.ParameterList&lt;T&gt; originalList = existingProvider.apply(lookup);
+return StrawberrymcModBiomes.adaptPresetParameterList(idArg, originalList, lookup);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p><code class="consolas">adaptPresetParameterList</code> returns the list unchanged until <code class="consolas">FMLCommonSetupEvent</code> has set <code class="consolas">BOOTSTRAP_VALIDATION_PASSED</code>. After that, it only changes the Overworld list, by calling <code class="consolas">modifyOverworldParameterPoints</code>. The Nether preset is wrapped but keeps its original list.</p>
 
 <h3 id="climate-parameters">Climate parameters</h3>
@@ -44,7 +44,7 @@ return StrawberrymcModBiomes.adaptPresetParameterList(idArg, originalList, looku
 <h3 id="surface-biome-depth">Claiming the climate box</h3>
 <p>Vanilla already covers every climate value, so an appended biome only ties with the vanilla biome at the same point. <code class="consolas">SurfaceBiomeDepthMixin</code> injects at the return of <code class="consolas">modifyOverworldParameterPoints</code> and, for each biome in its <code class="consolas">SURFACE_BIOMES</code> list (<code class="consolas">alpine_meadow</code> and <code class="consolas">ocean_abyss</code>), cuts that biome's climate boxes out of every other surface biome. Inside those ranges the listed biome is the only candidate.</p>
 <p>A point is a surface point when its depth is a single value equal to the quantized 0.0 or 1.0. Cave biomes use other depths, so they are skipped. <code class="consolas">subtract</code> splits a box against the cut one axis at a time, emitting the slices above and below the cut and narrowing the remaining box before the next axis. If any axis does not overlap, the box is returned whole.</p>
-<pre class="code-box"><code class="consolas">for (int i = 0; i &lt; from.length; i++) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">for (int i = 0; i &lt; from.length; i++) {
 	if (rest[i].min() &lt; cut[i].min()) {
 		Climate.Parameter[] below = rest.clone();
 		below[i] = new Climate.Parameter(rest[i].min(), cut[i].min());
@@ -56,7 +56,7 @@ return StrawberrymcModBiomes.adaptPresetParameterList(idArg, originalList, looku
 		pieces.add(above);
 	}
 	rest[i] = new Climate.Parameter(Math.max(rest[i].min(), cut[i].min()), Math.min(rest[i].max(), cut[i].max()));
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>The biome-specific consequences are covered in <a href="page-alpine-meadowlands-technical.html">Alpine Meadowlands [technical]</a> and <a href="page-ocean-abyss-technical.html">Ocean Abyss [technical]</a>. The latter also explains the mod's overrides of the vanilla density functions <code class="consolas">overworld/offset.json</code> and <code class="consolas">overworld/factor.json</code>.</p>
 
 <h3 id="surface-rules">Surface rules</h3>
@@ -105,11 +105,11 @@ return StrawberrymcModBiomes.adaptPresetParameterList(idArg, originalList, looku
 </tbody>
 </table>
 <p><code class="consolas">SetTemperatureBiomeModifier</code> is a custom modifier registered with the codec name <code class="consolas">strawberrymc:set_temperature</code>. Its comment explains its purpose: a biome below temperature 0.15 gets snow, so this keeps Alpine Meadow snow-free without editing the biome JSON that MCreator generates.</p>
-<pre class="code-box"><code class="consolas">@Override
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">@Override
 public void modify(Holder&lt;Biome&gt; biome, Phase phase, ModifiableBiomeInfo.BiomeInfo.Builder builder) {
 	if (phase == Phase.MODIFY &amp;&amp; this.biomes.contains(biome))
 		builder.getClimateSettings().setTemperature(this.temperature);
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>Vanilla biome tags in <code class="consolas">data/minecraft/tags/worldgen/biome</code> are extended with <code class="consolas">"replace": false</code>. <code class="consolas">is_overworld</code>, <code class="consolas">is_ocean</code> and <code class="consolas">is_deep_ocean</code> gain <code class="consolas">ocean_abyss</code>. The <code class="consolas">has_structure</code> tags place <code class="consolas">buried_treasure</code>, <code class="consolas">pillager_outpost</code>, <code class="consolas">ruined_portal_swamp</code> and <code class="consolas">shipwreck_beached</code> in <code class="consolas">clover_glades</code>, <code class="consolas">jungle_temple</code> in <code class="consolas">montane_jungle</code>, and <code class="consolas">mineshaft</code> and <code class="consolas">stronghold</code> in <code class="consolas">crystal_hollows</code>.</p>
 
 <h2 id="villager-trades">Villager trades</h2>
@@ -138,9 +138,9 @@ public void modify(Holder&lt;Biome&gt; biome, Phase phase, ModifiableBiomeInfo.B
 
 <h2 id="waypoints">Waypoint location helper</h2>
 <p>See also the main page, <a href="page-waypoints.html">Waypoints</a>. <a href="page-calculatewaypointlocationprocedure-raw.html">CalculateWaypointLocationProcedure [raw]</a> is a hand-written class in the procedures package with no matching MCreator element. It has one public static method, and no other class in the mod references it.</p>
-<pre class="code-box"><code class="consolas">public record PredictionResult(boolean isPresentInChunk, BlockPos position) {}
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public record PredictionResult(boolean isPresentInChunk, BlockPos position) {}
 
-public static PredictionResult predictRareVegetalLocation(long worldSeed, int chunkX, int chunkZ, int rarityChance)</code></pre>
+public static PredictionResult predictRareVegetalLocation(long worldSeed, int chunkX, int chunkZ, int rarityChance)</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>The method predicts where a feature with a rarity filter would land in a chunk, without generating the chunk. In order:</p>
 <ol>
 <li>It creates a <code class="consolas">WorldgenRandom</code> over <code class="consolas">XoroshiroRandomSource(0L)</code> and calls <code class="consolas">setDecorationSeed(worldSeed, chunkX &lt;&lt; 4, chunkZ &lt;&lt; 4)</code>.</li>
@@ -156,7 +156,7 @@ public static PredictionResult predictRareVegetalLocation(long worldSeed, int ch
 <h3 id="chiseled-cauldron-block">Chiseled Cauldron block</h3>
 <p><code class="consolas">ChiseledCauldronBlock</code> is registered as <code class="consolas">strawberrymc:chiseled_cauldron</code> from the element <code class="consolas">ChiseledCauldron.mod.json</code>. Its item has <code class="consolas">stacksTo(1)</code> and <code class="consolas">Rarity.RARE</code>. The block's properties are unbreakable hardness and blast resistance (<code class="consolas">strength(-1, 3600000)</code>), no occlusion, <code class="consolas">PushReaction.BLOCK</code>, always-on emissive rendering, and redstone conduction disabled. It implements <code class="consolas">SimpleWaterloggedBlock</code> with the usual <code class="consolas">WATERLOGGED</code> property.</p>
 <p>Its collision shape is a 5-pixel base plus four 2-pixel walls reaching the full block height, with an empty visual shape. <code class="consolas">getBlockPathType</code> returns <code class="consolas">PathType.BLOCKED</code>, so mobs do not path through it. The item appears in the Functional Blocks tab, the Operator Blocks tab and the mod's Developer tab.</p>
-<pre class="code-box"><code class="consolas">private static final VoxelShape SHAPE = Shapes.or(box(0, 0, 0, 16, 5, 16), box(0, 5, 0, 16, 16, 2), box(0, 5, 14, 16, 16, 16), box(0, 5, 2, 2, 16, 14), box(14, 5, 2, 16, 16, 14));</code></pre>
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">private static final VoxelShape SHAPE = Shapes.or(box(0, 0, 0, 16, 5, 16), box(0, 5, 0, 16, 16, 2), box(0, 5, 14, 16, 16, 16), box(0, 5, 2, 2, 16, 14), box(14, 5, 2, 16, 16, 14));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p><code class="consolas">animateTick</code> calls <a href="page-ambientparticleenchantprocedure-raw.html">AmbientParticleEnchantProcedure [raw]</a> with the block position. <code class="consolas">Block.animateTick</code> is only invoked from <code class="consolas">ClientLevel</code>, and the procedure spawns its <code class="consolas">ParticleTypes.ENCHANT</code> particles only when the world is a <code class="consolas">ServerLevel</code>, so the call emits nothing.</p>
 
 <h3 id="smite-vial">Smite Vial</h3>
@@ -169,11 +169,11 @@ public static PredictionResult predictRareVegetalLocation(long worldSeed, int ch
 <li>It sends 36 <code class="consolas">ParticleTypes.ANGRY_VILLAGER</code> particles one block above the cauldron from the server, with spread <code class="consolas">(cos(Angle), 0, sin(Angle))</code> and speed 1, adding 10 to <code class="consolas">Angle</code> after each one.</li>
 <li>It shrinks the held stack by one unless the caster is in Creative mode.</li>
 </ol>
-<pre class="code-box"><code class="consolas">for (int _i1 = 0; _i1 &lt; 36; _i1++) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">for (int _i1 = 0; _i1 &lt; 36; _i1++) {
 	if (world instanceof ServerLevel _level)
 		_level.sendParticles(ParticleTypes.ANGRY_VILLAGER, x, (y + 1), z, 1, Math.cos(Angle), 0, Math.sin(Angle), 1);
 	Angle = Angle + 10;
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 
 <h2 id="enchantments">Shocking enchantment</h2>
 <p>See also the main page, <a href="page-enchantments.html">Enchantments</a>. The enchantment's identifier is <code class="consolas">strawberrymc:electricution</code>, generated from the element <code class="consolas">Electricution.mod.json</code>, while its displayed name, from the <code class="consolas">enchantment.strawberrymc.electricution</code> language key, is "Shocking".</p>
@@ -198,8 +198,8 @@ public static PredictionResult predictRareVegetalLocation(long worldSeed, int ch
 
 <h3 id="shocking-procedure">EntityShock</h3>
 <p><a href="page-entityshockprocedure-raw.html">EntityShockProcedure [raw]</a> subscribes to <code class="consolas">LivingDamageEvent.Pre</code>. The check runs on the entity being damaged, reading the item that entity is using at that moment. When that use item carries the enchantment, the procedure sends two each of <code class="consolas">ANGRY_VILLAGER</code>, <code class="consolas">ENCHANTED_HIT</code> and <code class="consolas">GUST</code> particles at the entity (spread 1, speed 1) and applies extra damage.</p>
-<pre class="code-box"><code class="consolas">if ((entity instanceof LivingEntity _entUseItem0 ? _entUseItem0.getUseItem() : ItemStack.EMPTY)
-		.getEnchantmentLevel(world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse("strawberrymc:electricution")))) &gt; 0) {</code></pre>
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">if ((entity instanceof LivingEntity _entUseItem0 ? _entUseItem0.getUseItem() : ItemStack.EMPTY)
+		.getEnchantmentLevel(world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse("strawberrymc:electricution")))) &gt; 0) {</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>Extra damage comes from <code class="consolas">hurtServer</code> calls using the <code class="consolas">strawberrymc:shocking</code> damage type. The damage type's JSON has <code class="consolas">exhaustion</code> 0.2, <code class="consolas">scaling</code> <code class="consolas">always</code> and <code class="consolas">effects</code> <code class="consolas">poking</code>, and its language keys supply the death messages. Each check below is independent, so more than one can apply.</p>
 <table>
 <thead>

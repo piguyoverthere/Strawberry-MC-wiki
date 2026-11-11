@@ -18,10 +18,10 @@
 
 <h2 id="datapack">Datapack</h2>
 <p><code class="consolas">MonumentPuzzlesPack</code> listens to <code class="consolas">AddPackFindersEvent</code> and registers <code class="consolas">src/main/resources/monument_puzzles</code>. Keeping the files in their own pack means MCreator never regenerates or removes them.</p>
-<pre class="code-box"><code class="consolas">private static void addPack(AddPackFindersEvent event) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">private static void addPack(AddPackFindersEvent event) {
 	event.addPackFinders(Identifier.fromNamespaceAndPath("strawberrymc", "monument_puzzles"), PackType.SERVER_DATA,
 			Component.literal("Strawberry MC monument puzzles"), PackSource.BUILT_IN, true, Pack.Position.TOP);
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p><code class="consolas">pack.mcmeta</code> sets <code class="consolas">min_format</code> and <code class="consolas">max_format</code> to 101.1, with the description "Strawberry MC Ocean Monument puzzle jigsaws".</p>
 <table>
 <thead><tr><th>Path under <code class="consolas">monument_puzzles/data/</code></th><th>Contents</th></tr></thead>
@@ -199,7 +199,7 @@
 </tbody>
 </table>
 <p>The script has its own minimal NBT writer, with no dependencies. <code class="consolas">Int</code> and <code class="consolas">Byte</code> subclasses mark tag types, and the output is gzip-compressed. A <code class="consolas">Piece</code> holds a dictionary of cells from position to block name, properties and block-entity NBT. Its <code class="consolas">save</code> method turns those into the structure template format.</p>
-<pre class="code-box"><code class="consolas">palette, index, blocks = [], {}, []
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">palette, index, blocks = [], {}, []
 for pos in sorted(self.cells):
     name, props, nbt = self.cells[pos]
     key = (name, tuple(sorted(props.items())))
@@ -212,7 +212,7 @@ for pos in sorted(self.cells):
     block = {'pos': [Int(c) for c in pos], 'state': Int(index[key])}
     if nbt:
         block['nbt'] = nbt
-    blocks.append(block)</code></pre>
+    blocks.append(block)</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <table>
 <thead><tr><th>Function</th><th>Builds</th></tr></thead>
 <tbody>

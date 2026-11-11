@@ -58,23 +58,23 @@
 </tbody>
 </table>
 <p>The projectile is discarded once it is in the ground. <code class="consolas">onHitEntity</code> passes the hit entity and the projectile's owner to <a href="page-recoverypearlfetchprocedure-raw.html">RecoveryPearlFetchProcedure [raw]</a>, which teleports the hit entity to the owner's position.</p>
-<pre class="code-box"><code class="consolas">_ent.teleportTo(_tx, _ty, _tz);
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">_ent.teleportTo(_tx, _ty, _tz);
 if (_ent instanceof ServerPlayer _serverPlayer)
-	_serverPlayer.connection.teleport(_tx, _ty, _tz, _ent.getYRot(), _ent.getXRot());</code></pre>
+	_serverPlayer.connection.teleport(_tx, _ty, _tz, _ent.getYRot(), _ent.getXRot());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>The entity's rotation is kept, and a hit player also receives the matching connection teleport.</p>
 
 <h2 id="invulnerability">Invulnerability effect</h2>
 <p><code class="consolas">InvulnerabilityMobEffect</code> is the effect <code class="consolas">strawberrymc:invulnerability</code>, category <code class="consolas">NEUTRAL</code>, color <code class="consolas">-16711707</code>, with sound <code class="consolas">entity.lightning_bolt.impact</code> when applied. It has no attribute modifiers: the behavior is in <code class="consolas">InvulnerabilityEffectHandler</code>.</p>
 <h3 id="invulnerability-handler">Blocking other effects</h3>
 <p>The handler listens to <code class="consolas">MobEffectEvent.Applicable</code>. If the entity already has Invulnerability and the incoming effect is any other, the result is <code class="consolas">DO_NOT_APPLY</code>. A <code class="consolas">WeakHashMap</code> limits the feedback to once per 10 ticks per entity.</p>
-<pre class="code-box"><code class="consolas">event.setResult(MobEffectEvent.Applicable.Result.DO_NOT_APPLY);
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">event.setResult(MobEffectEvent.Applicable.Result.DO_NOT_APPLY);
 
 long currentTime = entity.level().getGameTime();
 long lastTime = COOLDOWN_MAP.getOrDefault(entity, 0L);
 
 if (currentTime - lastTime &gt;= 10) {
     COOLDOWN_MAP.put(entity, currentTime);
-    entity.playSound(SoundEvents.SHIELD_BLOCK.value(), 1.0F, 1.0F);</code></pre>
+    entity.playSound(SoundEvents.SHIELD_BLOCK.value(), 1.0F, 1.0F);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>On the server, the handler then sends 20 <code class="consolas">strawberrymc:invulnerability_particle</code> at mid-height with a spread of 0.5 on each axis and speed 0.05. The particle element has a <code class="consolas">maxAge</code> of 35 and gravity -1.7.</p>
 <h3 id="invulnerability-honey">Honey cure</h3>
 <p><code class="consolas">InvulnerabilityMobEffect.modifyItemComponents</code> handles <code class="consolas">ModifyDefaultComponentsEvent</code>. It copies <code class="consolas">Consumables.HONEY_BOTTLE</code>, adds a <code class="consolas">RemoveStatusEffectsConsumeEffect</code> for Invulnerability, and sets the result as the honey bottle's <code class="consolas">DataComponents.CONSUMABLE</code>.</p>
@@ -93,10 +93,10 @@ if (currentTime - lastTime &gt;= 10) {
 <li><strong>Branches.</strong> 4 to 6 attempts, each starting from a random trunk column at <code class="consolas">canopyBottom</code> plus 0 to 2, with a direction of -1 to 1 per axis. A direction of (0, 0) skips the branch. Length is 3 to 5, rising one block every two steps.</li>
 <li><strong>Branch tips.</strong> A diamond of leaves in the 3x3x3 around the tip, keeping positions where the sum of the absolute offsets is at most 2.</li>
 </ol>
-<pre class="code-box"><code class="consolas">for (int l = 1; l &lt;= branchLen; l++) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">for (int l = 1; l &lt;= branchLen; l++) {
     int stepY = by + (l / 2);
     BlockPos branchPos = BlockPos.containing(bx + (dx * l), stepY, bz + (dz * l));
     world.setBlock(branchPos, log, 3);
-</code></pre>
+</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

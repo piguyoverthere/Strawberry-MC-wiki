@@ -58,10 +58,10 @@
 </ol>
 <h2 id="client-tick">Ambient particle call</h2>
 <p><code class="consolas">animateTick</code> calls <a href="page-ambientparticleenchantprocedure-raw.html">AmbientParticleEnchantProcedure [raw]</a> with the block's position. The procedure requests five <code class="consolas">ParticleTypes.ENCHANT</code> particles with spreads of 0.5, 0.8 and 0.5 and a speed of 1:</p>
-<pre class="code-box"><code class="consolas">public static void execute(LevelAccessor world, double x, double y, double z) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public static void execute(LevelAccessor world, double x, double y, double z) {
 	if (world instanceof ServerLevel _level)
 		_level.sendParticles(ParticleTypes.ENCHANT, x, y, z, 5, 0.5, 0.8, 0.5, 1);
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p><code class="consolas">animateTick</code> runs on the client, where the level is not a <code class="consolas">ServerLevel</code>, so the guard is false and this call emits nothing.</p>
 <h2 id="resources">Model and resources</h2>
 <table>

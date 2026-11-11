@@ -17,7 +17,7 @@
 
 <h2 id="location-calculator">Location prediction</h2>
 <p><a href="page-calculatewaypointlocationprocedure-raw.html">CalculateWaypointLocationProcedure [raw]</a> is a Java class with one static method, <code class="consolas">predictRareVegetalLocation(long worldSeed, int chunkX, int chunkZ, int rarityChance)</code>. It predicts from the seed alone whether a rare feature will appear in a chunk, and at which x and z, without generating it. No other code calls the method.</p>
-<pre class="code-box"><code class="consolas">WorldgenRandom random = new WorldgenRandom(new XoroshiroRandomSource(0L));
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">WorldgenRandom random = new WorldgenRandom(new XoroshiroRandomSource(0L));
 random.setDecorationSeed(worldSeed, chunkX &lt;&lt; 4, chunkZ &lt;&lt; 4);
 
 long internalModifierSalt = random.nextLong();
@@ -28,7 +28,7 @@ if (filterRandom.nextInt(rarityChance) != 0) {
 }
 
 int offsetX = random.nextInt(16);
-int offsetZ = random.nextInt(16);</code></pre>
+int offsetZ = random.nextInt(16);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <ol>
 <li>A <code class="consolas">WorldgenRandom</code> over <code class="consolas">XoroshiroRandomSource</code> receives the decoration seed for the chunk's block coordinates.</li>
 <li>One <code class="consolas">nextLong</code> seeds a separate filter random, which rolls <code class="consolas">nextInt(rarityChance)</code>. Any result other than 0 means no feature.</li>

@@ -18,11 +18,11 @@
 
 <h2 id="developer-tab">Developer tab</h2>
 <p>The custom tab is registered through a <code class="consolas">DeferredRegister</code> for <code class="consolas">Registries.CREATIVE_MODE_TAB</code> under the ID <code class="consolas">strawberrymc:debug</code>. <code class="consolas">StrawberrymcMod</code> registers that <code class="consolas">REGISTRY</code> on the mod event bus. Its title key is <code class="consolas">item_group.strawberrymc.debug</code>, "Developer", its icon is a Command Block, and it has a search bar.</p>
-<pre class="code-box"><code class="consolas">public static final DeferredHolder&lt;CreativeModeTab, CreativeModeTab&gt; DEBUG = REGISTRY.register("debug",
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public static final DeferredHolder&lt;CreativeModeTab, CreativeModeTab&gt; DEBUG = REGISTRY.register("debug",
 		() -&gt; CreativeModeTab.builder().title(Component.translatable("item_group.strawberrymc.debug")).icon(() -&gt; new ItemStack(Blocks.COMMAND_BLOCK)).displayItems((parameters, tabData) -&gt; {
 			tabData.accept(StrawberrymcModBlocks.OASIS_SPAWNER.get().asItem());
 			// ... remaining entries
-		}).withSearchBar().build());</code></pre>
+		}).withSearchBar().build());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <table>
 <thead>
 <tr><th>Order</th><th>Item ID</th></tr>
@@ -64,7 +64,7 @@
 <h2 id="tall-fires">Tall Fires</h2>
 <h3 id="tall-fire-block">Block</h3>
 <p>Tall Fire is <code class="consolas">strawberrymc:tall_fire</code>, implemented by <code class="consolas">TallFireBlock</code>, which extends <code class="consolas">FireBlock</code>. Ticking, spreading and survival rules are inherited from that class. Its element is <code class="consolas">TallFire.mod.json</code>, and its block item appears in the Developer tab.</p>
-<pre class="code-box"><code class="consolas">public TallFireBlock(BlockBehaviour.Properties properties) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public TallFireBlock(BlockBehaviour.Properties properties) {
 	super(properties.sound(SoundType.GRAVEL).strength(1f, 10f).noCollision().isRedstoneConductor((bs, br, bp) -&gt; false).replaceable());
 }
 
@@ -72,7 +72,7 @@
 public void onPlace(BlockState blockstate, Level world, BlockPos pos, BlockState oldState, boolean moving) {
 	super.onPlace(blockstate, world, pos, oldState, moving);
 	world.scheduleTick(pos, this, 10);
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <table>
 <thead>
 <tr><th>Property</th><th>Value</th></tr>
@@ -93,9 +93,9 @@ public void onPlace(BlockState blockstate, Level world, BlockPos pos, BlockState
 <p>Two event-driven procedures turn <code class="consolas">Blocks.FIRE</code> into Tall Fire.</p>
 <p><a href="page-tallfireignitehandlerprocedure-raw.html">TallFireIgniteHandlerProcedure [raw]</a> subscribes to <code class="consolas">PlayerInteractEvent.RightClickBlock</code> for the main hand. If the clicked block is fire and the main hand holds <code class="consolas">strawberrymc:sulfur_slag</code>, it replaces the block with Tall Fire, shrinks the held stack by 1 and cancels the event.</p>
 <p><a href="page-tallfirenaturaligniterprocedure-raw.html">TallFireNaturalIgniterProcedure [raw]</a> subscribes to <code class="consolas">BlockEvent.EntityPlaceEvent</code>. When the placed position is fire, it counts how many of the six neighbors are also fire:</p>
-<pre class="code-box"><code class="consolas">if (fire_tracking &gt;= 2 &amp;&amp; Math.random() &lt; 0.5) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">if (fire_tracking &gt;= 2 &amp;&amp; Math.random() &lt; 0.5) {
 	world.setBlock(BlockPos.containing(x, y, z), StrawberrymcModBlocks.TALL_FIRE.get().defaultBlockState(), 3);
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>At least 2 adjacent fire blocks gives a 50% chance of conversion.</p>
 <h3 id="tall-fire-element">Element procedures</h3>
 <p><code class="consolas">TallFire.mod.json</code> names four trigger procedures. <code class="consolas">TallFireBlock</code> overrides only <code class="consolas">onPlace</code>, <code class="consolas">propagatesSkylightDown</code>, <code class="consolas">getLightDampening</code>, <code class="consolas">getVisualShape</code> and <code class="consolas">getCloneItemStack</code>, and no class calls these four procedures, so their code runs only if invoked directly.</p>

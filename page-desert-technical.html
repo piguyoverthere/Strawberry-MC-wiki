@@ -63,7 +63,7 @@
 <li><strong>Frond volume.</strong> Each frond block has a 50% chance of a leaf below it, and straight fronds have a 40% chance of a side leaf.</li>
 <li><strong>Tips.</strong> The last block hangs 1 or 2 extra leaves downward, each with a 30% chance of a side leaf.</li>
 </ol>
-<pre class="code-box"><code class="consolas">int height = 8 + random.nextInt(6);
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">int height = 8 + random.nextInt(6);
 int tiltX = random.nextInt(3) - 1;
 int tiltZ = random.nextInt(3) - 1;
 int currentX = (int) x;
@@ -75,7 +75,7 @@ for (int i = 0; i &lt; height; i++) {
         currentX += tiltX;
         currentZ += tiltZ;
     }
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 
 <h2 id="palm-blocks">Palm blocks</h2>
 <table>
@@ -107,10 +107,10 @@ for (int i = 0; i &lt; height; i++) {
 <p><code class="consolas">CoconutItem</code> (<code class="consolas">strawberrymc:coconut</code>) stacks to 64 and is both a thrown projectile and the way to plant a palm.</p>
 <h3 id="coconut-planting">Planting</h3>
 <p>Right-clicking a block runs <a href="page-coconutplantprocedure-raw.html">CoconutPlantProcedure [raw]</a>. If the clicked block is sand or red sand, a <code class="consolas">palm_sapling</code> is set one block above it.</p>
-<pre class="code-box"><code class="consolas">if ((world.getBlockState(BlockPos.containing(x, y, z))).getBlock() == Blocks.SAND
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">if ((world.getBlockState(BlockPos.containing(x, y, z))).getBlock() == Blocks.SAND
 		|| (world.getBlockState(BlockPos.containing(x, y, z))).getBlock() == Blocks.RED_SAND) {
 	world.setBlock(BlockPos.containing(x, y + 1, z), StrawberrymcModBlocks.PALM_SAPLING.get().defaultBlockState(), 3);
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <h3 id="coconut-throwing">Throwing</h3>
 <p>The item's use animation is <code class="consolas">BLOCK</code> with a use duration of 1 tick. <code class="consolas">use</code> starts the action if the player is in creative mode or <code class="consolas">findAmmo</code> finds a coconut in the inventory. <code class="consolas">releaseUsing</code> calls <code class="consolas">CoconutProjectileEntity.shoot</code> and removes one coconut outside creative mode.</p>
 <table>

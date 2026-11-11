@@ -60,20 +60,20 @@
 </tbody>
 </table>
 <p>If at least one string was set, each non-empty string is written with <code class="consolas">CustomData.update</code>, and slot 3 is set to the result with a count of 5. If none was set, slot 3 is cleared. The three categories are independent, so one output can carry a tip, a shaft and a fletching together. When slot 4 does not meet the check, the procedure does nothing and the output slot keeps its contents.</p>
-<pre class="code-box"><code class="consolas">if (!(var_tip).equals("")) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">if (!(var_tip).equals("")) {
 	{
 		final String _tagName = "tip";
 		final String _tagValue = var_tip;
 		CustomData.update(DataComponents.CUSTOM_DATA, output_arrow, tag -&gt; tag.putString(_tagName, _tagValue));
 	}
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <h3 id="taking">Taking the output and closing the menu</h3>
 <p>Slot 3's <code class="consolas">onTake</code> calls <code class="consolas">slotChanged(3, 1, count)</code>. On the client this sends a <code class="consolas">FletchingTableGUISlotMessage</code> (payload <code class="consolas">strawberrymc:fletching_table_gui_slots</code>) and runs the same handler locally. <code class="consolas">handleSlotAction</code> first returns if the chunk at the menu position is not loaded, a guard against arbitrary chunk generation, and then runs <code class="consolas">ShrinkFletchingTableIngredientsProcedure</code> when the slot is 3 and the change type is 1.</p>
-<pre class="code-box"><code class="consolas">_menu.getSlots().get(0).remove(5);
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">_menu.getSlots().get(0).remove(5);
 _menu.getSlots().get(1).remove(5);
 _menu.getSlots().get(2).remove(5);
 _menu.getSlots().get(4).remove(5);
-_player.containerMenu.broadcastChanges();</code></pre>
+_player.containerMenu.broadcastChanges();</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>Five items are removed from all four input slots, including any ingredient that did not contribute a string. The procedure is the only place ingredients are consumed.</p>
 <p>In <code class="consolas">removed</code>, every slot from 0 to 4 is returned to the player with <code class="consolas">placeItemBackInInventory</code>, or dropped if the player is dead or disconnected. Slot 3 is part of that loop, so a stack sitting in the output when the menu closes also goes to the player.</p>
 
@@ -96,9 +96,9 @@ _player.containerMenu.broadcastChanges();</code></pre>
 <p><code class="consolas">releaseUsing</code> runs in this order: it finds the ammo, creates and spawns an <code class="consolas">Arrow</code>, plays <code class="consolas">entity.arrow.shoot</code>, damages the bow by 1, shrinks the ammo stack by 1 in survival, and finally calls <code class="consolas">ArrowImpactEffectsProcedure.execute</code> at the shooter's position.</p>
 <h3 id="transfer">Copying the data to the arrow entity</h3>
 <p><code class="consolas">ArrowImpactEffectsProcedure</code> picks the ammo stack to read: the off hand if it holds an arrow, otherwise the first arrow in entity item slots 0 to 35. It runs after the ammo was shrunk, so when the shot used the last arrow of a stack, the strings come from the next arrow stack found. It then writes the three strings to the persistent data of the closest <code class="consolas">Arrow</code> in a 4-block-wide box centered on the shooter.</p>
-<pre class="code-box"><code class="consolas">(findEntityInWorldRange(world, Arrow.class, x, y, z, 4)).getPersistentData().putString("tip", (ammo_item.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getStringOr("tip", "")));
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">(findEntityInWorldRange(world, Arrow.class, x, y, z, 4)).getPersistentData().putString("tip", (ammo_item.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getStringOr("tip", "")));
 (findEntityInWorldRange(world, Arrow.class, x, y, z, 4)).getPersistentData().putString("shaft", (ammo_item.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getStringOr("shaft", "")));
-(findEntityInWorldRange(world, Arrow.class, x, y, z, 4)).getPersistentData().putString("fletching", (ammo_item.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getStringOr("fletching", "")));</code></pre>
+(findEntityInWorldRange(world, Arrow.class, x, y, z, 4)).getPersistentData().putString("fletching", (ammo_item.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getStringOr("fletching", "")));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 
 <h2 id="flight">In flight</h2>
 <p><code class="consolas">ArrowFlightVisualsProcedure</code> subscribes to <code class="consolas">EntityTickEvent.Pre</code> and acts on entities that are instances of <code class="consolas">Arrow</code>. "Moving" below means at least one component of <code class="consolas">getDeltaMovement()</code> is nonzero. Each tick runs these steps in order:</p>
@@ -161,7 +161,7 @@ velocity.z += (target.z - arrow.z) / (distance * 0.13)</code></pre>
 </tbody>
 </table>
 <p>The breeze effect also runs <code class="consolas">particle minecraft:wind_burst ~ ~ ~ 0 0 0 0 1</code> and plays the explosion sound. The one-tick delay uses <code class="consolas">StrawberrymcMod.queueServerWork(1, ...)</code>.</p>
-<pre class="code-box"><code class="consolas">StrawberrymcMod.queueServerWork(1, () -&gt; {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">StrawberrymcMod.queueServerWork(1, () -&gt; {
 	if (entity instanceof LivingEntity) {
 		if ((immediatesourceentity.getPersistentData().getStringOr("tip", "")).equals("gold")) {
 			entity.setDeltaMovement(new Vec3(0, 1.3, 0));
@@ -169,7 +169,7 @@ velocity.z += (target.z - arrow.z) / (distance * 0.13)</code></pre>
 			entity.setDeltaMovement(new Vec3(0, 1.2, 0));
 		}
 	}
-});</code></pre>
+});</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <h3 id="sponge-hit">Sponge branch</h3>
 <p>The hit procedure's water-removal branch checks <code class="consolas">shaft = sponge</code>, while <code class="consolas">CalcFletchingProcedure</code> stores sponge as a tip. A crafted sponge arrow therefore removes water only through the block impact branch.</p>
 <h3 id="amethyst-tags">Amethyst block tags</h3>

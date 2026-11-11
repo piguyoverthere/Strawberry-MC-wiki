@@ -39,7 +39,7 @@
 </table>
 <h3 id="tank-layers">Layers</h3>
 <p><code class="consolas">buildArena</code> loops over a square of radius 15 around the center, skips columns further than 15.2 away, and treats columns further than 14.2 as wall. Each column writes depth 0 to depth 9 below the vault's y.</p>
-<pre class="code-box"><code class="consolas">if (depth == 0)
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">if (depth == 0)
 	state = wall ? Blocks.DARK_PRISMARINE.defaultBlockState() : Blocks.GLASS.defaultBlockState();
 else if (depth == Layout.TANK_DEPTH + 2)
 	state = Blocks.PRISMARINE_BRICKS.defaultBlockState();
@@ -48,7 +48,7 @@ else if (wall)
 else if (depth == Layout.TANK_DEPTH + 1)
 	state = random.nextFloat() &lt; 0.3F ? Blocks.GRAVEL.defaultBlockState() : Blocks.SAND.defaultBlockState();
 else
-	state = Blocks.WATER.defaultBlockState();</code></pre>
+	state = Blocks.WATER.defaultBlockState();</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <table>
 <thead><tr><th>Depth below the glass</th><th>Inside (distance up to 14.2)</th><th>Wall (14.2 to 15.2)</th></tr></thead>
 <tbody>
@@ -74,12 +74,12 @@ else
 </table>
 <h3 id="tank-entities">Rune frame and fish</h3>
 <p>After the column loop, the vault goes at the center and a <code class="consolas">minecraft:dark_prismarine</code> pedestal goes at 7 below it. If the frame's position is in the chunk being generated, <code class="consolas">spawnArenaEntities</code> runs, so the entities are created exactly once.</p>
-<pre class="code-box"><code class="consolas">net.minecraft.world.entity.decoration.ItemFrame frame = new net.minecraft.world.entity.decoration.ItemFrame(serverLevel, layout.runeFrame(), Direction.UP);
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">net.minecraft.world.entity.decoration.ItemFrame frame = new net.minecraft.world.entity.decoration.ItemFrame(serverLevel, layout.runeFrame(), Direction.UP);
 frame.setItem(new net.minecraft.world.item.ItemStack(io.github.strawberrymc.init.StrawberrymcModItems.PRISMATIC_RUNE.get()), false);
 ((io.github.strawberrymc.custommixin.ItemFrameAccessor) frame).strawberrymc$setFixed(true);
 frame.setInvulnerable(true);
 frame.addTag(MonumentArena.RUNE_FRAME_TAG);
-level.addFreshEntity(frame);</code></pre>
+level.addFreshEntity(frame);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p><code class="consolas">ItemFrameAccessor</code> exposes the frame's private <code class="consolas">fixed</code> field. The tag is <code class="consolas">strawberrymc.rune_frame</code>. <code class="consolas">MonumentArena</code> also cancels <code class="consolas">PlayerInteractEvent.EntityInteract</code> and <code class="consolas">AttackEntityEvent</code> on a tagged frame for any player not in creative mode.</p>
 <p>Nine fish are spawned with a random source seeded from the arena's center: 6 <code class="consolas">minecraft:tropical_fish</code> and 3 <code class="consolas">minecraft:cod</code>. Each is placed 2 to 12 blocks from the center at a random angle, 2 to 6 blocks below the glass, using <code class="consolas">EntitySpawnReason.STRUCTURE</code>. All are marked as persistent.</p>
 
@@ -112,9 +112,9 @@ level.addFreshEntity(frame);</code></pre>
 </table>
 <h3 id="cutscene-funnel">Funnel particle</h3>
 <p>Each glyph starts in a ring around the vault, at radius 1.2 to 2.8 and 1.2 to 2.2 above it. The server sends it with count 0, so the three offset arguments arrive at the client as the particle's velocity. The particle uses them as its destination, the frame's center lowered by 0.35.</p>
-<pre class="code-box"><code class="consolas">level.sendParticles(RUNE_FUNNEL.get(), true, true, x, vault.getY() + 1.2 + level.getRandom().nextDouble(), z, 0, target.x, target.y, target.z, 1.0);</code></pre>
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">level.sendParticles(RUNE_FUNNEL.get(), true, true, x, vault.getY() + 1.2 + level.getRandom().nextDouble(), z, 0, target.x, target.y, target.z, 1.0);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p><code class="consolas">QuestHud.RuneFunnel</code> registers the sprites from <code class="consolas">rune_funnel.json</code>, the same 26 <code class="consolas">minecraft:sga_*</code> glyph sprites as the sensor glyph. Lifetime is 40 to 54 ticks, size 0.12 to 0.18, block light 15, with no physics. Its position is computed from <code class="consolas">p = age / lifetime</code>.</p>
-<pre class="code-box"><code class="consolas">float p = (float) age / lifetime;
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">float p = (float) age / lifetime;
 double r = radius * (1 - p * p * (3 - 2 * p));
 double angle = startAngle + p * Math.PI * 2.5;
 x = targetX + Math.cos(angle) * r;
@@ -122,22 +122,22 @@ z = targetZ + Math.sin(angle) * r;
 y = Mth.lerp(Math.pow(p, 1.4), startY, targetY);
 this.rCol = 0.2F + 0.6F * p;
 this.gCol = 0.55F + 0.4F * p;
-setAlpha(Math.min(1, Math.min(p / 0.15F, (1 - p) / 0.1F)));</code></pre>
+setAlpha(Math.min(1, Math.min(p / 0.15F, (1 - p) / 0.1F)));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>Blue stays at 1.0, so the color moves from <code class="consolas">(0.2, 0.55, 1.0)</code> to <code class="consolas">(0.8, 0.95, 1.0)</code> as the glyph descends. The type is registered with <code class="consolas">new SimpleParticleType(true)</code>.</p>
 <h3 id="cutscene-rune">The floating rune</h3>
 <p><code class="consolas">MonumentArena.release</code> does nothing if the frame is missing or empty. Otherwise it copies the frame's stack, clears the frame and its glowing tag, and spawns an <code class="consolas">ItemEntity</code> at the frame's center.</p>
-<pre class="code-box"><code class="consolas">floating.setNoGravity(true);
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">floating.setNoGravity(true);
 floating.setNeverPickUp();
 floating.setUnlimitedLifetime();
 floating.setGlowingTag(true);
-floating.addTag(RISING_RUNE_TAG);</code></pre>
+floating.addTag(RISING_RUNE_TAG);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>The tag is <code class="consolas">strawberrymc.rising_rune</code>. For each tick <code class="consolas">t</code> from 1 to 90, the server queues a position of <code class="consolas">start.y + (topY - start.y) * ease(t / 90)</code>, where <code class="consolas">topY</code> is the vault's y minus 0.6 and <code class="consolas">ease</code> is smoothstep. After the final tick the rune stays floating just under the glass, and the vault answers with "The vault is already open".</p>
 <h3 id="cutscene-camera">Camera</h3>
 <p><code class="consolas">ArenaCutscene.start</code> ignores the packet if the entrance or vent cutscene is playing. The frame position is the bottom center of the frame's block, and the surface is the vault's y minus 0.6. The camera's starting angle is the direction from the frame to the player, so the view comes from the side the player is standing on. Before tick 30 and from tick 218, <code class="consolas">currentShot</code> returns null and the camera stays on the player.</p>
-<pre class="code-box"><code class="consolas">double angle = startAngle + Math.toRadians(40) * (time - CUT_IN) / (CUT_OUT - CUT_IN);
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">double angle = startAngle + Math.toRadians(40) * (time - CUT_IN) / (CUT_OUT - CUT_IN);
 Vec3 desired = new Vec3(frame.x + Math.cos(angle) * DISTANCE, frame.y + 1.0 + rise * 0.6, frame.z + Math.sin(angle) * DISTANCE);
 // Keep a clear line of sight from just above the frame
-Vec3 anchor = new Vec3(frame.x, desired.y, frame.z).add(0, 0.5, 0);</code></pre>
+Vec3 anchor = new Vec3(frame.x, desired.y, frame.z).add(0, 0.5, 0);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <table>
 <thead><tr><th>Value</th><th>Detail</th></tr></thead>
 <tbody>

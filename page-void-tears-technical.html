@@ -29,8 +29,8 @@
 
 <h2 id="fluid">VoidTearsFluid</h2>
 <p><code class="consolas">VoidTearsFluid</code> extends <code class="consolas">BaseFlowingFluid</code>. A shared <code class="consolas">PROPERTIES</code> object links the type, both fluids and the liquid block, with an explosion resistance of 100 and a tick rate of 4. Drips use the <code class="consolas">SQUID_INK</code> particle.</p>
-<pre class="code-box"><code class="consolas">public static final BaseFlowingFluid.Properties PROPERTIES = new BaseFlowingFluid.Properties(() -&gt; StrawberrymcModFluidTypes.VOID_TEARS_TYPE.get(), () -&gt; StrawberrymcModFluids.VOID_TEARS.get(),
-		() -&gt; StrawberrymcModFluids.FLOWING_VOID_TEARS.get()).explosionResistance(100f).tickRate(4).block(() -&gt; (LiquidBlock) StrawberrymcModBlocks.VOID_TEARS.get());</code></pre>
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public static final BaseFlowingFluid.Properties PROPERTIES = new BaseFlowingFluid.Properties(() -&gt; StrawberrymcModFluidTypes.VOID_TEARS_TYPE.get(), () -&gt; StrawberrymcModFluids.VOID_TEARS.get(),
+		() -&gt; StrawberrymcModFluids.FLOWING_VOID_TEARS.get()).explosionResistance(100f).tickRate(4).block(() -&gt; (LiquidBlock) StrawberrymcModBlocks.VOID_TEARS.get());</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p><code class="consolas">Source</code> always reports amount 8 and <code class="consolas">isSource</code> true. <code class="consolas">Flowing</code> adds the <code class="consolas">LEVEL</code> property to its state and reports that level as its amount.</p>
 
 <h2 id="fluid-type">VoidTearsFluidType</h2>
@@ -49,11 +49,11 @@
 </tbody>
 </table>
 <p>Living entities move through it with water movement, because the type overrides <code class="consolas">move</code>:</p>
-<pre class="code-box"><code class="consolas">@Override
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">@Override
 public boolean move(LivingEntity entity, Vec3 movementVector, double gravity) {
 	entity.travelInWater(movementVector, gravity, entity.getDeltaMovement().y &lt;= 0, entity.getY());
 	return true;
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 
 <h2 id="block">VoidTearsBlock</h2>
 <p><code class="consolas">VoidTearsBlock</code> extends <code class="consolas">LiquidBlock</code>.</p>
@@ -73,7 +73,7 @@ public boolean move(LivingEntity entity, Vec3 movementVector, double gravity) {
 </tbody>
 </table>
 <p>The block calls two generated procedures after the superclass method:</p>
-<pre class="code-box"><code class="consolas">@Override
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">@Override
 public void neighborChanged(BlockState blockstate, Level world, BlockPos pos, Block neighborBlock, @Nullable Orientation orientation, boolean moving) {
 	super.neighborChanged(blockstate, world, pos, neighborBlock, orientation, moving);
 	VoidTearHissProcedure.execute(world, pos.getX(), pos.getY(), pos.getZ());
@@ -83,19 +83,19 @@ public void neighborChanged(BlockState blockstate, Level world, BlockPos pos, Bl
 public void entityInside(BlockState blockstate, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier insideBlockEffectApplier, boolean isPrecise) {
 	super.entityInside(blockstate, world, pos, entity, insideBlockEffectApplier, isPrecise);
 	VoidTearsDamageApplyProcedure.execute(world, entity);
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 
 <h2 id="procedures">Procedures</h2>
 <h3 id="damage-procedure">Damage</h3>
 <p><a href="page-voidtearsdamageapplyprocedure-raw.html">VoidTearsDamageApplyProcedure [raw]</a> runs whenever an entity is inside the block. It uses <code class="consolas">StrawberrymcMod.queueServerWork</code> to wait 20 ticks and then deals 5 damage of the custom type <code class="consolas">strawberrymc:void_tear_damage</code>.</p>
-<pre class="code-box"><code class="consolas">StrawberrymcMod.queueServerWork(20, () -&gt; {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">StrawberrymcMod.queueServerWork(20, () -&gt; {
 	{
 		Entity _ent = entity;
 		if (_ent.level() instanceof ServerLevel _serverLevel) {
 			_ent.hurtServer(_serverLevel, new DamageSource(world.holderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, Identifier.parse("strawberrymc:void_tear_damage")))), 5);
 		}
 	}
-});</code></pre>
+});</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>The damage type is defined in <code class="consolas">damage_type/void_tear_damage.json</code>:</p>
 <table>
 <thead>
@@ -113,10 +113,10 @@ public void entityInside(BlockState blockstate, Level world, BlockPos pos, Entit
 
 <h2 id="client">Client rendering</h2>
 <p><code class="consolas">VoidTearsFluidExtension</code> registers the fluid model and the client fluid type extension. While the camera is in the fluid, the overlay texture is <code class="consolas">strawberrymc:textures/void_tears_overlay.png</code>, the fog color is set to red 0, green 0, blue 0.0667, and the fog runs from distance 0 to the smaller of 48 and the render distance.</p>
-<pre class="code-box"><code class="consolas">fluidFogColor.set(0f, 0f, 0.0666666667f, fluidFogColor.w);
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">fluidFogColor.set(0f, 0f, 0.0666666667f, fluidFogColor.w);
 
 fogData.environmentalStart = 0f;
-fogData.environmentalEnd = Math.min(48f, renderDistance);</code></pre>
+fogData.environmentalEnd = Math.min(48f, renderDistance);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 
 <h2 id="pool-feature">Pool feature</h2>
 <p>Pools are placed in <a href="page-the-void-technical.html">The Void</a> by three files in the <code class="consolas">void_terrain</code> datapack:</p>

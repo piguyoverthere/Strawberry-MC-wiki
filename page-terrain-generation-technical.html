@@ -17,13 +17,13 @@
 
 <h2 id="biome-source">Adding biomes to the biome source</h2>
 <p><code class="consolas">BiomeSourcePresetMixin</code> targets <code class="consolas">MultiNoiseBiomeSourceParameterList.Preset</code>. When a preset with the ID <code class="consolas">minecraft:overworld</code> or <code class="consolas">minecraft:nether</code> is constructed, it wraps the preset's <code class="consolas">provider</code> so the original list passes through <code class="consolas">StrawberrymcModBiomes.adaptPresetParameterList</code>.</p>
-<pre class="code-box"><code class="consolas">this.provider = new MultiNoiseBiomeSourceParameterList.Preset.SourceProvider() {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">this.provider = new MultiNoiseBiomeSourceParameterList.Preset.SourceProvider() {
 	@Override
 	public &lt;T&gt; Climate.ParameterList&lt;T&gt; apply(Function&lt;ResourceKey&lt;Biome&gt;, T&gt; lookup) {
 		Climate.ParameterList&lt;T&gt; originalList = existingProvider.apply(lookup);
 		return StrawberrymcModBiomes.adaptPresetParameterList(idArg, originalList, lookup);
 	}
-};</code></pre>
+};</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p><code class="consolas">adaptPresetParameterList</code> returns the list unchanged until <code class="consolas">FMLCommonSetupEvent</code> has set <code class="consolas">BOOTSTRAP_VALIDATION_PASSED</code>. After that, the Overworld list goes to <code class="consolas">modifyOverworldParameterPoints</code>, and the Nether list is returned unchanged.</p>
 
 <h3 id="parameter-points">Parameter points</h3>
@@ -44,7 +44,7 @@
 <h3 id="climate-claim">Claiming climate boxes</h3>
 <p><code class="consolas">SurfaceBiomeDepthMixin</code> injects at the return of <code class="consolas">modifyOverworldParameterPoints</code>. It first appends <code class="consolas">strawberrymc:ocean_abyss</code> at depths 0 and 1, with temperature -0.45 to 1, humidity -1 to 1, continentalness -1.05 to -0.7, erosion -1 to 1 and weirdness -1 to 1.</p>
 <p>It then processes its <code class="consolas">SURFACE_BIOMES</code> list, <code class="consolas">alpine_meadow</code> and <code class="consolas">ocean_abyss</code>. For each box a listed biome owns, the <code class="consolas">subtract</code> method cuts that box out of every other surface entry, splitting the entry dimension by dimension into the pieces outside it. <code class="consolas">isSurface</code> limits this to entries whose depth is the single point 0 or 1, so cave biomes keep their ranges. The source comment gives the reason: vanilla already covers every climate value, so a custom biome would otherwise only tie with a vanilla one.</p>
-<pre class="code-box"><code class="consolas">List&lt;Climate.Parameter[]&gt; pieces = new ArrayList&lt;&gt;();
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">List&lt;Climate.Parameter[]&gt; pieces = new ArrayList&lt;&gt;();
 Climate.Parameter[] rest = from.clone();
 for (int i = 0; i &lt; from.length; i++) {
 	if (rest[i].min() &lt; cut[i].min()) {
@@ -56,7 +56,7 @@ for (int i = 0; i &lt; from.length; i++) {
 		Climate.Parameter[] above = rest.clone();
 		above[i] = new Climate.Parameter(cut[i].max(), rest[i].max());
 		pieces.add(above);
-	}</code></pre>
+	}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 
 <h2 id="surface-rules">Surface rules</h2>
 <p>At <code class="consolas">ServerAboutToStartEvent</code>, <code class="consolas">StrawberrymcModBiomes.onServerAboutToStart</code> walks the <code class="consolas">LEVEL_STEM</code> registry. For every Overworld or Nether stem using a <code class="consolas">NoiseBasedChunkGenerator</code>, it stores the dimension type on the generator's settings through <code class="consolas">StrawberrymcModNoiseGeneratorSettings</code>.</p>

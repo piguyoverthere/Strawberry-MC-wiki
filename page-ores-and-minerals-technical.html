@@ -29,11 +29,11 @@
 </tbody>
 </table>
 <p>All four are in <code class="consolas">minecraft:mineable/pickaxe</code> and use <code class="consolas">requiresCorrectToolForDrops</code>. The two ore blocks use <code class="consolas">NoteBlockInstrument.BASEDRUM</code>, and the two storage blocks use <code class="consolas">SoundType.METAL</code>. Each loot table has one pool with one roll and the <code class="consolas">minecraft:survives_explosion</code> condition, without a silk touch branch.</p>
-<pre class="code-box"><code class="consolas">public class RadoniteOreBlock extends Block {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public class RadoniteOreBlock extends Block {
 	public RadoniteOreBlock(BlockBehaviour.Properties properties) {
 		super(properties.strength(3f).requiresCorrectToolForDrops().instrument(NoteBlockInstrument.BASEDRUM));
 	}
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 
 <h2 id="items">Items</h2>
 <p>Each is a plain <code class="consolas">Item</code> subclass with only a constructor.</p>

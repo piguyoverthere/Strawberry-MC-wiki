@@ -37,7 +37,8 @@
         TH: ["colspan", "rowspan", "scope"],
         OL: ["start"],
         DETAILS: ["open"],
-        DIV: ["data-pending-by", "data-pending-date", "data-original"]
+        DIV: ["data-pending-by", "data-pending-date", "data-original"],
+        PRE: ["data-tab"]
     };
     const allowedStyles = ["color", "background-color", "text-align"];
     const fontClasses = ["roman", "consolas", "georgia", "comic"];
@@ -253,7 +254,8 @@
                         (name === "target" && value !== "_blank") ||
                         ((name === "class" || name === "id") && !/^[\w\s-]*$/.test(value)) ||
                         (name === "data-original" && !/^[A-Za-z0-9+/=]*$/.test(value)) ||
-                        (name === "data-pending-date" && !/^[\dT:.Z-]*$/.test(value))
+                        (name === "data-pending-date" && !/^[\dT:.Z-]*$/.test(value)) ||
+                        (name === "data-tab" && !/^[\w .+#-]{1,40}$/.test(value))
                     ) {
                         child.removeAttribute(name);
                     } else if (name === "style") {
@@ -282,6 +284,7 @@
             mark.replaceWith(...mark.childNodes);
         }
         template.content.querySelectorAll(".mc-linked").forEach((slot) => slot.classList.remove("mc-linked"));
+        template.content.querySelectorAll(".code-tab-bar").forEach((bar) => bar.remove());
         // Typing over a code box's placeholder can drop its <code> wrapper, so put it back.
         for (const pre of template.content.querySelectorAll("pre.code-box")) {
             if (pre.childNodes.length !== 1 || pre.firstChild.nodeName !== "CODE") {
@@ -709,8 +712,11 @@
             <button type="button" data-command="justifyRight" title="Align right" aria-label="Align right">Right</button>
         </div>
         <div class="wiki-format-group">
-            <button type="button" data-command="textBox" title="Insert a text box">+ Text box</button>
+            <button type="button" data-command="textBox" title="Insert a text box. To continue below it, press Enter twice at its end.">+ Text box</button>
+            <button type="button" data-command="warningBox" title="Insert a yellow warning box, or turn the text box the cursor is in yellow">+ Warning</button>
+            <button type="button" data-command="dangerBox" title="Insert a red danger box, or turn the text box the cursor is in red">+ Danger</button>
             <button type="button" data-command="codeBox" title="Insert a code box. To continue below it, press the down arrow at its end or Enter twice.">+ Code box</button>
+            <button type="button" data-command="codeTabs" title="Insert a code box with Java and Pseudocode tabs, or add a Pseudocode tab to the code box the cursor is in">+ Java/Pseudocode</button>
             <button type="button" data-command="table" title="Insert a table">+ Table</button>
             <button type="button" data-command="recipe" title="Insert a crafting recipe">+ Recipe</button>
             <button type="button" data-command="blocks" title="Insert a diagram made of blocks">+ Blocks</button>
@@ -943,20 +949,36 @@
             current = current.parentElement;
         }
         const cursor = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-        if (!current || !root.contains(current)) {
+        // Go after the paragraph or heading the cursor is in, keeping lists, tables and boxes whole. When the cursor
+        // is in a container holding other blocks (the page itself, text typed without paragraphs, or the one box
+        // Google Docs and Word pastes come in), split that container at the cursor instead: going after the whole
+        // container would put new blocks at the very end of the page.
+        const lineSelector = "p, h1, h2, h3, h4, h5, h6, div, details, section, footer";
+        let wrapper = null;
+        if (!current || !root.contains(current) || !cursor) {
             current = null;
-        } else if (current !== root) {
-            // Go after the paragraph or heading the cursor is in, keeping lists, tables and boxes whole. Pages pasted
-            // from Google Docs or Word wrap everything in one box, so stopping at the page's top level would put
-            // new blocks at the very end.
-            current = current.closest("ul, ol, table, pre, blockquote, figure, .mc-diagram, .wiki-raw-html, .wiki-textbox")
-                || current.closest("p, h1, h2, h3, h4, h5, h6, div, details, section, footer");
-            if (!current || !root.contains(current)) current = null;
+        } else {
+            const box = current.closest(".code-tabs, ul, ol, table, pre, blockquote, figure, .mc-diagram, .wiki-raw-html, .wiki-textbox");
+            const line = current.closest(lineSelector);
+            if (box && root.contains(box) && box !== root) {
+                current = box;
+            } else if (line && root.contains(line) && line !== root &&
+                !line.querySelector(`:scope > :is(${lineSelector}, ul, ol, table, pre, blockquote, figure)`)) {
+                current = line;
+            } else {
+                wrapper = line && root.contains(line) ? line : root;
+                current = null;
+            }
         }
 
-        if (current === root && cursor) {
-            // The cursor sits between blocks, so put the new one right there
-            root.insertBefore(block, root.childNodes[cursor.endOffset] || null);
+        if (wrapper) {
+            let child = cursor.endContainer;
+            if (child === wrapper) {
+                wrapper.insertBefore(block, wrapper.childNodes[cursor.endOffset] || null);
+            } else {
+                while (child.parentNode !== wrapper) child = child.parentNode;
+                child.after(block);
+            }
         } else if (current) {
             current.after(block);
             if (current.matches("p") && !current.textContent.trim() && !current.querySelector("img, [data-wiki-island]")) {
@@ -1052,7 +1074,7 @@
 
     function leaveBox(box) {
         let next = box.nextElementSibling;
-        if (!next || next.matches(`${boxSelector}, .wiki-raw-html, [data-wiki-island], hr, h1, h2, h3, h4, h5, h6`)) {
+        if (!next || next.matches(`${boxSelector}, .code-tabs, .wiki-raw-html, [data-wiki-island], hr, h1, h2, h3, h4, h5, h6`)) {
             next = document.createElement("p");
             next.append(document.createElement("br"));
             box.after(next);
@@ -1079,7 +1101,16 @@
         rest.setStart(range.endContainer, range.endOffset);
         rest.setEnd(box, box.childNodes.length);
         if (textOf(rest).replace(/\n$/, "") !== "") return;
-        if (event.key === "Enter") {
+        if (event.key === "Enter" && box.matches(".wiki-textbox")) {
+            // Enter on an empty last line of a text box (so Enter twice at its end) leaves it
+            const line = (range.startContainer.nodeType === Node.ELEMENT_NODE ? range.startContainer : range.startContainer.parentElement)
+                .closest("p, h1, h2, h3, h4, h5, h6, li, div");
+            if (!line || line === box || line.textContent.trim() || line.querySelector("img")) return;
+            event.preventDefault();
+            if (box.textContent.trim()) {
+                line.remove();
+            }
+        } else if (event.key === "Enter") {
             const before = document.createRange();
             before.setStart(box, 0);
             before.setEnd(range.startContainer, range.startOffset);
@@ -1089,7 +1120,7 @@
         } else {
             event.preventDefault();
         }
-        leaveBox(box);
+        leaveBox(box.closest(".code-tabs") || box);
     });
 
     // Indenting inside a code box adds or removes four spaces at the start of each selected line, instead of
@@ -1186,8 +1217,43 @@
                 openBlocksDialog(null);
                 break;
             case "textBox":
-                insertBlock(`<div class="wiki-textbox"><p>${escapeHtml(selectedText()) || "New text box"}</p></div>`);
+            case "warningBox":
+            case "dangerBox": {
+                const kind = { textBox: "", warningBox: "wiki-warning", dangerBox: "wiki-danger" }[command];
+                const node = cursorRange()?.startContainer;
+                const existing = !hasTextSelected() && node && (node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement).closest(".wiki-textbox");
+                if (existing && root.contains(existing)) {
+                    existing.classList.remove("wiki-warning", "wiki-danger");
+                    if (kind) existing.classList.add(kind);
+                    status.textContent = { textBox: "Made this a plain text box.", warningBox: "Made this a warning box.", dangerBox: "Made this a danger box." }[command];
+                    break;
+                }
+                const placeholder = { textBox: "New text box", warningBox: "Warning text", dangerBox: "Danger text" }[command];
+                insertBlock(`<div class="wiki-textbox${kind ? ` ${kind}` : ""}"><p>${escapeHtml(selectedText()) || placeholder}</p></div>`);
                 break;
+            }
+            case "codeTabs": {
+                const pseudocode = '<pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode goes here</code></pre>';
+                const existing = !hasTextSelected() && codeBoxAt(document.getSelection());
+                if (existing && !existing.closest(".code-tabs")) {
+                    const group = document.createElement("div");
+                    group.className = "code-tabs";
+                    existing.replaceWith(group);
+                    existing.dataset.tab = "Java";
+                    group.append(existing);
+                    group.insertAdjacentHTML("beforeend", pseudocode);
+                    setupCodeTabs();
+                    status.textContent = "Added a Pseudocode tab to this code box.";
+                    break;
+                }
+                if (existing) {
+                    status.textContent = "This code box already has tabs.";
+                    break;
+                }
+                insertBlock(`<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">${escapeHtml(selectedText()) || "Java goes here"}</code></pre>${pseudocode}</div>`);
+                setupCodeTabs();
+                break;
+            }
             case "codeBox":
                 insertBlock(`<pre class="code-box"><code class="consolas">${escapeHtml(selectedText()) || "Code goes here"}</code></pre>`);
                 break;
@@ -1299,8 +1365,43 @@
         return item;
     }
 
-    // Backspace at the start of a list item: the first press removes its bullet (or number),
-    // the second joins the line onto the end of the previous item.
+    // Backspace at the start of a line just below a list joins it onto the list's last item.
+    function joinParagraphOntoList(caret, start, event) {
+        const paragraph = start.closest("p");
+        const list = paragraph?.previousElementSibling;
+        if (!paragraph || !root.contains(paragraph) || !list?.matches("ul, ol") || !list.lastElementChild) {
+            return;
+        }
+        const before = document.createRange();
+        before.setStart(paragraph, 0);
+        before.setEnd(caret.startContainer, caret.startOffset);
+        if (before.toString() !== "" || before.cloneContents().querySelector("img")) {
+            return;
+        }
+        event.preventDefault();
+        const previous = lastListItemIn(list.lastElementChild);
+        const content = [...paragraph.childNodes];
+        const hasText = content.some((node) => node.textContent.trim() || node.nodeName === "IMG");
+        if (hasText && previous.lastChild?.nodeName === "BR") {
+            previous.lastChild.remove();
+        }
+        const joinPoint = previous.childNodes.length;
+        if (hasText) {
+            previous.append(...content);
+        }
+        paragraph.remove();
+        // The line had split a list in two; join the halves back up
+        const rest = list.nextElementSibling;
+        if (rest?.tagName === list.tagName) {
+            list.append(...rest.children);
+            rest.remove();
+        }
+        placeCaret(previous, joinPoint);
+    }
+
+    // Backspace at the start of a list item: the first press removes its bullet (or number), the second moves
+    // the line out of the list as a normal paragraph (or up a level in a nested list), and a third joins it
+    // onto the end of the item above.
     root.addEventListener("keydown", (event) => {
         if (!editing || event.key !== "Backspace" || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) {
             return;
@@ -1313,6 +1414,7 @@
         const start = caret.startContainer.nodeType === Node.ELEMENT_NODE ? caret.startContainer : caret.startContainer.parentElement;
         const item = start.closest("li");
         if (!item || !root.contains(item)) {
+            joinParagraphOntoList(caret, start, event);
             return;
         }
         const before = document.createRange();
@@ -1328,34 +1430,44 @@
             return;
         }
 
-        const ownContent = [...item.childNodes].filter((node) => !/^(UL|OL)$/.test(node.nodeName));
-        const hasText = ownContent.some((node) => node.textContent.trim() || node.nodeName === "IMG");
-        const previous = item.previousElementSibling && lastListItemIn(item.previousElementSibling);
-
-        if (!previous) {
-            // First item in the list: move the line out above the list as a normal paragraph.
-            const paragraph = document.createElement("p");
-            paragraph.append(...(hasText ? ownContent : [document.createElement("br")]));
-            item.parentElement.before(paragraph);
-            item.replaceWith(...item.childNodes);
-            if (!paragraph.nextElementSibling?.children.length) {
-                paragraph.nextElementSibling?.remove();
+        const list = item.parentElement;
+        const later = [...list.children].slice([...list.children].indexOf(item) + 1);
+        const outerItem = list.parentElement.closest("li");
+        if (outerItem && root.contains(outerItem)) {
+            // Nested list: the line moves up a level and gets its bullet back; the items after it stay under it.
+            if (later.length) {
+                const rest = list.cloneNode(false);
+                rest.append(...later);
+                item.append(rest);
             }
-            placeCaret(paragraph, 0);
+            outerItem.after(item);
+            item.classList.remove("wiki-plain");
+            if (!list.children.length) {
+                list.remove();
+            }
+            placeCaret(item, 0);
             return;
         }
 
-        if (hasText && previous.lastChild?.nodeName === "BR") {
-            previous.lastChild.remove();
-        }
-        const joinPoint = previous.childNodes.length;
-        if (hasText) {
-            previous.append(...ownContent);
-        }
+        // The line leaves the list as a normal paragraph, splitting the list if it was in the middle.
+        const ownContent = [...item.childNodes].filter((node) => !/^(UL|OL)$/.test(node.nodeName));
+        const hasText = ownContent.some((node) => node.textContent.trim() || node.nodeName === "IMG");
         const nestedLists = [...item.children].filter((child) => /^(UL|OL)$/.test(child.tagName));
-        previous.append(...nestedLists);
+        const paragraph = document.createElement("p");
+        paragraph.append(...(hasText ? ownContent : [document.createElement("br")]));
+        const after = [paragraph, ...nestedLists];
+        if (later.length) {
+            const rest = list.cloneNode(false);
+            rest.removeAttribute("start");
+            rest.append(...later);
+            after.push(rest);
+        }
+        list.after(...after);
         item.remove();
-        placeCaret(previous, joinPoint);
+        if (!list.children.length) {
+            list.remove();
+        }
+        placeCaret(paragraph, 0);
     });
 
     root.addEventListener("paste", (event) => {
@@ -2007,6 +2119,49 @@
         });
         document.addEventListener("wiki-content-changed", applyAutolinks);
     }
+
+    // A .code-tabs box holds several code boxes (Java, Pseudocode, ...) and shows one at a time, with a tab for each
+    // drawn above them. The tab bar and which tab is open are never saved into the page.
+    const openCodeTab = new WeakMap();
+    function setupCodeTabs() {
+        for (const group of root.querySelectorAll(".code-tabs")) {
+            const panes = [...group.children].filter((child) => child.matches("pre"));
+            let bar = group.querySelector(":scope > .code-tab-bar");
+            if (!panes.length) {
+                bar?.remove();
+                continue;
+            }
+            if (!bar) {
+                bar = document.createElement("div");
+                bar.className = "code-tab-bar";
+                bar.dataset.wikiInjected = "";
+                bar.contentEditable = "false";
+                group.prepend(bar);
+            }
+            const open = Math.min(openCodeTab.get(group) || 0, panes.length - 1);
+            bar.replaceChildren(...panes.map((pane, index) => {
+                const tab = document.createElement("button");
+                tab.type = "button";
+                tab.textContent = pane.dataset.tab || `Tab ${index + 1}`;
+                tab.setAttribute("aria-pressed", String(index === open));
+                tab.addEventListener("mousedown", (event) => event.preventDefault());
+                tab.addEventListener("click", () => {
+                    openCodeTab.set(group, index);
+                    setupCodeTabs();
+                });
+                return tab;
+            }));
+            panes.forEach((pane, index) => {
+                pane.hidden = index !== open;
+            });
+        }
+    }
+    setupCodeTabs();
+    document.addEventListener("wiki-content-changed", setupCodeTabs);
+    root.addEventListener("input", () => {
+        // Typing or deleting across a tab bar can remove it; draw it again
+        if (root.querySelector(".code-tabs:not(:has(> .code-tab-bar))")) setupCodeTabs();
+    });
 
     function setEditing(value) {
         editing = value;
@@ -2855,10 +3010,47 @@
 
     // Toolbar wiring ---------------------------------------------------------
 
+    function caretAtPoint(x, y) {
+        if (document.caretRangeFromPoint) {
+            return document.caretRangeFromPoint(x, y);
+        }
+        const position = document.caretPositionFromPoint?.(x, y);
+        if (!position) return null;
+        const range = document.createRange();
+        range.setStart(position.offsetNode, position.offset);
+        return range;
+    }
+
     editButton.addEventListener("click", () => {
         if (!canEditPage) return;
+        // Start editing at the first line on screen instead of jumping back to the top of the page
+        const scrollTop = window.scrollY;
         setEditing(true);
-        root.focus();
+        root.focus({ preventScroll: true });
+        const area = root.getBoundingClientRect();
+        const headerBottom = Math.max(0, document.querySelector(".site-header")?.getBoundingClientRect().bottom || 0);
+        const x = Math.min(Math.max(area.left + 24, 1), window.innerWidth - 1);
+        for (let y = Math.max(headerBottom, area.top) + 12; y < Math.min(area.bottom, window.innerHeight); y += 16) {
+            let caret = caretAtPoint(x, y);
+            if (caret?.startContainer.nodeType === Node.ELEMENT_NODE) {
+                // Between blocks: go to the start of the first text in the block that follows
+                const following = caret.startContainer.childNodes[caret.startOffset];
+                const text = following?.nodeType === Node.TEXT_NODE ? following : following && document.createTreeWalker(following, NodeFilter.SHOW_TEXT, {
+                    acceptNode: (node) => node.data.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP
+                }).nextNode();
+                if (!text) continue;
+                caret = document.createRange();
+                caret.setStart(text, 0);
+            }
+            const node = caret?.startContainer;
+            const element = node && (node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement);
+            if (element && root.contains(element) && !element.closest("[contenteditable=\"false\"]")) {
+                caret.collapse(true);
+                selectRange(caret);
+                break;
+            }
+        }
+        window.scrollTo(window.scrollX, scrollTop);
     });
     saveButton.addEventListener("click", saveEdits);
     cancelButton.addEventListener("click", () => {

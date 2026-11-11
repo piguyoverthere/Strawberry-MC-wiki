@@ -60,8 +60,8 @@
 
 <h2 id="shock-procedure">EntityShockProcedure</h2>
 <p>The procedure subscribes to <code class="consolas">LivingDamageEvent.Pre</code>, so it runs each time a living entity takes damage. <code class="consolas">entity</code> is the entity being damaged. The gate reads the enchantment level on that entity's item in use from <code class="consolas">getUseItem()</code>, looked up through the registry with <code class="consolas">strawberrymc:electricution</code>:</p>
-<pre class="code-box"><code class="consolas">if ((entity instanceof LivingEntity _entUseItem0 ? _entUseItem0.getUseItem() : ItemStack.EMPTY)
-		.getEnchantmentLevel(world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse("strawberrymc:electricution")))) &gt; 0) {</code></pre>
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">if ((entity instanceof LivingEntity _entUseItem0 ? _entUseItem0.getUseItem() : ItemStack.EMPTY)
+		.getEnchantmentLevel(world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse("strawberrymc:electricution")))) &gt; 0) {</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>The effect therefore applies to a damaged entity that is actively using an item with Shocking. Any level above 0 behaves the same, because the level value is only compared with 0.</p>
 <h3 id="shock-order">Order of effects</h3>
 <ol>
@@ -88,12 +88,12 @@
 <p>With equipment in its normal slots, only the leggings row and the chainmail boots row match, because the other rows look for a piece in a slot that does not normally hold it.</p>
 <h3 id="shock-drop">Equipment drop</h3>
 <p>On the 1 in 8 roll, the procedure picks <code class="consolas">Mth.nextInt(RandomSource.create(), 100, 103)</code> as a slot index and reads that index through the entity's <code class="consolas">Capabilities.Item.ENTITY</code> handler. It spawns the stack as an <code class="consolas">ItemEntity</code> with a pickup delay of 5 at the entity's position, empties the slot, and plays <code class="consolas">item.shield.break</code> with <code class="consolas">SoundSource.NEUTRAL</code>.</p>
-<pre class="code-box"><code class="consolas">shockSlotDrop = Mth.nextInt(RandomSource.create(), 100, 103);
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">shockSlotDrop = Mth.nextInt(RandomSource.create(), 100, 103);
 if (world instanceof ServerLevel _level) {
 	ItemEntity entityToSpawn = new ItemEntity(_level, x, y, z, (getEntitySlot(entity, (int) shockSlotDrop)));
 	entityToSpawn.setPickUpDelay(5);
 	_level.addFreshEntity(entityToSpawn);
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 
 <h2 id="damage-type">Damage type</h2>
 <p><code class="consolas">data/strawberrymc/damage_type/shocking.json</code>, generated from <code class="consolas">Shocking.mod.json</code>, defines the source used by the armor checks.</p>

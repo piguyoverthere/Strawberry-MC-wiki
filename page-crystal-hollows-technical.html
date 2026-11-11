@@ -98,14 +98,14 @@
 </table>
 <p>Stretching y by 1.8 makes chambers wide and flat instead of round.</p>
 <h3 id="density-formula">Density formula</h3>
-<pre class="code-box"><code class="consolas">double t = (y - FLOOR) / (double) (ceiling - FLOOR);
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">double t = (y - FLOOR) / (double) (ceiling - FLOOR);
 double shell = Math.max(0, SHELL - t) / SHELL + Math.max(0, t - (1 - SHELL)) / SHELL;
 double density = -0.35 - 0.9 * caveNoise(lx + CELL, y - FLOOR, lz + CELL) + 1.3 * shell * shell + 2.5 * (1 - w);
 if (density &gt;= 0)
 	return false;
 // Pillars flare out toward the floor and ceiling like they grew into the rock
 double edge = 2 * t - 1;
-return pillars[lx + 1][lz + 1] + 0.06 * noises.wobble.getValue(minX + lx, y, minZ + lz) &lt;= 0.5 - 0.22 * edge * edge;</code></pre>
+return pillars[lx + 1][lz + 1] + 0.06 * noises.wobble.getValue(minX + lx, y, minZ + lz) &lt;= 0.5 - 0.22 * edge * edge;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <table>
 <thead>
 <tr><th>Term</th><th>Meaning</th></tr>
@@ -124,13 +124,13 @@ return pillars[lx + 1][lz + 1] + 0.06 * noises.wobble.getValue(minX + lx, y, min
 <h3 id="pillars">Stone pillars</h3>
 <p>The final line of the formula keeps rock where <code class="consolas">pillars + 0.06 * wobble</code> exceeds <code class="consolas">0.5 - 0.22 * edge²</code>. The <code class="consolas">edge</code> value is 0 at mid height and 1 at the floor and ceiling, so the threshold falls from 0.5 to 0.28 and the pillars flare where they meet the rock.</p>
 <h3 id="crust">Crust</h3>
-<pre class="code-box"><code class="consolas">BlockState above = chunk.getBlockState(pos.above());
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">BlockState above = chunk.getBlockState(pos.above());
 BlockState crust = null;
 if (above.isAir())
 	crust = crystalline;
 else if (above.is(crystalline.getBlock()) || shape.air(lx, y - 1, lz) || shape.air(lx - 1, y, lz) || shape.air(lx + 1, y, lz)
 		|| shape.air(lx, y, lz - 1) || shape.air(lx, y, lz + 1))
-	crust = calcite;</code></pre>
+	crust = calcite;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>The pass runs from one block above the ceiling down to y=-52. A replaceable block with air above becomes Crystalline Calcite. A block under Crystalline Calcite, or one with air beneath or beside it, becomes calcite. Running top-down means a floor block is already crystalline when the block under it is reached. <code class="consolas">Shape.air</code> reads the chunk for positions inside it and calls <code class="consolas">open</code> for positions in the neighboring chunk.</p>
 
 <h2 id="features">Placed features</h2>
@@ -164,20 +164,20 @@ else if (above.is(crystalline.getBlock()) || shape.air(lx, y - 1, lz) || shape.a
 <li>Range: layers run from 3 below the origin to <code class="consolas">h + 3</code>, so both ends are embedded in rock.</li>
 <li>Replaces air and <code class="consolas">minecraft:base_stone_overworld</code>.</li>
 </ul>
-<pre class="code-box"><code class="consolas">r = (radius * (1 + (0.5 * Math.pow(Math.min(Math.abs((((2 * i) / h) - 1)), 1), 4))));
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">r = (radius * (1 + (0.5 * Math.pow(Math.min(Math.abs((((2 * i) / h) - 1)), 1), 4))));
 reach = (Math.round(r) + 1);
 cx = (x + (lean_x * i));
-cz = (z + (lean_z * i));</code></pre>
+cz = (z + (lean_z * i));</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>The flare factor is 1 at mid height and 1.5 at the ends. A position belongs to the column when its offset, dotted with each of three unit normals 120 degrees apart, is at most <code class="consolas">r / 2</code>.</p>
 <h3 id="calcite-mountain">calcite_mountain</h3>
 <p><a href="page-calcitemountaingenerationprocedure-raw.html">CalciteMountainGenerationProcedure [raw]</a> builds a mound. The radius is an integer from 7 to 13 and the height is from 0.8 to 1.6 times the radius.</p>
-<pre class="code-box"><code class="consolas">top = Math.round(((height * Math.pow((1 - dist), 1.4)) + Mth.nextDouble(RandomSource.create(), -0.6, 1.2)));
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">top = Math.round(((height * Math.pow((1 - dist), 1.4)) + Mth.nextDouble(RandomSource.create(), -0.6, 1.2)));
 if (top &gt;= 0) {
 	k = top;
 	while ((k &gt; -12) &amp;&amp; (world.isEmptyBlock(BlockPos.containing((x + dx), (y + k), (z + dz))))) {
 		world.setBlock(BlockPos.containing((x + dx), (y + k), (z + dz)), Blocks.CALCITE.defaultBlockState(), 3);
 		k = (k - 1);
-	}</code></pre>
+	}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>Each column fills with calcite down through empty space, to at most 12 blocks below the origin, which skirts the mound over uneven floors. If the block above the top is empty it receives a Crystalline Calcite cap.</p>
 <h3 id="hollows-geode">hollows_geode</h3>
 <table>
@@ -238,14 +238,14 @@ if (top &gt;= 0) {
 
 <h2 id="fog">Fog</h2>
 <p><code class="consolas">CrystalHollowsFog</code> is a client event subscriber on <code class="consolas">ViewportEvent.RenderFog</code>. The cavern is open enough to see out to the edge of the loaded chunks, so inside the biome it closes the atmospheric fog in well before the render distance and fades the view into the biome's dark fog color.</p>
-<pre class="code-box"><code class="consolas">FogData fog = event.getFogData();
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">FogData fog = event.getFogData();
 fog.environmentalStart = Math.min(fog.environmentalStart, FOG_START);
 fog.environmentalEnd = Math.min(fog.environmentalEnd, FOG_END);
 fog.renderDistanceStart = Math.min(fog.renderDistanceStart, FOG_START);
 fog.renderDistanceEnd = Math.min(fog.renderDistanceEnd, FOG_END);
 // No sky or clouds show through gaps in the cavern; they're drawn in the fog colour
 fog.skyEnd = 0;
-fog.cloudEnd = 0;</code></pre>
+fog.cloudEnd = 0;</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p><code class="consolas">FOG_START</code> is 20 and <code class="consolas">FOG_END</code> is 72.</p>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

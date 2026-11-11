@@ -30,21 +30,21 @@
 </tbody>
 </table>
 <p>The five classes have the same structure and vary only in strength and light level. Each extends <code class="consolas">Block</code> and implements <code class="consolas">SimpleWaterloggedBlock</code>, with sound <code class="consolas">AMETHYST_CLUSTER</code>, no occlusion, and no redstone conduction.</p>
-<pre class="code-box"><code class="consolas">public AquamarineCrystalBlock(BlockBehaviour.Properties properties) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public AquamarineCrystalBlock(BlockBehaviour.Properties properties) {
 	super(properties.sound(SoundType.AMETHYST_CLUSTER).strength(1.5f).lightLevel(s -&gt; 10).noOcclusion().isRedstoneConductor((bs, br, bp) -&gt; false));
 	this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(WATERLOGGED, false));
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <h3 id="cluster-states">States and placement</h3>
 <p>Clusters have a <code class="consolas">FACING</code> property with all six directions and a <code class="consolas">WATERLOGGED</code> boolean. <code class="consolas">getStateForPlacement</code> sets the facing to the clicked face and waterlogs the block when placed in water. <code class="consolas">updateShape</code> schedules a water tick while waterlogged, and <code class="consolas">getFluidState</code> returns a water source in that state.</p>
 <h3 id="cluster-shape">Shape and light</h3>
-<pre class="code-box"><code class="consolas">return switch (state.getValue(FACING)) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">return switch (state.getValue(FACING)) {
 	case NORTH -&gt; box(3, 3, 3, 13, 13, 16);
 	case EAST -&gt; box(0, 3, 3, 13, 13, 13);
 	case WEST -&gt; box(3, 3, 3, 16, 13, 13);
 	case UP -&gt; box(3, 0, 3, 13, 13, 13);
 	case DOWN -&gt; box(3, 3, 3, 13, 16, 13);
 	default -&gt; box(3, 3, 0, 13, 13, 13);
-};</code></pre>
+};</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>The collision box is a 10 by 10 pixel prism, 13 pixels long. <code class="consolas">getVisualShape</code> returns an empty shape, <code class="consolas">getLightDampening</code> returns 0, and <code class="consolas">propagatesSkylightDown</code> is true when the block is not waterlogged.</p>
 <h3 id="cluster-model">Model</h3>
 <p>Each cluster's block model has the parent <code class="consolas">strawberrymc:custom/crystal_cluster</code>. The blockstate rotates it by facing: north 0, east y 90, south y 180, west y 270, up x 270 and down x 90.</p>
@@ -84,7 +84,7 @@
 </tbody>
 </table>
 <p>The column is built by <a href="page-crystalcolumngenerationprocedure-raw.html">CrystalColumnGenerationProcedure [raw]</a>, which picks its material from a random integer 1 to 6:</p>
-<pre class="code-box"><code class="consolas">pick = Mth.nextInt(RandomSource.create(), 1, 6);
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">pick = Mth.nextInt(RandomSource.create(), 1, 6);
 if (pick == 1) {
 	mat = Blocks.AMETHYST_BLOCK.defaultBlockState();
 } else if (pick == 2) {
@@ -97,6 +97,6 @@ if (pick == 1) {
 	mat = StrawberrymcModBlocks.AQUAMARINE_BLOCK.get().defaultBlockState();
 } else {
 	mat = StrawberrymcModBlocks.ROSE_QUARTZ_BLOCK.get().defaultBlockState();
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

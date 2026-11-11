@@ -74,13 +74,13 @@
 
 <h2 id="climate">Climate mixin</h2>
 <p><code class="consolas">SurfaceBiomeDepthMixin</code> injects at the return of <code class="consolas">StrawberrymcModBiomes.modifyOverworldParameterPoints</code>. It adds the biome at the two depth points used for surface biomes, then gives it exclusive claim to its climate.</p>
-<pre class="code-box"><code class="consolas">private static final Climate.Parameter[] OCEAN_ABYSS_CLIMATE = {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">private static final Climate.Parameter[] OCEAN_ABYSS_CLIMATE = {
 	Climate.Parameter.span(-0.45f, 1.0f), // temperature
 	Climate.Parameter.span(-1.0f, 1.0f), // humidity
 	Climate.Parameter.span(-1.05f, -0.7f), // continentalness
 	Climate.Parameter.span(-1.0f, 1.0f), // erosion
 	Climate.Parameter.span(-1.0f, 1.0f) // weirdness
-};</code></pre>
+};</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <table>
 <thead>
 <tr><th>Parameter</th><th>Range</th></tr>
@@ -114,7 +114,7 @@
 
 <h2 id="lava-flood">Lava flood</h2>
 <p>Below y=-54 worldgen fills open space with lava instead of water, which would leave a layer of lava under the ocean, and lava springs can open into the water from the walls. <code class="consolas">AbyssLavaFlood</code> is a feature that turns that lava into water. The configured and placed features are both named <code class="consolas">abyss_lava_flood</code>, the placed feature has no placement modifiers so it runs once per chunk, and the biome modifier adds it in step <code class="consolas">top_layer_modification</code>, after every other feature.</p>
-<pre class="code-box"><code class="consolas">for (int x = minX; x &lt; minX + 16; x++) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">for (int x = minX; x &lt; minX + 16; x++) {
 	for (int z = minZ; z &lt; minZ + 16; z++) {
 		if (!level.getBiome(pos.set(x, BIOME_Y, z)).is(OCEAN_ABYSS))
 			continue;
@@ -126,7 +126,7 @@
 			}
 		}
 	}
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p><code class="consolas">BIOME_Y</code> is -54, so the biome is read near the floor. Every lava block from the bottom of the world to sea level in a matching column becomes water.</p>
 
 <h2 id="monument">Ocean monument placement</h2>
@@ -146,7 +146,7 @@
 </tbody>
 </table>
 <h3 id="monument-floor">Lowering onto the floor</h3>
-<pre class="code-box"><code class="consolas">for (int i = 0; i &lt;= 4; i++) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">for (int i = 0; i &lt;= 4; i++) {
 	for (int j = 0; j &lt;= 4; j++) {
 		int x = box.minX() + (box.maxX() - box.minX()) * i / 4;
 		int z = box.minZ() + (box.maxZ() - box.minZ()) * j / 4;
@@ -156,7 +156,7 @@
 }
 int dy = Math.max(lowestFloor, LOWEST_BASE_Y) - box.minY();
 if (dy &lt; 0)
-	builder.offsetPiecesVertically(dy);</code></pre>
+	builder.offsetPiecesVertically(dy);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>The heightmap is sampled on a 5 by 5 grid across the footprint and the lowest floor wins. <code class="consolas">LOWEST_BASE_Y</code> is -58, which keeps a little deepslate over bedrock, as bedrock reaches up to y=-60. The monument only moves down. Pieces are rebuilt at their original height whenever a chunk loads from disk, so <code class="consolas">strawberrymc$keepSavedHeight</code> moves the rebuilt pieces to the height of the saved box.</p>
 <h3 id="monument-basin">Basin</h3>
 <table>
@@ -169,11 +169,11 @@ if (dy &lt; 0)
 <tr><td>MAX_CAVE_FLOOD</td><td>16</td><td>Depth limit for flooding caves under the basin</td></tr>
 </tbody>
 </table>
-<pre class="code-box"><code class="consolas">double distance = Math.sqrt(dx * dx + dz * dz);
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">double distance = Math.sqrt(dx * dx + dz * dz);
 if (distance &gt; BASIN_RADIUS)
 	continue;
 
-int floorY = monument.minY() + (int) Math.max(0, distance - FLAT_RING);</code></pre>
+int floorY = monument.minY() + (int) Math.max(0, distance - FLAT_RING);</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>For each column outside the footprint and within the radius, the basin floor is level with the monument's base for 8 blocks, then climbs 1 block per block of distance. Everything from the basin floor to sea level that is not already water becomes water. Air directly below the basin floor is flooded for up to 15 blocks, so caves the basin opens up do not leave air pockets. Where the dig exposed new stone, the top block becomes gravel, if it is in <code class="consolas">BASE_STONE_OVERWORLD</code> and rests on something solid.</p>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>

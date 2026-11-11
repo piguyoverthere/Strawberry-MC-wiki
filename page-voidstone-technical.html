@@ -15,14 +15,14 @@
         <h1>Voidstone [technical]</h1>
 <h2 id="block-class">Block class</h2>
 <p>Voidstone is <code class="consolas">strawberrymc:voidstone</code>, registered in <code class="consolas">StrawberrymcModBlocks</code> as <code class="consolas">VoidstoneBlock</code>. All of its behavior is set in the constructor's property chain, plus one override that lets plants grow on it.</p>
-<pre class="code-box"><code class="consolas">public VoidstoneBlock(BlockBehaviour.Properties properties) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public VoidstoneBlock(BlockBehaviour.Properties properties) {
 	super(properties.mapColor(MapColor.TERRACOTTA_BLACK).sound(SoundType.BONE_BLOCK).strength(7f).requiresCorrectToolForDrops().friction(0.4f).speedFactor(0.9f).instrument(NoteBlockInstrument.BASEDRUM));
 }
 
 @Override
 public TriState canSustainPlant(BlockState state, BlockGetter world, BlockPos pos, Direction direction, BlockState plant) {
 	return TriState.TRUE;
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 
 <h2 id="properties">Properties</h2>
 <table>

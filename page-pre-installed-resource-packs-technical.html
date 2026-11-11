@@ -17,10 +17,10 @@
 
 <h2 id="registration">Registration</h2>
 <p>Each pack is a folder under <code class="consolas">src/main/resources</code> with its own <code class="consolas">pack.mcmeta</code>. A static method subscribes to <code class="consolas">AddPackFindersEvent</code> on the mod event bus and calls <code class="consolas">addPackFinders</code>. The identifier's path names the folder, so <code class="consolas">strawberrymc:comscript</code> points at <code class="consolas">src/main/resources/comscript</code>.</p>
-<pre class="code-box"><code class="consolas">private static void addPack(AddPackFindersEvent event) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">private static void addPack(AddPackFindersEvent event) {
 	event.addPackFinders(Identifier.fromNamespaceAndPath("strawberrymc", "comscript"), PackType.CLIENT_RESOURCES, Component.literal("Strawberry MC ComScript"),
 		PackSource.BUILT_IN, true, Pack.Position.TOP);
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p>Every registration passes the same trailing arguments:</p>
 <ul>
 <li><code class="consolas">PackSource.BUILT_IN</code> marks the pack as supplied by the game rather than by the player.</li>

@@ -47,9 +47,9 @@
 <li><code class="consolas">GlowrootTuberStoneBlock</code> implements <code class="consolas">BonemealableBlock</code> with <code class="consolas">isBonemealSuccess</code> always true.</li>
 <li><code class="consolas">performBonemeal</code> runs <a href="page-glowroottubergrowprocedure-raw.html">GlowrootTuberGrowProcedure [raw]</a>, which sets a <code class="consolas">glowroot</code> one block above.</li>
 </ol>
-<pre class="code-box"><code class="consolas">public static void execute(LevelAccessor world, double x, double y, double z) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">public static void execute(LevelAccessor world, double x, double y, double z) {
 	world.setBlock(BlockPos.containing(x, y + 1, z), StrawberrymcModBlocks.GLOWROOT.get().defaultBlockState(), 3);
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p><a href="page-glowroothavestprocedure-raw.html">GlowrootHavestProcedure [raw]</a> is a standalone procedure that no block or item calls. When executed with a hoe in slot 98 of the passed item stack's item capability, it replaces the block with stone, plays <code class="consolas">item.crop.plant</code> and spawns one tuber.</p>
 
 <h2 id="worldgen">World generation</h2>
@@ -68,10 +68,10 @@
 <p>The configured feature is a <code class="consolas">simple_random_selector</code> with one inline placed feature. That feature is a <code class="consolas">minecraft:block_column</code> of one layer, height 1, placing <code class="consolas">strawberrymc:glowroot_dummy_spawner</code> into air, moved by 5 tries with a <code class="consolas">random_offset</code> of ±7 horizontally and ±3 vertically.</p>
 <h3 id="dummy-spawner">Dummy spawner conversion</h3>
 <p><code class="consolas">GlowrootDummySpawnerBlock.onPlace</code> runs <a href="page-glowrootgenerationprocedure-raw.html">GlowrootGenerationProcedure [raw]</a>. If the block below is in <code class="consolas">minecraft:base_stone_overworld</code>, the procedure replaces it with <code class="consolas">glowroot_tuber_stone</code> and replaces the spawner with a real <code class="consolas">glowroot</code>.</p>
-<pre class="code-box"><code class="consolas">if ((world.getBlockState(BlockPos.containing(x, y - 1, z))).is(BlockTags.create(Identifier.parse("minecraft:base_stone_overworld")))) {
+<div class="code-tabs"><pre class="code-box" data-tab="Java"><code class="consolas">if ((world.getBlockState(BlockPos.containing(x, y - 1, z))).is(BlockTags.create(Identifier.parse("minecraft:base_stone_overworld")))) {
 	world.setBlock(BlockPos.containing(x, y - 1, z), StrawberrymcModBlocks.GLOWROOT_TUBER_STONE.get().defaultBlockState(), 3);
 	world.setBlock(BlockPos.containing(x, y, z), StrawberrymcModBlocks.GLOWROOT.get().defaultBlockState(), 3);
-}</code></pre>
+}</code></pre><pre class="code-box" data-tab="Pseudocode"><code class="consolas">Pseudocode not written yet.</code></pre></div>
 <p><code class="consolas">onPlace</code> is called when a block is set in a <code class="consolas">LevelChunk</code>. <code class="consolas">ProtoChunk.setBlockState</code>, which chunk generation writes through, does not call it.</p>
         <script src="wiki-editor.js" defer=""></script>
     </body></html>
