@@ -3263,7 +3263,13 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "convince",
+     "date": "2026-11-11T17:54:00.164Z"
+    }
+   }
   },
   {
    "id": "idea-doc-137",
