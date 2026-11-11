@@ -980,6 +980,39 @@ tfoot {
     font-size:.8em;
     text-transform:capitalize
 }
+.idea-tabs{
+    display:flex;
+    gap:4px;
+    margin:0 0 12px;
+    border-bottom:2px solid #a2a9b1
+}
+.idea-tab{
+    margin-bottom:-2px;
+    padding:8px 16px;
+    border:1px solid #c8ccd1;
+    border-bottom:2px solid #a2a9b1;
+    border-radius:6px 6px 0 0;
+    background:#eaecf0;
+    color:#54595d;
+    cursor:pointer;
+    font:600 15px/1.2 Arial, Helvetica, sans-serif
+}
+.idea-tab[aria-selected="true"]{
+    border-color:#a2a9b1;
+    border-bottom-color:#ffffff;
+    background:#ffffff;
+    color:#202122
+}
+.idea-card.idea-completed{
+    border-left:6px solid #3366cc
+}
+.idea-completed-page{
+    margin:8px 0;
+    font-weight:600
+}
+.idea-complete{
+    color:#2e7d32
+}
 .idea-card.idea-ready{
     border-color:#2e7d32;
     border-left-width:6px;

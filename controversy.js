@@ -204,6 +204,10 @@
                 input = element("textarea", { id, rows: field.rows || 6, required: field.required, maxlength: 8000 });
             } else {
                 input = element("input", { id, type: "text", required: field.required, maxlength: 120 });
+                if (field.suggestions) {
+                    input.setAttribute("list", `${id}-list`);
+                    form.append(element("datalist", { id: `${id}-list` }, ...field.suggestions.map((value) => element("option", { value }))));
+                }
             }
             if (field.value) input.value = field.value;
             inputs[field.name] = input;
@@ -230,7 +234,7 @@
     const status = element("p", { className: "controversy-status", role: "status", "aria-live": "polite" });
 
     // Ideas page ----------------------------------------------------------------------------------
-    const ideaFilters = { author: "", query: "", sort: "document" };
+    const ideaFilters = { author: "", query: "", sort: "document", tab: "ideas" };
 
     function voteCounts(idea) {
         const votes = Object.values(idea.votes || {});
@@ -345,6 +349,57 @@
             }
         }, `${name} ${archived ? "archives" : "restores"} idea: ${idea.title}`, { needsReview: false })
             .then(() => { status.textContent = archived ? "Moved to Archives." : "Restored to the Ideas page."; }));
+    }
+
+    // Ideas that have been coded and have a wiki page move to the Completed tab. The idea's author, admins and
+    // editors can mark them, and move them back.
+    function canComplete(idea) {
+        return signedIn() && (canDelete(idea) || canReview());
+    }
+
+    function wikiPages() {
+        if (typeof pages === "undefined") return [];
+        return [...new Map(pages.filter((page) => !page.href.includes("#")).map((page) => [page.href, page])).values()];
+    }
+
+    function markCompleted(idea) {
+        const known = wikiPages();
+        openFormDialog({
+            title: `Mark "${idea.title}" as completed`,
+            submitLabel: "Mark as completed",
+            fields: [{
+                name: "page", label: "Its wiki page", required: true, suggestions: known.map((page) => page.title),
+                hint: "Only for ideas that have been coded. Type the page's name, or its file such as page-voidstone.html."
+            }],
+            onSubmit: (values) => {
+                const page = known.find((item) => item.title.toLowerCase() === values.page.toLowerCase() || item.href === values.page);
+                const href = page?.href || (/^[\w-]+\.html$/.test(values.page) ? values.page : "");
+                if (!href) {
+                    status.textContent = `There's no wiki page called "${values.page}". Make the page first, then mark the idea as completed.`;
+                    return;
+                }
+                requireSignIn("", (name) => save((fresh) => {
+                    const target = (fresh.ideas || []).find((item) => item.id === idea.id);
+                    if (!target) throw new Error("This idea no longer exists. Reload the page.");
+                    target.completed = true;
+                    target.completedBy = name;
+                    target.completedDate = new Date().toISOString();
+                    target.wikiPage = href;
+                    target.wikiPageTitle = page?.title || href;
+                }, `${name} marks idea completed: ${idea.title}`, { needsReview: false })
+                    .then(() => { status.textContent = `"${idea.title}" moved to the Completed tab.`; }));
+            }
+        });
+    }
+
+    function reopenIdea(idea) {
+        if (!window.confirm(`Move "${idea.title}" back to the Ideas tab?`)) return;
+        requireSignIn("", (name) => save((fresh) => {
+            const target = (fresh.ideas || []).find((item) => item.id === idea.id);
+            if (!target) throw new Error("This idea no longer exists. Reload the page.");
+            for (const key of ["completed", "completedBy", "completedDate", "wikiPage", "wikiPageTitle"]) delete target[key];
+        }, `${name} moves idea back from completed: ${idea.title}`, { needsReview: false })
+            .then(() => { status.textContent = `"${idea.title}" is back on the Ideas tab.`; }));
     }
 
     function comment(idea, text) {
@@ -491,16 +546,49 @@
             approve.length || disapprove.length || convince.length
                 ? element("span", { className: "idea-voters", text: [approve.length ? `For: ${voters(approve)}` : "", disapprove.length ? `Against: ${voters(disapprove)}` : "", convince.length ? `Needs convincing: ${voters(convince)}` : ""].filter(Boolean).join(" · ") })
                 : null));
-        if (canDelete(idea)) {
+        if (canDelete(idea) || canComplete(idea)) {
             card.append(element("div", { className: "idea-owner-actions" },
-                element("button", { type: "button", className: "wiki-link-button", text: "Edit idea", onclick: () => editIdea(idea) }),
-                element("button", { type: "button", className: "wiki-link-button idea-delete", text: "Delete idea", onclick: () => setArchived(idea, true) })));
+                canComplete(idea) && !idea.pending ? element("button", { type: "button", className: "wiki-link-button idea-complete", text: "✅ Mark as completed", title: "For ideas that have been coded and have a wiki page", onclick: () => markCompleted(idea) }) : null,
+                canDelete(idea) ? element("button", { type: "button", className: "wiki-link-button", text: "Edit idea", onclick: () => editIdea(idea) }) : null,
+                canDelete(idea) ? element("button", { type: "button", className: "wiki-link-button idea-delete", text: "Delete idea", onclick: () => setArchived(idea, true) }) : null));
         }
         return card;
     }
 
+    function renderCompletedIdea(idea) {
+        const { approve, disapprove, convince } = voteCounts(idea);
+        return element("article", { className: "idea-card idea-completed", id: idea.id },
+            element("header", { className: "idea-header" },
+                element("h3", { text: idea.number ? `${idea.number}. ${idea.title}` : idea.title }),
+                element("span", { className: "idea-meta" },
+                    element("span", { className: "idea-author", text: idea.author }),
+                    " · ",
+                    idea.completedDate ? timestamp(idea.completedDate, "completed ") : "completed",
+                    idea.completedBy ? ` by ${idea.completedBy}` : "")),
+            element("p", { className: "idea-completed-page" }, "📄 Wiki page: ", element("a", { href: idea.wikiPage, text: idea.wikiPageTitle || idea.wikiPage })),
+            idea.description ? element("details", { className: "idea-comments" },
+                element("summary", { text: "Original idea" }),
+                element("div", { className: "idea-description" }, renderText(idea.description))) : null,
+            element("p", { className: "idea-meta", text: `👍 ${approve.length} · 👎 ${disapprove.length} · 🤔 ${convince.length} · ${(idea.replies || []).length + (idea.comments || []).length} comments` }),
+            canComplete(idea) ? element("button", { type: "button", className: "wiki-link-button", text: "Move back to Ideas", onclick: () => reopenIdea(idea) }) : null);
+    }
+
     function renderIdeas() {
-        const activeIdeas = data.ideas.filter((idea) => !idea.archived);
+        const activeIdeas = data.ideas.filter((idea) => !idea.archived && !idea.completed);
+        const completedIdeas = data.ideas.filter((idea) => !idea.archived && idea.completed)
+            .sort((a, b) => (b.completedDate || "").localeCompare(a.completedDate || ""));
+        const tabs = element("div", { className: "idea-tabs", role: "tablist", "aria-label": "Ideas" },
+            ...[["ideas", `💡 Ideas (${activeIdeas.length})`], ["completed", `✅ Completed (${completedIdeas.length})`]].map(([value, label]) =>
+                element("button", {
+                    type: "button", role: "tab", className: "idea-tab", "aria-selected": String(ideaFilters.tab === value), text: label,
+                    onclick: () => { ideaFilters.tab = value; render(); }
+                })));
+        if (ideaFilters.tab === "completed") {
+            ideasApp.replaceChildren(tabs, account, status, element("div", { className: "idea-list" },
+                ...(completedIdeas.length ? completedIdeas.map(renderCompletedIdea)
+                    : [element("p", { text: "No ideas have been completed yet. Once an idea has been coded and has a wiki page, use ✅ Mark as completed on it." })])));
+            return;
+        }
         const authors = [...new Set(activeIdeas.map((idea) => idea.author))];
         const toolbar = element("div", { className: "controversy-toolbar" },
             element("button", { type: "button", className: "wiki-primary-button", text: "+ Add idea", onclick: addIdea }),
@@ -531,7 +619,7 @@
             list.replaceChildren(...(ideas.length ? ideas.map(({ idea }) => renderIdea(idea)) : [element("p", { text: "No ideas match." })]));
         }
         renderList();
-        ideasApp.replaceChildren(toolbar, account, status, list);
+        ideasApp.replaceChildren(tabs, toolbar, account, status, list);
     }
 
     // Threads & Debates page ----------------------------------------------------------------------
@@ -700,6 +788,7 @@
             return;
         }
         if (archivesApp && id) openDiscussions.add(id);
+        if (ideasApp && data.ideas.some((item) => item.id === id && item.completed)) ideaFilters.tab = "completed";
         render();
         // The list is drawn after the browser looked for the #id, so go to it now
         if ((ideasApp || archivesApp) && id) {
@@ -721,6 +810,11 @@
         const id = location.hash.slice(1);
         if ((discussionsApp || archivesApp) && id) {
             openDiscussions.add(id);
+            render();
+        }
+        const completed = ideasApp && data.ideas.find((item) => item.id === id)?.completed;
+        if (ideasApp && id && (ideaFilters.tab === "completed") !== Boolean(completed)) {
+            ideaFilters.tab = completed ? "completed" : "ideas";
             render();
         }
         document.getElementById(id)?.scrollIntoView({ block: "start" });
