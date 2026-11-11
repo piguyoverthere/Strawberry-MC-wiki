@@ -1855,3 +1855,46 @@ mark.wiki-annotation-pending{
 .idea-owner-actions .idea-delete{
     margin-top:0
 }
+/* Private wiki: everything but the password box stays hidden until wiki-editor.js unlocks the page */
+html:not(.wiki-unlocked) body:not(.wiki-public):not(:has(#login-app)) > :not(.wiki-gate){
+    visibility:hidden !important
+}
+.wiki-gate{
+    position:fixed;
+    z-index:100;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    background-color:#2f2f2f
+}
+.wiki-gate-box{
+    box-sizing:border-box;
+    width:100%;
+    max-width:380px;
+    padding:24px;
+    border:1px solid #a2a9b1;
+    border-radius:6px;
+    background-color:#ffffff;
+    font:15px/1.5 Arial, Helvetica, sans-serif
+}
+.wiki-gate-box h1{
+    margin-top:0
+}
+.wiki-gate-box input[type="password"]{
+    box-sizing:border-box;
+    width:100%;
+    margin:4px 0 8px;
+    padding:8px;
+    border:1px solid #72777d;
+    border-radius:4px
+}
+.wiki-gate-box label{
+    display:block
+}
+.wiki-gate-box button[type="submit"]{
+    display:block;
+    width:100%;
+    margin-top:8px
+}

@@ -52,6 +52,68 @@
         document.head.append(viewport);
     }
 
+    // Private wiki: pages stay hidden (see global.css) until the reader logs in or enters the wiki or review
+    // password. The pages are still public on GitHub, so this keeps casual visitors out rather than securing them.
+    const viewAccessKey = "strawberry-wiki-view-access";
+    const canView = () => {
+        try {
+            return Boolean((sessionStorage.getItem(tokenStorageKey) || localStorage.getItem(tokenStorageKey)) && (sessionStorage.getItem(accountStorageKey) || localStorage.getItem(accountStorageKey)))
+                || Boolean(sessionStorage.getItem(viewAccessKey) || localStorage.getItem(viewAccessKey));
+        } catch {
+            return false;
+        }
+    };
+    const isPublicPage = currentPage === "login.html";
+
+    function showViewGate() {
+        const gate = document.createElement("div");
+        gate.className = "wiki-gate";
+        gate.dataset.wikiInjected = "";
+        gate.innerHTML = `
+            <form class="wiki-gate-box">
+                <h1>Strawberry MC Wiki</h1>
+                <p>This wiki is private. Enter the wiki password, or log in with your account.</p>
+                <label for="wiki-gate-password">Wiki password</label>
+                <input id="wiki-gate-password" type="password" autocomplete="current-password" required>
+                <label class="wiki-checkbox"><input type="checkbox" checked> Remember me on this device</label>
+                <p class="wiki-dialog-error" role="alert"></p>
+                <button type="submit" class="wiki-primary-button">Enter</button>
+                <p><a href="login.html?${new URLSearchParams({ next: currentPage + location.search + location.hash })}">Log in with your account instead</a></p>
+            </form>`;
+        const form = gate.querySelector("form");
+        const error = gate.querySelector(".wiki-dialog-error");
+        const submit = gate.querySelector('button[type="submit"]');
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            error.textContent = "";
+            submit.disabled = true;
+            submit.textContent = "Checking…";
+            try {
+                // Only proves the password; viewing doesn't need the GitHub token, so it isn't kept
+                await unlockEither(gate.querySelector("#wiki-gate-password").value);
+                try {
+                    (gate.querySelector('input[type="checkbox"]').checked ? localStorage : sessionStorage).setItem(viewAccessKey, "1");
+                } catch {
+                    // Without storage the password is asked again on the next page.
+                }
+                gate.remove();
+                document.documentElement.classList.add("wiki-unlocked");
+            } catch (failure) {
+                error.textContent = failure.message === "That isn't the wiki password or the review password." ? "That password isn't right." : failure.message;
+                submit.disabled = false;
+                submit.textContent = "Enter";
+            }
+        });
+        document.body.append(gate);
+        gate.querySelector("#wiki-gate-password").focus();
+    }
+
+    if (canView() || isPublicPage) {
+        document.documentElement.classList.add("wiki-unlocked");
+    } else {
+        showViewGate();
+    }
+
     // Wrap the page body (everything between the header and the scripts) so it can be edited as one region.
     const header = document.querySelector(".site-header");
     const root = document.createElement("div");
@@ -468,8 +530,7 @@
                 signOutButton.textContent = "Sign out";
                 signOutButton.title = `Sign out of ${accountName} on this device`;
                 signOutButton.addEventListener("click", () => {
-                    forgetToken();
-                    forgetAccount();
+                    window.wikiStore.signOut();
                     location.reload();
                 });
                 nav.append(signOutButton);
@@ -3364,6 +3425,13 @@
         signOut() {
             forgetToken();
             forgetAccount();
+            for (const storage of [sessionStorage, localStorage]) {
+                try {
+                    storage.removeItem(viewAccessKey);
+                } catch {
+                    // Storage blocked; nothing was saved there.
+                }
+            }
         },
         forget() {
             this.signOut();
