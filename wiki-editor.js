@@ -479,6 +479,13 @@
                     node.textContent = node.textContent.replace(/\|/g, "");
                 }
             }
+            // About sits on its own beside Home
+            const aboutLink = document.createElement("a");
+            aboutLink.href = "about.html";
+            aboutLink.textContent = "About";
+            aboutLink.dataset.wikiInjected = "";
+            if (currentPage === "about.html") aboutLink.setAttribute("aria-current", "page");
+            nav.insertBefore(aboutLink, pdfLink);
             for (const [label, links] of navMenus) {
                 nav.insertBefore(buildNavMenu(label, links), pdfLink);
             }
