@@ -245,8 +245,8 @@
         };
     }
 
-    // An idea is ready to be implemented once approvals minus disapprovals minus "needs convincing" votes have
-    // stayed above 2 for more than a day.
+    // An idea is ready to be implemented once approvals minus disapprovals minus "needs convincing" votes are above 2
+    // and nothing but comments has happened to it for more than a day (the rule on the Ideas page).
     const readyMargin = 2;
     const readyAfter = 24 * 60 * 60 * 1000;
 
@@ -255,30 +255,16 @@
         return approve.length - disapprove.length - convince.length;
     }
 
-    // When the score last rose above the margin. Votes save that moment on the idea; for ideas from before then,
-    // replay the current votes in date order (votes copied from the document count from when the idea was added).
-    function readySince(idea) {
-        if (netScore(idea) <= readyMargin) return null;
-        if (idea.readySince) return Date.parse(idea.readySince);
+    // The last time the idea changed other than by a comment: added, edited, or a vote cast, changed or taken back.
+    // Votes copied from the document have no date, so they count from when the idea was added (or not at all).
+    function lastActivity(idea) {
         const added = Date.parse(idea.created || "") || 0;
-        const weight = { approve: 1, disapprove: -1, convince: -1 };
-        const votes = Object.values(idea.votes || {})
-            .map((item) => ({ weight: weight[item.vote] || 0, time: Date.parse(item.date || "") || added }))
-            .sort((a, b) => a.time - b.time);
-        let score = 0;
-        let since = null;
-        for (const item of votes) {
-            const before = score;
-            score += item.weight;
-            if (before <= readyMargin && score > readyMargin) since = item.time;
-            else if (score <= readyMargin) since = null;
-        }
-        return since;
+        return Math.max(added, Date.parse(idea.edited || "") || 0, Date.parse(idea.lastVoteDate || "") || 0,
+            ...Object.values(idea.votes || {}).map((item) => Date.parse(item.date || "") || 0));
     }
 
     function isReady(idea) {
-        const since = readySince(idea);
-        return since !== null && Date.now() - since > readyAfter;
+        return netScore(idea) > readyMargin && Date.now() - lastActivity(idea) > readyAfter;
     }
 
     function vote(idea, choice) {
@@ -293,11 +279,9 @@
                 } else {
                     target.votes[key] = { name, vote: choice, date: new Date().toISOString() };
                 }
-                if (netScore(target) <= readyMargin) {
-                    delete target.readySince;
-                } else if (!target.readySince) {
-                    target.readySince = new Date(readySince(target) ?? Date.now()).toISOString();
-                }
+                // Taking a vote back leaves no vote behind, so the idea remembers when its voting last changed
+                target.lastVoteDate = new Date().toISOString();
+                delete target.readySince;
             }, `${name} votes ${choice} on idea: ${idea.title}`, { needsReview: false })
                 .then(() => { status.textContent = `Your vote on "${idea.title}" was saved.`; }));
     }
@@ -522,8 +506,8 @@
                     ready ? element("span", {
                         className: "idea-badge idea-badge-ready",
                         text: "✅ Ready to implement",
-                        title: `Approvals minus disapprovals and "needs convincing" votes have been above ${readyMargin} ${readySince(idea)
-                            ? `since ${new Date(readySince(idea)).toLocaleDateString("en-US", { dateStyle: "medium" })}`
+                        title: `Approvals minus disapprovals and "needs convincing" votes are above ${readyMargin}, with no votes or edits ${lastActivity(idea)
+                            ? `since ${new Date(lastActivity(idea)).toLocaleDateString("en-US", { dateStyle: "medium" })}`
                             : "since the votes in the ideas document"}`
                     }) : null,
                     " · ",
