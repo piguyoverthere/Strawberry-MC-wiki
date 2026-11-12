@@ -335,6 +335,11 @@
      "name": "Sai",
      "vote": "convince",
      "date": "2026-11-11T01:02:56.162Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-12T22:32:27.566Z"
     }
    },
    "replies": [
@@ -373,7 +378,8 @@
      "text": "Bro all of caleb's ideas are questionable",
      "date": "2026-11-12T19:15:48.554Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T22:32:27.566Z"
   },
   {
    "id": "idea-doc-7",
