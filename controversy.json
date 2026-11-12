@@ -1822,7 +1822,10 @@
      "date": "2026-11-12T16:54:50.102Z"
     }
    ],
-   "lastVoteDate": "2026-11-12T16:55:04.075Z"
+   "lastVoteDate": "2026-11-12T16:55:04.075Z",
+   "archived": true,
+   "archivedBy": "Eric",
+   "archivedDate": "2026-11-12T17:01:26.986Z"
   },
   {
    "id": "idea-doc-41",
