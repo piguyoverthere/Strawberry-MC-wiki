@@ -2290,7 +2290,12 @@
      "text": "Umm... What?",
      "date": "2026-11-12T17:05:14.540Z"
     }
-   ]
+   ],
+   "completed": true,
+   "completedBy": "Eric",
+   "completedDate": "2026-11-12T19:00:11.286Z",
+   "wikiPage": "page-flaming-forges.html",
+   "wikiPageTitle": "page-flaming-forges.html"
   },
   {
    "id": "idea-doc-58",
