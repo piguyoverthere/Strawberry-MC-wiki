@@ -1826,6 +1826,11 @@
      "name": "Alex",
      "vote": "disapprove",
      "date": "2026-11-12T16:56:13.029Z"
+    },
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "disapprove",
+     "date": "2026-11-12T22:38:36.494Z"
     }
    },
    "replies": [
@@ -1845,7 +1850,7 @@
      "date": "2026-11-12T22:38:30.310Z"
     }
    ],
-   "lastVoteDate": "2026-11-12T16:56:13.029Z"
+   "lastVoteDate": "2026-11-12T22:38:36.494Z"
   },
   {
    "id": "idea-doc-38",
