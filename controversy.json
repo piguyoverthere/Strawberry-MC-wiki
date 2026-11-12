@@ -5125,8 +5125,8 @@
    "id": "idea-doc-218",
    "author": "Theodore",
    "number": null,
-   "title": "Wheat golem for crops",
-   "description": "Wheat golem for crops",
+   "title": "Straw golem for crops",
+   "description": "The Straw golem is a golem built with 4 haybales and 1 pumpkin. It will walk around in a 15-by-15 block radius, defending and harvesting crops.",
    "comments": [
     "Eric: X",
     "Aadi: X",
@@ -5168,7 +5168,12 @@
      "vote": "approve",
      "source": "document"
     }
-   }
+   },
+   "formerTitles": [
+    "Wheat golem for crops"
+   ],
+   "edited": "2026-11-12T22:37:27.482Z",
+   "editedBy": "Theodore"
   },
   {
    "id": "idea-doc-219",
