@@ -1599,8 +1599,14 @@
      "name": "Eric",
      "vote": "disapprove",
      "source": "document"
+    },
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "convince",
+     "date": "2026-11-12T22:36:24.059Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-12T22:36:24.059Z"
   },
   {
    "id": "idea-doc-34",
