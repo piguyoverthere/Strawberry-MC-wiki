@@ -760,6 +760,11 @@
      "name": "Eric",
      "vote": "disapprove",
      "date": "2026-11-11T18:03:55.966Z"
+    },
+    "aadi": {
+     "name": "aadi",
+     "vote": "disapprove",
+     "date": "2026-11-12T01:48:33.128Z"
     }
    },
    "replies": [
@@ -768,7 +773,8 @@
      "text": "we aldready have endermites as the annoying mob in the end we don't need more questionable things",
      "date": "2026-11-10T19:15:41.644Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T01:48:33.128Z"
   },
   {
    "id": "idea-doc-16",
