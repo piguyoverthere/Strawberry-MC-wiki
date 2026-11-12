@@ -1318,6 +1318,11 @@
      "name": "Eric",
      "vote": "disapprove",
      "date": "2026-11-07T04:18:38.547Z"
+    },
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "convince",
+     "date": "2026-11-12T22:35:16.702Z"
     }
    },
    "replies": [
@@ -1351,7 +1356,8 @@
      "text": "For the 5th grade suffering",
      "date": "2026-11-10T19:43:31.299Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T22:35:16.702Z"
   },
   {
    "id": "idea-doc-27",
