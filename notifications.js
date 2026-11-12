@@ -95,6 +95,10 @@
         if ((match = line.match(/^([^:]+?) sets role of ([^:]+) to (admin|editor|reviewer)$/))) return { type: "account", who: match[1], text: ` made ${match[2]} ${match[3] === "admin" ? "an admin" : match[3] === "editor" ? "an editor" : "a reviewer"}`, target: "", href: null };
         if ((match = line.match(/^([^:]+?) (blocks [^:]+ until .+|unblocks [^:]+)$/))) return { type: "account", who: match[1], text: ` ${match[2]}`, target: "", href: null };
         if (/^.+ confirms an email address$|^Reset personal password: |^.+ changes their personal password$/.test(line)) return null;
+        if (/^.+ (unfollows .+|changes their settings|adds a profile picture|removes a profile picture|removes a picture from their profile)$/.test(line)) return null;
+        if ((match = line.match(/^([^:]+?) follows ([^:]+)$/))) return { type: "account", who: match[1], text: " started following ", target: match[2], href: `profile.html?${new URLSearchParams({ u: match[2] })}`, assigned: [match[2]] };
+        if ((match = line.match(/^([^:]+?) (updates their profile|adds a picture to their profile|changes their profile picture)$/)))
+            return { type: "account", who: match[1], text: ` ${{ "updates their profile": "updated their profile", "adds a picture to their profile": "added a picture to their profile", "changes their profile picture": "changed their profile picture" }[match[2]]}`, target: "", href: `profile.html?${new URLSearchParams({ u: match[1] })}` };
         if ((match = line.match(/^([^:]+?) changes the wiki password$/))) return { type: "account", who: match[1], text: " changed the wiki password", target: "", href: null };
         if ((match = line.match(/^([^:]+?) sets up email for password recovery$/))) return { type: "account", who: match[1], text: " set up email for password recovery", target: "", href: null };
         if ((match = line.match(/^([^:]+?) asks an admin to reset their password$/))) return { type: "account", who: match[1], text: " asked an admin to reset their password", target: "", href: "admin.html" };
@@ -220,7 +224,7 @@
             return element("li", { className: `notification notification-${update.type}${update.vote ? ` notification-${update.vote}` : ""}${update.isNew ? " notification-new" : ""}${isForMe(update) ? " notification-priority" : ""}` },
                 element("span", { className: `idea-badge notification-badge notification-badge-${update.type}` }, typeLabels[update.type]),
                 element("span", { className: "notification-text" },
-                    update.who ? element("strong", {}, update.who) : null,
+                    update.who ? element("strong", {}, element("a", { className: "notification-who", href: `profile.html?${new URLSearchParams({ u: update.who })}` }, update.who)) : null,
                     update.text,
                     href ? element("a", { href }, update.target) : update.target,
                     update.count > 1 ? element("span", { className: "notification-count" }, ` ×${update.count}`) : null,

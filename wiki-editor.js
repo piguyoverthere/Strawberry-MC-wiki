@@ -17,8 +17,116 @@
     const accountStorageKey = "strawberry-wiki-account";
     const roleStorageKey = "strawberry-wiki-role";
     const sharedTokenFile = "wiki-token.json";
+    const lookStorageKey = "strawberry-wiki-look";
+
+    // Appearance settings (dark mode, text size) are kept on this device and in the profile, so they follow you.
+    // The dark colours are worked out from global.css when the page loads, so new styles get a dark version too.
+    function readLook() {
+        try {
+            return JSON.parse(localStorage.getItem(lookStorageKey) || "{}") || {};
+        } catch {
+            return {};
+        }
+    }
+
+    function saveLook(look) {
+        try {
+            localStorage.setItem(lookStorageKey, JSON.stringify(look));
+        } catch {
+            // Storage blocked; the look still applies until the page closes.
+        }
+        applyLook(look);
+    }
+
+    const darkQuery = matchMedia("(prefers-color-scheme: dark)");
+
+    function applyLook(look = readLook()) {
+        const dark = look.theme === "dark" || (look.theme === "system" && darkQuery.matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        document.documentElement.dataset.textSize = ["large", "larger"].includes(look.textSize) ? look.textSize : "normal";
+        if (dark) addDarkStyles();
+    }
+    darkQuery.addEventListener("change", () => applyLook());
+
+    function rgbToHsl(r, g, b) {
+        r /= 255; g /= 255; b /= 255;
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        const l = (max + min) / 2;
+        if (max === min) return [0, 0, l];
+        const d = max - min;
+        const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        const h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+        return [h * 60, s, l];
+    }
+
+    // Light backgrounds become dark and dark text becomes light, keeping each colour's hue
+    function darkColor(r, g, b, a) {
+        const [h, s, l] = rgbToHsl(r, g, b);
+        const light = 0.1 + (1 - l) * 0.8;
+        return `hsl(${h.toFixed(1)} ${(s * (l > 0.85 ? 0.45 : 0.85) * 100).toFixed(1)}% ${(light * 100).toFixed(1)}%${a < 1 ? ` / ${a}` : ""})`;
+    }
+
+    function darkValue(value) {
+        return value
+            .replace(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,/]\s*([\d.]+%?))?\s*\)/g, (match, r, g, b, a) =>
+                darkColor(+r, +g, +b, a === undefined ? 1 : a.endsWith("%") ? parseFloat(a) / 100 : +a))
+            .replace(/\b(white|black)\b/g, (name) => name === "white" ? darkColor(255, 255, 255, 1) : darkColor(0, 0, 0, 1));
+    }
+
+    function darkRules(rules) {
+        let css = "";
+        for (const rule of rules) {
+            if (rule instanceof CSSMediaRule) {
+                const inner = darkRules(rule.cssRules);
+                if (inner) css += `@media ${rule.conditionText}{${inner}}`;
+            } else if (rule instanceof CSSStyleRule) {
+                const declarations = [];
+                for (const property of rule.style) {
+                    if (!/color$|^background-image$|^fill$|^stroke$/.test(property)) continue;
+                    const value = rule.style.getPropertyValue(property);
+                    const changed = darkValue(value);
+                    if (changed !== value) declarations.push(`${property}:${changed}${rule.style.getPropertyPriority(property) ? " !important" : ""}`);
+                }
+                if (!declarations.length) continue;
+                const selector = rule.selectorText.split(/,(?![^(]*\))/).map((part) => {
+                    part = part.trim();
+                    return /^(html|:root)\b/.test(part) ? part.replace(/^(html|:root)/, 'html[data-theme="dark"]') : `html[data-theme="dark"] ${part}`;
+                }).join(",");
+                css += `${selector}{${declarations.join(";")}}`;
+            }
+        }
+        return css;
+    }
+
+    function addDarkStyles() {
+        if (document.getElementById("wiki-dark-styles")) return;
+        const style = document.createElement("style");
+        style.id = "wiki-dark-styles";
+        style.dataset.wikiInjected = "";
+        document.head.append(style);
+        const fill = () => {
+            const sheet = [...document.styleSheets].find((item) => /global\.css$/.test(item.href || ""));
+            let css = "";
+            try {
+                css = darkRules(sheet?.cssRules || []);
+            } catch {
+                // The stylesheet couldn't be read; only the page colours change.
+            }
+            // The page behind the content and the green header stay dark and green rather than turning light
+            const dark = 'html[data-theme="dark"]';
+            style.textContent = `${css}${dark}{color-scheme:dark}${dark},${dark} body{background-color:#0e0f11}${dark} body{color:#e3e5e8}` +
+                `${dark} .site-header{background-color:#3d6a26;border-bottom-color:#3a2716}` +
+                `${dark} .site-header nav,${dark} .site-header nav a:not(.nav-button),${dark} .site-header nav a:not(.nav-button):visited,${dark} .site-header nav .nav-menu-button{color:#ffffff}`;
+        };
+        const link = document.querySelector('link[href$="global.css"]');
+        const loaded = [...document.styleSheets].some((item) => /global\.css$/.test(item.href || ""));
+        if (link && !loaded) link.addEventListener("load", fill, { once: true });
+        fill();
+    }
+    applyLook();
     const legacyEditableSelector = "h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, figcaption, summary";
-    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list, #ideas-app, #discussions-app, #notifications-app, #documents-app, #archives-app, #todo-app, #all-pages-app, #bugs-app, #login-app, #admin-app";
+    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list, #ideas-app, #discussions-app, #notifications-app, #documents-app, #archives-app, #todo-app, #all-pages-app, #bugs-app, #login-app, #admin-app, #profile-app";
     const allowedTags = new Set([
         "A", "ABBR", "B", "BLOCKQUOTE", "BR", "CAPTION", "CODE", "DEL", "DETAILS", "DIV", "EM", "FIGCAPTION",
         "FIGURE", "FOOTER", "H1", "H2", "H3", "H4", "H5", "H6", "HR", "I", "IMG", "INS", "KBD", "LI", "MARK",
@@ -526,9 +634,9 @@
             accountLink.className = "nav-button wiki-account-link";
             accountLink.dataset.wikiInjected = "";
             const accountName = readToken() && readAccount();
-            accountLink.href = accountName || currentPage === "login.html" ? "login.html" : `login.html?${new URLSearchParams({ next: currentPage + location.search + location.hash })}`;
+            accountLink.href = accountName ? `profile.html?${new URLSearchParams({ u: accountName })}` : currentPage === "login.html" ? "login.html" : `login.html?${new URLSearchParams({ next: currentPage + location.search + location.hash })}`;
             accountLink.textContent = accountName ? `👤 ${accountName}` : "Log in";
-            accountLink.title = accountName ? `Signed in as ${accountName} (${readRole()})` : "Log in or register";
+            accountLink.title = accountName ? `Your profile and settings (signed in as ${accountName}, ${readRole()})` : "Log in or register";
             nav.append(accountLink);
             if (canReviewRole(readRole())) {
                 const adminLink = document.createElement("a");
@@ -3356,6 +3464,7 @@
     // as pending until an admin approves them. All of this runs in the browser, so it guides honest editors rather
     // than locking anyone out: whoever can unlock the token could change the files directly.
     const accountsFile = "accounts.json";
+    const profilesFile = "profiles.json";
     const reviewTokenFile = "wiki-token-review.json";
     const accountIterations = 310000;
     const roles = ["admin", "editor", "reviewer"];
@@ -4177,17 +4286,134 @@
             requirePersonalPassword(password);
             await setPersonalPassword(token, name, password, `${readAccount()} resets the password of: ${name}`, { mustChange: true });
         },
-        async changePersonalPassword(password) {
+        // current is checked when given, so a browser left signed in can't be used to take over the account
+        async changePersonalPassword(password, current) {
             const token = readToken();
             const name = readAccount();
             if (!token || !name) {
                 throw new Error("Log in first.");
             }
             requirePersonalPassword(password);
+            if (current !== undefined) {
+                const account = (await readAccounts(token)).accounts?.[accountKey(name)];
+                if (!account) {
+                    throw new Error("Your account no longer exists. Log in again.");
+                }
+                const salt = Uint8Array.from(atob(account.salt), (character) => character.charCodeAt(0));
+                if (await hashPersonalPassword(current, salt, account.iterations || accountIterations) !== account.hash) {
+                    throw new Error("Your current personal password isn't right.");
+                }
+            }
             await setPersonalPassword(token, name, password, `${name} changes their personal password`);
-        }
+        },
+
+        // Profiles ------------------------------------------------------------------------------
+        profilesFile,
+        accountKey,
+        readLook,
+        // Applies on this device now and saves to the profile, so other devices pick it up
+        async setLook(change) {
+            const look = { ...readLook(), ...change, updated: new Date().toISOString() };
+            saveLook(look);
+            if (readToken() && readAccount()) {
+                await window.wikiStore.updateProfile((profile) => {
+                    profile.settings = { theme: look.theme, textSize: look.textSize, updated: look.updated };
+                }, `${readAccount()} changes their settings`);
+            }
+        },
+        // change(profile, data) edits the signed-in person's own profile; returning false saves nothing
+        updateProfile(change, message) {
+            const name = readAccount();
+            return window.wikiStore.updateJson(profilesFile, (data) => {
+                data.profiles = data.profiles || {};
+                const profile = data.profiles[accountKey(name)] || { name };
+                const result = change(profile, data);
+                if (result === false) return false;
+                profile.name = name;
+                profile.updated = new Date().toISOString();
+                data.profiles[accountKey(name)] = profile;
+            }, message, { needsReview: false });
+        },
+        follow(name, following = true) {
+            const me = readAccount();
+            if (accountKey(name) === accountKey(me)) {
+                throw new Error("You can't follow yourself.");
+            }
+            return window.wikiStore.updateProfile((profile) => {
+                const list = (profile.following || []).filter((key) => key !== accountKey(name));
+                if (following === (profile.following || []).includes(accountKey(name))) return false;
+                profile.following = following ? [...list, accountKey(name)] : list;
+            }, `${me} ${following ? "follows" : "unfollows"} ${name}`);
+        },
+        // Shrinks a picture and saves it under profile-images/, returning its path
+        async uploadProfileImage(file) {
+            const token = readToken();
+            const name = readAccount();
+            if (!token || !name) {
+                throw new Error("Log in first.");
+            }
+            await checkAccount(token);
+            if (!/^image\/(png|jpeg|gif|webp)$/.test(file.type)) {
+                throw new Error("Use a PNG, JPEG, GIF or WebP picture.");
+            }
+            let blob = file;
+            let extension = file.type.split("/")[1].replace("jpeg", "jpg");
+            if (file.type !== "image/gif") {
+                const bitmap = await createImageBitmap(file);
+                const scale = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
+                const canvas = document.createElement("canvas");
+                canvas.width = Math.round(bitmap.width * scale);
+                canvas.height = Math.round(bitmap.height * scale);
+                canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+                blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", 0.85));
+                extension = "webp";
+            }
+            if (blob.size > 2 * 1024 * 1024) {
+                throw new Error("That picture is too big. Use one under 2 MB.");
+            }
+            const content = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result).split(",")[1]);
+                reader.onerror = () => reject(new Error("That picture could not be read."));
+                reader.readAsDataURL(blob);
+            });
+            const path = `profile-images/${accountKey(name).replace(/[^a-z0-9]+/g, "-")}-${Date.now()}.${extension}`;
+            await githubRequest(token, `contents/${path}`, {
+                method: "PUT",
+                body: { message: `${name} adds a profile picture`, content, branch: repository.branch }
+            });
+            return { path, blob };
+        },
+        async deleteProfileImage(path) {
+            const token = readToken();
+            if (!token || !readAccount() || !/^profile-images\/[\w-]+\.(png|jpg|gif|webp)$/.test(path)) return;
+            const existing = await githubRequest(token, `contents/${path}?ref=${repository.branch}`, { allowMissing: true });
+            if (existing?.sha) {
+                await githubRequest(token, `contents/${path}`, {
+                    method: "DELETE",
+                    body: { message: `${readAccount()} removes a profile picture`, sha: existing.sha, branch: repository.branch }
+                });
+            }
+        },
+        confirmEmail: () => openConfirmEmailDialog(null)
     };
     document.dispatchEvent(new Event("wiki-store-ready"));
+
+    (async () => {
+        const name = readToken() && readAccount();
+        if (!name) return;
+        try {
+            if (sessionStorage.getItem("strawberry-wiki-look-synced") === accountKey(name)) return;
+            sessionStorage.setItem("strawberry-wiki-look-synced", accountKey(name));
+            const response = await fetch(profilesFile, { cache: "no-cache" });
+            const settings = response.ok ? (await response.json()).profiles?.[accountKey(name)]?.settings : null;
+            if (settings?.updated && settings.updated > (readLook().updated || "")) {
+                saveLook({ theme: settings.theme, textSize: settings.textSize, updated: settings.updated });
+            }
+        } catch {
+            // Keep this device's settings.
+        }
+    })();
 
     // While signed in without a confirmed email address, a button in the top bar offers to add one, for getting back
     // in after forgetting the personal password.

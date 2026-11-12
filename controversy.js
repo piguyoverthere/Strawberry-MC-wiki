@@ -26,6 +26,8 @@
         return node;
     }
 
+    const profileHref = (name) => `profile.html?${new URLSearchParams({ u: name || "" })}`;
+
     function formatDate(value) {
         if (!value) return "";
         const parsed = new Date(value.length === 10 ? `${value}T00:00:00` : value);
@@ -501,7 +503,7 @@
             element("header", { className: "idea-header" },
                 element("h3", { text: idea.number ? `${idea.number}. ${idea.title}` : idea.title }),
                 element("span", { className: "idea-meta" },
-                    element("span", { className: "idea-author", text: idea.author }),
+                    element("a", { className: "idea-author", href: profileHref(idea.author), text: idea.author }),
                     idea.status ? element("span", { className: `idea-badge idea-badge-${idea.status}`, text: idea.status }) : null,
                     ready ? element("span", {
                         className: "idea-badge idea-badge-ready",
@@ -551,7 +553,7 @@
             card.append(element("ul", { className: "idea-replies" },
                 ...replies.map((item) => element("li", { className: item.pending ? "wiki-pending-item" : null },
                     element("div", { className: "idea-meta" },
-                        element("span", { className: "idea-author", text: item.author }), " · ", timestamp(item.date)),
+                        element("a", { className: "idea-author", href: profileHref(item.author), text: item.author }), " · ", timestamp(item.date)),
                     highlightMentions(element("div", { className: "idea-description" }, renderText(item.text)), item.mentions),
                     item.pending ? reviewBar(`comment by ${item.author}`,
                         () => moderate(true, `comment by ${item.author} on idea: ${idea.title}`, (fresh) => {
@@ -608,7 +610,7 @@
             element("header", { className: "idea-header" },
                 element("h3", { text: idea.number ? `${idea.number}. ${idea.title}` : idea.title }),
                 element("span", { className: "idea-meta" },
-                    element("span", { className: "idea-author", text: idea.author }),
+                    element("a", { className: "idea-author", href: profileHref(idea.author), text: idea.author }),
                     " · ",
                     idea.completedDate ? timestamp(idea.completedDate, "completed ") : "completed",
                     idea.completedBy ? ` by ${idea.completedBy}` : "")),
@@ -800,7 +802,7 @@
             element("header", { className: "idea-header" },
                 element("h3", { text: idea.number ? `${idea.number}. ${idea.title}` : idea.title }),
                 element("span", { className: "idea-meta" },
-                    element("span", { className: "idea-author", text: idea.author }),
+                    element("a", { className: "idea-author", href: profileHref(idea.author), text: idea.author }),
                     " · ",
                     idea.archivedDate ? timestamp(idea.archivedDate, "deleted ") : "deleted",
                     idea.archivedBy ? ` by ${idea.archivedBy}` : "")),
