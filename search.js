@@ -322,6 +322,7 @@ const pages = [
     { title: "Water Swiftness [technical]", href: "page-water-swiftness-technical.html", keywords: "water swiftness [technical] technical" },
     { title: "Mycquests [technical]", href: "page-mycquests-technical.html", keywords: "mycquests [technical] technical" },
     { title: "Stick Figure", href: "page-stick-figure.html", keywords: "stick figure" },
+    { title: "This Site No Longer Syncs to Strawberry MC Wiki", href: "news-eric-this-site-no-longer-syncs-to-strawberry-mc-wiki.html", keywords: "this site no longer syncs to strawberry mc wiki" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
