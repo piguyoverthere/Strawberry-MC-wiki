@@ -36,6 +36,11 @@
      "name": "Sai",
      "vote": "convince",
      "date": "2026-11-11T01:01:30.782Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-12T22:30:27.264Z"
     }
    },
    "replies": [
@@ -54,7 +59,8 @@
      "text": "Ty for making it eric :)",
      "date": "2026-11-11T01:07:04.603Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T22:30:27.264Z"
   },
   {
    "id": "idea-doc-2",
