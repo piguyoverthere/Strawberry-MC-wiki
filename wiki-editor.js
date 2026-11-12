@@ -39,11 +39,18 @@
     }
 
     const darkQuery = matchMedia("(prefers-color-scheme: dark)");
+    let lookSaving = null;
+    let lookSaveAgain = false;
 
     function applyLook(look = readLook()) {
         const dark = look.theme === "dark" || (look.theme === "system" && darkQuery.matches);
         document.documentElement.dataset.theme = dark ? "dark" : "light";
-        document.documentElement.dataset.textSize = ["large", "larger"].includes(look.textSize) ? look.textSize : "normal";
+        const root = document.documentElement;
+        root.dataset.textSize = ["large", "larger"].includes(look.textSize) ? look.textSize : "normal";
+        root.dataset.font = ["serif", "readable"].includes(look.font) ? look.font : "sans";
+        root.dataset.width = ["wide", "full"].includes(look.width) ? look.width : "normal";
+        root.toggleAttribute("data-underline-links", look.underlineLinks === true);
+        root.toggleAttribute("data-reduce-motion", look.reduceMotion === true);
         if (dark) addDarkStyles();
     }
     darkQuery.addEventListener("change", () => applyLook());
@@ -2358,7 +2365,9 @@
                 bar.contentEditable = "false";
                 group.prepend(bar);
             }
-            const open = Math.min(openCodeTab.get(group) || 0, panes.length - 1);
+            // Until someone picks a tab, the one chosen in Settings opens first
+            const preferred = panes.findIndex((pane) => pane.dataset.tab === readLook().codeTab);
+            const open = Math.min(openCodeTab.has(group) ? openCodeTab.get(group) : Math.max(preferred, 0), panes.length - 1);
             bar.replaceChildren(...panes.map((pane, index) => {
                 const tab = document.createElement("button");
                 tab.type = "button";
@@ -2389,7 +2398,7 @@
         document.body.classList.toggle("wiki-editing", value);
         if (value) {
             root.contentEditable = "true";
-            root.spellcheck = true;
+            root.spellcheck = readLook().spellcheck !== false;
             islands.forEach((island) => {
                 island.contentEditable = "false";
             });
@@ -2425,7 +2434,8 @@
         if (!toc) {
             toc = document.createElement("details");
             toc.className = "wiki-toc";
-            toc.open = window.innerWidth > 700;
+            const contents = readLook().contents;
+            toc.open = contents === "open" || (contents !== "closed" && window.innerWidth > 700);
             root.before(toc);
         }
         const list = document.createElement("ol");
@@ -3760,13 +3770,13 @@
         let knownTasks = null;
         watchJson("annotations.json", (data) => {
             const tasks = annotationTasks(data, readAccount());
-            if (knownTasks !== null && tasks.length > knownTasks) {
+            if (knownTasks !== null && tasks.length > knownTasks && readLook().taskPopups !== false) {
                 const { annotation, item } = tasks.at(-1);
                 status.textContent = `New priority task from ${item.author} on ${annotation.pageTitle}.`;
             }
             knownTasks = tasks.length;
             header.querySelectorAll(".nav-badge").forEach((badge) => badge.remove());
-            if (!tasks.length) return;
+            if (!tasks.length || readLook().headerBadge === false) return;
             const link = header.querySelector('.nav-menu a[href="notifications.html"]');
             for (const target of [link, link?.closest(".nav-menu")?.querySelector("button")]) {
                 if (target) target.append(Object.assign(document.createElement("span"), { className: "nav-badge", textContent: String(tasks.length), title: `${tasks.length} priority task${tasks.length === 1 ? "" : "s"} for you` }));
@@ -4312,14 +4322,23 @@
         accountKey,
         readLook,
         // Applies on this device now and saves to the profile, so other devices pick it up
-        async setLook(change) {
-            const look = { ...readLook(), ...change, updated: new Date().toISOString() };
-            saveLook(look);
-            if (readToken() && readAccount()) {
-                await window.wikiStore.updateProfile((profile) => {
-                    profile.settings = { theme: look.theme, textSize: look.textSize, updated: look.updated };
-                }, `${readAccount()} changes their settings`);
-            }
+        // reset clears every setting back to how the wiki starts out
+        async setLook(change, { reset = false } = {}) {
+            saveLook({ ...(reset ? {} : readLook()), ...change, updated: new Date().toISOString() });
+            if (!readToken() || !readAccount()) return;
+            // Changes made while a save is on its way go in one more save afterwards, with every setting as it is then
+            lookSaveAgain = Boolean(lookSaving);
+            lookSaving = lookSaving || (async () => {
+                do {
+                    lookSaveAgain = false;
+                    await window.wikiStore.updateProfile((profile) => {
+                        profile.settings = readLook();
+                    }, `${readAccount()} changes their settings`);
+                } while (lookSaveAgain);
+            })().finally(() => {
+                lookSaving = null;
+            });
+            return lookSaving;
         },
         // change(profile, data) edits the signed-in person's own profile; returning false saves nothing
         updateProfile(change, message) {
@@ -4408,7 +4427,7 @@
             const response = await fetch(profilesFile, { cache: "no-cache" });
             const settings = response.ok ? (await response.json()).profiles?.[accountKey(name)]?.settings : null;
             if (settings?.updated && settings.updated > (readLook().updated || "")) {
-                saveLook({ theme: settings.theme, textSize: settings.textSize, updated: settings.updated });
+                saveLook(settings);
             }
         } catch {
             // Keep this device's settings.

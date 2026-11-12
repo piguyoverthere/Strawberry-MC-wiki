@@ -2431,3 +2431,91 @@ html[data-text-size="larger"] body{
         grid-template-columns:1fr
     }
 }
+/* Font, page width, links and motion settings (Settings on your profile) */
+html[data-font="serif"] body{
+    font-family:Georgia,"Times New Roman",serif
+}
+html[data-font="readable"] body{
+    font-family:Verdana,Tahoma,sans-serif;
+    letter-spacing:0.02em;
+    word-spacing:0.08em;
+    line-height:1.7
+}
+html[data-width="wide"] .wiki-content{
+    max-width:1280px
+}
+html[data-width="full"] .wiki-content{
+    max-width:none
+}
+html[data-underline-links] a{
+    text-decoration:underline
+}
+html[data-reduce-motion] *,
+html[data-reduce-motion] *::before,
+html[data-reduce-motion] *::after{
+    animation:none !important;
+    transition:none !important;
+    scroll-behavior:auto !important
+}
+.profile-pronouns{
+    margin-left:12px;
+    color:#54595d;
+    font-size:0.45em;
+    font-weight:normal
+}
+.profile-status{
+    margin:0 0 8px;
+    font-style:italic
+}
+.profile-favourites ul{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 20px;
+    padding:0;
+    list-style:none
+}
+.profile-favourites h2{
+    margin-top:32px;
+    padding-bottom:8px;
+    border-bottom:1px solid #c8ccd1
+}
+.profile-field input[list] + input[list]{
+    margin-top:6px
+}
+.profile-settings-nav{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin:0 0 20px
+}
+.profile-settings-nav a{
+    padding:4px 12px;
+    border:1px solid #a2a9b1;
+    border-radius:999px;
+    color:#202122;
+    background-color:#ffffff;
+    text-decoration:none
+}
+.profile-settings-nav a:hover{
+    background-color:#eaecf0
+}
+.profile-settings-group h3{
+    scroll-margin-top:100px
+}
+.profile-toggle{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    margin:10px 0
+}
+.profile-toggle input{
+    margin-top:3px
+}
+.profile-toggle small{
+    display:block;
+    color:#54595d
+}
+.profile-settings-group fieldset small{
+    display:block;
+    margin-top:4px
+}

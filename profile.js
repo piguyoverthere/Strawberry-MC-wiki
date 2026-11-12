@@ -193,6 +193,9 @@
         const following = followingOf(name);
         document.title = `${account.name} | Strawberry MC`;
         const links = (profile.links || []).filter((link) => /^https?:\/\//i.test(link.url || ""));
+        // Privacy settings hide parts of a profile from everyone else
+        const privacy = own ? {} : profile.privacy || {};
+        const favourites = (profile.favouritePages || []).filter((page) => /^[\w-]+\.html$/.test(page.href || ""));
         const bigPicture = profile.picture && imagePath.test(profile.picture)
             ? element("img", { className: "profile-big-picture", src: imageSrc(profile.picture), alt: `${account.name}'s profile picture` })
             : element("div", { className: "profile-big-picture profile-avatar-empty", "aria-hidden": "true" }, account.name.charAt(0).toUpperCase());
@@ -205,7 +208,7 @@
             element("div", { className: "profile-columns" },
                 element("aside", { className: "profile-side" },
                     bigPicture,
-                    element("ul", { className: "profile-stats" },
+                    privacy.hideStats ? null : element("ul", { className: "profile-stats" },
                         statRow("💡", "Ideas", done.ideas.length, "ideas.html"),
                         statRow("💬", "Idea comments", done.replies.length, "ideas.html"),
                         statRow("🗳", "Votes", done.votes.length, "ideas.html"),
@@ -214,16 +217,22 @@
                         statRow("📝", "Page comments", done.pageComments.length),
                         statRow("👥", "Followers", followers.length))),
                 element("div", { className: "profile-main" },
-                    element("h2", { className: "profile-display-name" }, profile.displayName || account.name),
+                    element("h2", { className: "profile-display-name" }, profile.displayName || account.name,
+                        profile.pronouns ? element("span", { className: "profile-pronouns" }, profile.pronouns) : null),
+                    profile.status ? element("p", { className: "profile-status" }, `💭 ${profile.status}`) : null,
                     element("p", { className: "profile-meta" },
                         element("span", {}, `📅 Joined: ${formatDate(account.created) || "before profiles"}`),
-                        done.lastActive ? element("span", {}, `🕘 Last active: ${formatDate(done.lastActive)}`) : null,
+                        done.lastActive && !privacy.hideLastActive ? element("span", {}, `🕘 Last active: ${formatDate(done.lastActive)}`) : null,
+                        profile.minecraftName ? element("span", {}, `⛏ Minecraft: ${profile.minecraftName}`) : null,
                         element("span", { className: `profile-role profile-role-${account.role || "editor"}` }, account.role || "editor"),
                         ...links.map((link) => element("a", { href: link.url, target: "_blank", rel: "noopener nofollow ugc" }, `🔗 ${link.label || new URL(link.url).hostname}`))),
                     profile.bio ? element("p", { className: "profile-bio" }, profile.bio)
                         : element("p", { className: "profile-empty" }, own ? "You haven't written a bio yet. Add one in Settings below." : "No bio yet."),
-                    peopleSection(`Following ${following.length} ${following.length === 1 ? "person" : "people"}`, following, "following"),
-                    peopleSection(`${followers.length} ${followers.length === 1 ? "follower" : "followers"}`, followers, "followers"),
+                    favourites.length ? element("section", { className: "profile-favourites" },
+                        element("h2", {}, "Favourite pages"),
+                        element("ul", {}, ...favourites.map((page) => element("li", {}, element("a", { href: page.href }, `⭐ ${page.title}`))))) : null,
+                    privacy.hideFollows ? null : peopleSection(`Following ${following.length} ${following.length === 1 ? "person" : "people"}`, following, "following"),
+                    privacy.hideFollows ? null : peopleSection(`${followers.length} ${followers.length === 1 ? "follower" : "followers"}`, followers, "followers"),
                     picturesSection(account.name, own),
                     own ? peopleSection("Everyone on the wiki", Object.values(data.accounts).map((item) => item.name).filter((who) => key(who) !== key(me())).sort((a, b) => a.localeCompare(b)), "everyone") : null)));
     }
@@ -244,6 +253,19 @@
         const displayName = element("input", { type: "text", maxlength: 40, value: profile.displayName || "" });
         const bio = element("textarea", { rows: 4, maxlength: 600 });
         bio.value = profile.bio || "";
+        const pronouns = element("input", { type: "text", maxlength: 30, value: profile.pronouns || "", placeholder: "e.g. they/them" });
+        const statusLine = element("input", { type: "text", maxlength: 80, value: profile.status || "", placeholder: "e.g. Building the Echo Shrine" });
+        const minecraftName = element("input", { type: "text", maxlength: 16, value: profile.minecraftName || "", pattern: "\\w{3,16}" });
+        const pageList = element("datalist", { id: "profile-page-list" });
+        const favouriteInputs = [0, 1, 2].map((index) => element("input", {
+            type: "text", list: "profile-page-list", maxlength: 120, value: profile.favouritePages?.[index]?.title || "",
+            "aria-label": `Favourite page ${index + 1}`, placeholder: "Start typing a page name",
+            onfocus: () => {
+                if (!pageList.children.length && typeof pages !== "undefined") {
+                    pageList.append(...pages.filter((page) => /^page-/.test(page.href)).map((page) => element("option", { value: page.title })));
+                }
+            }
+        }));
         const linkRows = element("div", { className: "profile-link-rows" });
         const addLink = (link = {}) => {
             if (linkRows.children.length >= maxLinks) return;
@@ -269,52 +291,187 @@
                     status.textContent = `"${bad.url}" isn't a web address. Start it with https://`;
                     return;
                 }
+                if (minecraftName.value.trim() && !/^\w{3,16}$/.test(minecraftName.value.trim())) {
+                    status.textContent = "Minecraft usernames are 3 to 16 letters, numbers or underscores.";
+                    return;
+                }
+                const wikiPages = typeof pages !== "undefined" ? pages : [];
+                const favouritePages = [];
+                for (const input of favouriteInputs) {
+                    const title = input.value.trim();
+                    if (!title) continue;
+                    const page = wikiPages.find((item) => item.title.toLowerCase() === title.toLowerCase())
+                        || (profile.favouritePages || []).find((item) => item.title === title);
+                    if (!page) {
+                        status.textContent = `There's no wiki page called "${title}". Pick one from the list.`;
+                        return;
+                    }
+                    favouritePages.push({ title: page.title, href: page.href });
+                }
                 save(() => store.updateProfile((fresh) => {
                     fresh.displayName = displayName.value.trim();
                     fresh.bio = bio.value.trim();
                     fresh.links = links;
-                    if (!fresh.displayName) delete fresh.displayName;
-                    if (!fresh.bio) delete fresh.bio;
+                    fresh.pronouns = pronouns.value.trim();
+                    fresh.status = statusLine.value.trim();
+                    fresh.minecraftName = minecraftName.value.trim();
+                    fresh.favouritePages = favouritePages;
+                    for (const name of ["displayName", "bio", "pronouns", "status", "minecraftName"]) {
+                        if (!fresh[name]) delete fresh[name];
+                    }
                     if (!links.length) delete fresh.links;
+                    if (!favouritePages.length) delete fresh.favouritePages;
                 }, `${me()} updates their profile`), submit, () => {
                     status.textContent = "Profile saved. Others see it within a minute.";
                 });
             }
         },
-        element("h3", {}, "Profile"),
+        element("h3", { id: "settings-profile" }, "Profile"),
         field("Display name", displayName, "Shown above your bio. Your username stays the same."),
+        field("Pronouns", pronouns),
+        field("Status", statusLine, "A short line shown under your name."),
         field("Bio", bio, "Plain text, up to 600 characters."),
+        field("Minecraft username", minecraftName),
+        element("div", { className: "profile-field" }, element("span", { className: "profile-field-label" }, "Favourite pages"), ...favouriteInputs, pageList,
+            element("small", {}, "Up to 3 wiki pages shown on your profile.")),
         element("div", { className: "profile-field" }, element("span", { className: "profile-field-label" }, "Links"), linkRows,
             element("button", { type: "button", onclick: () => addLink() }, "+ Add link")),
         status,
         element("div", { className: "profile-form-actions" }, submit));
     }
 
-    function appearanceForm() {
-        const look = store.readLook();
+    // Settings that change how the wiki looks and behaves; they apply straight away and follow you to other devices
+    function lookGroup(id, title, ...rows) {
         const status = message();
-        const choice = (name, value, label, current) => element("label", { className: "profile-choice" },
+        const group = element("div", { className: "profile-settings-group" }, element("h3", { id }, title), ...rows.map((row) => row(status)), status);
+        return group;
+    }
+
+    async function changeLook(change, status) {
+        try {
+            await store.setLook(change);
+            status.textContent = "Saved. It follows you to your other devices.";
+        } catch (error) {
+            status.textContent = `Changed on this device, but not saved to your profile: ${error.message}`;
+        }
+    }
+
+    function choices(name, legend, options, fallback, hint) {
+        return (status) => {
+            const current = store.readLook()[name] || fallback;
+            return element("fieldset", {}, element("legend", {}, legend),
+                ...options.map(([value, label]) => element("label", { className: "profile-choice" },
+                    element("input", { type: "radio", name, value, checked: current === value, onchange: () => changeLook({ [name]: value }, status) }), ` ${label}`)),
+                hint ? element("small", { className: "profile-hint" }, hint) : null);
+        };
+    }
+
+    function toggle(name, label, fallback, hint) {
+        return (status) => {
+            const saved = store.readLook()[name];
+            return element("label", { className: "profile-toggle" },
+                element("input", { type: "checkbox", checked: saved === undefined ? fallback : saved, onchange: (event) => changeLook({ [name]: event.target.checked }, status) }),
+                element("span", {}, label, hint ? element("small", {}, hint) : null));
+        };
+    }
+
+    function appearanceGroup() {
+        return lookGroup("settings-appearance", "Appearance",
+            choices("theme", "Theme", [["light", "☀ Light"], ["dark", "🌙 Dark"], ["system", "💻 Match my device"]], "light"),
+            choices("textSize", "Text size", [["normal", "Normal"], ["large", "Large"], ["larger", "Larger"]], "normal"),
+            choices("font", "Font", [["sans", "Plain"], ["serif", "Book"], ["readable", "Easy to read"]], "sans"),
+            choices("width", "Page width", [["normal", "Normal"], ["wide", "Wide"], ["full", "Full screen"]], "normal"),
+            toggle("underlineLinks", "Underline all links", false),
+            toggle("reduceMotion", "Reduce motion", false, "Turns off sliding and fading."));
+    }
+
+    function readingGroup() {
+        return lookGroup("settings-reading", "Reading",
+            choices("codeTab", "Code boxes open on", [["Java", "Java"], ["Pseudocode", "Pseudocode"]], "Java"),
+            choices("contents", "Contents box on long pages", [["auto", "Open on big screens"], ["open", "Always open"], ["closed", "Always closed"]], "auto"));
+    }
+
+    function editingGroup() {
+        return lookGroup("settings-editing", "Editing",
+            toggle("spellcheck", "Check spelling while editing pages", true));
+    }
+
+    function notificationsGroup() {
+        return lookGroup("settings-notifications", "Notifications",
+            toggle("taskPopups", "Pop up a message when someone pings you", true),
+            toggle("headerBadge", "Show the number of tasks for you in the top bar", true),
+            choices("notificationsView", "The Notifications page shows", [["all", "All updates"], ["forme", "Only updates for me"]], "all"));
+    }
+
+    // Saved in your public profile, so they apply for everyone who looks at it
+    function privacyGroup() {
+        const privacy = profileOf(me()).privacy || {};
+        const status = message();
+        const option = (name, label) => element("label", { className: "profile-toggle" },
             element("input", {
-                type: "radio", name, value, checked: current === value,
-                onchange: async () => {
-                    try {
-                        await store.setLook({ [name]: value });
-                        status.textContent = "Saved. It follows you to other devices when you log in there.";
-                    } catch (error) {
-                        status.textContent = `Changed on this device, but not saved to your profile: ${error.message}`;
+                type: "checkbox", checked: Boolean(privacy[name]),
+                onchange: (event) => save(() => store.updateProfile((fresh) => {
+                    fresh.privacy = { ...fresh.privacy, [name]: event.target.checked };
+                    if (!event.target.checked) delete fresh.privacy[name];
+                    if (!Object.keys(fresh.privacy).length) delete fresh.privacy;
+                }, `${me()} changes their privacy settings`), event.target, () => {
+                    status.textContent = "Saved.";
+                })
+            }), element("span", {}, label));
+        return element("div", { className: "profile-settings-group" },
+            element("h3", { id: "settings-privacy" }, "Privacy"),
+            element("p", { className: "profile-hint" }, "Hides these from other people's view of your profile. The wiki's files are public, so this keeps your profile tidy rather than secret."),
+            option("hideStats", "Hide my activity counts"),
+            option("hideLastActive", "Hide when I was last active"),
+            option("hideFollows", "Hide who I follow and who follows me"),
+            status);
+    }
+
+    function dataGroup() {
+        const status = message();
+        const clearLocal = (test, what) => {
+            if (!confirm(`Remove ${what} from this device? This can't be undone.`)) return;
+            let removed = 0;
+            try {
+                for (const name of Object.keys(localStorage)) {
+                    if (test(name)) {
+                        localStorage.removeItem(name);
+                        removed++;
                     }
                 }
-            }), ` ${label}`);
+            } catch {
+                // Storage blocked; nothing was saved there.
+            }
+            status.textContent = removed ? `Removed ${what}.` : `There were no ${what} on this device.`;
+        };
         return element("div", { className: "profile-settings-group" },
-            element("h3", {}, "Appearance"),
-            element("fieldset", {}, element("legend", {}, "Theme"),
-                choice("theme", "light", "☀ Light", look.theme || "light"),
-                choice("theme", "dark", "🌙 Dark", look.theme || "light"),
-                choice("theme", "system", "💻 Match my device", look.theme || "light")),
-            element("fieldset", {}, element("legend", {}, "Text size"),
-                choice("textSize", "normal", "Normal", look.textSize || "normal"),
-                choice("textSize", "large", "Large", look.textSize || "normal"),
-                choice("textSize", "larger", "Larger", look.textSize || "normal")),
+            element("h3", { id: "settings-data" }, "Your data"),
+            element("p", { className: "profile-form-actions" },
+                element("button", {
+                    type: "button",
+                    onclick: () => {
+                        const account = accountOf(me());
+                        const { lastActive, ...items } = activity(me());
+                        const file = new Blob([JSON.stringify({
+                            account: { name: account.name, role: account.role || "editor", created: account.created },
+                            profile: profileOf(me()), lastActive, ...items
+                        }, null, 2)], { type: "application/json" });
+                        const link = element("a", { href: URL.createObjectURL(file), download: `${key(me()).replace(/[^a-z0-9]+/g, "-")}-strawberry-wiki.json` });
+                        link.click();
+                        URL.revokeObjectURL(link.href);
+                    }
+                }, "⬇ Download my data"),
+                element("button", { type: "button", onclick: () => clearLocal((name) => name.startsWith("strawberry-wiki-draft:"), "saved page edits") }, "Clear saved page edits"),
+                element("button", { type: "button", onclick: () => clearLocal((name) => name.startsWith("strawberry-wiki-bookmarks:"), "bookmarks") }, "Clear bookmarks"),
+                element("button", {
+                    type: "button",
+                    onclick: async () => {
+                        if (!confirm("Put every appearance, reading, editing and notification setting back to how it started?")) return;
+                        await store.setLook({}, { reset: true }).catch(() => {});
+                        location.reload();
+                    }
+                }, "Reset all settings")),
+            element("small", { className: "profile-hint" }, "Your data is everything the wiki keeps about you: your profile, ideas, comments, votes, posts and bug reports. Saved edits and bookmarks are only on this device."),
             status);
     }
 
@@ -345,7 +502,7 @@
                 }
             }
         },
-        element("h3", {}, "Personal password"),
+        element("h3", { id: "settings-password" }, "Personal password"),
         element("p", { className: "profile-hint" }, "This is your own password, not the wiki password everyone shares."),
         field("Current password", current),
         field("New password", next, "At least 6 characters."),
@@ -356,7 +513,7 @@
     }
 
     function recoveryGroup() {
-        const group = element("div", { className: "profile-settings-group" }, element("h3", {}, "Password recovery"), element("p", {}, "Checking…"));
+        const group = element("div", { className: "profile-settings-group" }, element("h3", { id: "settings-recovery" }, "Password recovery"), element("p", {}, "Checking…"));
         (async () => {
             let ready = false;
             try {
@@ -366,7 +523,7 @@
             }
             const account = accountOf(me());
             const confirmed = account?.emailConfirmed;
-            group.replaceChildren(element("h3", {}, "Password recovery"),
+            group.replaceChildren(element("h3", { id: "settings-recovery" }, "Password recovery"),
                 !ready ? element("p", {}, "Emailed reset codes aren't set up on this wiki yet. If you forget your personal password, use \"Ask an admin\" on the login page.")
                     : element("p", {}, confirmed ? `✓ You confirmed an email address on ${formatDate(confirmed)}. If you forget your personal password, a code is sent there.`
                         : "You haven't added an email address. Without one, only an admin can reset your personal password."),
@@ -378,7 +535,7 @@
     function accountGroup() {
         const account = accountOf(me());
         return element("div", { className: "profile-settings-group" },
-            element("h3", {}, "Account"),
+            element("h3", { id: "settings-account" }, "Account"),
             element("p", {}, `You're signed in as ${account.name} (${account.role || "editor"}).`),
             element("p", { className: "profile-form-actions" },
                 element("a", { className: "profile-plain-button", href: "login.html" }, "Log in as someone else"),
@@ -391,9 +548,15 @@
     let settings = null;
 
     function renderSettings() {
+        const groups = [profileForm(), appearanceGroup(), readingGroup(), editingGroup(), notificationsGroup(), privacyGroup(), passwordForm(), recoveryGroup(), dataGroup(), accountGroup()];
         settings = element("section", { id: "profile-settings", className: "profile-settings" },
             element("h2", {}, "⚙ Settings"),
-            element("div", { className: "profile-settings-grid" }, profileForm(), appearanceForm(), passwordForm(), recoveryGroup(), accountGroup()));
+            element("nav", { className: "profile-settings-nav", "aria-label": "Settings sections" },
+                ...groups.map((group) => {
+                    const heading = group.querySelector("h3");
+                    return element("a", { href: `#${heading.id}` }, heading.textContent);
+                })),
+            element("div", { className: "profile-settings-grid" }, ...groups));
         return settings;
     }
 

@@ -95,7 +95,7 @@
         if ((match = line.match(/^([^:]+?) sets role of ([^:]+) to (admin|editor|reviewer)$/))) return { type: "account", who: match[1], text: ` made ${match[2]} ${match[3] === "admin" ? "an admin" : match[3] === "editor" ? "an editor" : "a reviewer"}`, target: "", href: null };
         if ((match = line.match(/^([^:]+?) (blocks [^:]+ until .+|unblocks [^:]+)$/))) return { type: "account", who: match[1], text: ` ${match[2]}`, target: "", href: null };
         if (/^.+ confirms an email address$|^Reset personal password: |^.+ changes their personal password$/.test(line)) return null;
-        if (/^.+ (unfollows .+|changes their settings|adds a profile picture|removes a profile picture|removes a picture from their profile)$/.test(line)) return null;
+        if (/^.+ (unfollows .+|changes their settings|changes their privacy settings|adds a profile picture|removes a profile picture|removes a picture from their profile)$/.test(line)) return null;
         if ((match = line.match(/^([^:]+?) follows ([^:]+)$/))) return { type: "account", who: match[1], text: " started following ", target: match[2], href: `profile.html?${new URLSearchParams({ u: match[2] })}`, assigned: [match[2]] };
         if ((match = line.match(/^([^:]+?) (updates their profile|adds a picture to their profile|changes their profile picture)$/)))
             return { type: "account", who: match[1], text: ` ${{ "updates their profile": "updated their profile", "adds a picture to their profile": "added a picture to their profile", "changes their profile picture": "changed their profile picture" }[match[2]]}`, target: "", href: `profile.html?${new URLSearchParams({ u: match[1] })}` };
@@ -177,7 +177,8 @@
     }).catch(() => {});
 
     const lastSeen = readStorage(seenStorageKey);
-    const filters = { type: "all", query: "" };
+    // Settings on your profile can open this page on just the updates meant for you
+    const filters = { type: window.wikiStore?.readLook().notificationsView === "forme" && window.wikiStore.isSignedIn() ? "forme" : "all", query: "" };
     const updates = [];
     const seenCommits = new Set();
     let page = 1;
@@ -191,6 +192,7 @@
         element("label", {}, "Show ",
             element("select", { onchange: (event) => { filters.type = event.target.value; render(); } },
                 element("option", { value: "all" }, "All updates"),
+                window.wikiStore?.isSignedIn() ? element("option", { value: "forme", selected: filters.type === "forme" }, "⚑ For you") : null,
                 ...types.map(([value, label]) => element("option", { value }, label)))),
         element("input", {
             type: "search", placeholder: "Search updates…", "aria-label": "Search updates",
@@ -216,7 +218,7 @@
             }
         }
         const shown = grouped.filter((update) =>
-            (filters.type === "all" || update.type === filters.type) &&
+            (filters.type === "all" || update.type === filters.type || (filters.type === "forme" && isForMe(update))) &&
             (!filters.query || `${update.who || ""} ${update.text} ${update.target}`.toLowerCase().includes(filters.query)));
         list.replaceChildren(...shown.map((update) => {
             // Looked up here rather than when loading, since search.js may load after this script
