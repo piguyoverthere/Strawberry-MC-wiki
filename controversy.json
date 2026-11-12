@@ -2432,7 +2432,14 @@
    ],
    "status": "resolved",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "date": "2026-11-12T19:18:16.830Z"
+    }
+   },
+   "lastVoteDate": "2026-11-12T19:18:16.830Z"
   },
   {
    "id": "idea-doc-62",
