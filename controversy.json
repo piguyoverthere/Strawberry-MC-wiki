@@ -4632,7 +4632,18 @@
      "vote": "approve",
      "source": "document"
     }
-   }
+   },
+   "replies": [
+    {
+     "author": "Eric",
+     "text": "@Sai @Alex",
+     "date": "2026-11-12T19:01:18.246Z",
+     "mentions": [
+      "Alex",
+      "Sai"
+     ]
+    }
+   ]
   },
   {
    "id": "idea-doc-208",
