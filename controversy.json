@@ -816,7 +816,14 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "aadi": {
+     "name": "aadi",
+     "vote": "convince",
+     "date": "2026-11-12T01:48:45.622Z"
+    }
+   },
+   "lastVoteDate": "2026-11-12T01:48:45.622Z"
   },
   {
    "id": "idea-doc-18",
