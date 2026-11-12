@@ -490,9 +490,14 @@
      "name": "aadi",
      "vote": "disapprove",
      "date": "2026-11-12T01:46:29.091Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "convince",
+     "date": "2026-11-12T22:33:17.129Z"
     }
    },
-   "lastVoteDate": "2026-11-12T01:46:29.091Z",
+   "lastVoteDate": "2026-11-12T22:33:17.129Z",
    "replies": [
     {
      "author": "aadi",
