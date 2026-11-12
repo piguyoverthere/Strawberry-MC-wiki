@@ -5213,8 +5213,14 @@
      "name": "Sai",
      "vote": "approve",
      "source": "document"
+    },
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "convince",
+     "date": "2026-11-12T22:34:36.375Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-12T22:34:36.375Z"
   },
   {
    "id": "idea-doc-222",
