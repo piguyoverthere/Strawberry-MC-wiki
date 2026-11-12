@@ -5050,9 +5050,14 @@
      "name": "Eric",
      "vote": "disapprove",
      "date": "2026-11-11T18:02:13.515Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "disapprove",
+     "date": "2026-11-12T22:38:34.126Z"
     }
    },
-   "lastVoteDate": "2026-11-12T22:38:23.850Z"
+   "lastVoteDate": "2026-11-12T22:38:34.126Z"
   },
   {
    "id": "idea-doc-216",
