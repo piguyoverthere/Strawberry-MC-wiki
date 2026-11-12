@@ -826,9 +826,14 @@
      "name": "aadi",
      "vote": "convince",
      "date": "2026-11-12T01:48:45.622Z"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "convince",
+     "date": "2026-11-12T05:01:16.751Z"
     }
    },
-   "lastVoteDate": "2026-11-12T01:48:45.622Z"
+   "lastVoteDate": "2026-11-12T05:01:16.751Z"
   },
   {
    "id": "idea-doc-18",
