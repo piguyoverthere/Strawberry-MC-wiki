@@ -1632,7 +1632,17 @@
      "date": "2026-11-12T16:55:13.926Z"
     }
    },
-   "lastVoteDate": "2026-11-12T16:55:13.926Z"
+   "lastVoteDate": "2026-11-12T16:55:13.926Z",
+   "replies": [
+    {
+     "author": "Eric",
+     "text": "WHY ALEX @Alex",
+     "date": "2026-11-12T16:55:51.981Z",
+     "mentions": [
+      "Alex"
+     ]
+    }
+   ]
   },
   {
    "id": "idea-doc-39",
