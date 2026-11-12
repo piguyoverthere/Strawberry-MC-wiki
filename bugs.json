@@ -352,8 +352,14 @@
    "severity": "critical",
    "reporter": "Eric",
    "reported": "2026-11-12T16:09:59.560Z",
-   "updated": "2026-11-12T16:10:11.664Z",
-   "comments": [],
+   "updated": "2026-11-12T19:49:03.799Z",
+   "comments": [
+    {
+     "author": "aadi",
+     "date": "2026-11-12T19:49:03.799Z",
+     "text": "Actually, it is if you run any command rly. the game is also generally laggy"
+    }
+   ],
    "history": [
     {
      "author": "Eric",
