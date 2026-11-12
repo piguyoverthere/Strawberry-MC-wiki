@@ -2276,8 +2276,14 @@
      "name": "Eric",
      "vote": "approve",
      "date": "2026-11-07T00:16:44.169Z"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "convince",
+     "date": "2026-11-12T17:04:54.345Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-12T17:04:54.345Z"
   },
   {
    "id": "idea-doc-58",
