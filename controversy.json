@@ -5319,6 +5319,11 @@
      "name": "Eric",
      "vote": "approve",
      "date": "2026-11-10T17:56:38.868Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-12T22:33:49.674Z"
     }
    },
    "replies": [
@@ -5337,7 +5342,8 @@
      "text": "they stand in boats in minecarts not sit like a zombie villager",
      "date": "2026-11-10T20:38:35.227Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T22:33:49.674Z"
   }
  ],
  "discussions": [
