@@ -395,6 +395,21 @@
     }
    ],
    "history": []
+  },
+  {
+   "id": "bug-12",
+   "number": 12,
+   "title": "Crystal hollows generate everywhere",
+   "description": "They are everywhere and they should be rare. ERIC DO NOT FIX I RESOLVED ON MY GIT SO DONT OVERWRITE",
+   "steps": "locate a lush cave\nmarvel in the absolute tininess of the lush cave compared to the crystals",
+   "area": "worldgen",
+   "status": "unresolved",
+   "severity": "minor",
+   "reporter": "aadi",
+   "reported": "2026-11-12T23:51:22.281Z",
+   "updated": "2026-11-12T23:51:22.281Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
