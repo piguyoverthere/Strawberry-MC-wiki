@@ -340,6 +340,21 @@
      "to": "resolved"
     }
    ]
+  },
+  {
+   "id": "bug-10",
+   "number": 10,
+   "title": "on behalf of aadi: Crystal hollows crashes game when teleported to",
+   "description": "if you tp to crystal hollows game crashes",
+   "steps": "tp to crystal hollows",
+   "area": "other",
+   "status": "unresolved",
+   "severity": "critical",
+   "reporter": "Eric",
+   "reported": "2026-11-12T16:09:59.560Z",
+   "updated": "2026-11-12T16:09:59.560Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
