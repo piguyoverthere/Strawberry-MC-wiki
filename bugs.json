@@ -403,13 +403,21 @@
    "description": "They are everywhere and they should be rare. ERIC DO NOT FIX I RESOLVED ON MY GIT SO DONT OVERWRITE",
    "steps": "locate a lush cave\nmarvel in the absolute tininess of the lush cave compared to the crystals",
    "area": "worldgen",
-   "status": "unresolved",
+   "status": "resolved",
    "severity": "minor",
    "reporter": "aadi",
    "reported": "2026-11-12T23:51:22.281Z",
-   "updated": "2026-11-12T23:51:22.281Z",
+   "updated": "2026-11-12T23:51:41.059Z",
    "comments": [],
-   "history": []
+   "history": [
+    {
+     "author": "aadi",
+     "date": "2026-11-12T23:51:41.059Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "resolved"
+    }
+   ]
   }
  ]
 }
