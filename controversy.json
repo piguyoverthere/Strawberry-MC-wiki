@@ -4964,7 +4964,12 @@
      "date": "2026-11-12T17:02:37.604Z"
     }
    ],
-   "lastVoteDate": "2026-11-12T17:01:33.029Z"
+   "lastVoteDate": "2026-11-12T17:01:33.029Z",
+   "completed": true,
+   "completedBy": "Eric",
+   "completedDate": "2026-11-12T17:03:15.835Z",
+   "wikiPage": "page-custom-arrows.html",
+   "wikiPageTitle": "page-custom-arrows.html"
   },
   {
    "id": "idea-doc-221",
