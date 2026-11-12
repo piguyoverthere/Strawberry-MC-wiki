@@ -658,9 +658,14 @@
      "name": "Sai",
      "vote": "disapprove",
      "date": "2026-11-10T19:09:16.202Z"
+    },
+    "aadi": {
+     "name": "aadi",
+     "vote": "disapprove",
+     "date": "2026-11-12T01:48:15.848Z"
     }
    },
-   "lastVoteDate": "2026-11-12T01:48:09.794Z"
+   "lastVoteDate": "2026-11-12T01:48:15.848Z"
   },
   {
    "id": "idea-doc-13",
