@@ -2250,8 +2250,14 @@
      "name": "Sai",
      "vote": "approve",
      "source": "document"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "date": "2026-11-12T17:04:43.862Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-12T17:04:43.862Z"
   },
   {
    "id": "idea-doc-57",
