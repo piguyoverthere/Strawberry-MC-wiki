@@ -1,3 +1,18 @@
 {
- "profiles": {}
+ "profiles": {
+  "eric": {
+   "name": "Eric",
+   "links": [
+    {
+     "label": "Adacraft",
+     "url": "https://adacraft.org"
+    },
+    {
+     "label": "Github profile",
+     "url": "https://github.com/piguyoverthere"
+    }
+   ],
+   "updated": "2026-11-12T05:16:46.923Z"
+  }
+ }
 }
