@@ -321,6 +321,7 @@ const pages = [
     { title: "Eric [technical]", href: "page-eric-technical.html", keywords: "eric [technical] technical" },
     { title: "Water Swiftness [technical]", href: "page-water-swiftness-technical.html", keywords: "water swiftness [technical] technical" },
     { title: "Mycquests [technical]", href: "page-mycquests-technical.html", keywords: "mycquests [technical] technical" },
+    { title: "Stick Figure", href: "page-stick-figure.html", keywords: "stick figure" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
