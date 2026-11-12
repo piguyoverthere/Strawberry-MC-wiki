@@ -369,6 +369,21 @@
      "to": "reviewing"
     }
    ]
+  },
+  {
+   "id": "bug-11",
+   "number": 11,
+   "title": "Laggy",
+   "description": "Game is really laggy",
+   "steps": "Move around in game",
+   "area": "other",
+   "status": "unresolved",
+   "severity": "major",
+   "reporter": "aadi",
+   "reported": "2026-11-12T19:49:42.046Z",
+   "updated": "2026-11-12T19:49:42.046Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
