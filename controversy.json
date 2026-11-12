@@ -1535,6 +1535,11 @@
      "name": "Aadi",
      "vote": "disapprove",
      "source": "document"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "date": "2026-11-12T16:57:19.438Z"
     }
    },
    "replies": [
@@ -1573,7 +1578,8 @@
      "text": "deleting soon....",
      "date": "2026-11-11T03:40:15.305Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T16:57:19.438Z"
   },
   {
    "id": "idea-doc-36",
