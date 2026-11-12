@@ -2314,8 +2314,14 @@
      "name": "Sai",
      "vote": "disapprove",
      "source": "document"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "disapprove",
+     "date": "2026-11-12T19:00:03.956Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-12T19:00:03.956Z"
   },
   {
    "id": "idea-doc-59",
