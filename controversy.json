@@ -2412,8 +2412,14 @@
      "name": "Eric",
      "vote": "approve",
      "source": "document"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "date": "2026-11-12T19:18:00.566Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-12T19:18:00.566Z"
   },
   {
    "id": "idea-doc-61",
