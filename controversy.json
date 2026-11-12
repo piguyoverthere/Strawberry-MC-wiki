@@ -171,8 +171,14 @@
      "name": "Sai",
      "vote": "disapprove",
      "date": "2026-11-10T19:01:43.078Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "convince",
+     "date": "2026-11-12T22:30:53.231Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-12T22:30:53.231Z"
   },
   {
    "id": "idea-doc-4",
