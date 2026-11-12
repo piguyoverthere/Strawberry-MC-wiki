@@ -4940,7 +4940,13 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {},
+   "votes": {
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "date": "2026-11-12T17:01:33.029Z"
+    }
+   },
    "replies": [
     {
      "author": "Eric",
@@ -4952,7 +4958,8 @@
      "text": "Absolutely no clue what this means but sure",
      "date": "2026-11-12T17:01:30.251Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T17:01:33.029Z"
   },
   {
    "id": "idea-doc-221",
