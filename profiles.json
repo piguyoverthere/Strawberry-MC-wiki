@@ -12,13 +12,14 @@
      "url": "https://github.com/piguyoverthere"
     }
    ],
-   "updated": "2026-11-12T19:43:49.635Z",
+   "updated": "2026-11-12T19:43:54.631Z",
    "settings": {
     "textSize": "normal",
-    "updated": "2026-11-12T19:43:47.800Z",
+    "updated": "2026-11-12T19:43:54.510Z",
     "font": "sans",
     "theme": "system",
-    "width": "normal"
+    "width": "normal",
+    "reduceMotion": false
    },
    "following": [
     "aadi"
