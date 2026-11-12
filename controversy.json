@@ -1661,6 +1661,11 @@
      "name": "Eric",
      "vote": "disapprove",
      "date": "2026-11-09T21:21:47.015Z"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "disapprove",
+     "date": "2026-11-12T16:54:54.659Z"
     }
    },
    "replies": [
@@ -1674,7 +1679,8 @@
      "text": "bro what is this a weapon or a tool either way it's just knockoff hoe nope",
      "date": "2026-11-12T16:54:50.102Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T16:54:54.659Z"
   },
   {
    "id": "idea-doc-41",
