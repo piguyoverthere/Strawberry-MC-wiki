@@ -1611,8 +1611,8 @@
     },
     "alex": {
      "name": "Alex",
-     "vote": "approve",
-     "date": "2026-11-12T16:56:09.803Z"
+     "vote": "disapprove",
+     "date": "2026-11-12T16:56:13.029Z"
     }
    },
    "replies": [
@@ -1622,7 +1622,7 @@
      "date": "2026-11-12T16:56:04.261Z"
     }
    ],
-   "lastVoteDate": "2026-11-12T16:56:09.803Z"
+   "lastVoteDate": "2026-11-12T16:56:13.029Z"
   },
   {
    "id": "idea-doc-38",
