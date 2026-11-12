@@ -1930,8 +1930,8 @@
    "votes": {
     "eric": {
      "name": "Eric",
-     "vote": "approve",
-     "source": "document"
+     "vote": "convince",
+     "date": "2026-11-12T21:58:16.756Z"
     },
     "alex": {
      "name": "Alex",
@@ -1939,7 +1939,7 @@
      "date": "2026-11-12T16:54:10.023Z"
     }
    },
-   "lastVoteDate": "2026-11-12T16:54:10.023Z"
+   "lastVoteDate": "2026-11-12T21:58:16.756Z"
   },
   {
    "id": "idea-doc-42",
