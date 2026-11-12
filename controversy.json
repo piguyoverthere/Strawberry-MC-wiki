@@ -2351,7 +2351,14 @@
      "vote": "disapprove",
      "date": "2026-11-10T19:37:29.116Z"
     }
-   }
+   },
+   "replies": [
+    {
+     "author": "Alex",
+     "text": "Kinda interesting",
+     "date": "2026-11-12T19:00:23.894Z"
+    }
+   ]
   },
   {
    "id": "idea-doc-60",
