@@ -1815,6 +1815,11 @@
      "name": "Aadi",
      "vote": "disapprove",
      "source": "document"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "disapprove",
+     "date": "2026-11-12T16:52:25.660Z"
     }
    },
    "replies": [
@@ -1823,7 +1828,8 @@
      "text": "Aadi this is in the crystal hollows",
      "date": "2026-11-10T19:46:11.950Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T16:52:25.660Z"
   },
   {
    "id": "idea-doc-47",
