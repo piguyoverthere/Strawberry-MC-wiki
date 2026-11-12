@@ -2312,8 +2312,8 @@
    "votes": {
     "eric": {
      "name": "Eric",
-     "vote": "disapprove",
-     "source": "document"
+     "vote": "convince",
+     "date": "2026-11-12T19:00:36.339Z"
     },
     "sai": {
      "name": "Sai",
@@ -2326,7 +2326,7 @@
      "date": "2026-11-12T19:00:03.956Z"
     }
    },
-   "lastVoteDate": "2026-11-12T19:00:03.956Z"
+   "lastVoteDate": "2026-11-12T19:00:36.339Z"
   },
   {
    "id": "idea-doc-59",
