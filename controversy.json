@@ -1752,11 +1752,6 @@
      "name": "Eric",
      "vote": "disapprove",
      "date": "2026-11-09T21:22:38.548Z"
-    },
-    "alex": {
-     "name": "Alex",
-     "vote": "disapprove",
-     "date": "2026-11-12T16:53:25.728Z"
     }
    },
    "replies": [
@@ -1776,7 +1771,7 @@
      "date": "2026-11-12T16:53:21.666Z"
     }
    ],
-   "lastVoteDate": "2026-11-12T16:53:25.728Z"
+   "lastVoteDate": "2026-11-12T16:53:28.212Z"
   },
   {
    "id": "idea-doc-45",
