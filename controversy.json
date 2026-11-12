@@ -1708,8 +1708,14 @@
      "name": "Eric",
      "vote": "approve",
      "source": "document"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "date": "2026-11-12T16:53:58.316Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-12T16:53:58.316Z"
   },
   {
    "id": "idea-doc-43",
