@@ -2350,6 +2350,11 @@
      "name": "Sai",
      "vote": "disapprove",
      "date": "2026-11-10T19:37:29.116Z"
+    },
+    "alex": {
+     "name": "Alex",
+     "vote": "approve",
+     "date": "2026-11-12T19:00:26.242Z"
     }
    },
    "replies": [
@@ -2358,7 +2363,8 @@
      "text": "Kinda interesting",
      "date": "2026-11-12T19:00:23.894Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T19:00:26.242Z"
   },
   {
    "id": "idea-doc-60",
