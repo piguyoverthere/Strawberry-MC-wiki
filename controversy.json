@@ -654,17 +654,13 @@
      "vote": "disapprove",
      "source": "document"
     },
-    "aadi": {
-     "name": "Aadi",
-     "vote": "disapprove",
-     "source": "document"
-    },
     "sai": {
      "name": "Sai",
      "vote": "disapprove",
      "date": "2026-11-10T19:09:16.202Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-12T01:48:09.794Z"
   },
   {
    "id": "idea-doc-13",
