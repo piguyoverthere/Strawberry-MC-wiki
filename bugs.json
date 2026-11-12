@@ -183,10 +183,10 @@
    "steps": "locate as many unresolved pages as possible\nresolve all",
    "area": "wiki",
    "status": "confirmed",
-   "severity": "major",
+   "severity": "minor",
    "reporter": "Alex",
    "reported": "2026-11-09T22:36:18.234Z",
-   "updated": "2026-11-10T19:27:55.115Z",
+   "updated": "2026-11-12T23:52:55.362Z",
    "comments": [
     {
      "author": "Alex",
@@ -230,6 +230,13 @@
      "field": "status",
      "from": "unresolved",
      "to": "confirmed"
+    },
+    {
+     "author": "aadi",
+     "date": "2026-11-12T23:52:55.362Z",
+     "field": "severity",
+     "from": "major",
+     "to": "minor"
     }
    ]
   },
