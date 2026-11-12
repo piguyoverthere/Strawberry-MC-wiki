@@ -253,6 +253,11 @@
      "name": "Sai",
      "vote": "disapprove",
      "date": "2026-11-10T19:02:10.059Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "disapprove",
+     "date": "2026-11-12T22:32:03.549Z"
     }
    },
    "replies": [
@@ -286,7 +291,8 @@
      "text": "THIS IS QUESTIONABLE DISSAPROVE",
      "date": "2026-11-10T19:03:00.903Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T22:32:03.549Z"
   },
   {
    "id": "idea-doc-6",
