@@ -1781,9 +1781,14 @@
      "name": "Alex",
      "vote": "approve",
      "date": "2026-11-12T16:56:50.792Z"
+    },
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "approve",
+     "date": "2026-11-12T22:37:51.276Z"
     }
    },
-   "lastVoteDate": "2026-11-12T16:56:50.792Z",
+   "lastVoteDate": "2026-11-12T22:37:51.276Z",
    "replies": [
     {
      "author": "Alex",
