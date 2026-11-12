@@ -5256,6 +5256,11 @@
      "name": "aadi",
      "vote": "disapprove",
      "date": "2026-11-09T20:57:57.184Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-12T22:34:33.644Z"
     }
    },
    "replies": [
@@ -5264,7 +5269,8 @@
      "text": "heeeeeelp",
      "date": "2026-11-09T20:58:01.300Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T22:34:33.644Z"
   },
   {
    "id": "idea-mw9qs6la-hbf7e",
