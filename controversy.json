@@ -1018,7 +1018,12 @@
      "vote": "approve",
      "source": "document"
     }
-   }
+   },
+   "completed": true,
+   "completedBy": "Alex",
+   "completedDate": "2026-11-12T16:59:59.511Z",
+   "wikiPage": "page-phoenix.html",
+   "wikiPageTitle": "Phoenix"
   },
   {
    "id": "idea-doc-22",
