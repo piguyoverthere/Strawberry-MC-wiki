@@ -348,13 +348,21 @@
    "description": "if you tp to crystal hollows game crashes",
    "steps": "tp to crystal hollows",
    "area": "other",
-   "status": "unresolved",
+   "status": "reviewing",
    "severity": "critical",
    "reporter": "Eric",
    "reported": "2026-11-12T16:09:59.560Z",
-   "updated": "2026-11-12T16:09:59.560Z",
+   "updated": "2026-11-12T16:10:11.664Z",
    "comments": [],
-   "history": []
+   "history": [
+    {
+     "author": "Eric",
+     "date": "2026-11-12T16:10:11.664Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "reviewing"
+    }
+   ]
   }
  ]
 }
