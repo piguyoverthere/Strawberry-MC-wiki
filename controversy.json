@@ -619,6 +619,11 @@
      "name": "Sai",
      "vote": "approve",
      "date": "2026-11-10T19:09:02.181Z"
+    },
+    "aadi": {
+     "name": "aadi",
+     "vote": "approve",
+     "date": "2026-11-12T01:48:00.911Z"
     }
    },
    "replies": [
@@ -627,7 +632,8 @@
      "text": "this is caleb",
      "date": "2026-11-12T01:47:55.197Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T01:48:00.911Z"
   },
   {
    "id": "idea-doc-12",
