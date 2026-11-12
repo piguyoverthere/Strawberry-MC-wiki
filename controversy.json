@@ -427,8 +427,14 @@
      "name": "Sai",
      "vote": "disapprove",
      "date": "2026-11-10T19:04:06.851Z"
+    },
+    "aadi": {
+     "name": "aadi",
+     "vote": "disapprove",
+     "date": "2026-11-12T01:46:29.091Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-12T01:46:29.091Z"
   },
   {
    "id": "idea-doc-9",
