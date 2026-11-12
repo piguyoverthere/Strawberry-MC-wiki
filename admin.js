@@ -237,7 +237,8 @@
 
     async function renderQueue() {
         const json = (file) => fetch(file, { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).catch(() => ({}));
-        const [ideas, bugs, pages, annotations] = await Promise.all([json("controversy.json"), json("bugs.json"), json("pending-pages.json"), json("annotations.json")]);
+        const [ideas, bugs, pages, annotations, restores] = await Promise.all([json("controversy.json"), json("bugs.json"), json("pending-pages.json"), json("annotations.json"), json("restore-requests.json")]);
+        const restoreRequests = restores.requests || [];
         const items = [];
         for (const idea of (ideas.ideas || []).filter((item) => !item.archived)) {
             if (idea.pending) items.push([`New idea by ${idea.author}: ${idea.title}`, `ideas.html#${idea.id}`]);
@@ -262,7 +263,14 @@
             items.length
                 ? element("ul", {}, ...items.map(([text, href]) => element("li", {}, element("a", { href, text }))))
                 : element("p", { text: "Nothing is waiting for review." }),
-            element("p", { className: "wiki-dialog-hint", text: "Open an item to approve or disapprove it. The list follows the live site, so a review you just saved can take a minute to drop off." }));
+            element("p", { className: "wiki-dialog-hint", text: "Open an item to approve or disapprove it. The list follows the live site, so a review you just saved can take a minute to drop off." }),
+            restoreRequests.length ? element("h3", { text: `Asked to restore an older version (${restoreRequests.length})` }) : null,
+            restoreRequests.length
+                ? element("ul", {}, ...restoreRequests.map((request) => element("li", {},
+                    element("a", { href: `${request.file}#wiki-history`, text: `${request.by}: ${request.title}, back to ${formatTime(request.versionDate)}` }),
+                    request.reason ? ` (“${request.reason}”)` : null)))
+                : null,
+            restoreRequests.length ? element("p", { className: "wiki-dialog-hint", text: "Only admins can restore a page. Open one to see the changes in the page's history and restore it or turn it down." }) : null);
     }
 
     let queue = element("section", { className: "admin-section" }, element("p", { text: "Loading the review queue…" }));

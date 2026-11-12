@@ -1927,7 +1927,8 @@ mark.wiki-annotation-pending{
 .notification-convince .notification-badge-vote{
     background-color:#fff3c4
 }
-.idea-card{
+.idea-card,
+.discussion{
     scroll-margin-top:110px
 }
 .idea-card:target,
@@ -2518,4 +2519,195 @@ html[data-reduce-motion] *::after{
 .profile-settings-group fieldset small{
     display:block;
     margin-top:4px
+}
+/* Notifications page: Notifications and Changes tabs */
+.notification-tabs{
+    display:flex;
+    gap:4px;
+    margin:16px 0 0;
+    border-bottom:2px solid #c8ccd1
+}
+.notification-tab{
+    position:relative;
+    bottom:-2px;
+    padding:9px 18px;
+    border:2px solid transparent;
+    border-bottom-color:#c8ccd1;
+    border-radius:6px 6px 0 0;
+    background:none;
+    color:#36454f;
+    cursor:pointer;
+    font:600 15px/1.2 Arial, Helvetica, sans-serif
+}
+.notification-tab:hover{
+    background-color:#eef3f7
+}
+.notification-tab[aria-selected="true"]{
+    border-color:#c8ccd1;
+    border-bottom-color:#ffffff;
+    background-color:#ffffff;
+    color:#0056b3
+}
+.notification-tab-count{
+    margin-left:6px;
+    padding:1px 7px;
+    border-radius:10px;
+    background-color:#c0392b;
+    color:#ffffff;
+    font-size:.8em
+}
+.notification-tab-hint{
+    margin:10px 0;
+    color:#54595d;
+    font-size:.92em
+}
+.notification-tasks-off{
+    display:none
+}
+.notification-reason{
+    margin-left:8px;
+    padding:1px 6px;
+    border-radius:3px;
+    background-color:#e3edf9;
+    color:#1d3f66;
+    font-size:.85em;
+    white-space:nowrap
+}
+.notification-sign-in{
+    margin:0
+}
+/* Version history */
+.wiki-history-dialog{
+    width:min(94vw, 820px);
+    max-height:88vh
+}
+.wiki-history-list{
+    margin:8px 0 0;
+    padding:0;
+    list-style:none
+}
+.wiki-history-entry{
+    margin:0 0 6px;
+    border:1px solid #d5dade;
+    border-radius:6px;
+    background-color:#ffffff
+}
+.wiki-history-entry > summary{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    gap:4px 8px;
+    padding:8px 10px;
+    cursor:pointer
+}
+.wiki-history-sha{
+    padding:1px 5px;
+    border-radius:3px;
+    background-color:#eef1f4;
+    color:#6a3fa0;
+    font-family:Consolas, Menlo, monospace
+}
+.wiki-history-message{
+    font-weight:600
+}
+.wiki-history-current{
+    padding:1px 6px;
+    border-radius:3px;
+    background-color:#d7f0dc;
+    color:#1b5e2b;
+    font-size:.8em;
+    font-weight:bold
+}
+.wiki-history-meta{
+    color:#54595d;
+    font-size:.88em
+}
+.wiki-history-stats{
+    margin-left:auto;
+    font-family:Consolas, Menlo, monospace;
+    font-size:.88em
+}
+.wiki-diff-add-count{
+    color:#1a7f37
+}
+.wiki-diff-remove-count{
+    color:#cf222e
+}
+.wiki-history-body{
+    padding:0 10px 10px
+}
+.wiki-diff{
+    max-height:50vh;
+    margin:0 0 8px;
+    padding:6px 0;
+    overflow:auto;
+    border:1px solid #d0d7de;
+    border-radius:6px;
+    background-color:#f6f8fa;
+    font:13px/1.45 Consolas, Menlo, monospace;
+    white-space:pre-wrap;
+    word-break:break-word
+}
+.wiki-diff > span{
+    display:block;
+    padding:0 10px
+}
+.wiki-diff-add{
+    background-color:#dafbe1;
+    color:#116329
+}
+.wiki-diff-remove{
+    background-color:#ffebe9;
+    color:#82071e
+}
+.wiki-diff-same{
+    color:#57606a
+}
+.wiki-diff-hunk{
+    margin:4px 0;
+    background-color:#ddf4ff;
+    color:#0550ae
+}
+.wiki-diff-note{
+    color:#57606a;
+    font-family:sans-serif
+}
+.wiki-history-actions{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px 12px
+}
+.wiki-history-requests:empty{
+    display:none
+}
+.wiki-history-requests{
+    margin:8px 0;
+    padding:8px 12px;
+    border:1px solid #e0c060;
+    border-radius:6px;
+    background-color:#fff8dc
+}
+.wiki-history-requests h3{
+    margin:0 0 4px;
+    font-size:1em
+}
+.wiki-history-requests ul{
+    margin:0;
+    padding-left:18px
+}
+.wiki-history-requests li{
+    margin:4px 0
+}
+.wiki-history-requests .wiki-history-actions{
+    display:inline-flex;
+    margin-left:8px
+}
+.wiki-history-reason{
+    display:block;
+    color:#54595d;
+    font-style:italic
+}
+.wiki-editing .wiki-editor-toolbar .wiki-history-button{
+    display:none
 }

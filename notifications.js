@@ -9,6 +9,8 @@
     const perPage = 100;
     const seenStorageKey = "strawberry-wiki-notifications-seen";
     const tokenStorageKey = "strawberry-wiki-github-token";
+    const pagePath = decodeURIComponent(location.pathname);
+    const bookmarkStorageKey = `strawberry-wiki-bookmarks:${pagePath.slice(0, pagePath.lastIndexOf("/") + 1)}`;
     const types = [
         ["page-new", "New pages"],
         ["page-edit", "Page changes"],
@@ -67,6 +69,9 @@
     // Ideas and threads are linked by id, looked up from their title
     let controversy = { ideas: new Map(), discussions: new Map() };
     let bugIds = new Map();
+    let bugsByTitle = new Map();
+    // Account keys of the people you follow, from your profile
+    let following = new Set();
     function bugHref(title) {
         const id = bugIds.get(title);
         return id ? `bugs.html#${id}` : "bugs.html";
@@ -76,20 +81,26 @@
         return idea ? `${idea.archived ? "archives" : "ideas"}.html#${idea.id}` : "ideas.html";
     }
     function discussionHref(title) {
-        const id = controversy.discussions.get(title);
-        return id ? `discussions.html#${id}` : "discussions.html";
+        const discussion = controversy.discussions.get(title);
+        return discussion ? `${discussion.archived ? "archives" : "discussions"}.html#${discussion.id}` : "discussions.html";
     }
 
     // Turns a commit message into an update, or null for bookkeeping commits nobody needs to see
     function describe(message) {
         const update = describeLine(message.split("\n")[0].trim().replace(/ \(needs review\)$/, ""));
         if (update && / \(needs review\)$/.test(message.split("\n")[0].trim())) update.needsReview = true;
+        // Page saves name who made them on a line of their own
+        const editor = message.match(/^Edited-by: (.+)$/m);
+        if (update && editor && !update.who && update.page) {
+            update.who = editor[1].trim();
+            update.text = update.type === "page-new" ? " created a page: " : " changed ";
+        }
         return update;
     }
 
     function describeLine(line) {
         let match;
-        if (/^Add .+ to search$|^Rename .+ in search$|^Update review queue for |^Remove unresolved notes from .+ page$|^Add unresolved note to .+ page$/.test(line)) return null;
+        if (/^Remove answered restore request for |^Add .+ to search$|^Rename .+ in search$|^Update review queue for |^Remove unresolved notes from .+ page$|^Add unresolved note to .+ page$/.test(line)) return null;
         if ((match = line.match(/^([^:]+?) (approves|disapproves) ((?:idea|bug): .+|all waiting changes in .+|comment by .+|reply by .+|.+'s vote on idea: .+|(?:a change|all changes) to .+ page|the draft .+ page)$/)))
             return { type: "review", who: match[1], text: ` ${match[2]} `, target: match[3], href: null, vote: match[2] === "approves" ? "approve" : "disapprove" };
         if ((match = line.match(/^([^:]+?) sets role of ([^:]+) to (admin|editor|reviewer)$/))) return { type: "account", who: match[1], text: ` made ${match[2]} ${match[3] === "admin" ? "an admin" : match[3] === "editor" ? "an editor" : "a reviewer"}`, target: "", href: null };
@@ -104,6 +115,12 @@
         if ((match = line.match(/^([^:]+?) asks an admin to reset their password$/))) return { type: "account", who: match[1], text: " asked an admin to reset their password", target: "", href: "admin.html" };
         if ((match = line.match(/^([^:]+?) resets the password of: (.+)$/))) return { type: "account", who: match[1], text: ` reset the password of ${match[2]}`, target: "", href: null };
         if ((match = line.match(/^([^:]+?) sets the review password$/))) return { type: "account", who: match[1], text: " set the review password", target: "", href: null };
+        if ((match = line.match(/^(.+?) restores (.+) page to the version from (.+?)(?: for (.+))?$/)))
+            return { type: "page-edit", who: match[1], text: ` restored an older version (${match[3]}) of `, target: match[2], page: true, assigned: match[4] ? [match[4]] : undefined };
+        if ((match = line.match(/^(.+?) asks to restore (.+) page to the version from (.+)$/)))
+            return { type: "review", who: match[1], text: ` asked to restore an older version (${match[3]}) of `, target: match[2], href: null, page: true, restoreRequest: true };
+        if ((match = line.match(/^(.+?) declines restoring (.+) page for (.+)$/)))
+            return { type: "review", who: match[1], text: ` turned down ${match[3]}'s request to restore `, target: match[2], page: true, assigned: [match[3]] };
         if ((match = line.match(/^Create (.+) page$/))) return { type: "page-new", text: "New page: ", target: match[1], page: true };
         if ((match = line.match(/^Update (.+) page$/))) return { type: "page-edit", text: "Page changed: ", target: match[1], page: true };
         if ((match = line.match(/^Add (.+) to news$/))) return { type: "news", text: "News article: ", target: match[1], href: "news.html" };
@@ -143,6 +160,49 @@
         return update.assigned.some((name) => name.trim().toLowerCase() === me);
     }
 
+    function readBookmarkedPages() {
+        try {
+            const pages = JSON.parse(readStorage(bookmarkStorageKey) || "[]");
+            return new Set(Array.isArray(pages) ? pages.map((page) => page?.href) : []);
+        } catch {
+            return new Set();
+        }
+    }
+
+    const same = (a, b) => Boolean(a && b) && a.trim().toLowerCase() === b.trim().toLowerCase();
+
+    // Why an update belongs on your Notifications tab, or "" if it only belongs under Changes
+    function reasonFor(update) {
+        const store = window.wikiStore;
+        if (!store?.isSignedIn()) return "";
+        const me = store.getAuthor();
+        if (same(update.who, me)) return "";
+        if (isForMe(update)) return "⚑ For you";
+        // Admins see requests to restore a page
+        if (update.restoreRequest && store.isAdmin()) return "Needs an admin";
+        if (["vote", "idea", "comment", "review"].includes(update.type)) {
+            const idea = controversy.ideas.get(update.target.replace(/^idea: /, ""));
+            if (idea) {
+                if (same(idea.author, me)) return "Your idea";
+                if (update.type === "comment" && ((idea.replies || []).some((reply) => same(reply.author, me)) ||
+                    (idea.comments || []).some((comment) => same(String(comment).split(":")[0], me)))) return "You commented";
+            }
+        }
+        if (update.type === "thread") {
+            const discussion = controversy.discussions.get(update.target);
+            if (discussion && same(discussion.author, me)) return "Your thread";
+            if (discussion && (discussion.posts || []).some((post) => same(post.author, me))) return "You replied";
+        }
+        if (update.type === "bug") {
+            const bug = bugsByTitle.get(update.target);
+            if (bug && same(bug.reporter, me)) return "Your bug";
+            if (bug && (bug.comments || []).some((comment) => same(comment.author, me))) return "You commented";
+        }
+        if (update.page && readBookmarkedPages().has(pageHref(update.target))) return "★ Bookmarked page";
+        if (update.who && following.has(update.who.trim().toLowerCase())) return "Following";
+        return "";
+    }
+
     // Priority tasks: comments on articles that named you with @
     const tasksSection = element("section", { className: "notification-tasks", hidden: true });
 
@@ -177,8 +237,12 @@
     }).catch(() => {});
 
     const lastSeen = readStorage(seenStorageKey);
-    // Settings on your profile can open this page on just the updates meant for you
-    const filters = { type: window.wikiStore?.readLook().notificationsView === "forme" && window.wikiStore.isSignedIn() ? "forme" : "all", query: "" };
+    // Notifications are the updates that concern you; Changes is everything. Your settings pick which opens first.
+    const signedIn = Boolean(window.wikiStore?.isSignedIn());
+    const startTab = location.hash === "#changes" || location.hash === "#notifications"
+        ? location.hash.slice(1)
+        : signedIn && !["all", "changes"].includes(window.wikiStore.readLook().notificationsView) ? "notifications" : "changes";
+    const filters = { tab: startTab, type: "all", query: "" };
     const updates = [];
     const seenCommits = new Set();
     let page = 1;
@@ -188,17 +252,30 @@
     const status = element("p", { className: "controversy-status", role: "status" });
     const list = element("ol", { className: "notification-list" });
     const more = element("button", { type: "button", className: "wiki-primary-button notification-more", onclick: () => load() }, "Load older updates");
+    const typeFilter = element("label", {}, "Show ",
+        element("select", { onchange: (event) => { filters.type = event.target.value; render(); } },
+            element("option", { value: "all" }, "All changes"),
+            ...types.map(([value, label]) => element("option", { value }, label))));
     const toolbar = element("div", { className: "controversy-toolbar" },
-        element("label", {}, "Show ",
-            element("select", { onchange: (event) => { filters.type = event.target.value; render(); } },
-                element("option", { value: "all" }, "All updates"),
-                window.wikiStore?.isSignedIn() ? element("option", { value: "forme", selected: filters.type === "forme" }, "⚑ For you") : null,
-                ...types.map(([value, label]) => element("option", { value }, label)))),
+        typeFilter,
         element("input", {
             type: "search", placeholder: "Search updates…", "aria-label": "Search updates",
             oninput: (event) => { filters.query = event.target.value.trim().toLowerCase(); render(); }
         }));
-    app.replaceChildren(tasksSection, toolbar, status, list, more);
+    const tabButtons = Object.fromEntries([["notifications", "Notifications"], ["changes", "Changes"]].map(([value, label]) =>
+        [value, element("button", { type: "button", role: "tab", className: "notification-tab", onclick: () => showTab(value) }, label)]));
+    const tabBar = element("div", { className: "notification-tabs", role: "tablist", "aria-label": "Notifications or all changes" }, ...Object.values(tabButtons));
+    const tabHint = element("p", { className: "notification-tab-hint" });
+    const signInNote = element("p", { className: "notification-sign-in" },
+        element("a", { href: window.wikiStore?.loginHref() || "login.html" }, "Log in"),
+        " to see notifications about your ideas, threads, comments, bookmarked pages and the people you follow. Everything else is under Changes.");
+    app.replaceChildren(tabBar, tabHint, tasksSection, toolbar, status, list, more);
+
+    function showTab(tab) {
+        filters.tab = tab;
+        history.replaceState(null, "", `#${tab}`);
+        render();
+    }
 
     function formatTime(value) {
         const date = new Date(value);
@@ -217,12 +294,31 @@
                 grouped.push({ ...update, count: 1 });
             }
         }
+        for (const update of grouped) update.reason = reasonFor(update);
+        const onNotifications = filters.tab === "notifications";
+        for (const [value, button] of Object.entries(tabButtons)) {
+            const fresh = grouped.filter((update) => update.isNew && (value === "changes" || update.reason)).length;
+            button.setAttribute("aria-selected", String(value === filters.tab));
+            button.replaceChildren(value === "notifications" ? "Notifications" : "Changes",
+                ...(fresh ? [element("span", { className: "notification-tab-count" }, String(fresh))] : []));
+        }
+        tabHint.textContent = onNotifications
+            ? "Replies and votes on your ideas, threads and comments you're part of, changes to your bookmarked pages, what the people you follow do, and anything that names you."
+            : "Everything that has changed on the wiki: new pages, page edits, votes, ideas, comments and replies.";
+        typeFilter.hidden = onNotifications;
+        tasksSection.classList.toggle("notification-tasks-off", !onNotifications);
+        if (onNotifications && !signedIn) {
+            list.replaceChildren(element("li", { className: "notification" }, signInNote));
+            more.hidden = true;
+            return;
+        }
         const shown = grouped.filter((update) =>
-            (filters.type === "all" || update.type === filters.type || (filters.type === "forme" && isForMe(update))) &&
+            (onNotifications ? update.reason : filters.type === "all" || update.type === filters.type) &&
             (!filters.query || `${update.who || ""} ${update.text} ${update.target}`.toLowerCase().includes(filters.query)));
         list.replaceChildren(...shown.map((update) => {
             // Looked up here rather than when loading, since search.js may load after this script
-            const href = update.page ? pageHref(update.target) : update.href;
+            const pageLink = update.page ? pageHref(update.target) : null;
+            const href = update.restoreRequest && pageLink ? `${pageLink}#wiki-history` : update.page ? pageLink : update.href;
             return element("li", { className: `notification notification-${update.type}${update.vote ? ` notification-${update.vote}` : ""}${update.isNew ? " notification-new" : ""}${isForMe(update) ? " notification-priority" : ""}` },
                 element("span", { className: `idea-badge notification-badge notification-badge-${update.type}` }, typeLabels[update.type]),
                 element("span", { className: "notification-text" },
@@ -231,12 +327,15 @@
                     href ? element("a", { href }, update.target) : update.target,
                     update.count > 1 ? element("span", { className: "notification-count" }, ` ×${update.count}`) : null,
                     update.needsReview ? element("span", { className: "notification-review-label" }, "Needs review") : null,
+                    onNotifications && update.reason && update.reason !== "⚑ For you" ? element("span", { className: "notification-reason" }, update.reason) : null,
                     isForMe(update) ? element("span", { className: "notification-priority-label" }, "⚑ For you") : null,
                     update.isNew ? element("span", { className: "notification-new-label" }, "New") : null),
                 element("time", { className: "notification-time", datetime: update.date }, formatTime(update.date)));
         }));
         if (!shown.length && !loading)
-            list.append(element("li", { className: "notification" }, finished ? "No updates match." : "No updates match yet. Load older updates to look further back."));
+            list.append(element("li", { className: "notification" }, finished
+                ? onNotifications ? "No notifications yet." : "No updates match."
+                : onNotifications ? "No notifications yet. Load older updates to look further back." : "No updates match yet. Load older updates to look further back."));
         more.hidden = finished;
     }
 
@@ -325,15 +424,18 @@
 
     // Load the idea, thread and bug ids first so their links go straight to them
     const json = (file) => fetch(file, { cache: "no-store" }).then((response) => response.ok ? response.json() : null).catch(() => null);
-    Promise.all([json("controversy.json"), json("bugs.json")]).then(([ideas, bugs]) => {
+    Promise.all([json("controversy.json"), json("bugs.json"), json("profiles.json")]).then(([ideas, bugs, profiles]) => {
         if (ideas) {
             controversy = {
                 ideas: new Map((ideas.ideas || []).flatMap((idea) => [idea.title, ...(idea.formerTitles || [])].map((title) => [title, idea]))),
-                discussions: new Map((ideas.discussions || []).map((discussion) => [discussion.title, discussion.id]))
+                discussions: new Map((ideas.discussions || []).map((discussion) => [discussion.title, discussion]))
             };
         }
         if (bugs) {
             bugIds = new Map((bugs.bugs || []).map((bug) => [bug.title, bug.id]));
+            bugsByTitle = new Map((bugs.bugs || []).map((bug) => [bug.title, bug]));
         }
+        const me = window.wikiStore?.isSignedIn() ? window.wikiStore.getAuthor().trim().toLowerCase() : "";
+        following = new Set(profiles?.profiles?.[me]?.following || []);
     }).finally(() => load());
 })();

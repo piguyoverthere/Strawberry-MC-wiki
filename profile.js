@@ -400,7 +400,7 @@
         return lookGroup("settings-notifications", "Notifications",
             toggle("taskPopups", "Pop up a message when someone pings you", true),
             toggle("headerBadge", "Show the number of tasks for you in the top bar", true),
-            choices("notificationsView", "The Notifications page shows", [["all", "All updates"], ["forme", "Only updates for me"]], "all"));
+            choices("notificationsView", "The Notifications page opens on", [["notifications", "Notifications (things for you)"], ["changes", "Changes (everything)"]], "notifications"));
     }
 
     // Saved in your public profile, so they apply for everyone who looks at it

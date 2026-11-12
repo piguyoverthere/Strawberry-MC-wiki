@@ -777,6 +777,318 @@
         }
     }
 
+    // Version history: every save is a commit, so the page's commits from the last month are its versions.
+    const restoreRequestsFile = "restore-requests.json";
+    const historyDays = 30;
+    const historyButton = document.createElement("button");
+    historyButton.type = "button";
+    historyButton.className = "wiki-history-button";
+    historyButton.textContent = "🕘 History";
+    historyButton.title = "See what changed on this page in the last month";
+    if (!isNewPage) {
+        toolbar.insertBefore(historyButton, commitButton);
+    }
+
+    const historyDialog = document.createElement("dialog");
+    historyDialog.className = "wiki-dialog wiki-history-dialog";
+    historyDialog.innerHTML = `
+        <h2>Version history</h2>
+        <p class="wiki-dialog-hint">Every change to this page in the last ${historyDays} days, newest first. Open one to see what changed.</p>
+        <div class="wiki-history-requests"></div>
+        <p class="wiki-history-status" role="status"></p>
+        <ol class="wiki-history-list"></ol>
+        <div class="wiki-dialog-actions"><button type="button" value="cancel">Close</button></div>
+    `;
+    document.body.append(historyDialog);
+    historyDialog.querySelector('[value="cancel"]').addEventListener("click", () => historyDialog.close());
+    const historyStatus = historyDialog.querySelector(".wiki-history-status");
+    const historyList = historyDialog.querySelector(".wiki-history-list");
+    const historyRequests = historyDialog.querySelector(".wiki-history-requests");
+
+    function historyElement(tag, className, ...children) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        node.append(...children.filter((child) => child !== null && child !== undefined));
+        return node;
+    }
+
+    async function githubRead(path) {
+        const token = readToken();
+        const response = await fetch(`https://api.github.com/repos/${repository.owner}/${repository.name}/${path}`, {
+            cache: "no-store",
+            headers: { Accept: "application/vnd.github+json", ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+        });
+        if (response.status === 403 || response.status === 429) throw new Error("GitHub is limiting how often history can be loaded. Try again in a few minutes.");
+        if (!response.ok) throw new Error(`Could not load the history (${response.status}).`);
+        return response.json();
+    }
+
+    // Old versions never change, so each is fetched once
+    const versionTexts = new Map();
+    function readVersion(sha) {
+        if (!versionTexts.has(sha)) {
+            versionTexts.set(sha, fetch(`https://raw.githubusercontent.com/${repository.owner}/${repository.name}/${sha}/${encodeURIComponent(targetFile)}`)
+                .then((response) => {
+                    if (!response.ok) throw new Error(`Could not load that version (${response.status}).`);
+                    return response.text();
+                })
+                .catch((error) => {
+                    versionTexts.delete(sha);
+                    throw error;
+                }));
+        }
+        return versionTexts.get(sha);
+    }
+
+    // The page as lines of text, a bit like Markdown, so the changes read like a git diff without the HTML around them
+    const historyBlocks = "h1, h2, h3, h4, h5, h6, p, li, pre, td, th, dt, dd, blockquote, figcaption, caption, summary";
+    function versionLines(html) {
+        const page = new DOMParser().parseFromString(html, "text/html");
+        const content = page.querySelector(".wiki-content") || page.body;
+        content.querySelectorAll("script, style, template, .wiki-editor-toolbar").forEach((node) => node.remove());
+        const lines = [];
+        const ownText = (node) => [...node.childNodes]
+            .filter((child) => child.nodeType === Node.TEXT_NODE || (child.nodeType === Node.ELEMENT_NODE && !child.matches(historyBlocks) && !child.querySelector(historyBlocks)))
+            .map((child) => child.textContent).join("").replace(/\s+/g, " ").trim();
+        for (const node of content.querySelectorAll(`${historyBlocks}, img`)) {
+            if (node.matches("img")) {
+                lines.push(`[image: ${node.getAttribute("alt") || node.getAttribute("src") || ""}]`);
+            } else if (node.matches("pre")) {
+                lines.push(...node.textContent.replace(/\r/g, "").split("\n").filter((line) => line.trim()).map((line) => `    ${line}`));
+            } else {
+                const text = ownText(node);
+                if (!text) continue;
+                const heading = node.tagName.match(/^H(\d)$/);
+                lines.push(heading ? `${"#".repeat(Number(heading[1]))} ${text}` : node.matches("li") ? `• ${text}` : node.matches("td, th") ? `| ${text}` : text);
+            }
+        }
+        return lines;
+    }
+
+    // Line diff by longest common subsequence, after dropping the unchanged start and end
+    function diffLines(before, after) {
+        let start = 0;
+        while (start < before.length && start < after.length && before[start] === after[start]) start++;
+        let end = 0;
+        while (end < before.length - start && end < after.length - start && before[before.length - 1 - end] === after[after.length - 1 - end]) end++;
+        const a = before.slice(start, before.length - end);
+        const b = after.slice(start, after.length - end);
+        const middle = [];
+        if (a.length * b.length > 4e6) {
+            middle.push(...a.map((line) => ["-", line]), ...b.map((line) => ["+", line]));
+        } else {
+            const table = Array.from({ length: a.length + 1 }, () => new Uint32Array(b.length + 1));
+            for (let i = a.length - 1; i >= 0; i--) {
+                for (let j = b.length - 1; j >= 0; j--) {
+                    table[i][j] = a[i] === b[j] ? table[i + 1][j + 1] + 1 : Math.max(table[i + 1][j], table[i][j + 1]);
+                }
+            }
+            let i = 0;
+            let j = 0;
+            while (i < a.length || j < b.length) {
+                if (i < a.length && j < b.length && a[i] === b[j]) {
+                    middle.push([" ", a[i++]]);
+                    j++;
+                } else if (i < a.length && (j >= b.length || table[i + 1][j] >= table[i][j + 1])) {
+                    middle.push(["-", a[i++]]);
+                } else {
+                    middle.push(["+", b[j++]]);
+                }
+            }
+        }
+        return [...before.slice(0, start).map((line) => [" ", line]), ...middle, ...before.slice(before.length - end).map((line) => [" ", line])];
+    }
+
+    // Changed lines with two lines around them, split into @@ hunks like git
+    function renderDiff(diff) {
+        const pre = historyElement("pre", "wiki-diff");
+        const keep = new Set();
+        diff.forEach(([kind], index) => {
+            if (kind !== " ") for (let near = index - 2; near <= index + 2; near++) keep.add(near);
+        });
+        if (!keep.size) {
+            pre.append(historyElement("span", "wiki-diff-note", "No changes to the text: only formatting, links or hidden parts of the page changed."));
+            return pre;
+        }
+        let oldLine = 0;
+        let newLine = 0;
+        let last = -2;
+        diff.forEach(([kind, line], index) => {
+            if (kind !== "+") oldLine++;
+            if (kind !== "-") newLine++;
+            if (!keep.has(index)) return;
+            if (index !== last + 1) pre.append(historyElement("span", "wiki-diff-hunk", `@@ line ${kind === "+" ? newLine : oldLine} @@\n`));
+            last = index;
+            pre.append(historyElement("span", kind === "+" ? "wiki-diff-add" : kind === "-" ? "wiki-diff-remove" : "wiki-diff-same", `${kind} ${line}\n`));
+        });
+        return pre;
+    }
+
+    const historyDate = (value) => new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+
+    function readRestoreRequests() {
+        const token = readToken();
+        return (token ? getRepositoryFile(token, restoreRequestsFile).then((file) => JSON.parse(file?.text || "{}")) : fetch(restoreRequestsFile, { cache: "no-store" }).then((response) => response.ok ? response.json() : {}))
+            .then((data) => (data.requests || []).filter((request) => request.file === targetFile))
+            .catch(() => []);
+    }
+
+    function renderRestoreRequests(requests) {
+        historyRequests.replaceChildren();
+        if (!requests.length) return;
+        const isAdmin = readRole() === "admin";
+        historyRequests.append(historyElement("h3", "", isAdmin ? `Asked to restore (${requests.length})` : "Waiting for an admin"),
+            historyElement("ul", "", ...requests.map((request) => {
+                const answer = (approve) => async (event) => {
+                    event.target.disabled = true;
+                    historyStatus.textContent = approve ? "Restoring…" : "Saving…";
+                    try {
+                        await window.wikiStore.answerRestoreRequest(request, approve);
+                        await loadHistory();
+                        historyStatus.textContent = approve
+                            ? `Restored the version from ${historyDate(request.versionDate)}. The live page updates in a minute or two; reload then to see it.`
+                            : `Turned down ${request.by}'s request.`;
+                    } catch (error) {
+                        event.target.disabled = false;
+                        historyStatus.textContent = `Could not save: ${error.message}`;
+                    }
+                };
+                const approveButton = historyElement("button", "wiki-review-approve", "Restore it");
+                approveButton.type = "button";
+                approveButton.addEventListener("click", answer(true));
+                const declineButton = historyElement("button", "wiki-review-disapprove", "Turn down");
+                declineButton.type = "button";
+                declineButton.addEventListener("click", answer(false));
+                return historyElement("li", "",
+                    historyElement("strong", "", request.by), ` asked ${historyDate(request.date)} to go back to the version from ${historyDate(request.versionDate)} `,
+                    historyElement("code", "", request.sha.slice(0, 7)),
+                    request.reason ? historyElement("q", "wiki-history-reason", request.reason) : null,
+                    isAdmin ? historyElement("span", "wiki-history-actions", approveButton, declineButton) : null);
+            })));
+    }
+
+    let historyLoading = null;
+    function loadHistory() {
+        if (historyLoading) return historyLoading;
+        historyStatus.textContent = "Loading the history…";
+        historyList.replaceChildren();
+        const since = new Date(Date.now() - historyDays * 864e5).toISOString();
+        const file = encodeURIComponent(targetFile);
+        historyLoading = Promise.all([
+            githubRead(`commits?sha=${repository.branch}&path=${file}&since=${since}&per_page=100`),
+            githubRead(`commits?sha=${repository.branch}&path=${file}&until=${since}&per_page=1`),
+            readRestoreRequests()
+        ]).then(async ([commits, older, requests]) => {
+            renderRestoreRequests(requests);
+            // The version before the month started is what the oldest change is compared with
+            const versions = commits.map((commit) => ({
+                sha: commit.sha,
+                message: commit.commit.message.split("\n")[0].replace(/ \(needs review\)$/, ""),
+                needsReview: / \(needs review\)$/.test(commit.commit.message.split("\n")[0]),
+                editor: commit.commit.message.match(/^Edited-by: (.+)$/m)?.[1].trim() || "",
+                date: commit.commit.committer?.date || commit.commit.author?.date
+            }));
+            if (!versions.length) {
+                historyStatus.textContent = older.length
+                    ? `No changes in the last ${historyDays} days. It was last changed ${historyDate(older[0].commit.committer?.date)}.`
+                    : "No history found for this page.";
+                return;
+            }
+            historyStatus.textContent = `${versions.length} change${versions.length === 1 ? "" : "s"} in the last ${historyDays} days.`;
+            const role = readRole();
+            historyList.replaceChildren(...versions.map((version, index) => {
+                const previous = versions[index + 1]?.sha || older[0]?.sha;
+                const stats = historyElement("span", "wiki-history-stats", "…");
+                const body = historyElement("div", "wiki-history-body", historyElement("p", "wiki-dialog-hint", "Loading the changes…"));
+                const details = historyElement("details", "wiki-history-entry",
+                    historyElement("summary", "",
+                        historyElement("code", "wiki-history-sha", version.sha.slice(0, 7)),
+                        " ", historyElement("span", "wiki-history-message", version.message),
+                        version.needsReview ? historyElement("span", "notification-review-label", "Needs review") : null,
+                        index === 0 ? historyElement("span", "wiki-history-current", "Current") : null,
+                        historyElement("span", "wiki-history-meta", `${version.editor ? `${version.editor} · ` : ""}${historyDate(version.date)}`),
+                        stats),
+                    body);
+                const diff = Promise.all([readVersion(version.sha), previous ? readVersion(previous) : ""]).then(([text, before]) =>
+                    diffLines(before ? versionLines(before) : [], versionLines(text)));
+                diff.then((lines) => {
+                    const added = lines.filter(([kind]) => kind === "+").length;
+                    const removed = lines.filter(([kind]) => kind === "-").length;
+                    stats.replaceChildren(historyElement("span", "wiki-diff-add-count", `+${added}`), " ", historyElement("span", "wiki-diff-remove-count", `−${removed}`));
+                }).catch(() => stats.replaceChildren());
+                details.addEventListener("toggle", () => {
+                    if (!details.open || body.dataset.loaded) return;
+                    body.dataset.loaded = "true";
+                    diff.then((lines) => {
+                        const actions = historyElement("div", "wiki-history-actions");
+                        if (index > 0 && role === "admin") {
+                            const restore = historyElement("button", "wiki-primary-button", "Restore this version");
+                            restore.type = "button";
+                            restore.addEventListener("click", async () => {
+                                if (!window.confirm(`Put this page back to how it was on ${historyDate(version.date)}? Every change since then is undone, but stays in the history, so it can be restored again.`)) return;
+                                restore.disabled = true;
+                                historyStatus.textContent = "Restoring…";
+                                try {
+                                    await window.wikiStore.restorePage(version.sha, version.date);
+                                    await loadHistory();
+                                    historyStatus.textContent = `Restored the version from ${historyDate(version.date)}. The live page updates in a minute or two; reload then to see it.`;
+                                } catch (error) {
+                                    restore.disabled = false;
+                                    historyStatus.textContent = `Could not restore: ${error.message}`;
+                                }
+                            });
+                            actions.append(restore);
+                        } else if (index > 0 && role) {
+                            const ask = historyElement("button", "wiki-primary-button", "Ask to restore this version");
+                            ask.type = "button";
+                            ask.addEventListener("click", async () => {
+                                const reason = window.prompt("Why should this page go back to this version? An admin will see your answer.", "");
+                                if (reason === null) return;
+                                ask.disabled = true;
+                                historyStatus.textContent = "Sending your request…";
+                                try {
+                                    await window.wikiStore.requestRestore(version.sha, version.date, reason.trim());
+                                    historyStatus.textContent = "Asked. An admin can restore it from this page's history or the Review page.";
+                                    renderRestoreRequests(await readRestoreRequests());
+                                } catch (error) {
+                                    ask.disabled = false;
+                                    historyStatus.textContent = `Could not send the request: ${error.message}`;
+                                }
+                            });
+                            actions.append(ask, historyElement("span", "wiki-dialog-hint", " Only admins can restore a page, so this asks one."));
+                        }
+                        const view = historyElement("a", "", "View this version's HTML");
+                        view.href = `https://github.com/${repository.owner}/${repository.name}/blob/${version.sha}/${encodeURIComponent(targetFile)}`;
+                        view.target = "_blank";
+                        view.rel = "noopener";
+                        actions.append(view);
+                        body.replaceChildren(renderDiff(lines), actions);
+                    }).catch((error) => {
+                        body.dataset.loaded = "";
+                        body.replaceChildren(historyElement("p", "wiki-dialog-error", error.message));
+                    });
+                });
+                return historyElement("li", "", details);
+            }));
+            historyList.querySelector("details")?.setAttribute("open", "");
+        }).catch((error) => {
+            historyStatus.textContent = error.message;
+        }).finally(() => {
+            historyLoading = null;
+        });
+        return historyLoading;
+    }
+
+    function openHistory() {
+        historyDialog.showModal();
+        loadHistory();
+    }
+    historyButton.addEventListener("click", openHistory);
+    // Links from the Review page and notifications open it straight away
+    if (!isNewPage && location.hash === "#wiki-history") {
+        window.addEventListener("load", openHistory, { once: true });
+    }
+
     // Formatting bar shown at the bottom of the screen while editing.
     const formatBar = document.createElement("section");
     formatBar.className = "wiki-format-bar";
@@ -3158,6 +3470,8 @@
                 renderReviewState();
                 if (!message.endsWith("(needs review)")) message += " (needs review)";
             }
+            // Says who saved it, for the page's version history and notifications
+            if (readAccount() && !/^Edited-by: /m.test(message)) message += `\n\nEdited-by: ${readAccount()}`;
             const existing = await getRepositoryFile(token, targetFile);
             // Pages committed before this browser remembered publishing them land here too, so ask rather than refuse.
             if (newPageFile && existing && !isPublishedNewPage() &&
@@ -4414,7 +4728,45 @@
                 });
             }
         },
-        confirmEmail: () => openConfirmEmailDialog(null)
+        confirmEmail: () => openConfirmEmailDialog(null),
+        // Only admins put a page back to an older version; the old version is saved as a new change, so it can be undone too
+        async restorePage(sha, versionDate, forName = "") {
+            const token = requireAdmin();
+            if (await checkAccount(token) !== "admin") throw new Error("Only admins can restore a page.");
+            const name = readAccount();
+            const text = await readVersion(sha);
+            const existing = await getRepositoryFile(token, targetFile);
+            if (existing?.text === text) throw new Error("This page is already the same as that version.");
+            await putRepositoryFile(token, targetFile, text,
+                `${name} restores ${getCurrentTitle()} page to the version from ${historyDate(versionDate)}${forName ? ` for ${forName}` : ""}\n\nEdited-by: ${name}`, existing?.sha);
+            try {
+                localStorage.removeItem(storageKey);
+            } catch {
+                // No saved edits to drop.
+            }
+        },
+        requestRestore(sha, versionDate, reason) {
+            const name = readAccount();
+            return window.wikiStore.updateJson(restoreRequestsFile, (data) => {
+                data.requests = data.requests || [];
+                if (data.requests.some((request) => request.file === targetFile && request.sha === sha && accountKey(request.by) === accountKey(name))) return false;
+                data.requests.push({
+                    id: `restore-${Date.now().toString(36)}`, file: targetFile, title: getCurrentTitle(), sha, versionDate,
+                    by: name, reason: reason.slice(0, 500), date: new Date().toISOString()
+                });
+            }, `${name} asks to restore ${getCurrentTitle()} page to the version from ${historyDate(versionDate)}`, { needsReview: false });
+        },
+        async answerRestoreRequest(request, approve) {
+            const token = requireAdmin();
+            if (approve) {
+                await window.wikiStore.restorePage(request.sha, request.versionDate, request.by);
+            }
+            await updateRepositoryJson(token, restoreRequestsFile, (data) => {
+                const before = (data.requests || []).length;
+                data.requests = (data.requests || []).filter((other) => other.id !== request.id);
+                if (data.requests.length === before) return false;
+            }, approve ? `Remove answered restore request for ${request.title} page` : `${readAccount()} declines restoring ${request.title} page for ${request.by}`);
+        }
     };
     document.dispatchEvent(new Event("wiki-store-ready"));
 

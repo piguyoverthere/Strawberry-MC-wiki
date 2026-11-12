@@ -836,11 +836,11 @@
             location.replace(`archives.html${location.hash}`);
             return;
         }
-        if (archivesApp && id) openDiscussions.add(id);
+        if ((archivesApp || discussionsApp) && id) openDiscussions.add(id);
         if (ideasApp && data.ideas.some((item) => item.id === id && item.completed)) ideaFilters.tab = "completed";
         render();
         // The list is drawn after the browser looked for the #id, so go to it now
-        if ((ideasApp || archivesApp) && id) {
+        if (id) {
             const target = document.getElementById(id);
             target?.classList.add("idea-card-linked");
             target?.scrollIntoView({ block: "start" });
