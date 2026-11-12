@@ -420,6 +420,11 @@
      "name": "Sai",
      "vote": "disapprove",
      "date": "2026-11-10T19:03:23.383Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "disapprove",
+     "date": "2026-11-12T22:32:50.930Z"
     }
    },
    "replies": [
@@ -443,7 +448,8 @@
      "text": "Caleb = LOW QUALITY IDEAS 95% OF THE TIME",
      "date": "2026-11-12T19:16:28.112Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T22:32:50.930Z"
   },
   {
    "id": "idea-doc-8",
