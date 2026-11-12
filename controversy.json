@@ -213,6 +213,11 @@
      "name": "Sai",
      "vote": "convince",
      "date": "2026-11-11T01:07:24.339Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "convince",
+     "date": "2026-11-12T22:31:47.944Z"
     }
    },
    "replies": [
@@ -226,7 +231,8 @@
      "text": "What is this supposed to be im confused",
      "date": "2026-11-10T19:12:41.168Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-12T22:31:47.944Z"
   },
   {
    "id": "idea-doc-5",
