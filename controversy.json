@@ -4921,8 +4921,14 @@
      "name": "Rishaan",
      "vote": "approve",
      "source": "document"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "convince",
+     "date": "2026-11-13T19:31:20.296Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-13T19:31:20.296Z"
   },
   {
    "id": "idea-doc-207",
