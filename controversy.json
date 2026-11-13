@@ -5014,8 +5014,14 @@
      "name": "Sai",
      "vote": "approve",
      "source": "document"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-13T19:30:31.489Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-13T19:30:31.489Z"
   },
   {
    "id": "idea-doc-210",
