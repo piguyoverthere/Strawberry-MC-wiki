@@ -4660,6 +4660,11 @@
      "name": "Eric",
      "vote": "convince",
      "date": "2026-11-11T00:17:11.328Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "convince",
+     "date": "2026-11-13T19:39:03.602Z"
     }
    },
    "replies": [
@@ -4668,7 +4673,8 @@
      "text": "?????????",
      "date": "2026-11-11T00:17:07.577Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-13T19:39:03.602Z"
   },
   {
    "id": "idea-doc-192",
