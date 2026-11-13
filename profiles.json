@@ -28,6 +28,13 @@
     "profile-images/eric-1794548130654.webp"
    ],
    "picture": "profile-images/eric-1794548130654.webp"
+  },
+  "aadi": {
+   "name": "aadi",
+   "following": [
+    "eric"
+   ],
+   "updated": "2026-11-13T15:26:41.960Z"
   }
  }
 }
