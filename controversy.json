@@ -2351,8 +2351,14 @@
      "name": "Alex",
      "vote": "approve",
      "source": "document"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "date": "2026-11-13T16:47:47.734Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-13T16:47:47.734Z"
   },
   {
    "id": "idea-doc-48",
