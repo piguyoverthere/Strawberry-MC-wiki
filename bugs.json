@@ -463,6 +463,21 @@
    "updated": "2026-11-13T01:04:04.757Z",
    "comments": [],
    "history": []
+  },
+  {
+   "id": "bug-15",
+   "number": 15,
+   "title": "weird gemcutter ui",
+   "description": "to convert items in the gemcutter, you have to click on the beryl which is not that intuitive, make it a button or like the crafting grid instead. also the ui looks bad",
+   "steps": "obtain green beryl and coconut oil\nplace in gemcutter (nothing happens)\ntap beryl (insta-converts)",
+   "area": "block",
+   "status": "unresolved",
+   "severity": "minor",
+   "reporter": "aadi",
+   "reported": "2026-11-13T01:12:08.302Z",
+   "updated": "2026-11-13T01:12:08.302Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
