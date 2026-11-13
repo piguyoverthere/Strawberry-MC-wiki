@@ -1,30 +1,3 @@
 {
- "bans": {
-  "sai": {
-   "type": "restrain",
-   "name": "Sai",
-   "until": "2026-11-14T02:25:27.041Z",
-   "title": "Restraining order",
-   "message": "You have been restrained for activities that violate our Developer's Contract. This restraining order lasts for 24 hours and you will be granted access once lifted. WARNING #1",
-   "style": "dark",
-   "icon": "⚖️",
-   "showEnd": true,
-   "showBy": false,
-   "by": "Eric",
-   "date": "2026-11-13T02:25:27.041Z"
-  },
-  "test reviewer": {
-   "type": "restrain",
-   "name": "test reviewer",
-   "until": "2026-11-14T02:25:56.442Z",
-   "title": "Restraining order",
-   "message": "For a while you're in reviewer mode: your changes wait for an admin or editor to approve them before they go live.",
-   "style": "dark",
-   "icon": "⚖️",
-   "showEnd": true,
-   "showBy": true,
-   "by": "Eric",
-   "date": "2026-11-13T02:25:56.442Z"
-  }
- }
+ "bans": {}
 }

@@ -100,7 +100,7 @@
 
     function describeLine(line) {
         let match;
-        if (/^Remove answered restore request for |^Add .+ to search$|^Rename .+ in search$|^Update review queue for |^Remove unresolved notes from .+ page$|^Add unresolved note to .+ page$/.test(line)) return null;
+        if (/^Remove answered restore request for |^Remove answered appeal of |^Editing status: |^Add .+ to search$|^Rename .+ in search$|^Update review queue for |^Remove unresolved notes from .+ page$|^Add unresolved note to .+ page$/.test(line)) return null;
         if ((match = line.match(/^([^:]+?) (approves|disapproves) ((?:idea|bug): .+|all waiting changes in .+|comment by .+|reply by .+|.+'s vote on idea: .+|(?:a change|all changes) to .+ page|the draft .+ page)$/)))
             return { type: "review", who: match[1], text: ` ${match[2]} `, target: match[3], href: null, vote: match[2] === "approves" ? "approve" : "disapprove" };
         if ((match = line.match(/^([^:]+?) sets role of ([^:]+) to (admin|editor|reviewer)$/))) return { type: "account", who: match[1], text: ` made ${match[2]} ${match[3] === "admin" ? "an admin" : match[3] === "editor" ? "an editor" : "a reviewer"}`, target: "", href: null };
@@ -118,6 +118,10 @@
         if ((match = line.match(/^([^:]+?) sets the review password$/))) return { type: "account", who: match[1], text: " set the review password", target: "", href: null };
         if ((match = line.match(/^(.+?) restores (.+) page to the version from (.+?)(?: for (.+))?$/)))
             return { type: "page-edit", who: match[1], text: ` restored an older version (${match[3]}) of `, target: match[2], page: true, assigned: match[4] ? [match[4]] : undefined };
+        if ((match = line.match(/^([^:]+?) appeals their (ban|restraining order)$/)))
+            return { type: "review", who: match[1], text: ` appealed their ${match[2]}`, target: "", href: "admin.html", restoreRequest: true };
+        if ((match = line.match(/^([^:]+?) (warns [^:]+|lifts the (?:ban|restraining order) on [^:]+ after an appeal|turns down the appeal of [^:]+)$/)))
+            return { type: "account", who: match[1], text: ` ${match[2]}`, target: "", href: null };
         if ((match = line.match(/^(.+?) asks to restore (.+) page to the version from (.+)$/)))
             return { type: "review", who: match[1], text: ` asked to restore an older version (${match[3]}) of `, target: match[2], href: null, page: true, restoreRequest: true };
         if ((match = line.match(/^(.+?) declines restoring (.+) page for (.+)$/)))
@@ -181,7 +185,7 @@
         const me = store.getAuthor();
         if (same(update.who, me)) return "";
         if (isForMe(update)) return "⚑ For you";
-        // Admins see requests to restore a page
+        // Admins see requests to restore a page and appeals
         if (update.restoreRequest && store.isAdmin()) return "Needs an admin";
         if (["vote", "idea", "comment", "review"].includes(update.type)) {
             const idea = controversy.ideas.get(update.target.replace(/^idea: /, ""));
@@ -272,7 +276,20 @@
     const signInNote = element("p", { className: "notification-sign-in" },
         element("a", { href: window.wikiStore?.loginHref() || "login.html" }, "Log in"),
         " to see notifications about your ideas, threads, comments, bookmarked pages and the people you follow. Everything else is under Changes.");
-    app.replaceChildren(tabBar, tabHint, tasksSection, toolbar, status, list, more);
+    // Your own edits that are saved in this browser but not committed to the wiki yet
+    const draftsSection = element("section", { className: "notification-drafts" });
+    function renderDrafts() {
+        const drafts = window.wikiStore?.uncommittedEdits?.() || [];
+        draftsSection.hidden = !drafts.length || filters.tab !== "notifications";
+        draftsSection.replaceChildren(
+            element("h2", {}, `Your uncommitted edits (${drafts.length})`),
+            element("p", { className: "notification-tab-hint" }, "Saved in this browser only. Nobody else can see them until you open the page and commit them to GitHub."),
+            element("ul", {}, ...drafts.map((draft) => element("li", {},
+                element("a", { href: draft.href }, draft.title),
+                draft.saved ? element("span", { className: "idea-meta" }, ` saved ${formatTime(draft.saved)}`) : null,
+                draft.isNew ? element("span", { className: "idea-meta" }, " · new page") : null))));
+    }
+    app.replaceChildren(tabBar, tabHint, draftsSection, tasksSection, toolbar, status, list, more);
 
     function showTab(tab) {
         filters.tab = tab;
@@ -309,6 +326,7 @@
             ? "Replies and votes on your ideas, threads and comments you're part of, changes to your bookmarked pages, what the people you follow do, and anything that names you."
             : "Everything that has changed on the wiki: new pages, page edits, votes, ideas, comments and replies.";
         typeFilter.hidden = onNotifications;
+        renderDrafts();
         tasksSection.classList.toggle("notification-tasks-off", !onNotifications);
         if (onNotifications && !signedIn) {
             list.replaceChildren(element("li", { className: "notification" }, signInNote));

@@ -249,6 +249,16 @@
         showBy: true
     };
     const isRestraint = (entry) => entry?.type === "restrain";
+    // A warning is a message shown once; it isn't a ban and doesn't change the account
+    const warningDefaults = {
+        title: "Warning",
+        message: "An admin wants you to know that something you did on the wiki isn't OK. Please keep to the wiki's rules.",
+        style: "red",
+        icon: "⚠️",
+        showEnd: false,
+        showBy: true
+    };
+    const warningDays = 30;
 
     function readRestraint() {
         try {
@@ -301,7 +311,8 @@
     // The box shown to a banned reader; the admin panel uses it for the preview too
     function banBox(ban) {
         const restraint = isRestraint(ban);
-        ban = { ...(restraint ? restraintDefaults : banDefaults), ...ban };
+        const defaults = ban?.type === "warn" ? warningDefaults : restraint ? restraintDefaults : banDefaults;
+        ban = { ...defaults, ...ban };
         const box = document.createElement("div");
         box.className = `wiki-gate-box wiki-ban-box wiki-ban-${banStyles[ban.style] ? ban.style : "red"}`;
         box.setAttribute("role", "alert");
@@ -313,13 +324,87 @@
             return node;
         };
         if (ban.icon) add("div", "wiki-ban-icon", ban.icon).setAttribute("aria-hidden", "true");
-        add("h1", "", ban.title || (restraint ? restraintDefaults : banDefaults).title);
+        add("h1", "", ban.title || defaults.title);
         if (ban.message) add("p", "wiki-ban-message", ban.message);
-        if (ban.showEnd && ban.until) {
+        if (ban.showEnd && ban.until && ban.type !== "warn") {
             const end = new Date(ban.until).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
             add("p", "wiki-ban-end", `${restraint ? "Reviewer mode" : "The ban"} ends ${end} (in ${banTimeLeft(ban.until)}).`);
         }
-        if (ban.showBy && ban.by) add("p", "wiki-ban-by", `${restraint ? "Ordered" : "Banned"} by ${ban.by}`);
+        if (ban.showBy && ban.by) add("p", "wiki-ban-by", `${ban.type === "warn" ? "From" : restraint ? "Ordered" : "Banned"} by ${ban.by}`);
+        return box;
+    }
+
+    // Appeals: a banned or restrained reader can send one appeal per ban or order; it waits in the admin review queue.
+    // If an admin turns it down, their reply is saved on the ban and shown here.
+    function appealBox(entry) {
+        const what = isRestraint(entry) ? "restraining order" : "ban";
+        const box = document.createElement("div");
+        box.className = "wiki-appeal";
+        const note = document.createElement("p");
+        note.className = "wiki-appeal-note";
+        const sentKey = `strawberry-wiki-appealed:${entry.key}:${entry.date || entry.until}`;
+        let sent = "";
+        try {
+            sent = localStorage.getItem(sentKey) || "";
+        } catch {
+            // Without storage the form shows again; the wiki still keeps one appeal per ban.
+        }
+        if (entry.appealReply !== undefined) {
+            note.textContent = `Your appeal was turned down${entry.appealBy ? ` by ${entry.appealBy}` : ""}.${entry.appealReply ? ` “${entry.appealReply}”` : ""}`;
+            box.append(note);
+            return box;
+        }
+        if (sent) {
+            note.textContent = `You sent an appeal on ${new Date(sent).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}. An admin will look at it.`;
+            box.append(note);
+            return box;
+        }
+        if (!signedInName) {
+            note.innerHTML = `<a href="login.html?${new URLSearchParams({ next: currentPage })}">Log in to your account</a> to appeal this ${what}.`;
+            box.append(note);
+            return box;
+        }
+        const details = document.createElement("details");
+        const summary = document.createElement("summary");
+        summary.textContent = `Appeal this ${what}`;
+        const label = document.createElement("label");
+        label.textContent = "Why should it be lifted?";
+        const text = document.createElement("textarea");
+        text.rows = 3;
+        text.maxLength = 1000;
+        label.append(text);
+        const send = document.createElement("button");
+        send.type = "button";
+        send.className = "wiki-primary";
+        send.textContent = "Send appeal";
+        const error = document.createElement("p");
+        error.className = "wiki-dialog-error";
+        error.setAttribute("role", "alert");
+        send.addEventListener("click", async () => {
+            if (!text.value.trim()) {
+                error.textContent = "Write a few words first.";
+                return;
+            }
+            send.disabled = true;
+            send.textContent = "Sending…";
+            try {
+                await window.wikiStore.sendAppeal(entry, text.value.trim());
+                const now = new Date().toISOString();
+                try {
+                    localStorage.setItem(sentKey, now);
+                } catch {
+                    // Fine; the admin still gets it.
+                }
+                note.textContent = "Your appeal is sent. An admin will look at it.";
+                details.replaceWith(note);
+            } catch (failure) {
+                error.textContent = `Could not send it: ${failure.message}`;
+                send.disabled = false;
+                send.textContent = "Send appeal";
+            }
+        });
+        details.append(summary, label, error, send);
+        box.append(details);
         return box;
     }
 
@@ -329,7 +414,9 @@
         const screen = document.createElement("div");
         screen.className = `wiki-gate wiki-ban wiki-ban-screen-${banStyles[ban.style] ? ban.style : "red"}`;
         screen.dataset.wikiInjected = "";
-        screen.append(banBox(ban));
+        const box = banBox(ban);
+        box.append(appealBox(ban));
+        screen.append(box);
         document.body.append(screen);
         document.title = `${ban.title || banDefaults.title} | Strawberry MC`;
         // Open the wiki again once the ban is over (checked each minute, so the time left stays right too)
@@ -345,13 +432,12 @@
         }, 60000);
     }
 
-    // The alert comes up once per order; after that a slim bar under the header reminds them and reopens it
-    function showRestraint(entry) {
-        const seenKey = `strawberry-wiki-restraint-seen:${entry.key}:${entry.date || entry.until}`;
+    // A message in the admin's chosen look that stays up until "I understand"; shown once per seenKey
+    function alertDialog(entry, seenKey, extra) {
         const dialog = document.createElement("dialog");
         dialog.className = `wiki-dialog wiki-restraint-dialog wiki-ban-screen-${banStyles[entry.style] ? entry.style : "dark"}`;
         dialog.dataset.wikiInjected = "";
-        dialog.setAttribute("aria-label", entry.title || restraintDefaults.title);
+        dialog.setAttribute("aria-label", entry.title || "Message from an admin");
         const ok = document.createElement("button");
         ok.type = "button";
         ok.className = "wiki-primary";
@@ -360,17 +446,31 @@
         const actions = document.createElement("div");
         actions.className = "wiki-dialog-actions";
         actions.append(ok);
-        dialog.append(banBox(entry), actions);
+        const box = banBox(entry);
+        if (extra) box.append(extra);
+        dialog.append(box, actions);
         dialog.addEventListener("cancel", (event) => event.preventDefault());
         dialog.addEventListener("close", () => {
             try {
                 localStorage.setItem(seenKey, "1");
             } catch {
-                // Storage blocked; the alert shows again on the next page.
+                // Storage blocked; the message shows again on the next page.
             }
         });
         document.body.append(dialog);
+        let seen = false;
+        try {
+            seen = Boolean(localStorage.getItem(seenKey));
+        } catch {
+            // Without storage, show it.
+        }
+        if (!seen) dialog.showModal();
+        return dialog;
+    }
 
+    // The alert comes up once per order; after that a slim bar under the header reminds them and reopens it
+    function showRestraint(entry) {
+        const dialog = alertDialog(entry, `strawberry-wiki-restraint-seen:${entry.key}:${entry.date || entry.until}`, appealBox(entry));
         const bar = document.createElement("button");
         bar.type = "button";
         bar.className = "wiki-restraint-bar";
@@ -380,14 +480,15 @@
         const content = document.querySelector(".wiki-content");
         if (content) content.before(bar);
         else document.body.prepend(bar);
+    }
 
-        let seen = false;
-        try {
-            seen = Boolean(localStorage.getItem(seenKey));
-        } catch {
-            // Without storage, show it.
+    // Warnings are shown once each, then only kept in the admins' record
+    function showWarnings(warnings) {
+        for (const warning of warnings || []) {
+            if (Date.now() - Date.parse(warning.date) < warningDays * 864e5) {
+                alertDialog({ ...warning, type: "warn" }, `strawberry-wiki-warning-seen:${warning.id}`);
+            }
         }
-        if (!seen) dialog.showModal();
     }
 
     function openWiki() {
@@ -417,24 +518,26 @@
         // The page stays hidden while bans.json loads; if it can't be read, a ban saved on this device still counts
         const checking = fetch(bansFile, { cache: "no-store" })
             .then((response) => response.ok ? response.json() : response.status === 404 ? {} : Promise.reject(new Error("unreadable")))
-            .then((data) => activeBan(data?.bans?.[banKey]) ? { ...data.bans[banKey], key: banKey } : null);
+            .then((data) => ({
+                entry: activeBan(data?.bans?.[banKey]) ? { ...data.bans[banKey], key: banKey } : null,
+                warnings: signedInName ? data?.warnings?.[banKey] || [] : []
+            }));
         const timeout = new Promise((resolve, reject) => setTimeout(() => reject(new Error("slow")), 4000));
         const settled = Promise.race([checking, timeout]);
-        restraintReady = settled.then((entry) => {
+        restraintReady = settled.then(({ entry }) => {
             const order = isRestraint(entry) ? entry : null;
             saveRestraint(order);
             return order;
         }, () => readRestraint());
-        settled.then((entry) => {
+        settled.then(({ entry, warnings }) => {
             saveDeviceBan(isRestraint(entry) ? null : entry);
-            if (isRestraint(entry)) {
-                openWiki();
-                showRestraint(entry);
-            } else if (entry) {
+            if (entry && !isRestraint(entry)) {
                 showBanScreen(entry);
-            } else {
-                openWiki();
+                return;
             }
+            openWiki();
+            if (entry) showRestraint(entry);
+            showWarnings(warnings);
         }, () => {
             const saved = deviceBan?.key === banKey ? deviceBan : null;
             if (saved) {
@@ -2983,8 +3086,10 @@
     });
 
     function setEditing(value) {
+        const was = editing;
         editing = value;
         document.dispatchEvent(new Event("wiki-content-changed"));
+        if (was !== value) setTimeout(() => document.dispatchEvent(new Event("wiki-drafts-changed")));
         document.body.classList.toggle("wiki-editing", value);
         if (value) {
             root.contentEditable = "true";
@@ -3047,7 +3152,7 @@
     function saveEdits() {
         const content = serializeContent();
         try {
-            localStorage.setItem(storageKey, JSON.stringify({ version: 2, html: content }));
+            localStorage.setItem(storageKey, JSON.stringify({ version: 2, html: content, saved: new Date().toISOString() }));
         } catch (error) {
             status.textContent = `Could not save edits in this browser: ${error.message}`;
             return false;
@@ -3062,6 +3167,7 @@
             saveLocalPage({ title, file: newPageFile, href: getDraftPageHref(newPageFile, title), keywords: getNewPageKeywords() });
         }
         status.textContent = "Edits saved in this browser. Commit to GitHub (or download the HTML) to update the site.";
+        document.dispatchEvent(new Event("wiki-drafts-changed"));
         return true;
     }
 
@@ -3225,6 +3331,11 @@
                 <p class="wiki-dialog-hint">One or two sentences shown on the News page.</p>
             </div>
             <p class="wiki-dialog-hint">File name: <code class="consolas wiki-new-page-file">—</code></p>
+            <div class="wiki-template-field">
+                <label for="wiki-new-page-template">Start from</label>
+                <select id="wiki-new-page-template" name="template"></select>
+                <p class="wiki-dialog-hint wiki-template-hint"></p>
+            </div>
             <label for="wiki-new-page-keywords">Search keywords</label>
             <textarea id="wiki-new-page-keywords" name="keywords" rows="3" autocomplete="off"></textarea>
             <p class="wiki-dialog-hint">Every word that should lead to this page in search, separated by spaces or commas.</p>
@@ -3244,6 +3355,59 @@
     let newPageKind = "page";
     const newPageFileLabel = newPageDialog.querySelector(".wiki-new-page-file");
     const newPageError = newPageDialog.querySelector(".wiki-dialog-error");
+    const templateField = newPageDialog.querySelector(".wiki-template-field");
+    const templateSelect = newPageDialog.querySelector("#wiki-new-page-template");
+    const templateHint = newPageDialog.querySelector(".wiki-template-hint");
+
+    // Starting layouts for new pages. Headings follow the Grammar conventions: the page title is the only
+    // heading 1, sections are heading 2, divisions heading 3; the attribute tables are the ones the conventions ask for.
+    const attributeTable = (rows) => `<table><thead><tr><th>Attribute</th><th>Value</th></tr></thead><tbody>${rows.map((row) => `<tr><td>${row}</td><td>[value]</td></tr>`).join("")}</tbody></table>`;
+    const pageTemplates = {
+        blank: { name: "Blank page", hint: "Just the title.", body: () => "<p><br></p>" },
+        block: {
+            name: "Block",
+            hint: "Obtaining, Usage and a Properties table with the attributes blocks need.",
+            body: (title) => `<p>[What ${title} is and where it's found.]</p><h2>Obtaining</h2><p>[How to get ${title}.]</p><h2>Usage</h2><p>[What ${title} is used for.]</p>`
+                + `<h2>Properties</h2>${attributeTable(["Resistance", "Hardness", "Bounding Box", "Waterloggable", "Note Block Sound", "Map Hex Color"])}<h2>Appendix: Related Topics</h2><ul><li>[Related page]</li></ul>`
+        },
+        item: {
+            name: "Item",
+            hint: "Obtaining, Usage and Recipe.",
+            body: (title) => `<p>[What ${title} is.]</p><h2>Obtaining</h2><p>[How to get ${title}.]</p><h2>Usage</h2><p>[What ${title} does, with exact numbers.]</p><h2>Recipe</h2><p>[The crafting recipe, or a diagram of it.]</p><h2>Appendix: Related Topics</h2><ul><li>[Related page]</li></ul>`
+        },
+        mob: {
+            name: "Mob",
+            hint: "Spawning, Behavior, Morphology and Drops, with Hostility in a table.",
+            body: (title) => `<p>[What ${title} is.]</p>${attributeTable(["Hostility", "Health", "Attack Damage"])}<h2>Spawning</h2><p>[Where and when ${title} spawns.]</p>`
+                + `<h2>Behavior</h2><p>[What ${title} does.]</p><h2>Morphology</h2><p>[What ${title} looks like.]</p><h2>Drops</h2><ul><li>[Item and amount]</li></ul><h2>Appendix: Related Topics</h2><ul><li>[Related page]</li></ul>`
+        },
+        biome: {
+            name: "Biome",
+            hint: "Generation, Features, Mobs and a table with the attributes biomes need.",
+            body: (title) => `<p>[What ${title} looks like.]</p><h2>Generation</h2><p>[Where ${title} generates.]</p><h2>Features</h2><p>[Blocks, plants and structures found in ${title}.]</p><h2>Mobs</h2><ul><li>[Mob]</li></ul>`
+                + `<h2>Biome Data</h2>${attributeTable(["Temperature", "Generation Conditions", "Downfall Chance", "Fog Hex", "Vegetation Tint Hex", "Surface Builder Block", "Water Fog Hex", "Water Tint Hex"])}<h2>Appendix: Related Topics</h2><ul><li>[Related page]</li></ul>`
+        },
+        structure: {
+            name: "Structure",
+            hint: "Generation, Layout and Loot.",
+            body: (title) => `<p>[What ${title} is.]</p><h2>Generation</h2><p>[Where ${title} generates.]</p><h2>Layout</h2><p>[The rooms and parts of ${title}. A diagram helps.]</p><h2>Loot</h2><ul><li>[Item and chance]</li></ul><h2>Appendix: Related Topics</h2><ul><li>[Related page]</li></ul>`
+        },
+        update: {
+            name: "Update",
+            hint: "Changes, Summary and related features, like the update pages.",
+            body: (title) => `<p>[What ${title} changes, in a sentence or two.]</p><h2>Changes</h2><h3>[First change]</h3><p>[Describe the change.]</p><h2>Summary</h2><ul><li>[Change]</li></ul><h2>Appendix: Related Features</h2><ul><li>[Related page]</li></ul>`
+        },
+        technical: {
+            name: "Technical page",
+            hint: "Overview and a data table, for a [technical] page.",
+            body: (title) => `<p>[The in-depth details of ${title.replace(/\s*\[technical\]$/i, "")}, including the code.]</p><h2>Overview</h2><p>[Summary.]</p><h2>Data</h2><table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>[field]</td><td>[value]</td></tr></tbody></table><h2>Appendix: Related Topics</h2><ul><li>[Related page]</li></ul>`
+        }
+    };
+    templateSelect.append(...Object.entries(pageTemplates).map(([value, template]) => new Option(template.name, value)));
+    const showTemplateHint = () => {
+        templateHint.textContent = pageTemplates[templateSelect.value]?.hint || "";
+    };
+    templateSelect.addEventListener("change", showTemplateHint);
 
     function dialogFileName() {
         return newPageKind === "news"
@@ -3258,6 +3422,9 @@
         newPageDialog.querySelector(".wiki-new-page-title-label").textContent = isArticle ? "Article title" : "Page title";
         newPageDialog.querySelector('button[type="submit"]').textContent = isArticle ? "Start writing" : "Create page";
         articleFields.hidden = !isArticle;
+        templateField.hidden = isArticle;
+        templateSelect.value = "blank";
+        showTemplateHint();
         newPageAuthorInput.required = isArticle;
         try {
             newPageAuthorInput.value = localStorage.getItem(authorStorageKey) || "";
@@ -3328,6 +3495,20 @@
             }
         }
         saveLocalPage(entry);
+        const template = newPageKind === "page" ? pageTemplates[templateSelect.value] : null;
+        if (template && templateSelect.value !== "blank") {
+            const safe = (text) => text.replace(/[&<>"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[character]);
+            const plain = title.replace(draftPrefix, "").trim();
+            try {
+                localStorage.setItem(`strawberry-wiki-draft:${deploymentPath}${file}`, JSON.stringify({
+                    version: 2,
+                    html: `<h1>${safe(title)}</h1>${template.body(safe(plain))}`,
+                    saved: new Date().toISOString()
+                }));
+            } catch {
+                // Without storage the page starts blank.
+            }
+        }
         location.href = getDraftPageHref(file, title);
     });
 
@@ -3802,6 +3983,7 @@
             } catch {
                 // The draft simply stays in this browser.
             }
+            document.dispatchEvent(new Event("wiki-drafts-changed"));
 
             commitDialog.close();
             status.textContent = "";
@@ -3844,7 +4026,7 @@
     }
 
     editButton.addEventListener("click", () => {
-        if (!canEditPage) return;
+        if (!canEditPage || !confirmEditClash()) return;
         // Start editing at the first line on screen instead of jumping back to the top of the page
         const scrollTop = window.scrollY;
         setEditing(true);
@@ -3901,6 +4083,7 @@
         savedContent = originalContent;
         applyContent(savedContent);
         setEditing(false);
+        document.dispatchEvent(new Event("wiki-drafts-changed"));
         status.textContent = "Saved edits removed; original page text restored.";
     });
 
@@ -3909,6 +4092,212 @@
             event.preventDefault();
         }
     });
+
+    function timeAgo(date) {
+        const minutes = Math.round((Date.now() - Date.parse(date)) / 60000);
+        if (minutes < 1) return "just now";
+        if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+        const hours = Math.round(minutes / 60);
+        if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+        const days = Math.round(hours / 24);
+        if (days < 45) return `${days} day${days === 1 ? "" : "s"} ago`;
+        return new Date(date).toLocaleDateString("en-US", { dateStyle: "medium" });
+    }
+
+    // "Last edited by Alex, 3 days ago" under each page, from the page's latest commit, linking to its history
+    async function showLastEdited() {
+        if (isNewPage || !pageFilePattern.test(currentPage)) return;
+        const cacheKey = `strawberry-wiki-last-edited:${currentPage}`;
+        let info = null;
+        try {
+            const cached = JSON.parse(sessionStorage.getItem(cacheKey) || "null");
+            if (cached && Date.now() - cached.checked < 5 * 60000) info = cached;
+        } catch {
+            // Look it up instead.
+        }
+        if (!info) {
+            const [commit] = await githubRead(`commits?sha=${repository.branch}&path=${encodeURIComponent(currentPage)}&per_page=1`);
+            if (!commit) return;
+            const message = commit.commit.message;
+            const name = message.match(/^Edited-by: (.+)$/m)?.[1]
+                || message.match(/^([^:\n]+?) (?:changes|creates|approves|disapproves|restores|resolves)\b/)?.[1] || "";
+            info = { name: name.trim(), date: commit.commit.committer?.date || commit.commit.author?.date, checked: Date.now() };
+            try {
+                sessionStorage.setItem(cacheKey, JSON.stringify(info));
+            } catch {
+                // It's looked up again next time.
+            }
+        }
+        if (!info.date) return;
+        const line = document.createElement("p");
+        line.className = "wiki-last-edited";
+        line.dataset.wikiInjected = "";
+        const when = document.createElement("time");
+        when.dateTime = info.date;
+        when.title = new Date(info.date).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+        when.textContent = timeAgo(info.date);
+        const link = document.createElement("button");
+        link.type = "button";
+        link.className = "wiki-link-button";
+        link.textContent = "View history";
+        link.addEventListener("click", openHistory);
+        line.append(`Last edited${info.name ? ` by ${info.name}` : ""}, `, when, " · ", link);
+        root.after(line);
+    }
+    showLastEdited().catch(() => {
+        // GitHub couldn't be reached or is limiting requests; the line is just left out.
+    });
+
+    // Who's editing: editing.json lists, per page, the accounts editing it right now ("editing") or with edits
+    // saved in their browser that aren't committed yet ("unsaved"). Others see a note on the page and a warning
+    // before they start editing. Entries end by themselves if they aren't refreshed.
+    const presenceFile = "editing.json";
+    const presenceLimits = { editing: 20 * 60000, unsaved: 14 * 864e5 };
+    const presenceOn = !isNewPage && canEditPage;
+    let presencePeople = {};
+    let presenceWriting = Promise.resolve();
+
+    const livePresence = (entry) => entry && Date.now() - Date.parse(entry.updated) < (presenceLimits[entry.state] || 0);
+    const hasLocalDraft = () => {
+        try {
+            return localStorage.getItem(storageKey) !== null;
+        } catch {
+            return false;
+        }
+    };
+    const myPresenceKey = () => readToken() && readAccount() ? accountKey(readAccount()) : "";
+
+    function setPresence(state) {
+        const name = readToken() && readAccount();
+        if (!presenceOn || !name) return;
+        const key = accountKey(name);
+        const mine = presencePeople[key];
+        // Nothing to change: same state, written in the last 5 minutes
+        if (state && mine?.state === state && Date.now() - Date.parse(mine.updated) < 5 * 60000) return;
+        if (!state && !mine) return;
+        const now = new Date().toISOString();
+        if (state) presencePeople[key] = { name, state, since: mine?.state === state ? mine.since : now, updated: now };
+        else delete presencePeople[key];
+        renderPresence();
+        const words = state === "editing" ? "is editing" : state === "unsaved" ? "has uncommitted edits on" : "is done with";
+        presenceWriting = presenceWriting.then(() => updateRepositoryJson(readToken(), presenceFile, (data) => {
+            data.pages = data.pages || {};
+            for (const [file, people] of Object.entries(data.pages)) {
+                for (const [person, entry] of Object.entries(people)) if (!livePresence(entry)) delete people[person];
+                if (!Object.keys(people).length) delete data.pages[file];
+            }
+            const people = data.pages[targetFile] || {};
+            if (state) {
+                const was = people[key];
+                people[key] = { name, state, since: was?.state === state ? was.since : now, updated: now };
+                data.pages[targetFile] = people;
+            } else {
+                if (!people[key]) return false;
+                delete people[key];
+                if (!Object.keys(people).length) delete data.pages[targetFile];
+            }
+        }, `Editing status: ${name} ${words} ${targetFile}`)).catch(() => {
+            // Only a courtesy note for others; editing goes on without it.
+        });
+    }
+
+    async function loadPresence(fresh = false) {
+        if (!presenceOn) return;
+        try {
+            const fromSite = () => fetch(presenceFile, { cache: "no-store" }).then((response) => response.ok ? response.json() : {});
+            const data = fresh && readToken()
+                ? await getRepositoryFile(readToken(), presenceFile).then((file) => JSON.parse(file?.text || "{}"), fromSite)
+                : await fromSite();
+            const people = data.pages?.[targetFile] || {};
+            // Keep my own entry as this tab knows it; the live site can be a minute behind
+            const me = myPresenceKey();
+            if (me) {
+                if (presencePeople[me]) people[me] = presencePeople[me];
+                else delete people[me];
+            }
+            presencePeople = Object.fromEntries(Object.entries(people).filter(([, entry]) => livePresence(entry)));
+        } catch {
+            // Keep what we had.
+        }
+        renderPresence();
+    }
+
+    const presenceBar = document.createElement("div");
+    presenceBar.className = "wiki-presence";
+    presenceBar.dataset.wikiInjected = "";
+    presenceBar.setAttribute("role", "status");
+    presenceBar.hidden = true;
+    root.before(presenceBar);
+
+    function othersEditing() {
+        const me = myPresenceKey();
+        return Object.entries(presencePeople).filter(([key, entry]) => key !== me && livePresence(entry)).map(([, entry]) => entry);
+    }
+
+    function renderPresence() {
+        (toc || root).before(presenceBar);
+        const lines = othersEditing().map((entry) => {
+            const line = document.createElement("p");
+            line.className = `wiki-presence-${entry.state}`;
+            line.textContent = entry.state === "editing"
+                ? `✏️ ${entry.name} is editing this page right now (started ${timeAgo(entry.since)}).`
+                : `📝 ${entry.name} has edits to this page that aren't committed yet (saved ${timeAgo(entry.updated)}). If you edit it too, one of you may overwrite the other.`;
+            return line;
+        });
+        // Your own edits that are saved in this browser but not on the wiki yet
+        if (hasLocalDraft() && !editing) {
+            const line = document.createElement("p");
+            line.className = "wiki-presence-mine";
+            line.append(isNewPage
+                ? "This page isn't on the wiki yet: your edits are only saved in this browser. "
+                : "You have edits to this page saved in this browser that aren't committed yet, so nobody else can see them. ");
+            const commit = document.createElement("button");
+            commit.type = "button";
+            commit.className = "wiki-link-button";
+            commit.textContent = "Commit to GitHub";
+            commit.addEventListener("click", () => commitButton.click());
+            line.append(commit);
+            if (!isNewPage) {
+                const discard = document.createElement("button");
+                discard.type = "button";
+                discard.className = "wiki-link-button";
+                discard.textContent = "Discard them";
+                discard.addEventListener("click", () => resetButton.click());
+                line.append(" · ", discard);
+            }
+            lines.push(line);
+        }
+        presenceBar.replaceChildren(...lines);
+        presenceBar.hidden = !lines.length;
+    }
+
+    // Asked before editing a page someone else is working on
+    function confirmEditClash() {
+        const others = othersEditing();
+        if (!others.length) return true;
+        const names = others.map((entry) => `${entry.name} ${entry.state === "editing" ? "is editing this page right now" : "has uncommitted edits to this page"}.`).join("\n");
+        return window.confirm(`${names}\n\nIf you both commit, one of you may overwrite the other's changes. Edit anyway?`);
+    }
+
+    // Keep my entry right as editing starts and stops
+    document.addEventListener("wiki-drafts-changed", () => {
+        setPresence(editing ? "editing" : hasLocalDraft() ? "unsaved" : null);
+        renderPresence();
+    });
+    setInterval(() => {
+        if (editing) setPresence("editing");
+    }, 10 * 60000);
+    setInterval(() => {
+        if (document.visibilityState === "visible") loadPresence();
+    }, 60000);
+    if (presenceOn) {
+        loadPresence(true).then(() => {
+            // A draft from an earlier visit counts as uncommitted edits; an old entry with nothing behind it is cleared
+            if (!editing) setPresence(hasLocalDraft() ? "unsaved" : null);
+        });
+    } else {
+        renderPresence();
+    }
 
     let hasDraft = false;
     try {
@@ -4753,14 +5142,45 @@
             }
             return updateRepositoryJson(token, accountsFile, change, message);
         },
-        // Bans: bans.json maps an account key to { name, until, title, message, style, icon, showEnd, showBy, by, date }
+        // Pages with edits saved in this browser that aren't committed yet
+        uncommittedEdits() {
+            const prefix = `strawberry-wiki-draft:${deploymentPath}`;
+            const drafts = [];
+            try {
+                for (let index = 0; index < localStorage.length; index++) {
+                    const key = localStorage.key(index);
+                    if (!key?.startsWith(prefix)) continue;
+                    const file = key.slice(prefix.length) || "index.html";
+                    if (file === "new-page.html" || file.includes("/")) continue;
+                    let draft = {};
+                    try {
+                        draft = JSON.parse(localStorage.getItem(key)) || {};
+                    } catch {
+                        // An unreadable draft still gets listed by its file name.
+                    }
+                    const heading = typeof draft.html === "string" ? new DOMParser().parseFromString(draft.html, "text/html").querySelector("h1")?.textContent.trim() : "";
+                    const local = readLocalPages().find((page) => page.file === file && !page.published);
+                    drafts.push({ file, title: heading || local?.title || file, href: local ? local.href || getDraftPageHref(file, local.title) : file, saved: draft.saved || "", isNew: Boolean(local) });
+                }
+            } catch {
+                // Storage blocked: nothing to list.
+            }
+            return drafts.sort((a, b) => (b.saved || "").localeCompare(a.saved || ""));
+        },
+        // Moderation: bans.json holds
+        //   bans:     account key → the active ban or restraining order { type, name, until, title, message, style, icon, showEnd, showBy, by, date }
+        //   warnings: account key → recent warnings, each shown once
+        //   record:   account key → every warning, ban and order ever given, with the admin's note, kept after they end
         banStyles,
         banDefaults,
         restraintDefaults,
+        warningDefaults,
         banBox,
         async readBans() {
-            return JSON.parse((await getRepositoryFile(requireAdmin(), bansFile))?.text || "{}").bans || {};
+            const data = JSON.parse((await getRepositoryFile(requireAdmin(), bansFile))?.text || "{}");
+            return { bans: data.bans || {}, warnings: data.warnings || {}, record: data.record || {} };
         },
+        // change(bans, data) edits the moderation data; returns { bans, warnings, record } as saved
         async updateBans(change, message) {
             const token = requireAdmin();
             await checkAccount(token);
@@ -4769,13 +5189,39 @@
             }
             const data = await updateRepositoryJson(token, bansFile, (data) => {
                 data.bans = data.bans || {};
-                // Bans that have ended are tidied away whenever the list is saved
+                data.warnings = data.warnings || {};
+                data.record = data.record || {};
+                // Bans that have ended and old warnings are tidied away whenever the file is saved; the record keeps them
                 for (const [key, ban] of Object.entries(data.bans)) {
                     if (!activeBan(ban)) delete data.bans[key];
                 }
-                return change(data.bans);
+                for (const [key, list] of Object.entries(data.warnings)) {
+                    data.warnings[key] = list.filter((warning) => Date.now() - Date.parse(warning.date) < warningDays * 864e5);
+                    if (!data.warnings[key].length) delete data.warnings[key];
+                }
+                return change(data.bans, data);
             }, message);
-            return data.bans || {};
+            return { bans: data.bans || {}, warnings: data.warnings || {}, record: data.record || {} };
+        },
+        appealsFile: "appeals.json",
+        // One appeal per ban or order, from the account it's on
+        sendAppeal(entry, text) {
+            const name = readAccount();
+            const what = isRestraint(entry) ? "restraining order" : "ban";
+            return window.wikiStore.updateJson("appeals.json", (data) => {
+                data.appeals = data.appeals || [];
+                if (data.appeals.some((appeal) => appeal.key === entry.key && appeal.banDate === entry.date)) return false;
+                data.appeals.push({
+                    id: `appeal-${Date.now().toString(36)}`,
+                    key: entry.key,
+                    name,
+                    type: isRestraint(entry) ? "restrain" : "ban",
+                    banDate: entry.date || "",
+                    until: entry.until,
+                    message: text,
+                    date: new Date().toISOString()
+                });
+            }, `${name} appeals their ${what}`, { needsReview: false });
         },
         hasReviewPassword: async () => Boolean(await loadReviewToken()),
         // Saves a copy of the GitHub token locked with the review password, so reviewers can register and log in
@@ -5078,6 +5524,7 @@
             } catch {
                 // No saved edits to drop.
             }
+            document.dispatchEvent(new Event("wiki-drafts-changed"));
         },
         requestRestore(sha, versionDate, reason) {
             const name = readAccount();

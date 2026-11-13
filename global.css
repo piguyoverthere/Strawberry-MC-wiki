@@ -2837,3 +2837,143 @@ html[data-reduce-motion] *::after{
 .wiki-restraint-bar:hover{
     background-color:#ffefc2
 }
+/* Appeals on the ban screen and restraining-order alert */
+.wiki-appeal{
+    margin-top:14px;
+    padding-top:12px;
+    border-top:1px solid var(--ban-muted, #a2a9b1);
+    text-align:left
+}
+.wiki-appeal summary{
+    cursor:pointer;
+    font-weight:600;
+    text-align:center
+}
+.wiki-appeal label{
+    display:block;
+    margin-top:8px
+}
+.wiki-appeal textarea{
+    box-sizing:border-box;
+    width:100%;
+    margin-top:4px;
+    padding:6px;
+    font:inherit
+}
+.wiki-appeal .wiki-primary{
+    display:block;
+    width:100%;
+    margin-top:6px;
+    padding:8px 14px;
+    border:1px solid #0056b3;
+    border-radius:5px;
+    background-color:#0056b3;
+    color:#ffffff;
+    cursor:pointer;
+    font:600 14px/1.2 Arial, Helvetica, sans-serif
+}
+:root .wiki-appeal-note{
+    margin:0;
+    color:var(--ban-muted, #54595d);
+    font-size:.9em;
+    text-align:center
+}
+/* Admin panel: appeals and each account's record */
+.admin-appeals ul{
+    padding-left:20px
+}
+.admin-appeals li{
+    margin-bottom:12px
+}
+.admin-appeal-text{
+    margin:6px 0;
+    padding:6px 10px;
+    border-left:3px solid #a2a9b1;
+    background-color:#f8f9fa;
+    white-space:pre-wrap
+}
+.admin-appeal-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    align-items:center
+}
+.admin-appeal-actions input{
+    flex:1 1 160px
+}
+.admin-record-link{
+    font-size:.9em
+}
+.wiki-record-dialog{
+    width:min(560px, calc(100vw - 32px))
+}
+.wiki-record-list{
+    margin:0;
+    padding-left:20px
+}
+.wiki-record-list li{
+    margin-bottom:10px
+}
+.wiki-record-message,
+.wiki-record-note{
+    color:#54595d;
+    font-size:.92em;
+    white-space:pre-wrap
+}
+/* Who's editing this page, and your own uncommitted edits */
+.wiki-presence{
+    margin:0 0 12px;
+    padding:8px 12px;
+    border:1px solid #c9a227;
+    border-radius:6px;
+    background-color:#fff8e1;
+    color:#5c4400;
+    font:14px/1.45 Arial, Helvetica, sans-serif
+}
+.wiki-presence[hidden]{
+    display:none
+}
+.wiki-presence p{
+    margin:0
+}
+.wiki-presence p + p{
+    margin-top:6px
+}
+.wiki-presence .wiki-link-button{
+    font-weight:600
+}
+.wiki-presence-mine{
+    color:#173b45
+}
+/* Last edited line under a page */
+.wiki-last-edited{
+    margin:24px 0 8px;
+    padding-top:8px;
+    border-top:1px solid #d5e5ea;
+    color:#54595d;
+    font-size:.9em
+}
+body.wiki-editing .wiki-last-edited{
+    display:none
+}
+.notification-drafts{
+    margin:0 0 16px;
+    padding:10px 14px;
+    border:1px solid #c9a227;
+    border-radius:6px;
+    background-color:#fff8e1
+}
+.notification-drafts[hidden]{
+    display:none
+}
+.notification-drafts h2{
+    margin:0 0 4px;
+    font-size:1.05em
+}
+.notification-drafts ul{
+    margin:6px 0 0;
+    padding-left:20px
+}
+.wiki-template-field[hidden]{
+    display:none
+}
