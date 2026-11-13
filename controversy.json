@@ -852,8 +852,8 @@
    "votes": {
     "eric": {
      "name": "Eric",
-     "vote": "disapprove",
-     "date": "2026-11-07T01:06:29.261Z"
+     "vote": "convince",
+     "date": "2026-11-13T19:12:44.276Z"
     },
     "sai": {
      "name": "Sai",
@@ -882,7 +882,8 @@
      "text": "actually..... needs convincing sounds like good but hard to code without player cooking it and using it for things not supposed to",
      "date": "2026-11-13T19:12:34.018Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-13T19:12:44.276Z"
   },
   {
    "id": "idea-doc-15",
