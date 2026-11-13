@@ -583,6 +583,21 @@
    "updated": "2026-11-13T16:33:24.300Z",
    "comments": [],
    "history": []
+  },
+  {
+   "id": "bug-19",
+   "number": 19,
+   "title": "go to page function skips heading of page and is hidden by to nav bar",
+   "description": "use the contents bar to go to page and it skips the heading",
+   "steps": "go to page in the contents bar",
+   "area": "wiki",
+   "status": "unresolved",
+   "severity": "minor",
+   "reporter": "Eric",
+   "reported": "2026-11-13T19:38:47.122Z",
+   "updated": "2026-11-13T19:38:47.122Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
