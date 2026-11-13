@@ -5061,7 +5061,14 @@
    ],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-13T19:29:48.871Z"
+    }
+   },
+   "lastVoteDate": "2026-11-13T19:29:48.871Z"
   },
   {
    "id": "idea-doc-213",
