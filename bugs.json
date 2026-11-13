@@ -448,6 +448,21 @@
      "to": "resolved"
     }
    ]
+  },
+  {
+   "id": "bug-14",
+   "number": 14,
+   "title": "GEMCUTTER DELETS STUFF",
+   "description": "placing multiple items in a gemcutter deletes them",
+   "steps": "obtain more than 1 raw beryl\nobtain more than 1 coconut oil\nplace in gemcutter (if this does not work, take out and replace\nthe result is always 1 glass bottle and 1 emerald no matter what is put in",
+   "area": "block",
+   "status": "unresolved",
+   "severity": "critical",
+   "reporter": "aadi",
+   "reported": "2026-11-13T01:04:04.757Z",
+   "updated": "2026-11-13T01:04:04.757Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
