@@ -527,12 +527,20 @@
    "steps": "talk to Zafar",
    "area": "other",
    "status": "unresolved",
-   "severity": "minor",
+   "severity": "critical",
    "reporter": "Sai",
    "reported": "2026-11-13T16:17:48.970Z",
-   "updated": "2026-11-13T16:17:48.970Z",
+   "updated": "2026-11-13T16:18:27.411Z",
    "comments": [],
-   "history": []
+   "history": [
+    {
+     "author": "Eric",
+     "date": "2026-11-13T16:18:27.411Z",
+     "field": "severity",
+     "from": "minor",
+     "to": "critical"
+    }
+   ]
   }
  ]
 }
