@@ -14,6 +14,20 @@
     "id": "warning-mweji6pt",
     "date": "2026-11-13T05:32:12.545Z"
    }
+  ],
+  "sai": [
+   {
+    "type": "warn",
+    "name": "Sai",
+    "title": "Warning",
+    "message": "STOP SAYING SAD YOU ARE BEING INTERESTING",
+    "style": "red",
+    "icon": "⚠️",
+    "showBy": true,
+    "by": "Eric",
+    "id": "warning-mwf7icc6",
+    "date": "2026-11-13T16:44:10.614Z"
+   }
   ]
  },
  "record": {
@@ -28,6 +42,14 @@
     "date": "2026-11-13T05:30:11.046Z",
     "ended": "2026-11-13T16:28:46.926Z",
     "endedBy": "Eric"
+   },
+   {
+    "type": "warn",
+    "title": "Warning",
+    "message": "STOP SAYING SAD YOU ARE BEING INTERESTING",
+    "note": "sad :(",
+    "by": "Eric",
+    "date": "2026-11-13T16:44:10.614Z"
    }
   ],
   "aadi": [
