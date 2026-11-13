@@ -4989,8 +4989,14 @@
      "name": "Eric",
      "vote": "approve",
      "source": "document"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "convince",
+     "date": "2026-11-13T19:30:42.731Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-13T19:30:42.731Z"
   },
   {
    "id": "idea-doc-209",
