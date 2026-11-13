@@ -4781,7 +4781,13 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {},
+   "votes": {
+    "theodore": {
+     "name": "Theodore",
+     "vote": "convince",
+     "date": "2026-11-13T19:37:29.919Z"
+    }
+   },
    "replies": [
     {
      "author": "Theodore",
@@ -4791,7 +4797,8 @@
       "aadi"
      ]
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-13T19:37:29.919Z"
   },
   {
    "id": "idea-doc-200",
