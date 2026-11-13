@@ -553,6 +553,21 @@
      "to": "critical"
     }
    ]
+  },
+  {
+   "id": "bug-17",
+   "number": 17,
+   "title": "CANT COMMENT OR APPROVE CHANGES!!!",
+   "description": "Pressing approve for review mode changes or comment does not do anything and website is very laggy",
+   "steps": "post stuff",
+   "area": "wiki",
+   "status": "unresolved",
+   "severity": "critical",
+   "reporter": "Eric",
+   "reported": "2026-11-13T16:32:54.063Z",
+   "updated": "2026-11-13T16:32:54.063Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
