@@ -1,3 +1,12 @@
 {
- "pages": {}
+ "pages": {
+  "credits.html": {
+   "eric": {
+    "name": "Eric",
+    "state": "editing",
+    "since": "2026-11-13T19:17:02.746Z",
+    "updated": "2026-11-13T19:17:02.746Z"
+   }
+  }
+ }
 }
