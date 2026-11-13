@@ -4814,7 +4814,14 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "theodore": {
+     "name": "Theodore",
+     "vote": "convince",
+     "date": "2026-11-13T19:36:36.777Z"
+    }
+   },
+   "lastVoteDate": "2026-11-13T19:36:36.777Z"
   },
   {
    "id": "idea-doc-203",
