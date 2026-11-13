@@ -433,13 +433,21 @@
    "description": "The gemcutter GUI is useless and inaccessible and does not have a block tied to it. DO NOT FIX ERIC I WILL FIX",
    "steps": "search in creative inventory for gemcutter",
    "area": "block",
-   "status": "unresolved",
+   "status": "resolved",
    "severity": "major",
    "reporter": "aadi",
    "reported": "2026-11-13T00:43:56.527Z",
-   "updated": "2026-11-13T00:43:56.527Z",
+   "updated": "2026-11-13T01:01:59.774Z",
    "comments": [],
-   "history": []
+   "history": [
+    {
+     "author": "aadi",
+     "date": "2026-11-13T01:01:59.774Z",
+     "field": "status",
+     "from": "unresolved",
+     "to": "resolved"
+    }
+   ]
   }
  ]
 }
