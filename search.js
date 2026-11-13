@@ -324,6 +324,7 @@ const pages = [
     { title: "Mycquests [technical]", href: "page-mycquests-technical.html", keywords: "mycquests [technical] technical" },
     { title: "Stick Figure", href: "page-stick-figure.html", keywords: "stick figure" },
     { title: "This Site No Longer Syncs to Strawberry MC Wiki", href: "news-eric-this-site-no-longer-syncs-to-strawberry-mc-wiki.html", keywords: "this site no longer syncs to strawberry mc wiki" },
+    { title: "Full guide to coding (Neoforge, MCreator, VSCode)", href: "page-full-guide-to-coding-neoforge-mcreator-vscode.html", keywords: "full guide to coding ( neoforge mcreator vscode )" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
