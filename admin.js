@@ -63,6 +63,138 @@
         change((data) => { delete data.accounts[key].blockedUntil; }, `${me} unblocks ${name}`, `${name} is unblocked.`);
     }
 
+    // Bans -----------------------------------------------------------------------------------
+    // A ban hides the whole wiki from that account until it ends, showing the admin's own message instead.
+    let bans = {};
+    const activeBan = (key) => bans[key] && Date.parse(bans[key].until) > Date.now() ? bans[key] : null;
+    const banLengths = [["3600000", "1 hour"], ["86400000", "1 day"], ["259200000", "3 days"], ["604800000", "1 week"], ["2592000000", "30 days"], ["custom", "Until a date…"]];
+
+    async function saveBans(apply, message, done) {
+        status.textContent = "Saving…";
+        try {
+            bans = await store.updateBans(apply, message);
+            status.textContent = done;
+        } catch (error) {
+            status.textContent = `Could not save: ${error.message}`;
+        }
+        render();
+    }
+
+    function unban(key) {
+        const name = accounts[key]?.name || bans[key]?.name || key;
+        saveBans((list) => {
+            if (!list[key]) return false;
+            delete list[key];
+        }, `${me} unbans ${name}`, `${name} is unbanned. It can take a minute before the wiki opens for them again.`);
+    }
+
+    function openBanDialog(key) {
+        const account = accounts[key];
+        const current = activeBan(key);
+        const ban = { ...store.banDefaults, ...(current || {}) };
+        const dialog = element("dialog", { className: "wiki-dialog wiki-ban-dialog", "aria-label": `Ban ${account.name}` });
+        const close = () => {
+            dialog.close();
+            dialog.remove();
+        };
+        const length = element("select", { id: "ban-length" },
+            ...(current ? [element("option", { value: "keep", text: `Keep the end (${formatTime(current.until)})` })] : []),
+            ...banLengths.map(([value, text]) => element("option", { value, text, selected: !current && value === "86400000" })));
+        const custom = element("input", { type: "datetime-local", id: "ban-until", "aria-label": "Ban until", hidden: true });
+        const title = element("input", { type: "text", id: "ban-title", maxlength: "80", value: ban.title });
+        const message = element("textarea", { id: "ban-message", rows: "4", maxlength: "1000" });
+        message.value = ban.message;
+        const style = element("select", { id: "ban-style" },
+            ...Object.entries(store.banStyles).map(([value, text]) => element("option", { value, text, selected: value === ban.style })));
+        const icon = element("input", { type: "text", id: "ban-icon", maxlength: "8", value: ban.icon, placeholder: "None" });
+        const showEnd = element("input", { type: "checkbox", checked: ban.showEnd });
+        const showBy = element("input", { type: "checkbox", checked: ban.showBy });
+        const error = element("p", { className: "wiki-dialog-error", role: "alert" });
+        const preview = element("div", { className: "wiki-ban-preview" });
+
+        function endTime() {
+            if (length.value === "keep") return Date.parse(current.until);
+            if (length.value === "custom") return Date.parse(custom.value) || 0;
+            return Date.now() + Number(length.value);
+        }
+
+        function draft() {
+            const until = endTime();
+            return {
+                name: account.name,
+                until: until ? new Date(until).toISOString() : "",
+                title: title.value.trim() || store.banDefaults.title,
+                message: message.value.trim(),
+                style: style.value,
+                icon: icon.value.trim(),
+                showEnd: showEnd.checked,
+                showBy: showBy.checked,
+                by: me
+            };
+        }
+
+        function update() {
+            custom.hidden = length.value !== "custom";
+            const shown = draft();
+            if (!shown.until) shown.until = new Date(Date.now() + 864e5).toISOString();
+            preview.className = `wiki-ban-preview wiki-ban-screen-${shown.style}`;
+            preview.replaceChildren(store.banBox(shown));
+        }
+
+        dialog.append(
+            element("button", { type: "button", className: "wiki-dialog-close", "aria-label": "Close", title: "Close (Esc)", text: "×", onclick: close }),
+            element("h2", { text: current ? `Change the ban of ${account.name}` : `Ban ${account.name}` }),
+            element("p", { className: "wiki-dialog-hint", text: `While the ban lasts, ${account.name} sees only this message on every wiki page, on this account and on any device they last used it on. It ends by itself.` }),
+            element("label", { for: "ban-length", text: "How long" }), length, custom,
+            element("label", { for: "ban-title", text: "Title" }), title,
+            element("label", { for: "ban-message", text: "Message" }), message,
+            element("div", { className: "wiki-ban-options" },
+                element("span", {}, element("label", { for: "ban-style", text: "Look" }), style),
+                element("span", {}, element("label", { for: "ban-icon", text: "Icon" }), icon)),
+            element("label", { className: "wiki-checkbox" }, showEnd, " Show when the ban ends"),
+            element("label", { className: "wiki-checkbox" }, showBy, " Show who banned them"),
+            element("p", { className: "wiki-ban-preview-label", text: "Preview" }),
+            preview,
+            error,
+            element("div", { className: "wiki-dialog-actions" },
+                element("button", { type: "button", text: "Cancel", onclick: close }),
+                element("button", {
+                    type: "button", className: "wiki-primary", text: current ? "Save ban" : "Ban", onclick: () => {
+                        const saved = draft();
+                        if (!saved.until || Date.parse(saved.until) <= Date.now()) {
+                            error.textContent = "Pick a time in the future for the ban to end.";
+                            return;
+                        }
+                        saved.date = new Date().toISOString();
+                        close();
+                        saveBans((list) => { list[key] = saved; },
+                            current ? `${me} changes the ban of ${account.name}` : `${me} bans ${account.name} until ${formatTime(saved.until)}`,
+                            `${account.name} is banned until ${formatTime(saved.until)}. It can take a minute to reach them.`);
+                    }
+                })));
+        dialog.addEventListener("input", update);
+        dialog.addEventListener("change", update);
+        dialog.addEventListener("close", () => dialog.remove());
+        dialog.addEventListener("click", (event) => {
+            const box = dialog.getBoundingClientRect();
+            if (event.target === dialog && (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom)) close();
+        });
+        update();
+        document.body.append(dialog);
+        dialog.showModal();
+        title.focus();
+    }
+
+    function banCell(key, account, self) {
+        if (self) return element("span", { className: "idea-meta", text: "You can't ban yourself" });
+        const ban = activeBan(key);
+        return ban
+            ? element("span", {},
+                element("button", { type: "button", text: "Change", onclick: () => openBanDialog(key) }),
+                element("button", { type: "button", text: "Unban", onclick: () => unban(key) }))
+            : element("button", { type: "button", className: "admin-ban-button", text: "Ban…", onclick: () => openBanDialog(key) });
+    }
+
     function renderAccounts() {
         const rows = Object.entries(accounts).sort(([, a], [, b]) => a.name.localeCompare(b.name)).map(([key, account]) => {
             const role = account.role || "editor";
@@ -77,7 +209,9 @@
                         ...store.roles.map((value) => element("option", { value, selected: value === role, text: value })))),
                 element("td", { text: account.created ? formatTime(account.created) : "" }),
                 element("td", { text: account.emailConfirmed ? "✓ Confirmed" : "—" }),
-                element("td", {}, blocked ? element("span", { className: "admin-blocked", text: `Blocked until ${formatTime(account.blockedUntil)}` }) : "Active"),
+                element("td", {}, activeBan(key)
+                    ? element("span", { className: "admin-blocked", text: `Banned until ${formatTime(activeBan(key).until)}` })
+                    : blocked ? element("span", { className: "admin-blocked", text: `Blocked until ${formatTime(account.blockedUntil)}` }) : "Active"),
                 element("td", { className: "admin-actions" }, role !== "reviewer"
                     ? element("span", { className: "idea-meta", text: "Only reviewers can be blocked" })
                     : blocked
@@ -86,16 +220,17 @@
                             element("button", { type: "button", text: "1 day", onclick: () => block(key, Date.now() + 864e5) }),
                             element("button", { type: "button", text: "1 week", onclick: () => block(key, Date.now() + 7 * 864e5) }),
                             custom,
-                            element("button", { type: "button", text: "Block until", onclick: () => block(key, custom.value) }))));
+                            element("button", { type: "button", text: "Block until", onclick: () => block(key, custom.value) }))),
+                element("td", { className: "admin-actions" }, banCell(key, account, self)));
         });
         return element("section", { className: "admin-section" },
             element("h2", { text: "Accounts" }),
             rows.length
                 ? element("div", { className: "admin-table-wrap" }, element("table", { className: "admin-table" },
-                    element("thead", {}, element("tr", {}, ...["Account", "Role", "Registered", "Email", "Status", "Block"].map((text) => element("th", { text })))),
+                    element("thead", {}, element("tr", {}, ...["Account", "Role", "Registered", "Email", "Status", "Block", "Ban"].map((text) => element("th", { text })))),
                     element("tbody", {}, ...rows)))
                 : element("p", { text: "No accounts yet." }),
-            element("p", { className: "wiki-dialog-hint", text: "Admins: everything goes live, approve reviews, use this panel. Editors: everything goes live, approve reviews. Reviewers: votes count straight away, other changes wait for an admin or editor, can't start threads, new pages are [draft] pages. Blocked reviewers can't log in or save until the block ends." }));
+            element("p", { className: "wiki-dialog-hint", text: "Admins: everything goes live, approve reviews, use this panel. Editors: everything goes live, approve reviews. Reviewers: votes count straight away, other changes wait for an admin or editor, can't start threads, new pages are [draft] pages. Blocked reviewers can't log in or save until the block ends. Banned accounts (any role) can't open the wiki at all until the ban ends; they see your message instead." }));
     }
 
     function renderReviewPassword(isSet) {
@@ -282,8 +417,9 @@
         app.replaceChildren(...(store.isAdmin() ? [status, queue, renderResetRequests(), renderAccounts(), wikiPasswordSection, reviewSection, emailSection] : [status, queue]));
     }
 
-    Promise.all(store.isAdmin() ? [store.readAccounts(), store.hasReviewPassword(), renderQueue(), store.readEmailConfig()] : [{}, false, renderQueue(), null]).then(([data, reviewSet, queueSection, emailConfig]) => {
+    Promise.all(store.isAdmin() ? [store.readAccounts(), store.hasReviewPassword(), renderQueue(), store.readEmailConfig(), store.readBans()] : [{}, false, renderQueue(), null, {}]).then(([data, reviewSet, queueSection, emailConfig, banList]) => {
         accounts = data.accounts || {};
+        bans = banList || {};
         reviewSection = renderReviewPassword(reviewSet);
         emailSection = renderEmailSettings(emailConfig);
         queue = queueSection;

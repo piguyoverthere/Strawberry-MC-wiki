@@ -2733,3 +2733,76 @@ html[data-reduce-motion] *::after{
 .wiki-editing .wiki-editor-toolbar .wiki-history-button{
     display:none
 }
+/* Ban screen: the admin picks the look. The colours sit in custom properties, so the automatic dark mode leaves them as chosen */
+.wiki-ban-screen-red{--ban-page:#4a0f0d;--ban-box:#ffffff;--ban-text:#202122;--ban-muted:#54595d;--ban-accent:#b3261e}
+.wiki-ban-screen-dark{--ban-page:#0b0c0e;--ban-box:#1d1f23;--ban-text:#e3e5e8;--ban-muted:#a2a9b1;--ban-accent:#e3e5e8}
+.wiki-ban-screen-strawberry{--ban-page:#7a1630;--ban-box:#fff5f7;--ban-text:#3a0d18;--ban-muted:#7a4a55;--ban-accent:#d6274d}
+.wiki-ban-screen-plain{--ban-page:#2f2f2f;--ban-box:#ffffff;--ban-text:#202122;--ban-muted:#54595d;--ban-accent:#202122}
+:root .wiki-gate.wiki-ban,
+:root .wiki-ban-preview{
+    background-color:var(--ban-page)
+}
+:root .wiki-gate-box.wiki-ban-box{
+    max-width:440px;
+    border:0;
+    border-top:6px solid var(--ban-accent);
+    background-color:var(--ban-box);
+    color:var(--ban-text);
+    text-align:center
+}
+:root .wiki-ban-box h1{
+    margin:0 0 8px;
+    border:0;
+    color:var(--ban-accent)
+}
+.wiki-ban-icon{
+    font-size:48px;
+    line-height:1.2
+}
+.wiki-ban-message{
+    white-space:pre-wrap;
+    overflow-wrap:anywhere
+}
+:root .wiki-ban-end,
+:root .wiki-ban-by{
+    margin:8px 0 0;
+    color:var(--ban-muted);
+    font-size:.9em
+}
+:root .wiki-ban-end{
+    font-weight:600
+}
+.wiki-ban-preview{
+    display:flex;
+    justify-content:center;
+    padding:16px;
+    border-radius:6px
+}
+.wiki-ban-preview .wiki-gate-box{
+    margin:0
+}
+.wiki-ban-preview-label{
+    margin:12px 0 4px;
+    font-weight:600
+}
+.wiki-ban-dialog{
+    width:min(560px, calc(100vw - 32px))
+}
+.wiki-ban-dialog textarea,
+.wiki-ban-dialog input[type="text"],
+.wiki-ban-dialog select,
+.wiki-ban-dialog input[type="datetime-local"]{
+    box-sizing:border-box;
+    width:100%
+}
+.wiki-ban-dialog input[type="datetime-local"]{
+    margin-top:6px
+}
+.wiki-ban-options{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:12px
+}
+.wiki-ban-options label{
+    display:block
+}

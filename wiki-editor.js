@@ -224,10 +224,133 @@
         gate.querySelector("#wiki-gate-password").focus();
     }
 
-    if (canView() || isPublicPage) {
-        document.documentElement.classList.add("wiki-unlocked");
+    // Banned accounts: an admin can ban an account for a while (bans.json). While the ban lasts, every page shows
+    // the admin's message instead of the wiki. The ban is remembered on the device too, so logging out and using
+    // the wiki password doesn't get round it there. Like the password box, this keeps honest readers out; it isn't security.
+    const bansFile = "bans.json";
+    const banDeviceKey = "strawberry-wiki-banned";
+    const banStyles = { red: "Red", dark: "Dark", strawberry: "Strawberry", plain: "Plain" };
+    const banDefaults = {
+        title: "You're banned",
+        message: "Your account has been banned from the wiki for a while. If you think this is a mistake, talk to an admin.",
+        style: "red",
+        icon: "⛔",
+        showEnd: true,
+        showBy: true
+    };
+
+    function activeBan(ban) {
+        return ban && Date.parse(ban.until) > Date.now() ? ban : null;
+    }
+
+    function readDeviceBan() {
+        try {
+            return activeBan(JSON.parse(localStorage.getItem(banDeviceKey) || "null"));
+        } catch {
+            return null;
+        }
+    }
+
+    function saveDeviceBan(ban) {
+        try {
+            if (ban) localStorage.setItem(banDeviceKey, JSON.stringify(ban));
+            else localStorage.removeItem(banDeviceKey);
+        } catch {
+            // Storage blocked; the ban is still checked against the account.
+        }
+    }
+
+    function banTimeLeft(until) {
+        const minutes = Math.max(1, Math.ceil((Date.parse(until) - Date.now()) / 60000));
+        if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+        const hours = Math.round(minutes / 60);
+        if (hours < 48) return `${hours} hour${hours === 1 ? "" : "s"}`;
+        const days = Math.round(hours / 24);
+        return `${days} day${days === 1 ? "" : "s"}`;
+    }
+
+    // The box shown to a banned reader; the admin panel uses it for the preview too
+    function banBox(ban) {
+        ban = { ...banDefaults, ...ban };
+        const box = document.createElement("div");
+        box.className = `wiki-gate-box wiki-ban-box wiki-ban-${banStyles[ban.style] ? ban.style : "red"}`;
+        box.setAttribute("role", "alert");
+        const add = (tag, className, text) => {
+            const node = document.createElement(tag);
+            if (className) node.className = className;
+            node.textContent = text;
+            box.append(node);
+            return node;
+        };
+        if (ban.icon) add("div", "wiki-ban-icon", ban.icon).setAttribute("aria-hidden", "true");
+        add("h1", "", ban.title || banDefaults.title);
+        if (ban.message) add("p", "wiki-ban-message", ban.message);
+        if (ban.showEnd && ban.until) {
+            const end = new Date(ban.until).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+            add("p", "wiki-ban-end", `The ban ends ${end} (in ${banTimeLeft(ban.until)}).`);
+        }
+        if (ban.showBy && ban.by) add("p", "wiki-ban-by", `Banned by ${ban.by}`);
+        return box;
+    }
+
+    function showBanScreen(ban) {
+        document.querySelector(".wiki-gate")?.remove();
+        document.documentElement.classList.remove("wiki-unlocked");
+        const screen = document.createElement("div");
+        screen.className = `wiki-gate wiki-ban wiki-ban-screen-${banStyles[ban.style] ? ban.style : "red"}`;
+        screen.dataset.wikiInjected = "";
+        screen.append(banBox(ban));
+        document.body.append(screen);
+        document.title = `${ban.title || banDefaults.title} | Strawberry MC`;
+        // Open the wiki again once the ban is over (checked each minute, so the time left stays right too)
+        const timer = setInterval(() => {
+            if (!activeBan(ban)) {
+                clearInterval(timer);
+                saveDeviceBan(null);
+                location.reload();
+            } else {
+                const end = screen.querySelector(".wiki-ban-end");
+                if (end) end.replaceWith(banBox(ban).querySelector(".wiki-ban-end"));
+            }
+        }, 60000);
+    }
+
+    function openWiki() {
+        if (canView() || isPublicPage) {
+            document.documentElement.classList.add("wiki-unlocked");
+        } else {
+            showViewGate();
+        }
+    }
+
+    // The signed-in account, or the account last banned on this device
+    const signedInName = (() => {
+        try {
+            return sessionStorage.getItem(accountStorageKey) || localStorage.getItem(accountStorageKey) || "";
+        } catch {
+            return "";
+        }
+    })();
+    const deviceBan = readDeviceBan();
+    const banKey = isPublicPage ? "" : signedInName.trim().toLowerCase() || deviceBan?.key || "";
+
+    if (!banKey) {
+        openWiki();
     } else {
-        showViewGate();
+        // The page stays hidden while bans.json loads; if it can't be read, a ban saved on this device still counts
+        const checking = fetch(bansFile, { cache: "no-store" })
+            .then((response) => response.ok ? response.json() : response.status === 404 ? {} : Promise.reject(new Error("unreadable")))
+            .then((data) => activeBan(data?.bans?.[banKey]) ? { ...data.bans[banKey], key: banKey } : null);
+        const timeout = new Promise((resolve, reject) => setTimeout(() => reject(new Error("slow")), 4000));
+        Promise.race([checking, timeout]).then((ban) => {
+            saveDeviceBan(ban);
+            if (ban) showBanScreen(ban);
+            else openWiki();
+        }, () => {
+            const saved = deviceBan?.key === banKey ? deviceBan : null;
+            if (saved) showBanScreen(saved);
+            else openWiki();
+        });
     }
 
     // Wrap the page body (everything between the header and the scripts) so it can be edited as one region.
@@ -4530,6 +4653,29 @@
                 throw new Error("Only admins can do that.");
             }
             return updateRepositoryJson(token, accountsFile, change, message);
+        },
+        // Bans: bans.json maps an account key to { name, until, title, message, style, icon, showEnd, showBy, by, date }
+        banStyles,
+        banDefaults,
+        banBox,
+        async readBans() {
+            return JSON.parse((await getRepositoryFile(requireAdmin(), bansFile))?.text || "{}").bans || {};
+        },
+        async updateBans(change, message) {
+            const token = requireAdmin();
+            await checkAccount(token);
+            if (readRole() !== "admin") {
+                throw new Error("Only admins can do that.");
+            }
+            const data = await updateRepositoryJson(token, bansFile, (data) => {
+                data.bans = data.bans || {};
+                // Bans that have ended are tidied away whenever the list is saved
+                for (const [key, ban] of Object.entries(data.bans)) {
+                    if (!activeBan(ban)) delete data.bans[key];
+                }
+                return change(data.bans);
+            }, message);
+            return data.bans || {};
         },
         hasReviewPassword: async () => Boolean(await loadReviewToken()),
         // Saves a copy of the GitHub token locked with the review password, so reviewers can register and log in
