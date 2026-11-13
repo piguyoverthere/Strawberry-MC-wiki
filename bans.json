@@ -1,3 +1,31 @@
 {
- "bans": {}
+ "bans": {
+  "sai": {
+   "type": "restrain",
+   "name": "Sai",
+   "until": "2026-11-14T05:30:11.046Z",
+   "showEnd": true,
+   "title": "Restraining order",
+   "message": "You have violated the Developer Contract and Terms of Agreement. Your account is now temporarily suspended and will return to service in 24 hours. WARNING #1",
+   "style": "dark",
+   "icon": "⚖️",
+   "showBy": false,
+   "by": "Eric",
+   "date": "2026-11-13T05:30:11.046Z"
+  }
+ },
+ "warnings": {},
+ "record": {
+  "sai": [
+   {
+    "type": "restrain",
+    "title": "Restraining order",
+    "message": "You have violated the Developer Contract and Terms of Agreement. Your account is now temporarily suspended and will return to service in 24 hours. WARNING #1",
+    "note": "VIOLATION",
+    "until": "2026-11-14T05:30:11.046Z",
+    "by": "Eric",
+    "date": "2026-11-13T05:30:11.046Z"
+   }
+  ]
+ }
 }
