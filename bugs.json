@@ -468,8 +468,14 @@
    "severity": "critical",
    "reporter": "aadi",
    "reported": "2026-11-13T01:04:04.757Z",
-   "updated": "2026-11-13T01:04:04.757Z",
-   "comments": [],
+   "updated": "2026-11-13T01:12:54.660Z",
+   "comments": [
+    {
+     "author": "aadi",
+     "date": "2026-11-13T01:12:54.660Z",
+     "text": "it stopped lagging..."
+    }
+   ],
    "history": []
   },
   {
