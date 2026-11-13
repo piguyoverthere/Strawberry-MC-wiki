@@ -12,6 +12,19 @@
    "showBy": false,
    "by": "Eric",
    "date": "2026-11-13T02:25:27.041Z"
+  },
+  "test reviewer": {
+   "type": "restrain",
+   "name": "test reviewer",
+   "until": "2026-11-14T02:25:56.442Z",
+   "title": "Restraining order",
+   "message": "For a while you're in reviewer mode: your changes wait for an admin or editor to approve them before they go live.",
+   "style": "dark",
+   "icon": "⚖️",
+   "showEnd": true,
+   "showBy": true,
+   "by": "Eric",
+   "date": "2026-11-13T02:25:56.442Z"
   }
  }
 }
