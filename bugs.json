@@ -425,6 +425,21 @@
      "to": "resolved"
     }
    ]
+  },
+  {
+   "id": "bug-13",
+   "number": 13,
+   "title": "Gemcutter nonexistent",
+   "description": "The gemcutter GUI is useless and inaccessible and does not have a block tied to it. DO NOT FIX ERIC I WILL FIX",
+   "steps": "search in creative inventory for gemcutter",
+   "area": "block",
+   "status": "unresolved",
+   "severity": "major",
+   "reporter": "aadi",
+   "reported": "2026-11-13T00:43:56.527Z",
+   "updated": "2026-11-13T00:43:56.527Z",
+   "comments": [],
+   "history": []
   }
  ]
 }
