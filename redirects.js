@@ -1,5 +1,6 @@
 // Pages that were merged into a main topic page. The 404 page sends old links here.
 window.wikiRedirects = {
+    "grammar.html": "page-standardized-grammar-conventions-for-wiki-pages.html",
     "page-1-3.html": "page-ambience-compiled.html#1-3",
     "page-3-leaf-clover.html": "page-clover-glades.html#3-leaf-clover",
     "page-4-5.html": "page-ambience-compiled.html#4-5",

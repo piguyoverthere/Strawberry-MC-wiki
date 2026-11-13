@@ -549,7 +549,7 @@
     // The menus replace the header's plain links in the browser only; saved pages keep the links as written.
     let originalNavMarkup = null;
     const navMenus = [
-        ["Wiki", [["all-pages.html", "All Pages"], ["credits.html", "Credits"], ["page-bookmarked-pages.html", "Bookmarked Pages"], ["todo.html", "To Do"], ["bugs.html", "Bug Tracker"], ["changelog.html", "Changelog"], ["grammar.html", "Grammar"]]],
+        ["Wiki", [["all-pages.html", "All Pages"], ["credits.html", "Credits"], ["page-bookmarked-pages.html", "Bookmarked Pages"], ["todo.html", "To Do"], ["bugs.html", "Bug Tracker"], ["changelog.html", "Changelog"], ["page-standardized-grammar-conventions-for-wiki-pages.html", "Grammar"]]],
         ["Community", [["news.html", "News"], ["ideas.html", "Ideas"], ["discussions.html", "Threads &amp; Debates"], ["notifications.html", "Notifications"], ["archives.html", "Archives"]]]
     ];
 
