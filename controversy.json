@@ -5035,8 +5035,14 @@
      "name": "Eric",
      "vote": "approve",
      "source": "document"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-13T19:30:21.107Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-13T19:30:21.107Z"
   },
   {
    "id": "idea-doc-211",
