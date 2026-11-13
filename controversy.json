@@ -4679,7 +4679,14 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-13T19:38:51.576Z"
+    }
+   },
+   "lastVoteDate": "2026-11-13T19:38:51.576Z"
   },
   {
    "id": "idea-doc-193",
