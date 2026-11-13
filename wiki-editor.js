@@ -548,7 +548,7 @@
     // The menus replace the header's plain links in the browser only; saved pages keep the links as written.
     let originalNavMarkup = null;
     const navMenus = [
-        ["Wiki", [["all-pages.html", "All Pages"], ["credits.html", "Credits"], ["page-bookmarked-pages.html", "Bookmarked Pages"], ["todo.html", "To Do"], ["bugs.html", "Bug Tracker"]]],
+        ["Wiki", [["all-pages.html", "All Pages"], ["credits.html", "Credits"], ["page-bookmarked-pages.html", "Bookmarked Pages"], ["todo.html", "To Do"], ["bugs.html", "Bug Tracker"], ["changelog.html", "Changelog"]]],
         ["Community", [["news.html", "News"], ["ideas.html", "Ideas"], ["discussions.html", "Threads &amp; Debates"], ["notifications.html", "Notifications"], ["archives.html", "Archives"]]]
     ];
 
@@ -792,6 +792,7 @@
     const historyDialog = document.createElement("dialog");
     historyDialog.className = "wiki-dialog wiki-history-dialog";
     historyDialog.innerHTML = `
+        <button type="button" class="wiki-dialog-close" aria-label="Close version history" title="Close (Esc)">×</button>
         <h2>Version history</h2>
         <p class="wiki-dialog-hint">Every change to this page in the last ${historyDays} days, newest first. Open one to see what changed.</p>
         <div class="wiki-history-requests"></div>
@@ -801,6 +802,14 @@
     `;
     document.body.append(historyDialog);
     historyDialog.querySelector('[value="cancel"]').addEventListener("click", () => historyDialog.close());
+    historyDialog.querySelector(".wiki-dialog-close").addEventListener("click", () => historyDialog.close());
+    // Clicking the dimmed page around the dialog closes it too
+    historyDialog.addEventListener("click", (event) => {
+        const box = historyDialog.getBoundingClientRect();
+        if (event.target === historyDialog && (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom)) {
+            historyDialog.close();
+        }
+    });
     const historyStatus = historyDialog.querySelector(".wiki-history-status");
     const historyList = historyDialog.querySelector(".wiki-history-list");
     const historyRequests = historyDialog.querySelector(".wiki-history-requests");

@@ -2581,6 +2581,28 @@ html[data-reduce-motion] *::after{
     width:min(94vw, 820px);
     max-height:88vh
 }
+.wiki-dialog-close{
+    position:sticky;
+    top:0;
+    float:right;
+    z-index:1;
+    width:36px;
+    height:36px;
+    margin:-8px -10px 0 8px;
+    padding:0;
+    border:1px solid #a2a9b1;
+    border-radius:50%;
+    background-color:#ffffff;
+    color:#202122;
+    cursor:pointer;
+    font:400 24px/1 Arial, Helvetica, sans-serif
+}
+.wiki-dialog-close:hover,
+.wiki-dialog-close:focus-visible{
+    border-color:#0056b3;
+    background-color:#eaf3ff;
+    color:#0056b3
+}
 .wiki-history-list{
     margin:8px 0 0;
     padding:0;
