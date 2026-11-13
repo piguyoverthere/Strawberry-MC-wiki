@@ -509,6 +509,7 @@
                 <button type="button" data-action="download">Download HTML</button>
                 <button type="button" data-action="reset">Reset saved edits</button>
                 <button type="button" data-action="unresolved" hidden>Mark as unresolved</button>
+                <button type="button" data-action="keywords" hidden>Edit search keywords</button>
             </div>
         </details>
     `;
@@ -548,7 +549,7 @@
     // The menus replace the header's plain links in the browser only; saved pages keep the links as written.
     let originalNavMarkup = null;
     const navMenus = [
-        ["Wiki", [["all-pages.html", "All Pages"], ["credits.html", "Credits"], ["page-bookmarked-pages.html", "Bookmarked Pages"], ["todo.html", "To Do"], ["bugs.html", "Bug Tracker"], ["changelog.html", "Changelog"]]],
+        ["Wiki", [["all-pages.html", "All Pages"], ["credits.html", "Credits"], ["page-bookmarked-pages.html", "Bookmarked Pages"], ["todo.html", "To Do"], ["bugs.html", "Bug Tracker"], ["changelog.html", "Changelog"], ["grammar.html", "Grammar"]]],
         ["Community", [["news.html", "News"], ["ideas.html", "Ideas"], ["discussions.html", "Threads &amp; Debates"], ["notifications.html", "Notifications"], ["archives.html", "Archives"]]]
     ];
 
@@ -684,6 +685,7 @@
     const downloadButton = toolbar.querySelector('[data-action="download"]');
     const resetButton = toolbar.querySelector('[data-action="reset"]');
     const unresolvedButton = toolbar.querySelector('[data-action="unresolved"]');
+    const keywordsButton = toolbar.querySelector('[data-action="keywords"]');
     const bookmarkButton = document.createElement("button");
     bookmarkButton.type = "button";
     bookmarkButton.className = "wiki-bookmark-button";
@@ -2590,6 +2592,56 @@
         } catch (error) {
             status.textContent = `Could not mark this page: ${error.message}`;
         }
+    });
+
+    // Search keywords of a page that's already in search, changed straight in search.js
+    keywordsButton.hidden = isNewPage || !canReviewRole(readRole());
+    let keywordsDialog = null;
+    keywordsButton.addEventListener("click", async () => {
+        if (!keywordsDialog) {
+            keywordsDialog = createDialog(`
+                <form method="dialog">
+                    <h2>Search keywords</h2>
+                    <p class="wiki-dialog-hint">Searching the wiki matches every word typed against the page title and these keywords. Separate words with spaces or commas.</p>
+                    <label for="wiki-keywords-input">Keywords for <span class="wiki-keywords-title"></span></label>
+                    <textarea id="wiki-keywords-input" rows="5" spellcheck="false"></textarea>
+                    <p class="wiki-dialog-error" role="alert"></p>
+                    <div class="wiki-dialog-actions">
+                        <button type="button" value="cancel">Cancel</button>
+                        <button type="submit" class="wiki-primary">Save keywords</button>
+                    </div>
+                </form>
+            `);
+            const form = keywordsDialog.querySelector("form");
+            const error = keywordsDialog.querySelector(".wiki-dialog-error");
+            const submit = form.querySelector('[type="submit"]');
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const keywords = normalizeKeywords(keywordsDialog.querySelector("textarea").value);
+                if (!keywords) {
+                    error.textContent = "Add at least one keyword.";
+                    return;
+                }
+                submit.disabled = true;
+                error.textContent = "";
+                try {
+                    await window.wikiStore.setPageKeywords(currentPage, keywords);
+                    const entry = typeof pages !== "undefined" && Array.isArray(pages) ? pages.find((page) => page.href === currentPage) : null;
+                    if (entry) entry.keywords = keywords;
+                    keywordsDialog.close();
+                    status.textContent = "Search keywords saved. Search uses them once the live site updates, in a minute or two.";
+                } catch (saveError) {
+                    error.textContent = saveError.message;
+                } finally {
+                    submit.disabled = false;
+                }
+            });
+        }
+        const entry = typeof pages !== "undefined" && Array.isArray(pages) ? pages.find((page) => page.href === currentPage) : null;
+        keywordsDialog.querySelector(".wiki-keywords-title").textContent = entry?.title || getCurrentTitle();
+        keywordsDialog.querySelector("textarea").value = entry?.keywords || normalizeKeywords(getCurrentTitle());
+        keywordsDialog.querySelector(".wiki-dialog-error").textContent = entry ? "" : "This page isn't in search yet; saving adds it.";
+        keywordsDialog.showModal();
     });
 
     // Element names link to their pages ---------------------------------------------------------------------
@@ -4738,6 +4790,33 @@
             }
         },
         confirmEmail: () => openConfirmEmailDialog(null),
+        // Admins and editors change which words find a page in search
+        async setPageKeywords(file, keywords) {
+            const token = readToken();
+            if (!token || !readAccount()) throw new Error("Log in to change search keywords.");
+            if (!canReviewRole(await checkAccount(token))) throw new Error("Only admins and editors can change search keywords.");
+            const title = getCurrentTitle();
+            for (let attempt = 0; ; attempt++) {
+                const searchFile = await getRepositoryFile(token, "search.js");
+                if (!searchFile) throw new Error("search.js was not found in the repository.");
+                const lines = searchFile.text.split("\n");
+                const index = lines.findIndex((line) => line.includes(`href: ${JSON.stringify(file)}`));
+                if (index === -1) {
+                    await addToSearchIndex(token, title, file, keywords);
+                    return;
+                }
+                const updated = lines[index].replace(/keywords: "(?:[^"\\]|\\.)*"/, `keywords: ${JSON.stringify(keywords)}`);
+                if (updated === lines[index]) return;
+                lines[index] = updated;
+                const entryTitle = lines[index].match(/title: ("(?:[^"\\]|\\.)*")/)?.[1];
+                try {
+                    await putRepositoryFile(token, "search.js", lines.join("\n"), `${readAccount()} changes the search keywords of ${entryTitle ? JSON.parse(entryTitle) : title} page`, searchFile.sha);
+                    return;
+                } catch (error) {
+                    if (!(error.status === 409 || error.status === 422) || attempt >= 3) throw error;
+                }
+            }
+        },
         // Only admins put a page back to an older version; the old version is saved as a new change, so it can be undone too
         async restorePage(sha, versionDate, forName = "") {
             const token = requireAdmin();

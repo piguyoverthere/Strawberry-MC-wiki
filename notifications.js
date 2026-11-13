@@ -121,6 +121,8 @@
             return { type: "review", who: match[1], text: ` asked to restore an older version (${match[3]}) of `, target: match[2], href: null, page: true, restoreRequest: true };
         if ((match = line.match(/^(.+?) declines restoring (.+) page for (.+)$/)))
             return { type: "review", who: match[1], text: ` turned down ${match[3]}'s request to restore `, target: match[2], page: true, assigned: [match[3]] };
+        if ((match = line.match(/^(.+?) changes the search keywords of (.+) page$/)))
+            return { type: "page-edit", who: match[1], text: " changed the search keywords of ", target: match[2], page: true };
         if ((match = line.match(/^Create (.+) page$/))) return { type: "page-new", text: "New page: ", target: match[1], page: true };
         if ((match = line.match(/^Update (.+) page$/))) return { type: "page-edit", text: "Page changed: ", target: match[1], page: true };
         if ((match = line.match(/^Add (.+) to news$/))) return { type: "news", text: "News article: ", target: match[1], href: "news.html" };

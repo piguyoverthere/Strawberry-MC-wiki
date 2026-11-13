@@ -4,6 +4,7 @@ const pages = [
     { title: "Threads & Debates", href: "discussions.html", keywords: "mc controversy resolver debates threads discussions archive" },
     { title: "PDF Documents", href: "documents.html", keywords: "pdf open source documents versions older history download mc controversy resolver" },
     { title: "About", href: "about.html", keywords: "about strawberry mc wiki" },
+    { title: "Grammar", href: "grammar.html", keywords: "grammar style guide conventions writing rules capitalization headings titles tags spelling numbers" },
     { title: "Changelog", href: "changelog.html", keywords: "changelog patches patch notes site updates new features fixes history" },
     { title: "All Pages", href: "all-pages.html", keywords: "all pages index list alphabetical a-z directory contents" },
     { title: "Archives", href: "archives.html", keywords: "archive archives deleted ideas old debates threads restore" },
