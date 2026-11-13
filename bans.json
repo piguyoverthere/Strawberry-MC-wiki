@@ -14,7 +14,22 @@
    "date": "2026-11-13T05:30:11.046Z"
   }
  },
- "warnings": {},
+ "warnings": {
+  "aadi": [
+   {
+    "type": "warn",
+    "name": "aadi",
+    "title": "test thingy",
+    "message": "just testing out a feature its fine tell me if you received this",
+    "style": "red",
+    "icon": "eeple",
+    "showBy": true,
+    "by": "Eric",
+    "id": "warning-mweji6pt",
+    "date": "2026-11-13T05:32:12.545Z"
+   }
+  ]
+ },
  "record": {
   "sai": [
    {
@@ -25,6 +40,16 @@
     "until": "2026-11-14T05:30:11.046Z",
     "by": "Eric",
     "date": "2026-11-13T05:30:11.046Z"
+   }
+  ],
+  "aadi": [
+   {
+    "type": "warn",
+    "title": "test thingy",
+    "message": "just testing out a feature its fine tell me if you received this",
+    "note": "test",
+    "by": "Eric",
+    "date": "2026-11-13T05:32:12.545Z"
    }
   ]
  }
