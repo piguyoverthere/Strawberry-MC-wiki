@@ -4758,8 +4758,14 @@
      "name": "Sai",
      "vote": "disapprove",
      "source": "document"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-13T19:37:51.825Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-13T19:37:51.825Z"
   },
   {
    "id": "idea-doc-198",
