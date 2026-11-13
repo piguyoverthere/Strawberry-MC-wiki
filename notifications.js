@@ -104,7 +104,7 @@
         if ((match = line.match(/^([^:]+?) (approves|disapproves) ((?:idea|bug): .+|all waiting changes in .+|comment by .+|reply by .+|.+'s vote on idea: .+|(?:a change|all changes) to .+ page|the draft .+ page)$/)))
             return { type: "review", who: match[1], text: ` ${match[2]} `, target: match[3], href: null, vote: match[2] === "approves" ? "approve" : "disapprove" };
         if ((match = line.match(/^([^:]+?) sets role of ([^:]+) to (admin|editor|reviewer)$/))) return { type: "account", who: match[1], text: ` made ${match[2]} ${match[3] === "admin" ? "an admin" : match[3] === "editor" ? "an editor" : "a reviewer"}`, target: "", href: null };
-        if ((match = line.match(/^([^:]+?) (bans [^:]+ until .+|changes the ban of [^:]+|unbans [^:]+)$/))) return { type: "account", who: match[1], text: ` ${match[2]}`, target: "", href: null };
+        if ((match = line.match(/^([^:]+?) (bans [^:]+ until .+|changes the ban of [^:]+|unbans [^:]+|puts a restraining order on [^:]+ until .+|changes the restraining order on [^:]+|lifts the restraining order on [^:]+)$/))) return { type: "account", who: match[1], text: ` ${match[2]}`, target: "", href: null };
         if ((match = line.match(/^([^:]+?) (blocks [^:]+ until .+|unblocks [^:]+)$/))) return { type: "account", who: match[1], text: ` ${match[2]}`, target: "", href: null };
         if (/^.+ confirms an email address$|^Reset personal password: |^.+ changes their personal password$/.test(line)) return null;
         if (/^.+ (unfollows .+|changes their settings|changes their privacy settings|adds a profile picture|removes a profile picture|removes a picture from their profile)$/.test(line)) return null;

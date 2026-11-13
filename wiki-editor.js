@@ -229,6 +229,7 @@
     // the wiki password doesn't get round it there. Like the password box, this keeps honest readers out; it isn't security.
     const bansFile = "bans.json";
     const banDeviceKey = "strawberry-wiki-banned";
+    const restraintDeviceKey = "strawberry-wiki-restraint";
     const banStyles = { red: "Red", dark: "Dark", strawberry: "Strawberry", plain: "Plain" };
     const banDefaults = {
         title: "You're banned",
@@ -238,6 +239,33 @@
         showEnd: true,
         showBy: true
     };
+    // A restraining order doesn't hide the wiki: it alerts the account once, then treats it as a reviewer until it ends
+    const restraintDefaults = {
+        title: "Restraining order",
+        message: "For a while you're in reviewer mode: your changes wait for an admin or editor to approve them before they go live.",
+        style: "dark",
+        icon: "⚖️",
+        showEnd: true,
+        showBy: true
+    };
+    const isRestraint = (entry) => entry?.type === "restrain";
+
+    function readRestraint() {
+        try {
+            return activeBan(JSON.parse(localStorage.getItem(restraintDeviceKey) || "null"));
+        } catch {
+            return null;
+        }
+    }
+
+    function saveRestraint(entry) {
+        try {
+            if (entry) localStorage.setItem(restraintDeviceKey, JSON.stringify(entry));
+            else localStorage.removeItem(restraintDeviceKey);
+        } catch {
+            // Storage blocked; the order is still checked before every save.
+        }
+    }
 
     function activeBan(ban) {
         return ban && Date.parse(ban.until) > Date.now() ? ban : null;
@@ -245,7 +273,8 @@
 
     function readDeviceBan() {
         try {
-            return activeBan(JSON.parse(localStorage.getItem(banDeviceKey) || "null"));
+            const ban = activeBan(JSON.parse(localStorage.getItem(banDeviceKey) || "null"));
+            return isRestraint(ban) ? null : ban;
         } catch {
             return null;
         }
@@ -271,7 +300,8 @@
 
     // The box shown to a banned reader; the admin panel uses it for the preview too
     function banBox(ban) {
-        ban = { ...banDefaults, ...ban };
+        const restraint = isRestraint(ban);
+        ban = { ...(restraint ? restraintDefaults : banDefaults), ...ban };
         const box = document.createElement("div");
         box.className = `wiki-gate-box wiki-ban-box wiki-ban-${banStyles[ban.style] ? ban.style : "red"}`;
         box.setAttribute("role", "alert");
@@ -283,13 +313,13 @@
             return node;
         };
         if (ban.icon) add("div", "wiki-ban-icon", ban.icon).setAttribute("aria-hidden", "true");
-        add("h1", "", ban.title || banDefaults.title);
+        add("h1", "", ban.title || (restraint ? restraintDefaults : banDefaults).title);
         if (ban.message) add("p", "wiki-ban-message", ban.message);
         if (ban.showEnd && ban.until) {
             const end = new Date(ban.until).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
-            add("p", "wiki-ban-end", `The ban ends ${end} (in ${banTimeLeft(ban.until)}).`);
+            add("p", "wiki-ban-end", `${restraint ? "Reviewer mode" : "The ban"} ends ${end} (in ${banTimeLeft(ban.until)}).`);
         }
-        if (ban.showBy && ban.by) add("p", "wiki-ban-by", `Banned by ${ban.by}`);
+        if (ban.showBy && ban.by) add("p", "wiki-ban-by", `${restraint ? "Ordered" : "Banned"} by ${ban.by}`);
         return box;
     }
 
@@ -315,6 +345,51 @@
         }, 60000);
     }
 
+    // The alert comes up once per order; after that a slim bar under the header reminds them and reopens it
+    function showRestraint(entry) {
+        const seenKey = `strawberry-wiki-restraint-seen:${entry.key}:${entry.date || entry.until}`;
+        const dialog = document.createElement("dialog");
+        dialog.className = `wiki-dialog wiki-restraint-dialog wiki-ban-screen-${banStyles[entry.style] ? entry.style : "dark"}`;
+        dialog.dataset.wikiInjected = "";
+        dialog.setAttribute("aria-label", entry.title || restraintDefaults.title);
+        const ok = document.createElement("button");
+        ok.type = "button";
+        ok.className = "wiki-primary";
+        ok.textContent = "I understand";
+        ok.addEventListener("click", () => dialog.close());
+        const actions = document.createElement("div");
+        actions.className = "wiki-dialog-actions";
+        actions.append(ok);
+        dialog.append(banBox(entry), actions);
+        dialog.addEventListener("cancel", (event) => event.preventDefault());
+        dialog.addEventListener("close", () => {
+            try {
+                localStorage.setItem(seenKey, "1");
+            } catch {
+                // Storage blocked; the alert shows again on the next page.
+            }
+        });
+        document.body.append(dialog);
+
+        const bar = document.createElement("button");
+        bar.type = "button";
+        bar.className = "wiki-restraint-bar";
+        bar.dataset.wikiInjected = "";
+        bar.textContent = `${entry.icon || "⚖️"} ${entry.title || restraintDefaults.title}: reviewer mode until ${new Date(entry.until).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}`;
+        bar.addEventListener("click", () => dialog.showModal());
+        const content = document.querySelector(".wiki-content");
+        if (content) content.before(bar);
+        else document.body.prepend(bar);
+
+        let seen = false;
+        try {
+            seen = Boolean(localStorage.getItem(seenKey));
+        } catch {
+            // Without storage, show it.
+        }
+        if (!seen) dialog.showModal();
+    }
+
     function openWiki() {
         if (canView() || isPublicPage) {
             document.documentElement.classList.add("wiki-unlocked");
@@ -333,6 +408,8 @@
     })();
     const deviceBan = readDeviceBan();
     const banKey = isPublicPage ? "" : signedInName.trim().toLowerCase() || deviceBan?.key || "";
+    // Resolves to the signed-in account's restraining order, if any; checkAccount waits for it before every save
+    let restraintReady = Promise.resolve(readRestraint());
 
     if (!banKey) {
         openWiki();
@@ -342,14 +419,31 @@
             .then((response) => response.ok ? response.json() : response.status === 404 ? {} : Promise.reject(new Error("unreadable")))
             .then((data) => activeBan(data?.bans?.[banKey]) ? { ...data.bans[banKey], key: banKey } : null);
         const timeout = new Promise((resolve, reject) => setTimeout(() => reject(new Error("slow")), 4000));
-        Promise.race([checking, timeout]).then((ban) => {
-            saveDeviceBan(ban);
-            if (ban) showBanScreen(ban);
-            else openWiki();
+        const settled = Promise.race([checking, timeout]);
+        restraintReady = settled.then((entry) => {
+            const order = isRestraint(entry) ? entry : null;
+            saveRestraint(order);
+            return order;
+        }, () => readRestraint());
+        settled.then((entry) => {
+            saveDeviceBan(isRestraint(entry) ? null : entry);
+            if (isRestraint(entry)) {
+                openWiki();
+                showRestraint(entry);
+            } else if (entry) {
+                showBanScreen(entry);
+            } else {
+                openWiki();
+            }
         }, () => {
             const saved = deviceBan?.key === banKey ? deviceBan : null;
-            if (saved) showBanScreen(saved);
-            else openWiki();
+            if (saved) {
+                showBanScreen(saved);
+            } else {
+                openWiki();
+                const order = readRestraint();
+                if (order?.key === banKey) showRestraint(order);
+            }
         });
     }
 
@@ -3990,7 +4084,10 @@
     }
 
     function readRole() {
-        return readToken() && readAccount() ? readSession(roleStorageKey) || "editor" : "";
+        if (!readToken() || !readAccount()) return "";
+        // A restraining order puts the account in reviewer mode until it ends
+        if (readRestraint()?.key === accountKey(readAccount())) return "reviewer";
+        return readSession(roleStorageKey) || "editor";
     }
 
     function forgetAccount() {
@@ -4106,6 +4203,8 @@
             throw new Error(blocked);
         }
         storeRole(account.role || "editor");
+        const order = await restraintReady;
+        if (order?.key === accountKey(readAccount()) && activeBan(order)) return "reviewer";
         return account.role || "editor";
     }
 
@@ -4657,6 +4756,7 @@
         // Bans: bans.json maps an account key to { name, until, title, message, style, icon, showEnd, showBy, by, date }
         banStyles,
         banDefaults,
+        restraintDefaults,
         banBox,
         async readBans() {
             return JSON.parse((await getRepositoryFile(requireAdmin(), bansFile))?.text || "{}").bans || {};

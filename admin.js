@@ -65,8 +65,11 @@
 
     // Bans -----------------------------------------------------------------------------------
     // A ban hides the whole wiki from that account until it ends, showing the admin's own message instead.
+    // A restraining order alerts the account with the admin's message, then keeps it in reviewer mode until it ends.
     let bans = {};
     const activeBan = (key) => bans[key] && Date.parse(bans[key].until) > Date.now() ? bans[key] : null;
+    const isRestraint = (entry) => entry?.type === "restrain";
+    const defaultsFor = (type) => type === "restrain" ? store.restraintDefaults : store.banDefaults;
     const banLengths = [["3600000", "1 hour"], ["86400000", "1 day"], ["259200000", "3 days"], ["604800000", "1 week"], ["2592000000", "30 days"], ["custom", "Until a date…"]];
 
     async function saveBans(apply, message, done) {
@@ -82,17 +85,25 @@
 
     function unban(key) {
         const name = accounts[key]?.name || bans[key]?.name || key;
+        const restraint = isRestraint(bans[key]);
         saveBans((list) => {
             if (!list[key]) return false;
             delete list[key];
-        }, `${me} unbans ${name}`, `${name} is unbanned. It can take a minute before the wiki opens for them again.`);
+        }, restraint ? `${me} lifts the restraining order on ${name}` : `${me} unbans ${name}`,
+        restraint ? `The restraining order on ${name} is lifted.` : `${name} is unbanned. It can take a minute before the wiki opens for them again.`);
     }
 
-    function openBanDialog(key) {
+    function openBanDialog(key, startType = "ban") {
         const account = accounts[key];
         const current = activeBan(key);
-        const ban = { ...store.banDefaults, ...(current || {}) };
-        const dialog = element("dialog", { className: "wiki-dialog wiki-ban-dialog", "aria-label": `Ban ${account.name}` });
+        const ban = { ...defaultsFor(current?.type || startType), ...(current || {}) };
+        const dialog = element("dialog", { className: "wiki-dialog wiki-ban-dialog", "aria-label": `Ban or restrain ${account.name}` });
+        const type = element("select", { id: "ban-type" },
+            element("option", { value: "ban", text: "Ban: hide the wiki from them", selected: !isRestraint(ban) }),
+            element("option", { value: "restrain", text: "Restraining order: alert them, then reviewer mode", selected: isRestraint(ban) }));
+        const heading = element("h2");
+        const hint = element("p", { className: "wiki-dialog-hint" });
+        const saveButton = element("button", { type: "button", className: "wiki-primary" });
         const close = () => {
             dialog.close();
             dialog.remove();
@@ -100,7 +111,7 @@
         const length = element("select", { id: "ban-length" },
             ...(current ? [element("option", { value: "keep", text: `Keep the end (${formatTime(current.until)})` })] : []),
             ...banLengths.map(([value, text]) => element("option", { value, text, selected: !current && value === "86400000" })));
-        const custom = element("input", { type: "datetime-local", id: "ban-until", "aria-label": "Ban until", hidden: true });
+        const custom = element("input", { type: "datetime-local", id: "ban-until", "aria-label": "Ends at", hidden: true });
         const title = element("input", { type: "text", id: "ban-title", maxlength: "80", value: ban.title });
         const message = element("textarea", { id: "ban-message", rows: "4", maxlength: "1000" });
         message.value = ban.message;
@@ -118,12 +129,25 @@
             return Date.now() + Number(length.value);
         }
 
+        // Switching the type swaps in that type's wording, unless the admin has already written their own
+        let shownType = type.value;
+        function switchType() {
+            const was = defaultsFor(shownType);
+            const now = defaultsFor(type.value);
+            if (title.value.trim() === was.title) title.value = now.title;
+            if (message.value.trim() === was.message) message.value = now.message;
+            if (icon.value.trim() === was.icon) icon.value = now.icon;
+            if (style.value === was.style) style.value = now.style;
+            shownType = type.value;
+        }
+
         function draft() {
             const until = endTime();
             return {
+                type: type.value === "restrain" ? "restrain" : "ban",
                 name: account.name,
                 until: until ? new Date(until).toISOString() : "",
-                title: title.value.trim() || store.banDefaults.title,
+                title: title.value.trim() || defaultsFor(type.value).title,
                 message: message.value.trim(),
                 style: style.value,
                 icon: icon.value.trim(),
@@ -134,7 +158,16 @@
         }
 
         function update() {
+            if (type.value !== shownType) switchType();
+            const restraint = type.value === "restrain";
             custom.hidden = length.value !== "custom";
+            heading.textContent = current
+                ? `Change the ${isRestraint(current) ? "restraining order on" : "ban of"} ${account.name}`
+                : restraint ? `Restraining order on ${account.name}` : `Ban ${account.name}`;
+            hint.textContent = restraint
+                ? `${account.name} sees this message once, the next time they open the wiki. Until it ends, their account works like a reviewer's: their changes wait for an admin or editor to approve them. It ends by itself.`
+                : `While the ban lasts, ${account.name} sees only this message on every wiki page, on this account and on any device they last used it on. It ends by itself.`;
+            saveButton.textContent = current ? "Save" : restraint ? "Restrain" : "Ban";
             const shown = draft();
             if (!shown.until) shown.until = new Date(Date.now() + 864e5).toISOString();
             preview.className = `wiki-ban-preview wiki-ban-screen-${shown.style}`;
@@ -143,35 +176,42 @@
 
         dialog.append(
             element("button", { type: "button", className: "wiki-dialog-close", "aria-label": "Close", title: "Close (Esc)", text: "×", onclick: close }),
-            element("h2", { text: current ? `Change the ban of ${account.name}` : `Ban ${account.name}` }),
-            element("p", { className: "wiki-dialog-hint", text: `While the ban lasts, ${account.name} sees only this message on every wiki page, on this account and on any device they last used it on. It ends by itself.` }),
+            heading,
+            hint,
+            element("label", { for: "ban-type", text: "Type" }), type,
             element("label", { for: "ban-length", text: "How long" }), length, custom,
             element("label", { for: "ban-title", text: "Title" }), title,
             element("label", { for: "ban-message", text: "Message" }), message,
             element("div", { className: "wiki-ban-options" },
                 element("span", {}, element("label", { for: "ban-style", text: "Look" }), style),
                 element("span", {}, element("label", { for: "ban-icon", text: "Icon" }), icon)),
-            element("label", { className: "wiki-checkbox" }, showEnd, " Show when the ban ends"),
-            element("label", { className: "wiki-checkbox" }, showBy, " Show who banned them"),
+            element("label", { className: "wiki-checkbox" }, showEnd, " Show when it ends"),
+            element("label", { className: "wiki-checkbox" }, showBy, " Show who did it"),
             element("p", { className: "wiki-ban-preview-label", text: "Preview" }),
             preview,
             error,
             element("div", { className: "wiki-dialog-actions" },
                 element("button", { type: "button", text: "Cancel", onclick: close }),
-                element("button", {
-                    type: "button", className: "wiki-primary", text: current ? "Save ban" : "Ban", onclick: () => {
-                        const saved = draft();
-                        if (!saved.until || Date.parse(saved.until) <= Date.now()) {
-                            error.textContent = "Pick a time in the future for the ban to end.";
-                            return;
-                        }
-                        saved.date = new Date().toISOString();
-                        close();
-                        saveBans((list) => { list[key] = saved; },
-                            current ? `${me} changes the ban of ${account.name}` : `${me} bans ${account.name} until ${formatTime(saved.until)}`,
-                            `${account.name} is banned until ${formatTime(saved.until)}. It can take a minute to reach them.`);
-                    }
-                })));
+                saveButton));
+        saveButton.addEventListener("click", () => {
+            const saved = draft();
+            if (!saved.until || Date.parse(saved.until) <= Date.now()) {
+                error.textContent = "Pick a time in the future for it to end.";
+                return;
+            }
+            const restraint = isRestraint(saved);
+            // Changing the type counts as a new order, so a new restraining order alerts them again
+            const same = current && isRestraint(current) === restraint;
+            saved.date = same && current.date ? current.date : new Date().toISOString();
+            close();
+            saveBans((list) => { list[key] = saved; },
+                same
+                    ? restraint ? `${me} changes the restraining order on ${account.name}` : `${me} changes the ban of ${account.name}`
+                    : restraint ? `${me} puts a restraining order on ${account.name} until ${formatTime(saved.until)}` : `${me} bans ${account.name} until ${formatTime(saved.until)}`,
+                restraint
+                    ? `${account.name} is in reviewer mode until ${formatTime(saved.until)}. They'll be alerted the next time they open the wiki.`
+                    : `${account.name} is banned until ${formatTime(saved.until)}. It can take a minute to reach them.`);
+        });
         dialog.addEventListener("input", update);
         dialog.addEventListener("change", update);
         dialog.addEventListener("close", () => dialog.remove());
@@ -191,8 +231,10 @@
         return ban
             ? element("span", {},
                 element("button", { type: "button", text: "Change", onclick: () => openBanDialog(key) }),
-                element("button", { type: "button", text: "Unban", onclick: () => unban(key) }))
-            : element("button", { type: "button", className: "admin-ban-button", text: "Ban…", onclick: () => openBanDialog(key) });
+                element("button", { type: "button", text: isRestraint(ban) ? "Lift order" : "Unban", onclick: () => unban(key) }))
+            : element("span", {},
+                element("button", { type: "button", className: "admin-ban-button", text: "Ban…", onclick: () => openBanDialog(key, "ban") }),
+                element("button", { type: "button", className: "admin-restrain-button", text: "Restrain…", onclick: () => openBanDialog(key, "restrain") }));
     }
 
     function renderAccounts() {
@@ -210,7 +252,9 @@
                 element("td", { text: account.created ? formatTime(account.created) : "" }),
                 element("td", { text: account.emailConfirmed ? "✓ Confirmed" : "—" }),
                 element("td", {}, activeBan(key)
-                    ? element("span", { className: "admin-blocked", text: `Banned until ${formatTime(activeBan(key).until)}` })
+                    ? element("span", { className: "admin-blocked", text: isRestraint(activeBan(key))
+                        ? `Restraining order until ${formatTime(activeBan(key).until)} (reviewer mode)`
+                        : `Banned until ${formatTime(activeBan(key).until)}` })
                     : blocked ? element("span", { className: "admin-blocked", text: `Blocked until ${formatTime(account.blockedUntil)}` }) : "Active"),
                 element("td", { className: "admin-actions" }, role !== "reviewer"
                     ? element("span", { className: "idea-meta", text: "Only reviewers can be blocked" })
@@ -227,10 +271,10 @@
             element("h2", { text: "Accounts" }),
             rows.length
                 ? element("div", { className: "admin-table-wrap" }, element("table", { className: "admin-table" },
-                    element("thead", {}, element("tr", {}, ...["Account", "Role", "Registered", "Email", "Status", "Block", "Ban"].map((text) => element("th", { text })))),
+                    element("thead", {}, element("tr", {}, ...["Account", "Role", "Registered", "Email", "Status", "Block", "Ban or restrain"].map((text) => element("th", { text })))),
                     element("tbody", {}, ...rows)))
                 : element("p", { text: "No accounts yet." }),
-            element("p", { className: "wiki-dialog-hint", text: "Admins: everything goes live, approve reviews, use this panel. Editors: everything goes live, approve reviews. Reviewers: votes count straight away, other changes wait for an admin or editor, can't start threads, new pages are [draft] pages. Blocked reviewers can't log in or save until the block ends. Banned accounts (any role) can't open the wiki at all until the ban ends; they see your message instead." }));
+            element("p", { className: "wiki-dialog-hint", text: "Admins: everything goes live, approve reviews, use this panel. Editors: everything goes live, approve reviews. Reviewers: votes count straight away, other changes wait for an admin or editor, can't start threads, new pages are [draft] pages. Blocked reviewers can't log in or save until the block ends. Banned accounts (any role) can't open the wiki at all until the ban ends; they see your message instead. Accounts under a restraining order see your message once, then work like reviewers until it ends." }));
     }
 
     function renderReviewPassword(isSet) {

@@ -2806,3 +2806,34 @@ html[data-reduce-motion] *::after{
 .wiki-ban-options label{
     display:block
 }
+/* Restraining order: the alert uses the admin's chosen look; the bar under the header reopens it */
+:root .wiki-dialog.wiki-restraint-dialog{
+    width:min(480px, calc(100vw - 32px));
+    padding:16px;
+    border:0;
+    background-color:var(--ban-page)
+}
+.wiki-restraint-dialog .wiki-gate-box{
+    margin:0 auto
+}
+.wiki-restraint-dialog .wiki-dialog-actions{
+    justify-content:center;
+    margin-top:12px
+}
+.wiki-restraint-bar{
+    display:block;
+    box-sizing:border-box;
+    width:100%;
+    margin:0 0 12px;
+    padding:8px 12px;
+    border:1px solid #c9a227;
+    border-radius:6px;
+    background-color:#fff8e1;
+    color:#5c4400;
+    cursor:pointer;
+    font:600 14px/1.4 Arial, Helvetica, sans-serif;
+    text-align:left
+}
+.wiki-restraint-bar:hover{
+    background-color:#ffefc2
+}
