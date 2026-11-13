@@ -4959,6 +4959,11 @@
      "name": "Zafar",
      "vote": "approve",
      "source": "document"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-13T19:31:08.888Z"
     }
    },
    "replies": [
@@ -4971,7 +4976,8 @@
       "Sai"
      ]
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-13T19:31:08.888Z"
   },
   {
    "id": "idea-doc-208",
