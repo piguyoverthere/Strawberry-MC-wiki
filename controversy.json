@@ -440,6 +440,11 @@
      "name": "Theodore",
      "vote": "disapprove",
      "date": "2026-11-12T22:32:50.930Z"
+    },
+    "rishaan": {
+     "name": "Rishaan",
+     "vote": "disapprove",
+     "date": "2026-11-13T21:04:44.148Z"
     }
    },
    "replies": [
@@ -474,7 +479,7 @@
      "date": "2026-11-13T21:04:36.017Z"
     }
    ],
-   "lastVoteDate": "2026-11-12T22:32:50.930Z"
+   "lastVoteDate": "2026-11-13T21:04:44.148Z"
   },
   {
    "id": "idea-doc-8",
