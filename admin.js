@@ -83,15 +83,19 @@
         record = data.record || {};
     }
 
+    // Returns true once saved
     async function saveBans(apply, message, done) {
         status.textContent = "Saving…";
+        let saved = false;
         try {
             keepModeration(await store.updateBans(apply, message));
             status.textContent = done;
+            saved = true;
         } catch (error) {
             status.textContent = `Could not save: ${error.message}`;
         }
         render();
+        return saved;
     }
 
     // The record entry for the ban or order now in force
@@ -230,7 +234,18 @@
             element("div", { className: "wiki-dialog-actions" },
                 element("button", { type: "button", text: "Cancel", onclick: close }),
                 saveButton));
+        // The dialog stays open until the save works, so nothing the admin wrote is lost if it fails
+        async function saveAndClose(apply, message, done) {
+            saveButton.disabled = true;
+            error.textContent = "";
+            if (await saveBans(apply, message, done)) close();
+            else {
+                error.textContent = status.textContent;
+                saveButton.disabled = false;
+            }
+        }
         saveButton.addEventListener("click", () => {
+            if (saveButton.disabled) return;
             const saved = draft();
             const kind = saved.type;
             const now = new Date().toISOString();
@@ -238,8 +253,7 @@
             if (kind === "warn") {
                 saved.id = `warning-${Date.now().toString(36)}`;
                 saved.date = now;
-                close();
-                saveBans((list, data) => {
+                saveAndClose((list, data) => {
                     data.warnings[key] = [...(data.warnings[key] || []), saved];
                     addToRecord(data, key, { type: "warn", title: saved.title, message: saved.message, note: reason, by: me, date: now });
                 }, `${me} warns ${account.name}`, `${account.name} will see your warning the next time they open the wiki.`);
@@ -254,8 +268,7 @@
             const same = current && current.type === kind;
             saved.date = same && current.date ? current.date : now;
             if (same && current.appealReply !== undefined) Object.assign(saved, { appealReply: current.appealReply, appealBy: current.appealBy });
-            close();
-            saveBans((list, data) => {
+            saveAndClose((list, data) => {
                 const previous = list[key];
                 const item = recordEntry(data, key, previous);
                 if (same && item) {
@@ -342,6 +355,8 @@
     async function answerAppeal(appeal, approve, reply = "") {
         const name = appeal.name;
         const what = kindName(appeal.type);
+        // The ban or order may already be over, lifted or replaced; then the appeal is just cleared away
+        let gone = false;
         status.textContent = "Saving…";
         try {
             keepModeration(await store.updateBans((list, data) => {
@@ -355,7 +370,10 @@
                     Object.assign(current, { appealReply: reply, appealBy: me });
                     if (item) item.appeal = `turned down by ${me}: “${appeal.message}”${reply ? ` (reply: “${reply}”)` : ""}`;
                 }
-                if (!current) return false;
+                if (!current) {
+                    gone = true;
+                    return false;
+                }
             }, approve ? `${me} lifts the ${what} on ${name} after an appeal` : `${me} turns down the appeal of ${name}`));
             await store.updateJson(store.appealsFile, (data) => {
                 const before = (data.appeals || []).length;
@@ -364,7 +382,9 @@
             }, `Remove answered appeal of ${name}`);
             answeredAppeals.add(appeal.id);
             appeals = appeals.filter((item) => item.id !== appeal.id);
-            status.textContent = approve ? `The ${what} on ${name} is lifted.` : `${name}'s appeal is turned down. They'll see your reply.`;
+            status.textContent = gone
+                ? `The ${what} this appeal is about has already ended or been changed, so the appeal is cleared away.`
+                : approve ? `The ${what} on ${name} is lifted.` : `${name}'s appeal is turned down. They'll see your reply.`;
         } catch (error) {
             status.textContent = `Could not save: ${error.message}`;
         }
@@ -379,11 +399,16 @@
             element("p", { className: "wiki-dialog-hint", text: "Banned and restrained accounts can send one appeal each. Lift it, or turn it down with a reply they'll see." }),
             element("ul", {}, ...appeals.map((appeal) => {
                 const reply = element("input", { type: "text", maxlength: "300", placeholder: "Reply (optional)", "aria-label": `Reply to ${appeal.name}` });
+                const live = activeBan(appeal.key)?.date === appeal.banDate;
                 return element("li", {},
                     element("strong", { text: `${appeal.name} appeals their ${kindName(appeal.type)}` }),
-                    element("span", { className: "idea-meta", text: ` ${formatTime(appeal.date)}, ${appeal.until ? `ends ${formatTime(appeal.until)}` : ""}` }),
+                    element("span", { className: "idea-meta", text: ` ${formatTime(appeal.date)}${live && appeal.until ? `, ends ${formatTime(appeal.until)}` : ""}` }),
+                    live ? null : element("span", { className: "admin-blocked", text: ` · already ended or changed` }),
                     element("blockquote", { className: "admin-appeal-text", text: appeal.message }),
-                    element("span", { className: "admin-actions admin-appeal-actions" },
+                    live ? null : element("span", { className: "admin-actions admin-appeal-actions" },
+                        element("button", { type: "button", text: "Clear", onclick: () => answerAppeal(appeal, false) }),
+                        recordSummary(appeal.key)),
+                    !live ? null : element("span", { className: "admin-actions admin-appeal-actions" },
                         element("button", { type: "button", text: `Lift the ${kindName(appeal.type)}`, onclick: () => answerAppeal(appeal, true) }),
                         reply,
                         element("button", { type: "button", text: "Turn down", onclick: () => answerAppeal(appeal, false, reply.value.trim()) }),

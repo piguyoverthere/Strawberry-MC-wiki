@@ -1,6 +1,8 @@
 body{
     margin:0;
-    padding:0 20px
+    padding:0 20px;
+    /* Long unbroken words and links in comments wrap instead of making the page scroll sideways on phones */
+    overflow-wrap:break-word
 }
 .site-header{
     position:sticky;

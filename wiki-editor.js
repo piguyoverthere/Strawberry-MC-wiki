@@ -508,7 +508,10 @@
         }
     })();
     const deviceBan = readDeviceBan();
-    const banKey = isPublicPage ? "" : signedInName.trim().toLowerCase() || deviceBan?.key || "";
+    const signedInKey = signedInName.trim().toLowerCase();
+    // Both are checked: logging into another account on a banned device doesn't lift the device's ban
+    const banKey = isPublicPage ? "" : signedInKey || deviceBan?.key || "";
+    const deviceBanKey = isPublicPage ? "" : deviceBan?.key || "";
     // Resolves to the signed-in account's restraining order, if any; checkAccount waits for it before every save
     let restraintReady = Promise.resolve(readRestraint());
 
@@ -518,10 +521,16 @@
         // The page stays hidden while bans.json loads; if it can't be read, a ban saved on this device still counts
         const checking = fetch(bansFile, { cache: "no-store" })
             .then((response) => response.ok ? response.json() : response.status === 404 ? {} : Promise.reject(new Error("unreadable")))
-            .then((data) => ({
-                entry: activeBan(data?.bans?.[banKey]) ? { ...data.bans[banKey], key: banKey } : null,
-                warnings: signedInName ? data?.warnings?.[banKey] || [] : []
-            }));
+            .then((data) => {
+                const find = (key) => key && activeBan(data?.bans?.[key]) ? { ...data.bans[key], key } : null;
+                const own = find(banKey);
+                const onDevice = deviceBanKey && deviceBanKey !== banKey ? find(deviceBanKey) : null;
+                return {
+                    // A full ban on this device wins over the signed-in account's restraining order or nothing
+                    entry: own && !isRestraint(own) ? own : onDevice && !isRestraint(onDevice) ? onDevice : own,
+                    warnings: signedInName ? data?.warnings?.[banKey] || [] : []
+                };
+            });
         const timeout = new Promise((resolve, reject) => setTimeout(() => reject(new Error("slow")), 4000));
         const settled = Promise.race([checking, timeout]);
         restraintReady = settled.then(({ entry }) => {
@@ -539,7 +548,7 @@
             if (entry) showRestraint(entry);
             showWarnings(warnings);
         }, () => {
-            const saved = deviceBan?.key === banKey ? deviceBan : null;
+            const saved = deviceBan;
             if (saved) {
                 showBanScreen(saved);
             } else {
@@ -563,6 +572,14 @@
         header.after(root);
     } else {
         document.body.prepend(root);
+    }
+
+    // Many pages were made from the home page and kept its "Strawberry MC|Home" title, so their tabs, bookmarks and
+    // history all said Home. Name the tab after the page's heading instead (it's saved that way on the next commit).
+    const genericTitle = /^\s*Strawberry MC\s*\|\s*Home\s*$/i;
+    if (genericTitle.test(document.title) && !["index.html", "home-index.html"].includes(currentPage)) {
+        const heading = root.querySelector("h1")?.textContent.trim();
+        if (heading) document.title = `${heading} | Strawberry MC`;
     }
 
     // Interactive widgets (search box, buttons, bookmark list) are kept as-is and are not editable.
@@ -3161,6 +3178,11 @@
         savedContent = content;
         applyContent(content);
         setEditing(false);
+        // A renamed heading renames the tab too
+        const renamed = root.querySelector("h1")?.textContent.trim();
+        if (renamed && !["index.html", "home-index.html"].includes(currentPage)) {
+            document.title = `${renamed} | Strawberry MC`;
+        }
         if (newPageFile) {
             const title = getCurrentTitle();
             document.title = `${title} | Strawberry MC`;
@@ -4209,12 +4231,10 @@
                 ? await getRepositoryFile(readToken(), presenceFile).then((file) => JSON.parse(file?.text || "{}"), fromSite)
                 : await fromSite();
             const people = data.pages?.[targetFile] || {};
-            // Keep my own entry as this tab knows it; the live site can be a minute behind
+            // Keep my own entry as this tab knows it (the live site can be a minute behind). An entry of mine that this
+            // tab didn't write stays, so it can be cleared if there's nothing behind it any more.
             const me = myPresenceKey();
-            if (me) {
-                if (presencePeople[me]) people[me] = presencePeople[me];
-                else delete people[me];
-            }
+            if (me && presencePeople[me]) people[me] = presencePeople[me];
             presencePeople = Object.fromEntries(Object.entries(people).filter(([, entry]) => livePresence(entry)));
         } catch {
             // Keep what we had.
@@ -5457,6 +5477,7 @@
                 canvas.height = Math.round(bitmap.height * scale);
                 canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
                 blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", 0.85));
+                if (!blob) throw new Error("That picture could not be converted. Try a PNG or JPEG.");
                 extension = "webp";
             }
             if (blob.size > 2 * 1024 * 1024) {
@@ -5502,7 +5523,7 @@
                     await addToSearchIndex(token, title, file, keywords);
                     return;
                 }
-                const updated = lines[index].replace(/keywords: "(?:[^"\\]|\\.)*"/, `keywords: ${JSON.stringify(keywords)}`);
+                const updated = lines[index].replace(/keywords: "(?:[^"\\]|\\.)*"/, () => `keywords: ${JSON.stringify(keywords)}`);
                 if (updated === lines[index]) return;
                 lines[index] = updated;
                 const entryTitle = lines[index].match(/title: ("(?:[^"\\]|\\.)*")/)?.[1];
@@ -5545,7 +5566,12 @@
         async answerRestoreRequest(request, approve) {
             const token = requireAdmin();
             if (approve) {
-                await window.wikiStore.restorePage(request.sha, request.versionDate, request.by);
+                try {
+                    await window.wikiStore.restorePage(request.sha, request.versionDate, request.by);
+                } catch (error) {
+                    // Already restored (by hand or for someone else): the request is done all the same
+                    if (!/already the same as that version/.test(error.message)) throw error;
+                }
             }
             await updateRepositoryJson(token, restoreRequestsFile, (data) => {
                 const before = (data.requests || []).length;

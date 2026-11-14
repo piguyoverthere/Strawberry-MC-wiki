@@ -93,7 +93,7 @@
         const editor = message.match(/^Edited-by: (.+)$/m);
         if (update && editor && !update.who && update.page) {
             update.who = editor[1].trim();
-            update.text = update.type === "page-new" ? " created a page: " : " changed ";
+            update.text = update.type === "page-new" ? " created a page: " : update.type === "news" ? " published a news article: " : " changed ";
         }
         return update;
     }
@@ -129,8 +129,11 @@
         if ((match = line.match(/^(.+?) changes the search keywords of (.+) page$/)))
             return { type: "page-edit", who: match[1], text: " changed the search keywords of ", target: match[2], page: true };
         if ((match = line.match(/^Create (.+) page$/))) return { type: "page-new", text: "New page: ", target: match[1], page: true };
-        if ((match = line.match(/^Update (.+) page$/))) return { type: "page-edit", text: "Page changed: ", target: match[1], page: true };
-        if ((match = line.match(/^Add (.+) to news$/))) return { type: "news", text: "News article: ", target: match[1], href: "news.html" };
+        // "Update X page", or with the editor's own words after it ("Update X page removing old stuff")
+        if ((match = line.match(/^Update (.+?) page(?:\s.*)?$/))) return { type: "page-edit", text: "Page changed: ", target: match[1], page: true };
+        if ((match = line.match(/^Publish news article: (.+)$/))) return { type: "news", text: "News article published: ", target: match[1], page: true };
+        // The article's own commit ("Publish news article: …") already announces it
+        if (/^Add .+ to news$/.test(line)) return null;
         if ((match = line.match(/^(.+?) votes (approve|disapprove|convince) on idea: (.+)$/)))
             return { type: "vote", who: match[1], vote: match[2], text: ` ${{ approve: "approved", disapprove: "disapproved", convince: "said this needs convincing:" }[match[2]]} `, target: match[3], href: ideaHref(match[3]) };
         if ((match = line.match(/^(.+?) adds idea: (.+)$/))) return { type: "idea", who: match[1], text: " added an idea: ", target: match[2], href: ideaHref(match[2]) };

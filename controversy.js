@@ -145,16 +145,18 @@
         const store = window.wikiStore;
         if (!store) {
             alert("The wiki editor did not load, so changes cannot be saved right now.");
-            return;
+            return Promise.resolve(false);
         }
         if (!signedIn()) {
             location.href = store.loginHref();
-            return;
+            return Promise.resolve(false);
         }
         status.textContent = "Saving…";
-        action(store.getAuthor()).catch((error) => {
+        // Resolves true once saved, so forms can stay disabled until then
+        return action(store.getAuthor()).then(() => true, (error) => {
             status.textContent = `Could not save: ${error.message}`;
             renderAccount();
+            return false;
         });
     }
 
@@ -182,11 +184,18 @@
 
     // Commit a change to controversy.json and show the saved result straight away
     // (the live site takes a minute to publish it).
-    async function save(change, message, options) {
-        data = await window.wikiStore.updateJson(dataFile, change, message, options);
+    // Saves run one after another, so a second reply sent while the first is saving isn't merged into it or lost.
+    // options.sent clears the box that was posted from; whatever is typed in other boxes is kept through the redraw.
+    let saveQueue = Promise.resolve();
+    async function save(change, message, options = {}) {
+        const { sent, ...storeOptions } = options;
+        const run = saveQueue.then(() => window.wikiStore.updateJson(dataFile, change, message, storeOptions));
+        saveQueue = run.catch(() => {});
+        data = await run;
         data.ideas = data.ideas || [];
         data.discussions = data.discussions || [];
-        render();
+        sent?.();
+        window.wikiStore.keepInputs([app], render);
     }
 
     // Form dialog for adding an idea or starting a discussion ------------------------------------
@@ -453,15 +462,15 @@
         return list;
     }
 
-    function comment(idea, text) {
+    function comment(idea, text, sent) {
         const mentions = mentionsIn(text);
-        requireSignIn(`Comment on "${idea.title}".`, (name) =>
+        return requireSignIn(`Comment on "${idea.title}".`, (name) =>
             save((fresh, role) => {
                 const target = (fresh.ideas || []).find((item) => item.id === idea.id);
                 if (!target) throw new Error("This idea no longer exists. Reload the page.");
                 target.replies = target.replies || [];
                 target.replies.push({ author: name, text, date: new Date().toISOString(), ...(mentions.length ? { mentions } : {}), ...pendingMark(role) });
-            }, mentions.length ? `${name} pings ${mentions.join(", ")} on idea: ${idea.title}` : `${name} comments on idea: ${idea.title}`)
+            }, mentions.length ? `${name} pings ${mentions.join(", ")} on idea: ${idea.title}` : `${name} comments on idea: ${idea.title}`, { sent })
                 .then(() => { status.textContent = mentions.length ? `Your comment was posted and ${mentions.join(", ")} will see it in their notifications.` : "Your comment was posted."; }));
     }
 
@@ -572,13 +581,21 @@
                         })) : null))));
         }
         const commentInput = element("input", { type: "text", placeholder: "Add a comment… type @ to ping someone", maxlength: 2000, "aria-label": `Comment on ${idea.title}` });
+        const commentButton = element("button", { type: "submit", text: "Comment" });
         card.append(element("form", {
             className: "idea-comment-form",
-            onsubmit: (event) => {
+            onsubmit: async (event) => {
                 event.preventDefault();
-                if (commentInput.value.trim()) comment(idea, commentInput.value.trim());
+                if (!commentInput.value.trim() || commentButton.disabled) return;
+                commentButton.disabled = true;
+                const text = commentInput.value.trim();
+                await comment(idea, text, () => {
+                    const box = document.getElementById(idea.id)?.querySelector(".idea-comment-form input") || commentInput;
+                    if (box.value.trim() === text) box.value = "";
+                });
+                commentButton.disabled = false;
             }
-        }, commentInput, element("button", { type: "submit", text: "Comment" })), attachMentions(commentInput));
+        }, commentInput, commentButton), attachMentions(commentInput));
         card.append(element("div", { className: "idea-votes" },
             element("button", {
                 type: "button", className: "idea-vote idea-vote-approve", "aria-pressed": String(mine === "approve"),
@@ -678,7 +695,8 @@
     const openDiscussions = new Set();
 
     // Pictures in threads and debates: added with a button or pasted from the clipboard into the reply box.
-    // Each one is shrunk and saved under thread-images/ as soon as it's added, so the post only stores the paths.
+    // They're shrunk and saved under thread-images/ when the post is sent (so removed pictures and cancelled posts
+    // leave nothing behind); the post stores their paths.
     const maxPictures = 4;
     // Pictures uploaded in this tab show from memory until the published site has them
     const uploadedImages = new Map();
@@ -698,9 +716,9 @@
 
         function draw() {
             strip.hidden = !pictures.length;
-            strip.replaceChildren(...pictures.map((picture) => element("span", { className: `discussion-picture-thumb${picture.path ? "" : " is-uploading"}` },
+            strip.replaceChildren(...pictures.map((picture) => element("span", { className: `discussion-picture-thumb${picture.uploading ? " is-uploading" : ""}` },
                 element("img", { src: picture.preview, alt: "" }),
-                picture.path ? null : element("span", { className: "discussion-picture-progress", text: "Uploading…" }),
+                picture.uploading ? element("span", { className: "discussion-picture-progress", text: "Uploading…" }) : null,
                 element("button", {
                     type: "button", className: "discussion-picture-remove", "aria-label": "Remove picture", title: "Remove", text: "×",
                     onclick: () => {
@@ -724,18 +742,11 @@
                     note.textContent = `Up to ${maxPictures} pictures per post.`;
                     break;
                 }
-                const picture = { preview: URL.createObjectURL(file), path: "" };
-                pictures.push(picture);
-                picture.saving = window.wikiStore.uploadImage(file, "thread-images", (name) => `${name} adds a picture for a thread`)
-                    .then(({ path, blob }) => {
-                        uploadedImages.set(path, URL.createObjectURL(blob));
-                        picture.path = path;
-                        state.note.textContent = "";
-                    }, (error) => {
-                        if (pictures.includes(picture)) pictures.splice(pictures.indexOf(picture), 1);
-                        state.note.textContent = `${file.name || "That picture"} wasn't added: ${error.message}`;
-                    })
-                    .finally(() => state.draw());
+                if (!/^image\/(png|jpeg|gif|webp)$/.test(file.type)) {
+                    note.textContent = "Use a PNG, JPEG, GIF or WebP picture.";
+                    continue;
+                }
+                pictures.push({ file, preview: URL.createObjectURL(file), path: "" });
             }
             draw();
         }
@@ -756,11 +767,27 @@
         return {
             controls: element("span", { className: "discussion-picture-controls" }, button, input, note),
             strip,
-            // Waits for uploads still going, then gives the saved paths
+            // Uploads the pictures not saved yet, then gives all the paths. Throws if one can't be saved, so the post waits.
             async paths() {
-                await Promise.all(pictures.map((picture) => picture.saving));
+                for (const picture of [...pictures]) {
+                    if (picture.path) continue;
+                    picture.uploading = true;
+                    state.draw();
+                    try {
+                        const { path, blob } = await window.wikiStore.uploadImage(picture.file, "thread-images", (name) => `${name} adds a picture for a thread`);
+                        uploadedImages.set(path, URL.createObjectURL(blob));
+                        picture.path = path;
+                    } catch (error) {
+                        state.note.textContent = `A picture couldn't be saved: ${error.message}`;
+                        throw new Error(`A picture couldn't be saved: ${error.message}`);
+                    } finally {
+                        picture.uploading = false;
+                        state.draw();
+                    }
+                }
                 return pictures.map((picture) => picture.path).filter(Boolean);
             },
+            count: () => pictures.length,
             busy: () => pictures.some((picture) => !picture.path),
             clear() {
                 pictures.length = 0;
@@ -777,7 +804,7 @@
                 element("img", { src: imageSrc(path), alt: `Picture from ${post.author || "a post"}`, loading: "lazy" }))));
     }
 
-    function reply(discussion, text, images = [], onDone) {
+    function reply(discussion, text, images = [], sent) {
         const mentions = mentionsIn(text);
         return requireSignIn(`Post your reply in "${discussion.title}".`, (name) =>
             save((fresh, role) => {
@@ -788,9 +815,8 @@
                     author: name, text, date: new Date().toISOString(), source: "site",
                     ...(images.length ? { images } : {}), ...(mentions.length ? { mentions } : {}), ...pendingMark(role)
                 });
-            }, mentions.length ? `${name} pings ${mentions.join(", ")} in: ${discussion.title}` : `${name} replies in: ${discussion.title}`)
+            }, mentions.length ? `${name} pings ${mentions.join(", ")} in: ${discussion.title}` : `${name} replies in: ${discussion.title}`, { sent })
                 .then(() => {
-                    onDone?.();
                     status.textContent = mentions.length ? `Your reply was posted and ${mentions.join(", ")} will see it in their notifications.` : "Your reply was posted.";
                 }));
     }
@@ -822,7 +848,7 @@
             ],
             onSubmit: (values) => requireSignIn(`Start the ${values.kind} "${values.title}".`, async (name) => {
                 const id = newId(values.kind);
-                if (picker.busy()) status.textContent = "Waiting for your pictures to upload…";
+                if (picker.busy()) status.textContent = "Uploading your pictures…";
                 const images = await picker.paths();
                 const mentions = mentionsIn(values.text);
                 return save((fresh) => {
@@ -900,12 +926,24 @@
             onsubmit: async (event) => {
                 event.preventDefault();
                 const text = textarea.value.trim();
-                if (!text && !picker.busy() && !(await picker.paths()).length) return;
+                if ((!text && !picker.count()) || send.disabled) return;
                 send.disabled = true;
                 if (picker.busy()) send.textContent = "Uploading…";
                 try {
-                    const images = await picker.paths();
-                    await reply(discussion, text, images, () => picker.clear());
+                    let images;
+                    try {
+                        images = await picker.paths();
+                    } catch (error) {
+                        status.textContent = error.message;
+                        return;
+                    }
+                    await reply(discussion, text, images, () => {
+                        // The list may have been redrawn meanwhile, so clear the box that's on the page now,
+                        // and only if it still holds what was sent
+                        const box = document.getElementById(discussion.id)?.querySelector(".discussion-reply textarea") || textarea;
+                        if (box.value.trim() === text) box.value = "";
+                        picker.clear();
+                    });
                 } finally {
                     send.disabled = false;
                     send.textContent = "Reply";
