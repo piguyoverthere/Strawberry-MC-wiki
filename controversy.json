@@ -2739,7 +2739,12 @@
      "date": "2026-11-12T19:18:00.566Z"
     }
    },
-   "lastVoteDate": "2026-11-12T19:18:00.566Z"
+   "lastVoteDate": "2026-11-12T19:18:00.566Z",
+   "completed": true,
+   "completedBy": "aadi",
+   "completedDate": "2026-11-14T02:30:08.658Z",
+   "wikiPage": "page-brewing-effects-and-potions.html",
+   "wikiPageTitle": "Brewing, Effects, And Potions"
   },
   {
    "id": "idea-doc-61",
