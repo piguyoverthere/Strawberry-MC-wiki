@@ -107,7 +107,7 @@
         if ((match = line.match(/^([^:]+?) (bans [^:]+ until .+|changes the ban of [^:]+|unbans [^:]+|puts a restraining order on [^:]+ until .+|changes the restraining order on [^:]+|lifts the restraining order on [^:]+)$/))) return { type: "account", who: match[1], text: ` ${match[2]}`, target: "", href: null };
         if ((match = line.match(/^([^:]+?) (blocks [^:]+ until .+|unblocks [^:]+)$/))) return { type: "account", who: match[1], text: ` ${match[2]}`, target: "", href: null };
         if (/^.+ confirms an email address$|^Reset personal password: |^.+ changes their personal password$/.test(line)) return null;
-        if (/^.+ (unfollows .+|changes their settings|changes their privacy settings|adds a profile picture|removes a profile picture|removes a picture from their profile)$/.test(line)) return null;
+        if (/^.+ (unfollows .+|changes their settings|changes their privacy settings|adds a profile picture|adds a picture for a thread|removes a profile picture|removes a picture from their profile)$/.test(line)) return null;
         if ((match = line.match(/^([^:]+?) follows ([^:]+)$/))) return { type: "account", who: match[1], text: " started following ", target: match[2], href: `profile.html?${new URLSearchParams({ u: match[2] })}`, assigned: [match[2]] };
         if ((match = line.match(/^([^:]+?) (updates their profile|adds a picture to their profile|changes their profile picture)$/)))
             return { type: "account", who: match[1], text: ` ${{ "updates their profile": "updated their profile", "adds a picture to their profile": "added a picture to their profile", "changes their profile picture": "changed their profile picture" }[match[2]]}`, target: "", href: `profile.html?${new URLSearchParams({ u: match[1] })}` };
@@ -137,6 +137,10 @@
         if ((match = line.match(/^(.+?) pings (.+) on idea: (.+)$/))) return { type: "comment", who: match[1], text: ` pinged ${match[2]} in a comment on `, target: match[3], href: ideaHref(match[3]), assigned: match[2].split(", ") };
         if ((match = line.match(/^(.+?) comments on idea: (.+)$/))) return { type: "comment", who: match[1], text: " commented on ", target: match[2], href: ideaHref(match[2]) };
         if ((match = line.match(/^(.+?) replies in: (.+)$/))) return { type: "thread", who: match[1], text: " replied in ", target: match[2], href: discussionHref(match[2]) };
+        if ((match = line.match(/^(.+?) pings (.+) in new (debate|thread): (.+)$/)))
+            return { type: "thread", who: match[1], text: ` pinged ${match[2]} in a new ${match[3]}: `, target: match[4], href: discussionHref(match[4]), assigned: match[2].split(", ") };
+        if ((match = line.match(/^(.+?) pings (.+) in: (.+)$/)))
+            return { type: "thread", who: match[1], text: ` pinged ${match[2]} in `, target: match[3], href: discussionHref(match[3]), assigned: match[2].split(", ") };
         if ((match = line.match(/^(.+?) starts (debate|thread): (.+)$/)))
             return { type: "thread", who: match[1], text: ` started a ${match[2]}: `, target: match[3], href: discussionHref(match[3]) };
         if ((match = line.match(/^(.+?) edits idea: (.+)$/))) return { type: "idea", who: match[1], text: " edited an idea: ", target: match[2], href: ideaHref(match[2]) };

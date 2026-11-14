@@ -5432,7 +5432,12 @@
             }, `${me} ${following ? "follows" : "unfollows"} ${name}`);
         },
         // Shrinks a picture and saves it under profile-images/, returning its path
-        async uploadProfileImage(file) {
+        uploadProfileImage(file) {
+            return window.wikiStore.uploadImage(file, "profile-images", (name) => `${name} adds a profile picture`);
+        },
+        // Shrinks a picture (at most 1200 pixels across, WebP) and saves it in folder/, returning { path, blob }.
+        // message(name) is the commit message.
+        async uploadImage(file, folder, message) {
             const token = readToken();
             const name = readAccount();
             if (!token || !name) {
@@ -5463,10 +5468,10 @@
                 reader.onerror = () => reject(new Error("That picture could not be read."));
                 reader.readAsDataURL(blob);
             });
-            const path = `profile-images/${accountKey(name).replace(/[^a-z0-9]+/g, "-")}-${Date.now()}.${extension}`;
+            const path = `${folder}/${accountKey(name).replace(/[^a-z0-9]+/g, "-")}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${extension}`;
             await githubRequest(token, `contents/${path}`, {
                 method: "PUT",
-                body: { message: `${name} adds a profile picture`, content, branch: repository.branch }
+                body: { message: message(name), content, branch: repository.branch }
             });
             return { path, blob };
         },

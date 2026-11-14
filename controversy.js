@@ -212,8 +212,11 @@
                 }
             }
             if (field.value) input.value = field.value;
+            if (field.placeholder) input.placeholder = field.placeholder;
             inputs[field.name] = input;
             form.append(input);
+            // Extra controls that belong to this field, like the @name list or picture buttons
+            if (field.attach) form.append(...field.attach(input));
             if (field.hint) form.append(element("p", { className: "wiki-dialog-hint", text: field.hint }));
         }
         const actions = element("div", { className: "wiki-dialog-actions" },
@@ -674,15 +677,122 @@
     // Threads & Debates page ----------------------------------------------------------------------
     const openDiscussions = new Set();
 
-    function reply(discussion, text) {
-        requireSignIn(`Post your reply in "${discussion.title}".`, (name) =>
+    // Pictures in threads and debates: added with a button or pasted from the clipboard into the reply box.
+    // Each one is shrunk and saved under thread-images/ as soon as it's added, so the post only stores the paths.
+    const maxPictures = 4;
+    // Pictures uploaded in this tab show from memory until the published site has them
+    const uploadedImages = new Map();
+    const imageSrc = (path) => uploadedImages.get(path) || path;
+
+    // Pictures waiting to be posted, per thread, so they survive the list being redrawn when others post
+    const pickerStates = new Map();
+
+    function picturePicker(textarea, key) {
+        const state = (key && pickerStates.get(key)) || { pictures: [] };
+        if (key) pickerStates.set(key, state);
+        const pictures = state.pictures;
+        const strip = element("div", { className: "discussion-picture-strip", hidden: true });
+        const input = element("input", { type: "file", accept: "image/png,image/jpeg,image/gif,image/webp", multiple: true, hidden: true });
+        const button = element("button", { type: "button", className: "discussion-picture-button", title: "Add a picture (you can also paste one into the box)", text: "🖼 Picture", onclick: () => input.click() });
+        const note = element("span", { className: "discussion-picture-note", role: "status" });
+
+        function draw() {
+            strip.hidden = !pictures.length;
+            strip.replaceChildren(...pictures.map((picture) => element("span", { className: `discussion-picture-thumb${picture.path ? "" : " is-uploading"}` },
+                element("img", { src: picture.preview, alt: "" }),
+                picture.path ? null : element("span", { className: "discussion-picture-progress", text: "Uploading…" }),
+                element("button", {
+                    type: "button", className: "discussion-picture-remove", "aria-label": "Remove picture", title: "Remove", text: "×",
+                    onclick: () => {
+                        pictures.splice(pictures.indexOf(picture), 1);
+                        draw();
+                    }
+                }))));
+            button.disabled = pictures.length >= maxPictures;
+        }
+        // Uploads finishing later update whichever copy of the form is on the page now
+        state.draw = draw;
+        state.note = note;
+
+        function add(files) {
+            if (!signedIn()) {
+                note.textContent = "Log in to add pictures.";
+                return;
+            }
+            for (const file of files) {
+                if (pictures.length >= maxPictures) {
+                    note.textContent = `Up to ${maxPictures} pictures per post.`;
+                    break;
+                }
+                const picture = { preview: URL.createObjectURL(file), path: "" };
+                pictures.push(picture);
+                picture.saving = window.wikiStore.uploadImage(file, "thread-images", (name) => `${name} adds a picture for a thread`)
+                    .then(({ path, blob }) => {
+                        uploadedImages.set(path, URL.createObjectURL(blob));
+                        picture.path = path;
+                        state.note.textContent = "";
+                    }, (error) => {
+                        if (pictures.includes(picture)) pictures.splice(pictures.indexOf(picture), 1);
+                        state.note.textContent = `${file.name || "That picture"} wasn't added: ${error.message}`;
+                    })
+                    .finally(() => state.draw());
+            }
+            draw();
+        }
+
+        draw();
+        input.addEventListener("change", () => {
+            add([...input.files]);
+            input.value = "";
+        });
+        // Pasting a picture adds it; pasting text still works as usual
+        textarea.addEventListener("paste", (event) => {
+            const files = [...(event.clipboardData?.files || [])].filter((file) => file.type.startsWith("image/"));
+            if (!files.length) return;
+            if (!event.clipboardData.getData("text/plain")) event.preventDefault();
+            add(files);
+        });
+
+        return {
+            controls: element("span", { className: "discussion-picture-controls" }, button, input, note),
+            strip,
+            // Waits for uploads still going, then gives the saved paths
+            async paths() {
+                await Promise.all(pictures.map((picture) => picture.saving));
+                return pictures.map((picture) => picture.path).filter(Boolean);
+            },
+            busy: () => pictures.some((picture) => !picture.path),
+            clear() {
+                pictures.length = 0;
+                state.note.textContent = "";
+                state.draw();
+            }
+        };
+    }
+
+    function postImages(post) {
+        if (!post.images?.length) return null;
+        return element("div", { className: "discussion-images" },
+            ...post.images.map((path) => element("a", { href: imageSrc(path), target: "_blank", rel: "noopener" },
+                element("img", { src: imageSrc(path), alt: `Picture from ${post.author || "a post"}`, loading: "lazy" }))));
+    }
+
+    function reply(discussion, text, images = [], onDone) {
+        const mentions = mentionsIn(text);
+        return requireSignIn(`Post your reply in "${discussion.title}".`, (name) =>
             save((fresh, role) => {
                 const target = (fresh.discussions || []).find((item) => item.id === discussion.id);
                 if (!target) throw new Error("This discussion no longer exists. Reload the page.");
                 target.posts = target.posts || [];
-                target.posts.push({ author: name, text, date: new Date().toISOString(), source: "site", ...pendingMark(role) });
-            }, `${name} replies in: ${discussion.title}`)
-                .then(() => { status.textContent = "Your reply was posted."; }));
+                target.posts.push({
+                    author: name, text, date: new Date().toISOString(), source: "site",
+                    ...(images.length ? { images } : {}), ...(mentions.length ? { mentions } : {}), ...pendingMark(role)
+                });
+            }, mentions.length ? `${name} pings ${mentions.join(", ")} in: ${discussion.title}` : `${name} replies in: ${discussion.title}`)
+                .then(() => {
+                    onDone?.();
+                    status.textContent = mentions.length ? `Your reply was posted and ${mentions.join(", ")} will see it in their notifications.` : "Your reply was posted.";
+                }));
     }
 
     function startDiscussion() {
@@ -694,24 +804,38 @@
             status.textContent = "Reviewers can reply in threads and debates but can't start new ones.";
             return;
         }
+        let picker = null;
         openFormDialog({
             title: "Start a debate or thread",
             submitLabel: "Save",
             fields: [
                 { name: "kind", label: "Type", type: "select", options: [["debate", "Debate"], ["thread", "Thread"]] },
                 { name: "title", label: "Title", required: true },
-                { name: "text", label: "First post", type: "textarea", required: true, rows: 7 }
+                {
+                    name: "text", label: "First post", type: "textarea", required: true, rows: 7,
+                    placeholder: "Type @ to ping someone. Paste or add pictures below.",
+                    attach: (input) => {
+                        picker = picturePicker(input);
+                        return [attachMentions(input), picker.strip, picker.controls];
+                    }
+                }
             ],
-            onSubmit: (values) => requireSignIn(`Start the ${values.kind} "${values.title}".`, (name) => {
+            onSubmit: (values) => requireSignIn(`Start the ${values.kind} "${values.title}".`, async (name) => {
                 const id = newId(values.kind);
+                if (picker.busy()) status.textContent = "Waiting for your pictures to upload…";
+                const images = await picker.paths();
+                const mentions = mentionsIn(values.text);
                 return save((fresh) => {
                     fresh.discussions = fresh.discussions || [];
                     fresh.discussions.unshift({
                         id, kind: values.kind, title: values.title, date: new Date().toISOString().slice(0, 10),
                         participants: "", archived: false, resolved: false, source: "site", author: name,
-                        posts: [{ author: name, text: values.text, date: new Date().toISOString(), source: "site" }]
+                        posts: [{
+                            author: name, text: values.text, date: new Date().toISOString(), source: "site",
+                            ...(images.length ? { images } : {}), ...(mentions.length ? { mentions } : {})
+                        }]
                     });
-                }, `${name} starts ${values.kind}: ${values.title}`).then(() => {
+                }, mentions.length ? `${name} pings ${mentions.join(", ")} in new ${values.kind}: ${values.title}` : `${name} starts ${values.kind}: ${values.title}`).then(() => {
                     openDiscussions.add(id);
                     render();
                     status.textContent = `Your ${values.kind} was started.`;
@@ -754,7 +878,8 @@
                     element("span", { className: "idea-author", text: post.author || "Unknown" }),
                     " · ",
                     post.source === "site" && post.date ? timestamp(post.date) : fromDocument()),
-                element("div", { className: "idea-description" }, renderText(post.text)),
+                element("div", { className: "idea-description" }, highlightMentions(renderText(post.text), post.mentions)),
+                postImages(post),
                 post.pending ? reviewBar(`reply by ${post.author}`,
                     () => moderate(true, `reply by ${post.author} in: ${discussion.title}`, (fresh) => {
                         const target = fresh.discussions.find((other) => other.id === discussion.id)?.posts?.find(sameEntry(post));
@@ -767,14 +892,30 @@
                         if (index < 0) return false;
                         list.splice(index, 1);
                     })) : null)));
-        const textarea = element("textarea", { rows: 3, placeholder: "Write a reply…", "aria-label": `Reply to ${discussion.title}`, maxlength: 8000 });
+        const textarea = element("textarea", { rows: 3, placeholder: "Write a reply… type @ to ping someone, or paste a picture", "aria-label": `Reply to ${discussion.title}`, maxlength: 8000 });
+        const picker = picturePicker(textarea, discussion.id);
+        const send = element("button", { type: "submit", className: "discussion-send", text: "Reply" });
         const form = element("form", {
             className: "discussion-reply",
-            onsubmit: (event) => {
+            onsubmit: async (event) => {
                 event.preventDefault();
-                if (textarea.value.trim()) reply(discussion, textarea.value.trim());
+                const text = textarea.value.trim();
+                if (!text && !picker.busy() && !(await picker.paths()).length) return;
+                send.disabled = true;
+                if (picker.busy()) send.textContent = "Uploading…";
+                try {
+                    const images = await picker.paths();
+                    await reply(discussion, text, images, () => picker.clear());
+                } finally {
+                    send.disabled = false;
+                    send.textContent = "Reply";
+                }
             }
-        }, textarea, element("button", { type: "submit", text: "Reply" }));
+        },
+        element("div", { className: "discussion-reply-row" }, textarea, send),
+        attachMentions(textarea),
+        picker.strip,
+        picker.controls);
         details.append(list, form);
         return details;
     }
