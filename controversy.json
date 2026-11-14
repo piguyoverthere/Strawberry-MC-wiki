@@ -4397,7 +4397,12 @@
    ],
    "status": "resolved",
    "source": "document",
-   "votes": {}
+   "votes": {},
+   "completed": true,
+   "completedBy": "aadi",
+   "completedDate": "2026-11-14T02:28:16.730Z",
+   "wikiPage": "page-snowy-glade.html",
+   "wikiPageTitle": "Snowy Glade"
   },
   {
    "id": "idea-doc-166",
