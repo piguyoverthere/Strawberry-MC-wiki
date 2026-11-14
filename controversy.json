@@ -46,6 +46,11 @@
      "name": "Rishaan",
      "vote": "approve",
      "date": "2026-11-13T22:28:46.485Z"
+    },
+    "aadi": {
+     "name": "aadi",
+     "vote": "convince",
+     "date": "2026-11-14T02:24:09.266Z"
     }
    },
    "replies": [
@@ -65,7 +70,7 @@
      "date": "2026-11-11T01:07:04.603Z"
     }
    ],
-   "lastVoteDate": "2026-11-13T22:28:46.485Z"
+   "lastVoteDate": "2026-11-14T02:24:09.266Z"
   },
   {
    "id": "idea-doc-2",
