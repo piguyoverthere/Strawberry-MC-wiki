@@ -5665,7 +5665,12 @@
      "date": "2026-11-10T23:59:48.214Z"
     }
    ],
-   "lastVoteDate": "2026-11-12T22:34:04.160Z"
+   "lastVoteDate": "2026-11-12T22:34:04.160Z",
+   "completed": true,
+   "completedBy": "aadi",
+   "completedDate": "2026-11-14T02:25:57.917Z",
+   "wikiPage": "ideas.html",
+   "wikiPageTitle": "Ideas"
   },
   {
    "id": "idea-mwayplqh-zhtzm",
