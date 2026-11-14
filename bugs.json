@@ -356,10 +356,10 @@
    "steps": "tp to crystal hollows",
    "area": "other",
    "status": "reviewing",
-   "severity": "critical",
+   "severity": "major",
    "reporter": "Eric",
    "reported": "2026-11-12T16:09:59.560Z",
-   "updated": "2026-11-12T21:42:38.962Z",
+   "updated": "2026-11-14T01:25:47.994Z",
    "comments": [
     {
      "author": "aadi",
@@ -379,6 +379,13 @@
      "field": "status",
      "from": "unresolved",
      "to": "reviewing"
+    },
+    {
+     "author": "aadi",
+     "date": "2026-11-14T01:25:47.994Z",
+     "field": "severity",
+     "from": "critical",
+     "to": "major"
     }
    ]
   },
