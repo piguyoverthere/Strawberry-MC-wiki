@@ -5438,11 +5438,6 @@
      "vote": "approve",
      "source": "document"
     },
-    "aadi": {
-     "name": "Aadi",
-     "vote": "approve",
-     "source": "document"
-    },
     "zafar": {
      "name": "Zafar",
      "vote": "approve",
@@ -5480,7 +5475,8 @@
      "text": "we will not have to enslave villagers!... so we will have more for trading halls.",
      "date": "2026-11-14T02:26:49.079Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-14T02:27:05.081Z"
   },
   {
    "id": "idea-doc-219",
