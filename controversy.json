@@ -863,6 +863,11 @@
      "author": "Sai",
      "text": "Questionablity gamerule set to: (True)",
      "date": "2026-11-12T19:20:16.303Z"
+    },
+    {
+     "author": "Eric",
+     "text": "/gamerule isQuestionable true",
+     "date": "2026-11-14T21:15:17.645Z"
     }
    ]
   },
