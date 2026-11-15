@@ -3814,13 +3814,46 @@
                 409: "The file changed on GitHub while you were editing. Reload the page and try again.",
                 422: "GitHub could not accept this change."
             };
-            super(`${messages[status] || `GitHub returned an error (${status}).`}${detail ? ` (${detail})` : ""}`);
+            const rateLimited = detail === busyMessage;
+            super(rateLimited ? detail : `${messages[status] || `GitHub returned an error (${status}).`}${detail ? ` (${detail})` : ""}`);
             this.status = status;
+            // GitHub asked to slow down: not a bad token, so nobody is signed out over it
+            this.rateLimited = rateLimited;
         }
     }
 
-    async function githubRequest(token, path, { method = "GET", body, allowMissing = false } = {}) {
-        const response = await fetch(`https://api.github.com/repos/${repository.owner}/${repository.name}/${path}`, {
+    // Every save shares one GitHub token, and GitHub allows about 80 writes a minute and 500 an hour per token.
+    // So writes from this tab go one at a time, at least a second apart (GitHub's advice), and when GitHub says
+    // to slow down, the write waits and tries again instead of failing.
+    const writeGap = 1000;
+    const busyMessage = "GitHub is getting too many changes right now. Wait a few minutes and try again.";
+    const busyWaits = [5000, 15000, 45000];
+    let writeQueue = Promise.resolve();
+    let lastWriteAt = 0;
+    const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    // A small note in the corner while GitHub asks us to wait
+    let busyNote = null;
+    function showBusy(seconds) {
+        if (!busyNote) {
+            busyNote = document.createElement("p");
+            busyNote.className = "wiki-busy-note";
+            busyNote.dataset.wikiInjected = "";
+            busyNote.setAttribute("role", "status");
+        }
+        busyNote.textContent = seconds
+            ? `GitHub is busy. Your change will be saved in about ${seconds} seconds; keep this tab open.`
+            : "";
+        if (seconds) document.body.append(busyNote);
+        else busyNote.remove();
+    }
+
+    function isSlowDown(response, detail) {
+        return response.status === 429 || (response.status === 403 && (/rate limit/i.test(detail) || response.headers.get("retry-after") !== null));
+    }
+
+    async function githubSend(token, path, method, body) {
+        return fetch(`https://api.github.com/repos/${repository.owner}/${repository.name}/${path}`, {
             method,
             cache: "no-store",
             headers: {
@@ -3831,19 +3864,53 @@
             },
             body: body ? JSON.stringify(body) : undefined
         });
-        if (response.status === 404 && allowMissing) {
-            return null;
-        }
-        if (!response.ok) {
-            let detail = "";
-            try {
-                detail = (await response.json()).message;
-            } catch {
-                // No JSON error body.
+    }
+
+    async function githubRequest(token, path, { method = "GET", body, allowMissing = false } = {}) {
+        const attempt = async () => {
+            for (let retry = 0; ; retry++) {
+                const response = await githubSend(token, path, method, body);
+                if (response.status === 404 && allowMissing) {
+                    return null;
+                }
+                if (response.ok) {
+                    return response.json();
+                }
+                let detail = "";
+                try {
+                    detail = (await response.json()).message || "";
+                } catch {
+                    // No JSON error body.
+                }
+                if (isSlowDown(response, detail) && retry < busyWaits.length) {
+                    const asked = Number(response.headers.get("retry-after")) * 1000;
+                    const reset = Number(response.headers.get("x-ratelimit-reset")) * 1000 - Date.now();
+                    const wait = Math.min(Math.max(asked || 0, response.headers.get("x-ratelimit-remaining") === "0" && reset > 0 ? reset : 0, busyWaits[retry]), 120000);
+                    showBusy(Math.round(wait / 1000));
+                    await pause(wait);
+                    showBusy(0);
+                    continue;
+                }
+                if (isSlowDown(response, detail)) {
+                    detail = busyMessage;
+                }
+                throw new GitHubError(response.status, detail);
             }
-            throw new GitHubError(response.status, detail);
+        };
+        if (method === "GET") {
+            return attempt();
         }
-        return response.json();
+        const run = writeQueue.then(async () => {
+            const wait = lastWriteAt + writeGap - Date.now();
+            if (wait > 0) await pause(wait);
+            try {
+                return await attempt();
+            } finally {
+                lastWriteAt = Date.now();
+            }
+        });
+        writeQueue = run.catch(() => {});
+        return run;
     }
 
     function encodeBase64(text) {
@@ -3872,13 +3939,53 @@
         });
     }
 
+    // Saves several text files in one commit, so one action (a page plus its search entry, review-queue entry and
+    // so on) is one commit and one site update, and can never be left half-saved. prepare() reads what it needs and
+    // returns [{ path, text }]; if someone else commits in the meantime it runs again on the fresh files.
+    async function commitTogether(token, message, prepare) {
+        for (let attempt = 0; ; attempt++) {
+            const head = await githubRequest(token, `git/ref/heads/${repository.branch}`);
+            const headCommit = await githubRequest(token, `git/commits/${head.object.sha}`);
+            const files = (await prepare()).filter(Boolean);
+            if (!files.length) return;
+            if (files.length === 1) {
+                // One file is cheaper as a plain save (one request instead of three)
+                const current = await getRepositoryFile(token, files[0].path);
+                await putRepositoryFile(token, files[0].path, files[0].text, message, current?.sha);
+                return;
+            }
+            const tree = await githubRequest(token, "git/trees", {
+                method: "POST",
+                body: { base_tree: headCommit.tree.sha, tree: files.map(({ path, text }) => ({ path, mode: "100644", type: "blob", content: text })) }
+            });
+            const commit = await githubRequest(token, "git/commits", {
+                method: "POST",
+                body: { message, tree: tree.sha, parents: [head.object.sha] }
+            });
+            try {
+                await githubRequest(token, `git/refs/heads/${repository.branch}`, { method: "PATCH", body: { sha: commit.sha, force: false } });
+                jsonSaves++;
+                return;
+            } catch (error) {
+                // 422: someone else committed first. Start again from their commit.
+                if (!(error instanceof GitHubError && error.status === 422) || attempt >= 3) throw error;
+            }
+        }
+    }
+
     async function addToSearchIndex(token, title, file, keywords) {
+        const change = await searchIndexChange(token, title, file, keywords);
+        if (change) await putRepositoryFile(token, change.path, change.text, `Add ${title} to search`, change.sha);
+    }
+
+    // search.js with this page added, or null if it's already there
+    async function searchIndexChange(token, title, file, keywords) {
         const searchFile = await getRepositoryFile(token, "search.js");
         if (!searchFile) {
             throw new Error("search.js was not found in the repository.");
         }
         if (searchFile.text.includes(`href: ${JSON.stringify(file)}`)) {
-            return;
+            return null;
         }
         const listEnd = searchFile.text.indexOf("\n];");
         if (listEnd === -1) {
@@ -3888,16 +3995,17 @@
         const before = searchFile.text.slice(0, listEnd).trimEnd();
         const entry = `    { title: ${JSON.stringify(title)}, href: ${JSON.stringify(file)}, keywords: ${JSON.stringify(keywords)} },`;
         const updated = `${before.endsWith(",") ? before : `${before},`}${newline}${entry}${newline}${searchFile.text.slice(listEnd + 1)}`;
-        await putRepositoryFile(token, "search.js", updated, `Add ${title} to search`, searchFile.sha);
+        return { path: "search.js", text: updated, sha: searchFile.sha };
     }
 
-    async function addToNewsIndex(token, article) {
+    // news.js with this article added first, or null if it's already there
+    async function newsIndexChange(token, article) {
         const newsFile = await getRepositoryFile(token, "news.js");
         if (!newsFile) {
             throw new Error("news.js was not found in the repository.");
         }
         if (newsFile.text.includes(`href: ${JSON.stringify(article.href)}`)) {
-            return;
+            return null;
         }
         const marker = "const newsArticles = [";
         const listStart = newsFile.text.indexOf(marker);
@@ -3909,7 +4017,15 @@
         const insertAt = listStart + marker.length;
         const fields = ["title", "author", "date", "href", "summary"].map((field) => `${field}: ${JSON.stringify(article[field])}`).join(", ");
         const updated = `${newsFile.text.slice(0, insertAt)}${newline}    { ${fields} },${newsFile.text.slice(insertAt)}`;
-        await putRepositoryFile(token, "news.js", updated, `Add ${article.title} to news`, newsFile.sha);
+        return { path: "news.js", text: updated };
+    }
+
+    // A JSON file after change(data), in the same layout updateRepositoryJson saves; null if change returns false
+    async function jsonChange(token, file, change) {
+        const current = await getRepositoryFile(token, file);
+        const data = current ? JSON.parse(current.text) : {};
+        if (change(data) === false) return null;
+        return { path: file, text: `${JSON.stringify(data, null, 1)}\n` };
     }
 
     commitForm.addEventListener("submit", async (event) => {
@@ -3961,40 +4077,48 @@
             }
             // The repository stores pages with Windows (CRLF) line endings; match it so diffs only show real changes.
             const pageHtml = buildPageHtml().replace(/\r?\n/g, !existing || existing.text.includes("\r\n") ? "\r\n" : "\n");
-            await putRepositoryFile(token, targetFile, pageHtml, message, existing?.sha);
-            if (role === "reviewer") {
-                await updatePendingPages(token, (pages) => {
-                    pages[targetFile] = { title, by: readAccount(), date: new Date().toISOString() };
-                }, `Update review queue for ${title} page`);
-            }
+            // The page, its review-queue entry, its search and News entries and clearing your "editing" note all go
+            // in one commit: one site update instead of up to five
+            let searchNote = "";
+            const article = isNewsArticle ? readLocalPages().find((page) => page.file === newPageFile) : null;
+            await commitTogether(token, message, async () => {
+                searchNote = "";
+                const files = [{ path: targetFile, text: pageHtml }];
+                if (role === "reviewer") {
+                    files.push(await jsonChange(token, pendingPagesFile, (data) => {
+                        data.pages = data.pages || {};
+                        data.pages[targetFile] = { title, by: readAccount(), date: new Date().toISOString() };
+                    }));
+                }
+                if (newPageFile && !existing) {
+                    try {
+                        files.push(await searchIndexChange(token, title, newPageFile, keywords));
+                    } catch (error) {
+                        searchNote = ` The page was committed, but adding it to search failed: ${error.message}`;
+                    }
+                    if (isNewsArticle) {
+                        try {
+                            files.push(await newsIndexChange(token, {
+                                title,
+                                author: article?.author || "",
+                                date: article?.date || todayString(),
+                                href: newPageFile,
+                                summary: article?.summary || ""
+                            }));
+                        } catch (error) {
+                            searchNote += ` The article was committed, but adding it to the News page failed: ${error.message}`;
+                        }
+                    }
+                }
+                files.push(await presenceCleared(token));
+                return files;
+            });
+            forgetMyPresence();
             if (!readToken() && formData.get(usingPassword ? "rememberPassword" : "remember")) {
                 try {
                     sessionStorage.setItem(tokenStorageKey, token);
                 } catch {
                     // The token just won't be remembered.
-                }
-            }
-
-            let searchNote = "";
-            if (newPageFile && !existing) {
-                try {
-                    await addToSearchIndex(token, title, newPageFile, keywords);
-                } catch (error) {
-                    searchNote = ` The page was committed, but adding it to search failed: ${error.message}`;
-                }
-                if (isNewsArticle) {
-                    const article = readLocalPages().find((page) => page.file === newPageFile);
-                    try {
-                        await addToNewsIndex(token, {
-                            title,
-                            author: article?.author || "",
-                            date: article?.date || todayString(),
-                            href: newPageFile,
-                            summary: article?.summary || ""
-                        });
-                    } catch (error) {
-                        searchNote += ` The article was committed, but adding it to the News page failed: ${error.message}`;
-                    }
                 }
             }
             if (newPageFile) {
@@ -4025,7 +4149,7 @@
                 }
                 showTokenState();
             }
-            commitError.textContent = usingPassword && error instanceof GitHubError && [401, 403].includes(error.status)
+            commitError.textContent = usingPassword && error instanceof GitHubError && [401, 403].includes(error.status) && !error.rateLimited
                 ? "The wiki password worked, but the saved GitHub token has expired or lost access. The wiki owner needs to set up the wiki password again with a new token."
                 : error.message;
         } finally {
@@ -4174,7 +4298,9 @@
     // saved in their browser that aren't committed yet ("unsaved"). Others see a note on the page and a warning
     // before they start editing. Entries end by themselves if they aren't refreshed.
     const presenceFile = "editing.json";
-    const presenceLimits = { editing: 20 * 60000, unsaved: 14 * 864e5 };
+    // "editing" isn't refreshed while you edit (that cost a commit every 10 minutes), so it lasts long enough for
+    // a long editing session and clears when you save, cancel or commit
+    const presenceLimits = { editing: 3 * 3600000, unsaved: 14 * 864e5 };
     const presenceOn = !isNewPage && canEditPage;
     let presencePeople = {};
     let presenceWriting = Promise.resolve();
@@ -4221,6 +4347,25 @@
         }, `Editing status: ${name} ${words} ${targetFile}`)).catch(() => {
             // Only a courtesy note for others; editing goes on without it.
         });
+    }
+
+    // For the page commit: editing.json without my entry for this page, or null if there's nothing to clear
+    async function presenceCleared(token) {
+        const key = myPresenceKey();
+        if (!presenceOn || !key) return null;
+        return jsonChange(token, presenceFile, (data) => {
+            const people = data.pages?.[targetFile];
+            if (!people?.[key]) return false;
+            delete people[key];
+            if (!Object.keys(people).length) delete data.pages[targetFile];
+        });
+    }
+
+    // After that commit, this tab knows my entry is gone, so it doesn't write again
+    function forgetMyPresence() {
+        const key = myPresenceKey();
+        if (key) delete presencePeople[key];
+        renderPresence();
     }
 
     async function loadPresence(fresh = false) {
@@ -4299,14 +4444,23 @@
         return window.confirm(`${names}\n\nIf you both commit, one of you may overwrite the other's changes. Edit anyway?`);
     }
 
-    // Keep my entry right as editing starts and stops
+    // Keep my entry right as editing starts and stops. Opening the editor and closing it without changing
+    // anything writes nothing: "editing" is only written once you actually change the page.
+    let changedSinceEditStart = false;
     document.addEventListener("wiki-drafts-changed", () => {
-        setPresence(editing ? "editing" : hasLocalDraft() ? "unsaved" : null);
+        if (editing) {
+            if (changedSinceEditStart) setPresence("editing");
+        } else {
+            changedSinceEditStart = false;
+            setPresence(hasLocalDraft() ? "unsaved" : null);
+        }
         renderPresence();
     });
-    setInterval(() => {
-        if (editing) setPresence("editing");
-    }, 10 * 60000);
+    root.addEventListener("input", () => {
+        if (!editing || changedSinceEditStart) return;
+        changedSinceEditStart = true;
+        setPresence("editing");
+    });
     setInterval(() => {
         if (document.visibilityState === "visible") loadPresence();
     }, 60000);
@@ -4588,7 +4742,7 @@
                 jsonSaves++;
                 return data;
             } catch (error) {
-                if (error.status === 401 || error.status === 403) {
+                if ((error.status === 401 || error.status === 403) && !error.rateLimited) {
                     forgetToken();
                     forgetAccount();
                 }
@@ -5044,7 +5198,7 @@
             const clearing = (collect) => (data) => {
                 const items = collect(data).filter((item) => item?.pending);
                 items.forEach((item) => delete item.pending);
-                counts.set(collect, items.length);
+                counts.set(collect, (counts.get(collect) || 0) + items.length);
                 return items.length ? undefined : false;
             };
             const counts = new Map();
@@ -5054,7 +5208,8 @@
             ];
             const bugs = (data) => (data.bugs || []).flatMap((bug) => [bug, ...(bug.comments || [])]);
             const annotations = (data) => (data.annotations || []).flatMap((annotation) => [annotation, ...(annotation.replies || [])]);
-            await updateRepositoryJson(token, "controversy.json", clearing(controversy), `${name} approves all waiting changes in ideas and threads`);
+            await updateRepositoryJson(token, "ideas.json", clearing(controversy), `${name} approves all waiting changes in ideas`);
+            await updateRepositoryJson(token, "discussions.json", clearing(controversy), `${name} approves all waiting changes in threads`);
             await updateRepositoryJson(token, "bugs.json", clearing(bugs), `${name} approves all waiting changes in bugs`);
             await updateRepositoryJson(token, "annotations.json", clearing(annotations), `${name} approves all waiting changes in page comments`);
             const queued = JSON.parse((await getRepositoryFile(token, pendingPagesFile))?.text || "{}").pages || {};
@@ -5186,6 +5341,32 @@
                 // Storage blocked: nothing to list.
             }
             return drafts.sort((a, b) => (b.saved || "").localeCompare(a.saved || ""));
+        },
+        // Numbers for the admin panel's Site health box. Each part may come back missing if GitHub can't be asked.
+        async siteHealth() {
+            const token = requireAdmin();
+            const api = `https://api.github.com/repos/${repository.owner}/${repository.name}`;
+            const ask = (url, withToken = true) => fetch(url, {
+                cache: "no-store",
+                headers: { Accept: "application/vnd.github+json", ...(withToken ? { Authorization: `Bearer ${token}` } : {}) }
+            }).then((response) => response.ok ? response.json() : null).catch(() => null);
+            const since = (ms) => new Date(Date.now() - ms).toISOString();
+            const [hour, day, limits, repo, runs] = await Promise.all([
+                ask(`${api}/commits?sha=${repository.branch}&per_page=100&since=${since(3600000)}`),
+                ask(`${api}/commits?sha=${repository.branch}&per_page=100&since=${since(864e5)}`),
+                // Asking for the rate limit doesn't use any of it
+                ask("https://api.github.com/rate_limit"),
+                ask(api),
+                // Deploy runs are public; the wiki's token may not be allowed to read them
+                ask(`${api}/actions/runs?per_page=20`, false)
+            ]);
+            return {
+                commitsLastHour: Array.isArray(hour) ? hour.length : null,
+                commitsLastDay: Array.isArray(day) ? day.length : null,
+                rate: limits?.resources?.core || null,
+                sizeMB: typeof repo?.size === "number" ? Math.round(repo.size / 1024) : null,
+                deploys: runs?.workflow_runs?.map((run) => ({ status: run.status, conclusion: run.conclusion, date: run.created_at, name: run.name, url: run.html_url })) || null
+            };
         },
         // Moderation: bans.json holds
         //   bans:     account key → the active ban or restraining order { type, name, until, title, message, style, icon, showEnd, showBy, by, date }

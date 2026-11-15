@@ -3081,3 +3081,29 @@ body.wiki-editing .wiki-last-edited{
     color:#202122;
     font:13px/1.3 Arial, Helvetica, sans-serif
 }
+/* Admin panel: Site health */
+.admin-health-table th{
+    width:34%;
+    text-align:left;
+    font-weight:600
+}
+.admin-health-warn td,
+.admin-health-warn th{
+    background-color:#fdecea
+}
+/* Shown while GitHub asks the wiki to wait before saving */
+.wiki-busy-note{
+    position:fixed;
+    z-index:60;
+    left:16px;
+    bottom:16px;
+    max-width:min(360px, calc(100vw - 32px));
+    margin:0;
+    padding:10px 14px;
+    border:1px solid #c9a227;
+    border-radius:6px;
+    background-color:#fff8e1;
+    color:#5c4400;
+    box-shadow:0 2px 8px rgba(0, 0, 0, .2);
+    font:14px/1.4 Arial, Helvetica, sans-serif
+}

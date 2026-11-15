@@ -1,0 +1,39 @@
+# Publishes the wiki to GitHub Pages.
+#
+# Every save on the wiki is a commit, and busy hours bring dozens of them. Branch-based Pages builds start one
+# build per commit (with a soft limit of 10 an hour); this workflow has no such limit and folds bursts together:
+# while one deploy runs, only the newest waiting commit is kept, so a burst of saves becomes at most two deploys.
+#
+# Needs Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time. A newer waiting run replaces an older waiting one; the running deploy is never cut off.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      # The site is plain files, published as they are (no Jekyll); .git and .github are left out
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4

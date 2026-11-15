@@ -583,10 +583,12 @@
         }
     }
 
-    const files = { accounts: "accounts.json", profiles: store.profilesFile, controversy: "controversy.json", bugs: "bugs.json", annotations: "annotations.json" };
+    const files = { accounts: "accounts.json", profiles: store.profilesFile, ideas: "ideas.json", discussions: "discussions.json", bugs: "bugs.json", annotations: "annotations.json" };
     for (const [name, file] of Object.entries(files)) {
         store.watchJson(file, (json) => {
-            data[name] = name === "accounts" ? json.accounts || {} : name === "profiles" ? json.profiles || {} : json;
+            // Ideas and threads are two files now; the profile still reads them as one
+            if (name === "ideas" || name === "discussions") data.controversy = { ...data.controversy, [name]: json[name] || [] };
+            else data[name] = name === "accounts" ? json.accounts || {} : name === "profiles" ? json.profiles || {} : json;
             render();
         });
     }

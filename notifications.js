@@ -452,11 +452,11 @@
 
     // Load the idea, thread and bug ids first so their links go straight to them
     const json = (file) => fetch(file, { cache: "no-store" }).then((response) => response.ok ? response.json() : null).catch(() => null);
-    Promise.all([json("controversy.json"), json("bugs.json"), json("profiles.json")]).then(([ideas, bugs, profiles]) => {
-        if (ideas) {
+    Promise.all([json("ideas.json"), json("bugs.json"), json("profiles.json"), json("discussions.json")]).then(([ideas, bugs, profiles, discussions]) => {
+        if (ideas || discussions) {
             controversy = {
-                ideas: new Map((ideas.ideas || []).flatMap((idea) => [idea.title, ...(idea.formerTitles || [])].map((title) => [title, idea]))),
-                discussions: new Map((ideas.discussions || []).map((discussion) => [discussion.title, discussion]))
+                ideas: new Map((ideas?.ideas || []).flatMap((idea) => [idea.title, ...(idea.formerTitles || [])].map((title) => [title, idea]))),
+                discussions: new Map((discussions?.discussions || []).map((discussion) => [discussion.title, discussion]))
             };
         }
         if (bugs) {

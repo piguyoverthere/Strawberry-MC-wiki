@@ -596,7 +596,8 @@
 
     async function renderQueue() {
         const json = (file) => fetch(file, { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).catch(() => ({}));
-        const [ideas, bugs, pages, annotations, restores, appealData] = await Promise.all([json("controversy.json"), json("bugs.json"), json("pending-pages.json"), json("annotations.json"), json("restore-requests.json"), json(store.appealsFile)]);
+        const [ideaData, bugs, pages, annotations, restores, appealData, discussionData] = await Promise.all([json("ideas.json"), json("bugs.json"), json("pending-pages.json"), json("annotations.json"), json("restore-requests.json"), json(store.appealsFile), json("discussions.json")]);
+        const ideas = { ideas: ideaData.ideas || [], discussions: discussionData.discussions || [] };
         appeals = (appealData.appeals || []).filter((appeal) => !answeredAppeals.has(appeal.id));
         const restoreRequests = restores.requests || [];
         const items = [];
@@ -633,18 +634,64 @@
             restoreRequests.length ? element("p", { className: "wiki-dialog-hint", text: "Only admins can restore a page. Open one to see the changes in the page's history and restore it or turn it down." }) : null);
     }
 
+    // Site health -----------------------------------------------------------------------------
+    // The numbers that say when the wiki needs the next stage of its plan (a write server, then a database)
+    let healthSection = null;
+    async function renderHealth() {
+        const section = element("section", { className: "admin-section admin-health" }, element("h2", { text: "Site health" }));
+        let health;
+        try {
+            health = await store.siteHealth();
+        } catch (error) {
+            section.append(element("p", { text: `Couldn't check: ${error.message}` }));
+            return section;
+        }
+        const rows = [];
+        const add = (label, value, warn, hint) => rows.push(element("tr", { className: warn ? "admin-health-warn" : "" },
+            element("th", { text: label }), element("td", { text: value }), element("td", { className: "idea-meta", text: hint || "" })));
+        const count = (n) => n === null ? "couldn't check" : n >= 100 ? "100 or more" : String(n);
+        add("Commits in the last hour", count(health.commitsLastHour), health.commitsLastHour >= 100,
+            "Over 300 in an hour for a while means it's time for a write server (stage 2).");
+        add("Commits in the last 24 hours", count(health.commitsLastDay), false, "");
+        if (health.rate) {
+            add("GitHub API allowance left", `${health.rate.remaining} of ${health.rate.limit}`, health.rate.remaining < 1000,
+                `Shared by everyone signed in; refills at ${formatTime(health.rate.reset * 1000)}.`);
+        } else add("GitHub API allowance left", "couldn't check", false, "");
+        add("Repository size", health.sizeMB === null ? "couldn't check" : `${health.sizeMB} MB`, health.sizeMB > 500,
+            "GitHub recommends staying under 1 GB; past 500 MB, move old PDFs or data out.");
+        if (health.deploys) {
+            const recent = health.deploys.filter((run) => run.status === "completed");
+            const failed = recent.filter((run) => run.conclusion === "failure").length;
+            const latest = health.deploys[0];
+            add("Latest site update", latest ? `${latest.status === "completed" ? latest.conclusion : latest.status}, ${formatTime(latest.date)}` : "none yet",
+                latest?.conclusion === "failure", latest?.name === "pages build and deployment"
+                    ? "Still using branch builds. Switch Settings → Pages → Source to GitHub Actions."
+                    : "Saves made close together go out in one update.");
+            add("Failed updates (last 20)", String(failed), failed > 0, failed ? "Open the latest failed run on GitHub to see why." : "");
+        } else add("Latest site update", "couldn't check", false, "");
+        section.append(
+            element("div", { className: "admin-table-wrap" }, element("table", { className: "admin-table admin-health-table" }, element("tbody", {}, ...rows))),
+            element("p", { className: "wiki-dialog-hint", text: "GitHub allows about 500 saves an hour through the wiki's shared token, and there's no way to ask how many are left; the commit count above is the best guide." }));
+        return section;
+    }
+
     let queue = element("section", { className: "admin-section" }, element("p", { text: "Loading the review queue…" }));
     let reviewSection = renderReviewPassword(false);
     const wikiPasswordSection = renderWikiPassword();
     let emailSection = renderEmailSettings(null);
 
     function render() {
-        app.replaceChildren(...(store.isAdmin() ? [status, queue, renderAppeals(), renderResetRequests(), renderAccounts(), wikiPasswordSection, reviewSection, emailSection] : [status, queue]));
+        // Sections that have nothing to show are null; leave them out (replaceChildren would print "null")
+        app.replaceChildren(...(store.isAdmin() ? [status, queue, renderAppeals(), renderResetRequests(), renderAccounts(), healthSection, wikiPasswordSection, reviewSection, emailSection] : [status, queue]).filter(Boolean));
     }
 
     Promise.all(store.isAdmin() ? [store.readAccounts(), store.hasReviewPassword(), renderQueue(), store.readEmailConfig(), store.readBans()] : [{}, false, renderQueue(), null, {}]).then(([data, reviewSet, queueSection, emailConfig, banList]) => {
         accounts = data.accounts || {};
         keepModeration(banList || {});
+        if (store.isAdmin()) renderHealth().then((section) => {
+            healthSection = section;
+            render();
+        });
         reviewSection = renderReviewPassword(reviewSet);
         emailSection = renderEmailSettings(emailConfig);
         queue = queueSection;

@@ -1,7 +1,8 @@
 // Ideas and Threads & Debates pages, backed by controversy.json in the repository.
 // Reading is open to everyone; voting, adding ideas and posting need your name and the wiki password.
 (() => {
-    const dataFile = "controversy.json";
+    // Ideas and threads used to share controversy.json; they're now two files, so a vote doesn't rewrite every thread
+    const dataFiles = { ideas: "ideas.json", discussions: "discussions.json" };
     const ideasApp = document.querySelector("#ideas-app");
     const discussionsApp = document.querySelector("#discussions-app");
     const archivesApp = document.querySelector("#archives-app");
@@ -93,13 +94,14 @@
     }
 
     async function loadData() {
-        const response = await fetch(dataFile, { cache: "no-cache" });
-        if (!response.ok) {
-            throw new Error(`Could not load ${dataFile} (${response.status}).`);
-        }
-        data = await response.json();
-        data.ideas = data.ideas || [];
-        data.discussions = data.discussions || [];
+        const [ideas, discussions] = await Promise.all(Object.values(dataFiles).map(async (file) => {
+            const response = await fetch(file, { cache: "no-cache" });
+            if (!response.ok) {
+                throw new Error(`Could not load ${file} (${response.status}).`);
+            }
+            return response.json();
+        }));
+        data = { ideas: ideas.ideas || [], discussions: discussions.discussions || [] };
     }
 
     // Signing in happens on the login page (username, wiki password and personal password).
@@ -131,10 +133,10 @@
     }
 
     // An admin or editor approving or disapproving a reviewer's change. change(fresh) returns false when it's no longer waiting.
-    function moderate(approve, what, change) {
+    function moderate(approve, what, change, kind = "ideas") {
         requireSignIn("", (name) => save((fresh) => {
             if (change(fresh) === false) throw new Error("That change is no longer waiting for review. Reload the page.");
-        }, `${name} ${approve ? "approves" : "disapproves"} ${what}`)
+        }, `${name} ${approve ? "approves" : "disapproves"} ${what}`, { kind })
             .then(() => { status.textContent = approve ? "Approved." : "Disapproved and removed."; }));
     }
 
@@ -187,13 +189,13 @@
     // Saves run one after another, so a second reply sent while the first is saving isn't merged into it or lost.
     // options.sent clears the box that was posted from; whatever is typed in other boxes is kept through the redraw.
     let saveQueue = Promise.resolve();
+    // options.kind says which file: "ideas" (the default) or "discussions"
     async function save(change, message, options = {}) {
-        const { sent, ...storeOptions } = options;
-        const run = saveQueue.then(() => window.wikiStore.updateJson(dataFile, change, message, storeOptions));
+        const { sent, kind = "ideas", ...storeOptions } = options;
+        const run = saveQueue.then(() => window.wikiStore.updateJson(dataFiles[kind], change, message, storeOptions));
         saveQueue = run.catch(() => {});
-        data = await run;
-        data.ideas = data.ideas || [];
-        data.discussions = data.discussions || [];
+        const fresh = await run;
+        data[kind] = fresh[kind] || [];
         sent?.();
         window.wikiStore.keepInputs([app], render);
     }
@@ -815,7 +817,7 @@
                     author: name, text, date: new Date().toISOString(), source: "site",
                     ...(images.length ? { images } : {}), ...(mentions.length ? { mentions } : {}), ...pendingMark(role)
                 });
-            }, mentions.length ? `${name} pings ${mentions.join(", ")} in: ${discussion.title}` : `${name} replies in: ${discussion.title}`, { sent })
+            }, mentions.length ? `${name} pings ${mentions.join(", ")} in: ${discussion.title}` : `${name} replies in: ${discussion.title}`, { sent, kind: "discussions" })
                 .then(() => {
                     status.textContent = mentions.length ? `Your reply was posted and ${mentions.join(", ")} will see it in their notifications.` : "Your reply was posted.";
                 }));
@@ -861,7 +863,7 @@
                             ...(images.length ? { images } : {}), ...(mentions.length ? { mentions } : {})
                         }]
                     });
-                }, mentions.length ? `${name} pings ${mentions.join(", ")} in new ${values.kind}: ${values.title}` : `${name} starts ${values.kind}: ${values.title}`).then(() => {
+                }, mentions.length ? `${name} pings ${mentions.join(", ")} in new ${values.kind}: ${values.title}` : `${name} starts ${values.kind}: ${values.title}`, { kind: "discussions" }).then(() => {
                     openDiscussions.add(id);
                     render();
                     status.textContent = `Your ${values.kind} was started.`;
@@ -911,13 +913,13 @@
                         const target = fresh.discussions.find((other) => other.id === discussion.id)?.posts?.find(sameEntry(post));
                         if (!target?.pending) return false;
                         delete target.pending;
-                    }),
+                    }, "discussions"),
                     () => moderate(false, `reply by ${post.author} in: ${discussion.title}`, (fresh) => {
                         const list = fresh.discussions.find((other) => other.id === discussion.id)?.posts || [];
                         const index = list.findIndex((other) => sameEntry(post)(other) && other.pending);
                         if (index < 0) return false;
                         list.splice(index, 1);
-                    })) : null)));
+                    }, "discussions")) : null)));
         const textarea = element("textarea", { rows: 3, placeholder: "Write a reply… type @ to ping someone, or paste a picture", "aria-label": `Reply to ${discussion.title}`, maxlength: 8000 });
         const picker = picturePicker(textarea, discussion.id);
         const send = element("button", { type: "submit", className: "discussion-send", text: "Reply" });
@@ -1025,10 +1027,12 @@
             target?.scrollIntoView({ block: "start" });
         }
         // Other people's votes, comments and replies appear without reloading
-        window.wikiStore?.watchJson(dataFile, (fresh) => {
-            data = { ...fresh, ideas: fresh.ideas || [], discussions: fresh.discussions || [] };
-            window.wikiStore.keepInputs([app], render);
-        });
+        for (const [kind, file] of Object.entries(dataFiles)) {
+            window.wikiStore?.watchJson(file, (fresh) => {
+                data = { ...data, [kind]: fresh[kind] || [] };
+                window.wikiStore.keepInputs([app], render);
+            });
+        }
     }).catch((error) => {
         app.replaceChildren(element("p", { className: "wiki-dialog-error", text: error.message }));
     });
