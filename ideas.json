@@ -4729,7 +4729,14 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {},
+   "replies": [
+    {
+     "author": "Eric",
+     "text": "more details",
+     "date": "2026-11-15T23:32:39.775Z"
+    }
+   ]
   },
   {
    "id": "idea-doc-191",
