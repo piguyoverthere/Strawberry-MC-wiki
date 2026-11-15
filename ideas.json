@@ -5566,7 +5566,14 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "date": "2026-11-15T23:34:14.944Z"
+    }
+   },
+   "lastVoteDate": "2026-11-15T23:34:14.944Z"
   },
   {
    "id": "idea-doc-220",
