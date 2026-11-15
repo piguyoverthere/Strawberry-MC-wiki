@@ -1,5 +1,19 @@
 {
- "bans": {},
+ "bans": {
+  "sai": {
+   "type": "restrain",
+   "name": "Sai",
+   "until": "2026-11-16T03:26:53.066Z",
+   "showEnd": true,
+   "title": "Restraining order",
+   "message": "stop spamming. get brain cells.",
+   "style": "dark",
+   "icon": "⚖️",
+   "showBy": true,
+   "by": "Eric",
+   "date": "2026-11-15T03:26:53.066Z"
+  }
+ },
  "warnings": {
   "aadi": [
    {
@@ -50,6 +64,15 @@
     "note": "sad :(",
     "by": "Eric",
     "date": "2026-11-13T16:44:10.614Z"
+   },
+   {
+    "type": "restrain",
+    "title": "Restraining order",
+    "message": "stop spamming. get brain cells.",
+    "note": "",
+    "until": "2026-11-16T03:26:53.066Z",
+    "by": "Eric",
+    "date": "2026-11-15T03:26:53.066Z"
    }
   ],
   "aadi": [
