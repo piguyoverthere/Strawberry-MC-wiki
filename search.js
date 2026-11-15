@@ -353,39 +353,138 @@ const suggestions = document.querySelector("#search-suggestions");
 const status = document.querySelector("#search-status");
 const randomPageButton = document.querySelector("#random-page-button");
 
-function findMatches(query) {
-    const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+// Everything searchable, as { kind, title, href, keywords }. Wiki pages come from the list above; people, ideas,
+// threads, bugs and documents are read from the wiki's data files the first time someone searches.
+// Results show as "Kind | Name", and typing "User | eri" (or "user: eri") searches only that kind.
+const kinds = {
+    page: { label: "Page", plural: "pages", order: 0 },
+    news: { label: "News", plural: "news", order: 1 },
+    user: { label: "User", plural: "users", order: 2 },
+    idea: { label: "Idea", plural: "ideas", order: 3 },
+    thread: { label: "Thread", plural: "threads", order: 4 },
+    debate: { label: "Debate", plural: "debates", order: 4 },
+    bug: { label: "Bug", plural: "bugs", order: 5 },
+    section: { label: "Section", plural: "sections", order: 6 },
+    document: { label: "Document", plural: "documents", order: 7 }
+};
+const maxShown = 12;
 
-    if (terms.length === 0) {
+const items = pages.map((page) => ({
+    ...page,
+    kind: /^news-/.test(page.href) ? "news" : /#/.test(page.href) ? "section" : "page"
+}));
+
+let extrasLoading = null;
+function loadExtras() {
+    if (extrasLoading) return extrasLoading;
+    const json = (file) => fetch(file, { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).catch(() => ({}));
+    extrasLoading = Promise.all([json("accounts.json"), json("ideas.json"), json("discussions.json"), json("bugs.json")]).then(([accounts, ideas, discussions, bugs]) => {
+        for (const account of Object.values(accounts.accounts || {})) {
+            if (account?.name) items.push({ kind: "user", title: account.name, href: `profile.html?${new URLSearchParams({ u: account.name })}`, keywords: account.role || "" });
+        }
+        for (const idea of ideas.ideas || []) {
+            if (!idea?.title) continue;
+            items.push({
+                kind: "idea",
+                title: idea.title,
+                href: `${idea.archived ? "archives.html" : "ideas.html"}#${encodeURIComponent(idea.id)}`,
+                keywords: [idea.author, ...(idea.formerTitles || [])].filter(Boolean).join(" ")
+            });
+        }
+        for (const discussion of discussions.discussions || []) {
+            if (!discussion?.title) continue;
+            items.push({
+                kind: discussion.kind === "debate" ? "debate" : "thread",
+                title: discussion.title,
+                href: `${discussion.archived ? "archives.html" : "discussions.html"}#${encodeURIComponent(discussion.id)}`,
+                keywords: [discussion.author, discussion.participants].filter(Boolean).join(" ")
+            });
+        }
+        for (const bug of bugs.bugs || []) {
+            if (!bug?.title) continue;
+            items.push({ kind: "bug", title: `#${bug.number} ${bug.title}`, href: `bugs.html#${encodeURIComponent(bug.id)}`, keywords: [bug.reporter, bug.area, bug.status].filter(Boolean).join(" ") });
+        }
+        items.push(
+            { kind: "document", title: "Strawberry MC Wiki (PDF)", href: "Strawberry%20minecraft%20wiki%20(1).pdf", keywords: "pdf document" },
+            { kind: "document", title: "MC Controversy Resolver (PDF)", href: "mc-controversy-resolver.pdf", keywords: "pdf document" }
+        );
+    });
+    return extrasLoading;
+}
+
+// "User | eric", "users: eric" or "bug|clover" -> only that kind, searching the rest
+function readQuery(query) {
+    const match = query.match(/^\s*([a-z ]+?)\s*[|:]\s*(.*)$/i);
+    if (match) {
+        const wanted = match[1].trim().toLowerCase();
+        const kind = Object.keys(kinds).find((key) => kinds[key].label.toLowerCase() === wanted || kinds[key].plural === wanted);
+        if (kind) return { kind, text: match[2] };
+    }
+    return { kind: null, text: query };
+}
+
+function findMatches(query) {
+    const { kind, text } = readQuery(query);
+    const phrase = text.trim().toLowerCase();
+    const terms = phrase.split(/\s+/).filter(Boolean);
+    if (!terms.length && !kind) {
         return [];
     }
-
-    return pages.filter((page) => {
-        const searchableText = `${page.title} ${page.keywords}`.toLowerCase();
-        return terms.every((term) => searchableText.includes(term));
-    });
+    const sameKind = (item) => !kind || item.kind === kind || (kind === "thread" && item.kind === "debate");
+    return items
+        .filter((item) => sameKind(item) && terms.every((term) => `${item.title} ${item.keywords}`.toLowerCase().includes(term)))
+        .map((item) => {
+            const title = item.title.toLowerCase();
+            // Best first: the exact name, then names that start with it, then names that contain every word
+            const score = !terms.length ? 3 : title === phrase ? 0 : title.startsWith(phrase) ? 1 : terms.every((term) => title.includes(term)) ? 2 : 3;
+            return { item, score };
+        })
+        .sort((a, b) => a.score - b.score || kinds[a.item.kind].order - kinds[b.item.kind].order || a.item.title.length - b.item.title.length)
+        .map(({ item }) => item);
 }
 
 function renderSuggestions() {
     const matches = findMatches(input.value);
     suggestions.replaceChildren();
 
-    for (const page of matches) {
+    for (const match of matches.slice(0, maxShown)) {
         const item = document.createElement("li");
         const link = document.createElement("a");
-        link.href = page.href;
-        link.textContent = page.title;
+        link.href = match.href;
+        const kind = document.createElement("span");
+        kind.className = `search-kind search-kind-${match.kind}`;
+        kind.textContent = kinds[match.kind].label;
+        const separator = document.createElement("span");
+        separator.className = "search-kind-separator";
+        separator.textContent = " | ";
+        link.append(kind, separator, match.title);
+        link.setAttribute("aria-label", `${kinds[match.kind].label}: ${match.title}`);
         item.append(link);
         suggestions.append(item);
+    }
+    if (matches.length > maxShown) {
+        const more = document.createElement("li");
+        more.className = "search-more";
+        more.textContent = `${matches.length - maxShown} more. Type more of the name, or start with "User |", "Idea |", "Bug |"…`;
+        suggestions.append(more);
     }
 
     suggestions.hidden = matches.length === 0;
     status.textContent = input.value.trim() && matches.length === 0
-        ? "No matching pages found."
+        ? "Nothing matches that."
         : "";
 }
 
-input.addEventListener("input", renderSuggestions);
+input.addEventListener("focus", () => {
+    loadExtras();
+});
+input.addEventListener("input", () => {
+    renderSuggestions();
+    // People, ideas and threads arrive a moment later the first time
+    loadExtras().then(() => {
+        if (document.activeElement === input || !suggestions.hidden) renderSuggestions();
+    });
+});
 
 input.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
@@ -430,8 +529,9 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
-form.addEventListener("submit", (event) => {
+form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    await loadExtras();
     const match = findMatches(input.value)[0];
 
     if (match) {

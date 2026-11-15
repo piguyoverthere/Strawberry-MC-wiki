@@ -3107,3 +3107,34 @@ body.wiki-editing .wiki-last-edited{
     box-shadow:0 2px 8px rgba(0, 0, 0, .2);
     font:14px/1.4 Arial, Helvetica, sans-serif
 }
+/* Search results read "Kind | Name" */
+.search-kind{
+    display:inline-block;
+    min-width:4.6em;
+    color:#54595d;
+    font-size:.82em;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.03em
+}
+.search-kind-separator{
+    color:#a2a9b1
+}
+.search-kind-user{ color:#7a3e9d }
+.search-kind-idea{ color:#a15c00 }
+.search-kind-thread,
+.search-kind-debate{ color:#14866d }
+.search-kind-bug{ color:#b3261e }
+.search-kind-news{ color:#0056b3 }
+.search-more{
+    padding:6px 14px;
+    color:#54595d;
+    font-size:.85em
+}
+/* Search results inside the green header: dark text on the white list, not the header's white link style */
+.site-header nav .search-suggestions,
+.site-header nav .search-suggestions a,
+.site-header nav .search-suggestions a:visited{
+    color:#202122;
+    text-shadow:none
+}
