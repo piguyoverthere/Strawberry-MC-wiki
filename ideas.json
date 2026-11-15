@@ -4675,7 +4675,14 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "convince",
+     "date": "2026-11-15T23:32:10.781Z"
+    }
+   },
+   "lastVoteDate": "2026-11-15T23:32:10.781Z"
   },
   {
    "id": "idea-doc-188",
