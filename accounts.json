@@ -52,7 +52,8 @@
    "salt": "XOOnj+djmCaI/0qW6R2XLQ==",
    "iterations": 310000,
    "hash": "n4jpyskEI3lz8tzkTgvmKUjpZe8TZRT+sEMOhv/HAbw=",
-   "created": "2026-11-09T23:43:53.176Z"
+   "created": "2026-11-09T23:43:53.176Z",
+   "blockedUntil": "2026-11-22T03:43:41.189Z"
   },
   "theodore": {
    "name": "Theodore",
