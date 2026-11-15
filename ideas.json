@@ -5573,7 +5573,19 @@
      "date": "2026-11-15T23:34:14.944Z"
     }
    },
-   "lastVoteDate": "2026-11-15T23:34:14.944Z"
+   "lastVoteDate": "2026-11-15T23:34:14.944Z",
+   "replies": [
+    {
+     "author": "Eric",
+     "text": "@aadi @Rishaan @Alex",
+     "date": "2026-11-15T23:34:28.696Z",
+     "mentions": [
+      "Rishaan",
+      "Alex",
+      "aadi"
+     ]
+    }
+   ]
   },
   {
    "id": "idea-doc-220",
