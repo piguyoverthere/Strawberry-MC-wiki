@@ -5659,9 +5659,14 @@
      "name": "Theodore",
      "vote": "approve",
      "date": "2026-11-12T22:35:31.474Z"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "convince",
+     "date": "2026-11-15T23:34:38.452Z"
     }
    },
-   "lastVoteDate": "2026-11-12T22:35:31.474Z",
+   "lastVoteDate": "2026-11-15T23:34:38.452Z",
    "replies": [
     {
      "author": "Rishaan",
