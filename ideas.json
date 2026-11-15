@@ -4823,7 +4823,10 @@
      "vote": "disapprove",
      "date": "2026-11-11T00:55:46.539Z"
     }
-   }
+   },
+   "archived": true,
+   "archivedBy": "Eric",
+   "archivedDate": "2026-11-15T23:32:48.048Z"
   },
   {
    "id": "idea-doc-195",
