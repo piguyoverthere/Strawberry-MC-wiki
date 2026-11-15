@@ -5514,8 +5514,8 @@
    "votes": {
     "eric": {
      "name": "Eric",
-     "vote": "approve",
-     "source": "document"
+     "vote": "disapprove",
+     "date": "2026-11-15T23:34:04.222Z"
     },
     "zafar": {
      "name": "Zafar",
@@ -5555,7 +5555,7 @@
      "date": "2026-11-14T02:26:49.079Z"
     }
    ],
-   "lastVoteDate": "2026-11-14T02:27:05.081Z"
+   "lastVoteDate": "2026-11-15T23:34:04.222Z"
   },
   {
    "id": "idea-doc-219",
