@@ -4650,7 +4650,14 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "disapprove",
+     "date": "2026-11-15T23:31:59.512Z"
+    }
+   },
+   "lastVoteDate": "2026-11-15T23:31:59.512Z"
   },
   {
    "id": "idea-doc-187",
