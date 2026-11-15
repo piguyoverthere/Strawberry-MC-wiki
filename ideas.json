@@ -4693,7 +4693,14 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "date": "2026-11-15T23:32:20.203Z"
+    }
+   },
+   "lastVoteDate": "2026-11-15T23:32:20.203Z"
   },
   {
    "id": "idea-doc-189",
