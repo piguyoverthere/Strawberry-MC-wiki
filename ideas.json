@@ -4711,7 +4711,14 @@
    "comments": [],
    "status": "",
    "source": "document",
-   "votes": {}
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "date": "2026-11-15T23:32:23.313Z"
+    }
+   },
+   "lastVoteDate": "2026-11-15T23:32:23.313Z"
   },
   {
    "id": "idea-doc-190",
