@@ -1,0 +1,355 @@
+// ComScript Tutorial: the contents sidebar on the left, and Previous / Next buttons under each step.
+// wiki-editor.js loads this on tutorial-*.html pages (and on a tutorial page being written at new-page.html).
+// The order of the steps lives in tutorial.json: { sections: [{ id, title, pages: [{ file, title }] }] }.
+// Each tab's name is set here and can differ from the page's own heading. Tutorial pages stay out of search,
+// so the tutorial is reached from its menu item. Admins and editors change the contents with "Edit contents".
+(() => {
+    const store = window.wikiStore;
+    const dataFile = "tutorial.json";
+    const indexFile = "tutorial-index.html";
+    const collapsedKey = "strawberry-wiki-tutorial-collapsed";
+    const hiddenKey = "strawberry-wiki-tutorial-sidebar-hidden";
+    const params = new URLSearchParams(location.search);
+    const currentPage = decodeURIComponent(location.pathname).split("/").pop() || "index.html";
+    // A step being written for the first time is at new-page.html?file=tutorial-…&section=…
+    const draftFile = currentPage === "new-page.html" ? params.get("file") || "" : "";
+    const currentFile = draftFile || currentPage;
+    const draftSection = params.get("section") || "";
+
+    let data = { sections: [] };
+    let editingContents = false;
+    let saving = false;
+
+    function element(tag, options = {}, ...children) {
+        const node = document.createElement(tag);
+        for (const [key, value] of Object.entries(options)) {
+            if (key === "className") node.className = value;
+            else if (key === "text") node.textContent = value;
+            else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
+            else if (value !== undefined && value !== null && value !== false) node.setAttribute(key, value === true ? "" : value);
+        }
+        node.append(...children.filter((child) => child !== null && child !== undefined && child !== false));
+        return node;
+    }
+
+    function readSet(key) {
+        try {
+            return new Set(JSON.parse(localStorage.getItem(key) || "[]"));
+        } catch {
+            return new Set();
+        }
+    }
+
+    function writeSet(key, set) {
+        try {
+            localStorage.setItem(key, JSON.stringify([...set]));
+        } catch {
+            // Storage blocked; sections just start open next time.
+        }
+    }
+
+    const slugPart = (text) => text.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/['’]/g, "")
+        .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+    // Reading order: the overview, then every step in every section
+    function order() {
+        return [{ file: indexFile, title: "Overview" }, ...data.sections.flatMap((section) => section.pages || [])];
+    }
+
+    const canEdit = () => Boolean(store?.canReview());
+
+    // Layout ------------------------------------------------------------------------------------
+    document.documentElement.classList.add("wiki-tutorial");
+    const sidebar = element("aside", { className: "tutorial-sidebar", "aria-label": "ComScript Tutorial contents", "data-wiki-injected": true });
+    const showButton = element("button", {
+        type: "button", className: "tutorial-show-button", "data-wiki-injected": true, "aria-label": "Show tutorial contents",
+        onclick: () => setHidden(false)
+    }, "☰ Contents");
+    const pager = element("nav", { className: "tutorial-pager", "aria-label": "Tutorial steps", "data-wiki-injected": true });
+    const header = document.querySelector(".site-header");
+    (header || document.body.firstChild)?.after?.(sidebar);
+    if (!sidebar.isConnected) document.body.prepend(sidebar);
+    document.body.append(showButton);
+
+    function placePager() {
+        const content = document.querySelector(".wiki-content");
+        const after = document.querySelector(".wiki-last-edited") || content;
+        after?.after(pager);
+    }
+
+    // The sidebar sits below the sticky header, so it needs the header's height
+    function measureHeader() {
+        const height = header ? Math.round(header.getBoundingClientRect().height) : 0;
+        document.documentElement.style.setProperty("--tutorial-top", `${height}px`);
+    }
+    measureHeader();
+    window.addEventListener("resize", measureHeader);
+
+    function setHidden(hidden) {
+        document.documentElement.classList.toggle("tutorial-sidebar-hidden", hidden);
+        try {
+            if (hidden) localStorage.setItem(hiddenKey, "1");
+            else localStorage.removeItem(hiddenKey);
+        } catch {
+            // Storage blocked; it just opens again next time.
+        }
+    }
+    try {
+        if (localStorage.getItem(hiddenKey)) setHidden(true);
+    } catch {
+        // Storage blocked.
+    }
+
+    // A small dialog for names, instead of the browser's prompt box
+    function askText(title, label, value = "") {
+        return new Promise((resolve) => {
+            const input = element("input", { type: "text", maxlength: "80", value });
+            const dialog = element("dialog", { className: "wiki-dialog", "data-wiki-injected": true },
+                element("form", { method: "dialog" },
+                    element("h2", { text: title }),
+                    element("label", {}, label, input),
+                    element("div", { className: "wiki-dialog-actions" },
+                        element("button", { type: "button", text: "Cancel", onclick: () => dialog.close() }),
+                        element("button", { type: "submit", className: "wiki-primary", text: "OK" }))));
+            let answer = null;
+            dialog.querySelector("form").addEventListener("submit", () => {
+                answer = input.value.trim() || null;
+            });
+            dialog.addEventListener("close", () => {
+                dialog.remove();
+                resolve(answer);
+            });
+            document.body.append(dialog);
+            dialog.showModal();
+            input.select();
+        });
+    }
+
+    const status = element("p", { className: "tutorial-status", role: "status" });
+
+    async function change(apply, message) {
+        if (saving) return;
+        saving = true;
+        status.textContent = "Saving…";
+        try {
+            const fresh = await store.updateJson(dataFile, (saved) => {
+                saved.sections = saved.sections || [];
+                return apply(saved);
+            }, message, { needsReview: false });
+            data = { sections: fresh.sections || [] };
+            status.textContent = "Saved.";
+        } catch (error) {
+            status.textContent = `Could not save: ${error.message}`;
+        }
+        saving = false;
+        render();
+    }
+
+    const contentsMessage = () => `${store.getAuthor()} changes the ComScript Tutorial contents`;
+
+    // Moves a step up or down; at the edge of a section it moves into the next or previous section
+    function moveStep(file, step) {
+        change((saved) => {
+            const sections = saved.sections;
+            const from = sections.findIndex((section) => (section.pages || []).some((page) => page.file === file));
+            if (from < 0) return false;
+            const list = sections[from].pages;
+            const index = list.findIndex((page) => page.file === file);
+            const target = index + step;
+            if (target >= 0 && target < list.length) {
+                [list[index], list[target]] = [list[target], list[index]];
+                return undefined;
+            }
+            const next = sections[from + step];
+            if (!next) return false;
+            const [page] = list.splice(index, 1);
+            next.pages = next.pages || [];
+            if (step < 0) next.pages.push(page);
+            else next.pages.unshift(page);
+            return undefined;
+        }, contentsMessage());
+    }
+
+    function moveSection(id, step) {
+        change((saved) => {
+            const index = saved.sections.findIndex((section) => section.id === id);
+            const target = index + step;
+            if (index < 0 || target < 0 || target >= saved.sections.length) return false;
+            [saved.sections[index], saved.sections[target]] = [saved.sections[target], saved.sections[index]];
+            return undefined;
+        }, contentsMessage());
+    }
+
+    async function renameStep(page) {
+        const title = await askText("Rename this tab", "Tab name", page.title);
+        if (!title || title === page.title) return;
+        change((saved) => {
+            const found = saved.sections.flatMap((section) => section.pages || []).find((item) => item.file === page.file);
+            if (!found) return false;
+            found.title = title;
+            return undefined;
+        }, contentsMessage());
+    }
+
+    function removeStep(page) {
+        if (!window.confirm(`Take "${page.title}" out of the tutorial? The page itself isn't deleted, but nobody will be able to reach it from the tutorial.`)) return;
+        change((saved) => {
+            for (const section of saved.sections) section.pages = (section.pages || []).filter((item) => item.file !== page.file);
+            return undefined;
+        }, contentsMessage());
+    }
+
+    async function addSection() {
+        const title = await askText("Add a section", "Section name");
+        if (!title) return;
+        change((saved) => {
+            let id = slugPart(title) || "section";
+            while (saved.sections.some((section) => section.id === id)) id += "-2";
+            saved.sections.push({ id, title, pages: [] });
+            return undefined;
+        }, contentsMessage());
+    }
+
+    async function renameSection(section) {
+        const title = await askText("Rename this section", "Section name", section.title);
+        if (!title || title === section.title) return;
+        change((saved) => {
+            const found = saved.sections.find((item) => item.id === section.id);
+            if (!found) return false;
+            found.title = title;
+            return undefined;
+        }, contentsMessage());
+    }
+
+    function removeSection(section) {
+        if (section.pages?.length) {
+            status.textContent = "Move or take out this section's steps first.";
+            return;
+        }
+        change((saved) => {
+            const before = saved.sections.length;
+            saved.sections = saved.sections.filter((item) => item.id !== section.id);
+            return saved.sections.length === before ? false : undefined;
+        }, contentsMessage());
+    }
+
+    // A new step opens in the editor; it joins the contents when it's first committed
+    async function addStep(section) {
+        const title = await askText(`New step in "${section.title}"`, "Page title");
+        if (!title) return;
+        const slug = slugPart(title);
+        if (!slug) {
+            status.textContent = "Use at least one letter or number in the title.";
+            return;
+        }
+        const file = `tutorial-${slug}.html`;
+        if (file === indexFile || order().some((page) => page.file === file)) {
+            status.textContent = `There's already a tutorial page called ${file}. Choose a different title.`;
+            return;
+        }
+        try {
+            const response = await fetch(file, { method: "HEAD", cache: "no-store" });
+            if (response.ok) {
+                status.textContent = `${file} already exists. Choose a different title.`;
+                return;
+            }
+        } catch {
+            // Can't check from here; committing still refuses to overwrite without asking.
+        }
+        location.href = `new-page.html?${new URLSearchParams({ file, title, section: section.id })}`;
+    }
+
+    function iconButton(text, label, onclick) {
+        return element("button", { type: "button", className: "tutorial-tool", title: label, "aria-label": label, text, onclick });
+    }
+
+    function stepLink(page, isDraft = false) {
+        const current = page.file === currentFile;
+        return element("li", { className: `tutorial-step${current ? " is-current" : ""}${isDraft ? " is-draft" : ""}` },
+            element("a", { href: isDraft ? location.href : page.file, "aria-current": current ? "page" : null },
+                page.title, isDraft ? element("span", { className: "tutorial-draft-note", text: " (not committed yet)" }) : null),
+            editingContents && !isDraft ? element("span", { className: "tutorial-tools" },
+                iconButton("↑", `Move "${page.title}" up`, () => moveStep(page.file, -1)),
+                iconButton("↓", `Move "${page.title}" down`, () => moveStep(page.file, 1)),
+                iconButton("✎", `Rename the "${page.title}" tab`, () => renameStep(page)),
+                iconButton("×", `Take "${page.title}" out of the tutorial`, () => removeStep(page))) : null);
+    }
+
+    function render() {
+        const collapsed = readSet(collapsedKey);
+        const known = order().some((page) => page.file === currentFile);
+        const sections = data.sections.map((section) => {
+            const pages = section.pages || [];
+            // The step being written shows in its section until it's committed
+            const draft = draftFile && !known && draftSection === section.id ? { file: draftFile, title: document.querySelector(".wiki-content h1")?.textContent.trim() || params.get("title") || draftFile } : null;
+            const holdsCurrent = pages.some((page) => page.file === currentFile) || Boolean(draft);
+            const details = element("details", { className: "tutorial-section", open: !collapsed.has(section.id) || holdsCurrent },
+                element("summary", {}, element("span", { className: "tutorial-section-title", text: section.title }),
+                    element("span", { className: "tutorial-count", text: String(pages.length) })),
+                pages.length || draft ? element("ol", { className: "tutorial-steps" }, ...pages.map((page) => stepLink(page)), draft ? stepLink(draft, true) : null)
+                    : element("p", { className: "tutorial-empty", text: "No steps yet." }),
+                editingContents ? element("div", { className: "tutorial-section-tools" },
+                    element("button", { type: "button", className: "tutorial-add", text: "+ Page", onclick: () => addStep(section) }),
+                    iconButton("↑", `Move section "${section.title}" up`, () => moveSection(section.id, -1)),
+                    iconButton("↓", `Move section "${section.title}" down`, () => moveSection(section.id, 1)),
+                    iconButton("✎", `Rename section "${section.title}"`, () => renameSection(section)),
+                    iconButton("×", `Remove section "${section.title}"`, () => removeSection(section))) : null);
+            details.addEventListener("toggle", () => {
+                const set = readSet(collapsedKey);
+                if (details.open) set.delete(section.id);
+                else set.add(section.id);
+                writeSet(collapsedKey, set);
+            });
+            return details;
+        });
+        sidebar.replaceChildren(
+            element("div", { className: "tutorial-sidebar-head" },
+                element("a", { className: "tutorial-title", href: indexFile, text: "ComScript Tutorial" }),
+                element("button", { type: "button", className: "tutorial-hide-button", title: "Hide the contents", "aria-label": "Hide the contents", text: "«", onclick: () => setHidden(true) })),
+            element("ol", { className: "tutorial-steps tutorial-overview" }, stepLink({ file: indexFile, title: "Overview" })),
+            ...sections,
+            canEdit() ? element("div", { className: "tutorial-edit-bar" },
+                editingContents ? element("button", { type: "button", className: "tutorial-add", text: "+ Section", onclick: addSection }) : null,
+                element("button", {
+                    type: "button", className: "tutorial-edit-toggle", text: editingContents ? "Done" : "Edit contents",
+                    onclick: () => { editingContents = !editingContents; render(); }
+                })) : null,
+            status);
+        renderPager();
+    }
+
+    function renderPager() {
+        const steps = order();
+        const index = steps.findIndex((page) => page.file === currentFile);
+        if (index < 0) {
+            pager.replaceChildren();
+            pager.hidden = true;
+            return;
+        }
+        const previous = steps[index - 1];
+        const next = steps[index + 1];
+        pager.hidden = !previous && !next;
+        pager.replaceChildren(
+            previous ? element("a", { className: "tutorial-pager-link tutorial-previous", href: previous.file, rel: "prev" },
+                element("span", { className: "tutorial-pager-label", text: "← Previous" }), element("span", { className: "tutorial-pager-title", text: previous.title })) : element("span"),
+            next ? element("a", { className: "tutorial-pager-link tutorial-next", href: next.file, rel: "next" },
+                element("span", { className: "tutorial-pager-label", text: "Next →" }), element("span", { className: "tutorial-pager-title", text: next.title })) : element("span"));
+    }
+
+    // The "Last edited" line arrives a moment after the page; keep the buttons below it
+    new MutationObserver(() => {
+        if (pager.previousElementSibling !== (document.querySelector(".wiki-last-edited") || document.querySelector(".wiki-content"))) placePager();
+    }).observe(document.body, { childList: true });
+    placePager();
+    render();
+
+    const receive = (json) => {
+        data = { sections: Array.isArray(json?.sections) ? json.sections : [] };
+        render();
+    };
+    if (store?.watchJson) {
+        store.watchJson(dataFile, receive);
+    } else {
+        fetch(dataFile, { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).then(receive).catch(() => {});
+    }
+})();

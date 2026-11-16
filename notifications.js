@@ -57,8 +57,12 @@
         }
     }
 
+    // Tutorial pages aren't in search; they're looked up from the tutorial's contents
+    let tutorialPages = new Map([["ComScript Tutorial", "tutorial-index.html"]]);
+
     function pageHref(title) {
         if (specialPages[title]) return specialPages[title];
+        if (tutorialPages.has(title)) return tutorialPages.get(title);
         const index = typeof pages !== "undefined" && Array.isArray(pages) ? pages : [];
         const plain = title.replace(/\s*\([^)]*\)\s*$/, "");
         // Pages that were merged away or deleted aren't in search, so they aren't linked
@@ -118,6 +122,8 @@
         if ((match = line.match(/^([^:]+?) sets the review password$/))) return { type: "account", who: match[1], text: " set the review password", target: "", href: null };
         if ((match = line.match(/^(.+?) restores (.+) page to the version from (.+?)(?: for (.+))?$/)))
             return { type: "page-edit", who: match[1], text: ` restored an older version (${match[3]}) of `, target: match[2], page: true, assigned: match[4] ? [match[4]] : undefined };
+        if ((match = line.match(/^([^:]+?) changes the ComScript Tutorial contents$/)))
+            return { type: "page-edit", who: match[1], text: " changed the contents of the ", target: "ComScript Tutorial", href: "tutorial-index.html" };
         if ((match = line.match(/^([^:]+?) appeals their (ban|restraining order)$/)))
             return { type: "review", who: match[1], text: ` appealed their ${match[2]}`, target: "", href: "admin.html", restoreRequest: true };
         if ((match = line.match(/^([^:]+?) (warns [^:]+|lifts the (?:ban|restraining order) on [^:]+ after an appeal|turns down the appeal of [^:]+)$/)))
@@ -452,7 +458,8 @@
 
     // Load the idea, thread and bug ids first so their links go straight to them
     const json = (file) => fetch(file, { cache: "no-store" }).then((response) => response.ok ? response.json() : null).catch(() => null);
-    Promise.all([json("ideas.json"), json("bugs.json"), json("profiles.json"), json("discussions.json")]).then(([ideas, bugs, profiles, discussions]) => {
+    Promise.all([json("ideas.json"), json("bugs.json"), json("profiles.json"), json("discussions.json"), json("tutorial.json")]).then(([ideas, bugs, profiles, discussions, tutorial]) => {
+        for (const page of (tutorial?.sections || []).flatMap((section) => section.pages || [])) tutorialPages.set(page.title, page.file);
         if (ideas || discussions) {
             controversy = {
                 ideas: new Map((ideas?.ideas || []).flatMap((idea) => [idea.title, ...(idea.formerTitles || [])].map((title) => [title, idea]))),

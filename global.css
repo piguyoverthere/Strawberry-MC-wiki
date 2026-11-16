@@ -3138,3 +3138,285 @@ body.wiki-editing .wiki-last-edited{
     color:#202122;
     text-shadow:none
 }
+/* ComScript Tutorial: contents on the left, the step on the right, Previous / Next underneath */
+.tutorial-sidebar{
+    box-sizing:border-box;
+    padding:16px 14px 24px;
+    background-color:#f7f8f9;
+    border-right:1px solid #d5e5ea;
+    font:15px/1.4 Arial, Helvetica, sans-serif
+}
+@media (min-width:900px){
+    html.wiki-tutorial:not(.tutorial-sidebar-hidden) body{
+        padding-left:300px
+    }
+    html.wiki-tutorial:not(.tutorial-sidebar-hidden) .site-header{
+        margin-left:-300px
+    }
+    .tutorial-sidebar{
+        position:fixed;
+        z-index:15;
+        top:var(--tutorial-top, 64px);
+        bottom:0;
+        left:0;
+        width:280px;
+        overflow-y:auto
+    }
+}
+@media (max-width:899px){
+    .tutorial-sidebar{
+        margin:12px 0;
+        border:1px solid #d5e5ea;
+        border-radius:6px;
+        max-height:60vh;
+        overflow-y:auto
+    }
+}
+html.tutorial-sidebar-hidden .tutorial-sidebar{
+    display:none
+}
+.tutorial-show-button{
+    display:none
+}
+html.tutorial-sidebar-hidden .tutorial-show-button{
+    display:block;
+    position:fixed;
+    z-index:15;
+    top:calc(var(--tutorial-top, 64px) + 10px);
+    left:10px;
+    padding:6px 12px;
+    border:1px solid #a2a9b1;
+    border-radius:6px;
+    background-color:#ffffff;
+    color:#202122;
+    cursor:pointer;
+    box-shadow:0 2px 6px rgba(0, 0, 0, .15);
+    font:600 14px/1.2 Arial, Helvetica, sans-serif
+}
+.tutorial-sidebar-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px
+}
+.tutorial-title,
+.tutorial-title:visited{
+    color:#1b6b80;
+    font-size:1.15em;
+    font-weight:700;
+    text-decoration:none
+}
+.tutorial-hide-button{
+    padding:2px 8px;
+    border:1px solid #c8ccd1;
+    border-radius:4px;
+    background-color:#ffffff;
+    color:#54595d;
+    cursor:pointer;
+    font:16px/1 Arial, Helvetica, sans-serif
+}
+.tutorial-section{
+    margin-top:10px
+}
+.tutorial-section > summary{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:4px 2px;
+    color:#1b6b80;
+    cursor:pointer;
+    font-weight:700;
+    list-style:none
+}
+.tutorial-section > summary::-webkit-details-marker{
+    display:none
+}
+.tutorial-section > summary::before{
+    content:"▸";
+    display:inline-block;
+    width:12px;
+    color:#54595d;
+    font-size:.8em;
+    transition:transform .15s
+}
+.tutorial-section[open] > summary::before{
+    transform:rotate(90deg)
+}
+.tutorial-section-title{
+    flex:1
+}
+.tutorial-count{
+    color:#72777d;
+    font-size:.8em;
+    font-weight:400
+}
+.tutorial-steps{
+    margin:2px 0 0;
+    padding:0;
+    list-style:none
+}
+.tutorial-step{
+    display:flex;
+    align-items:center;
+    gap:4px
+}
+.tutorial-step a,
+.tutorial-step a:visited{
+    flex:1;
+    display:block;
+    padding:5px 8px 5px 20px;
+    border-radius:4px;
+    color:#202122;
+    text-decoration:none
+}
+.tutorial-overview .tutorial-step a{
+    padding-left:8px
+}
+.tutorial-step a:hover{
+    background-color:#e4f4f8
+}
+.tutorial-step.is-current a{
+    background-color:#d5ecf2;
+    color:#0b4f60;
+    font-weight:700
+}
+.tutorial-step.is-draft a{
+    font-style:italic
+}
+.tutorial-draft-note{
+    color:#72777d;
+    font-size:.85em;
+    font-weight:400
+}
+.tutorial-empty{
+    margin:4px 0 0 20px;
+    color:#72777d;
+    font-size:.9em
+}
+.tutorial-tools,
+.tutorial-section-tools{
+    display:flex;
+    flex-wrap:wrap;
+    gap:2px
+}
+.tutorial-section-tools{
+    margin:6px 0 0 20px
+}
+.tutorial-tool{
+    min-width:24px;
+    padding:2px 5px;
+    border:1px solid #c8ccd1;
+    border-radius:4px;
+    background-color:#ffffff;
+    color:#202122;
+    cursor:pointer;
+    font:13px/1.2 Arial, Helvetica, sans-serif
+}
+.tutorial-add,
+.tutorial-edit-toggle{
+    padding:4px 10px;
+    border:1px solid #0056b3;
+    border-radius:4px;
+    background-color:#ffffff;
+    color:#0056b3;
+    cursor:pointer;
+    font:600 13px/1.2 Arial, Helvetica, sans-serif
+}
+.tutorial-edit-bar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:16px;
+    padding-top:12px;
+    border-top:1px solid #d5e5ea
+}
+.tutorial-status{
+    margin:8px 0 0;
+    color:#54595d;
+    font-size:.85em
+}
+.tutorial-status:empty{
+    display:none
+}
+.tutorial-pager{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin:28px 0 16px
+}
+.tutorial-pager[hidden]{
+    display:none
+}
+.tutorial-pager-link,
+.tutorial-pager-link:visited{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    padding:12px 16px;
+    border:1px solid #a2c7d1;
+    border-radius:6px;
+    background-color:#ffffff;
+    color:#202122;
+    text-decoration:none
+}
+.tutorial-pager-link:hover{
+    border-color:#1b6b80;
+    background-color:#f2fafc;
+    text-decoration:none
+}
+.tutorial-next{
+    grid-column:2;
+    text-align:right
+}
+.tutorial-pager-label{
+    color:#1b6b80;
+    font-size:.85em;
+    font-weight:700
+}
+.tutorial-pager-title{
+    font-size:1.05em
+}
+body.wiki-editing .tutorial-pager{
+    display:none
+}
+/* Page contents in a column on the left on wide screens; above the page on narrow ones */
+@media (min-width:1000px){
+    html.wiki-side-toc body:not(.wiki-editing){
+        padding-left:290px
+    }
+    html.wiki-side-toc body:not(.wiki-editing) .site-header{
+        margin-left:-290px
+    }
+    html.wiki-side-toc .wiki-toc{
+        position:fixed;
+        z-index:15;
+        top:var(--wiki-header-height, 64px);
+        bottom:0;
+        left:0;
+        width:270px;
+        max-width:none;
+        margin:0;
+        padding:16px 14px 70px;
+        overflow-y:auto;
+        border:0;
+        border-right:1px solid #d5e5ea;
+        background:#f7f8f9;
+        box-shadow:none;
+        font:14px/1.4 Arial, Helvetica, sans-serif
+    }
+    html.wiki-side-toc .wiki-toc + .wiki-content{
+        margin-top:24px
+    }
+    html.wiki-side-toc .wiki-toc summary{
+        color:#1b6b80;
+        font-size:1.1em
+    }
+    html.wiki-side-toc .wiki-toc ol{
+        columns:auto;
+        padding-left:20px
+    }
+    html.wiki-side-toc .wiki-toc li{
+        margin:3px 0
+    }
+}

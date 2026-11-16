@@ -3,7 +3,7 @@
     const pagePath = decodeURIComponent(location.pathname);
     const deploymentPath = pagePath.slice(0, pagePath.lastIndexOf("/") + 1);
     const currentPage = pagePath.split("/").pop() || "index.html";
-    const pageFilePattern = /^(?:page|news)-[a-z0-9]+(?:-[a-z0-9]+)*\.html$/;
+    const pageFilePattern = /^(?:page|news|tutorial)-[a-z0-9]+(?:-[a-z0-9]+)*\.html$/;
     const params = new URLSearchParams(location.search);
     const isNewPage = currentPage === "new-page.html";
     const newPageFile = isNewPage && pageFilePattern.test(params.get("file") || "") ? params.get("file") : null;
@@ -809,7 +809,7 @@
     }
 
     if (newPageFile) {
-        const title = params.get("title")?.trim() || newPageFile.replace(/^(?:page|news)-|\.html$/g, "").replace(/-/g, " ");
+        const title = params.get("title")?.trim() || newPageFile.replace(/^(?:page|news|tutorial)-|\.html$/g, "").replace(/-/g, " ");
         const heading = root.querySelector("h1");
         if (heading) {
             heading.textContent = title;
@@ -945,6 +945,13 @@
             for (const [label, links] of navMenus) {
                 nav.insertBefore(buildNavMenu(label, links), pdfLink);
             }
+            // The ComScript Tutorial is only reached from here: its pages stay out of search
+            const tutorialLink = document.createElement("a");
+            tutorialLink.href = "tutorial-index.html";
+            tutorialLink.textContent = "ComScript Tutorial";
+            tutorialLink.dataset.wikiInjected = "";
+            if (/^tutorial-/.test(targetFile)) tutorialLink.setAttribute("aria-current", "page");
+            nav.insertBefore(tutorialLink, pdfLink);
             // Every page except the home page gets a search box in the middle of the header.
             if (!document.querySelector(".site-search")) {
                 const headerSearch = document.createElement("form");
@@ -2932,7 +2939,8 @@
     });
 
     // Search keywords of a page that's already in search, changed straight in search.js
-    keywordsButton.hidden = isNewPage || !canReviewRole(readRole());
+    // Tutorial pages stay out of search, so they have no search keywords
+    keywordsButton.hidden = isNewPage || /^tutorial-/.test(currentPage) || !canReviewRole(readRole());
     let keywordsDialog = null;
     keywordsButton.addEventListener("click", async () => {
         if (!keywordsDialog) {
@@ -3035,7 +3043,7 @@
         if (slot) location.href = elementFor(slot.title).page;
     });
 
-    if (/^(?:page|news)-/.test(targetFile)) {
+    if (/^(?:page|news|tutorial)-/.test(targetFile)) {
         fetch("elements.json", { cache: "no-cache" }).then((response) => response.ok ? response.json() : {}).then((data) => {
             const labels = [];
             for (const entry of data.elements || []) {
@@ -3136,8 +3144,19 @@
 
     // Long pages get an "On this page" list built from their headings.
     let toc = null;
+    // Side columns start below the sticky header, so they need its height
+    function measureHeader() {
+        const height = Math.round(document.querySelector(".site-header")?.getBoundingClientRect().height || 0);
+        document.documentElement.style.setProperty("--wiki-header-height", `${height}px`);
+    }
+    window.addEventListener("resize", measureHeader);
+    window.addEventListener("load", measureHeader);
+
     function buildTableOfContents() {
+        measureHeader();
         const headings = [...root.querySelectorAll("h2, h3")].filter((heading) => heading.textContent.trim());
+        // On wide screens the list sits in a column on the left (tutorial pages have their own sidebar there)
+        document.documentElement.classList.toggle("wiki-side-toc", headings.length >= 3 && !/^tutorial-/.test(targetFile));
         if (headings.length < 3) {
             toc?.remove();
             toc = null;
@@ -3788,7 +3807,8 @@
             : newPageFile && !isPublishedNewPage()
                 ? `Create ${getCurrentTitle()} page`
                 : `Update ${getCurrentTitle()} page`;
-        commitKeywordsField.hidden = !newPageFile || isPublishedNewPage();
+        // Tutorial steps stay out of search, so they don't need search keywords
+        commitKeywordsField.hidden = !newPageFile || isPublishedNewPage() || /^tutorial-/.test(newPageFile);
         if (newPageFile) {
             commitKeywordsInput.value = getNewPageKeywords();
         }
@@ -4090,7 +4110,16 @@
                         data.pages[targetFile] = { title, by: readAccount(), date: new Date().toISOString() };
                     }));
                 }
-                if (newPageFile && !existing) {
+                // A new tutorial step joins the tutorial's contents instead of search
+                if (newPageFile && !existing && /^tutorial-/.test(newPageFile)) {
+                    files.push(await jsonChange(token, "tutorial.json", (data) => {
+                        data.sections = data.sections || [];
+                        if (data.sections.some((section) => (section.pages || []).some((page) => page.file === newPageFile))) return false;
+                        const section = data.sections.find((item) => item.id === params.get("section")) || data.sections[data.sections.length - 1];
+                        if (!section) data.sections.push({ id: "steps", title: "Steps", pages: [{ file: newPageFile, title }] });
+                        else (section.pages = section.pages || []).push({ file: newPageFile, title });
+                    }));
+                } else if (newPageFile && !existing) {
                     try {
                         files.push(await searchIndexChange(token, title, newPageFile, keywords));
                     } catch (error) {
@@ -4944,11 +4973,19 @@
         });
     }
 
-    if (!isNewPage && /^(?:page|news)-/.test(currentPage)) {
+    if (!isNewPage && /^(?:page|news|tutorial)-/.test(currentPage)) {
         const annotationScript = document.createElement("script");
         annotationScript.src = "annotations.js";
         annotationScript.dataset.wikiInjected = "";
         document.body.append(annotationScript);
+    }
+
+    // ComScript Tutorial pages get the contents sidebar and Previous / Next buttons
+    if (/^tutorial-/.test(targetFile)) {
+        const tutorialScript = document.createElement("script");
+        tutorialScript.src = "tutorial.js";
+        tutorialScript.dataset.wikiInjected = "";
+        document.body.append(tutorialScript);
     }
 
     // Password recovery ---------------------------------------------------------------------------
