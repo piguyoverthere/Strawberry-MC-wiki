@@ -13,7 +13,12 @@
   {
    "id": "usage",
    "title": "Usage",
-   "pages": []
+   "pages": [
+    {
+     "file": "tutorial-purpose.html",
+     "title": "Purpose"
+    }
+   ]
   },
   {
    "id": "syntax",

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Purpose | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="Strawberry%20minecraft%20wiki%20(1).pdf" target="_blank" rel="noopener">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Purpose</h1>
+        <p>The developer team at Strawberry MC made ComScript and the Scripter to improve vanilla scripting beyond commands and make simple solutions for problems such as using scoreboards as a compromise to variables. Furthermore, ComScript replaces the need for extensive chain command blocks, condensing it into a single block. ComScript also makes commands consistent in input formatting, since the input formatting for commands (especially bedrock edition) have varied and inconsistent inputs. ComScript instead uses ComScript Object Notation (different from alo based psuedoJSON) to define the inputs, such as:</p><pre class="code-box"><code class="consolas">//assume vanilla wrapper here<br>say hello {<br>    .textColor(rgb(1, 1, 1)); //each of these are components<br>    .fontFamily("sans-serif");<br>}<br>//note these components can be in any order within the curly brackets</code></pre><p>Typical command syntax can still be used so seasoned players can still use their muscle memory and to prevent breaking anyone's command projects. All vanilla commands executed in the Scripter should have the mandatory components:</p><ul><li><span class="consolas">permissionLevel(&lt;int&gt;);</span></li><li><span class="consolas">executeAs(&lt;entity&gt;);</span></li></ul><p>Vanilla command execution example:</p><pre class="code-box"><code class="consolas">store new time = "day"<br>server.executeComponents { //client.executeCompotnents can be used for client-side commands<br>    .permissionLevel(4);<br>    .suppressOutput(&lt;true;&gt;);<br>}<br>server.getCommandStack().execute("time set ", $time)<br></code></pre><div class="wiki-textbox"><p>Note</p><p>This script sets the time to the $time variable, which in this case is "day", at permission level 4 (operator status) and output suppressed.</p></div><p>Though ComScript may be more efficient to use, ComScript is much slower to execute, as complex java based interpreters have to read the script character by character, which may also cause lag spikes.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    
+
+</body></html>
