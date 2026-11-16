@@ -5571,9 +5571,14 @@
      "name": "Eric",
      "vote": "approve",
      "date": "2026-11-15T23:34:14.944Z"
+    },
+    "aadi": {
+     "name": "aadi",
+     "vote": "approve",
+     "date": "2026-11-16T16:57:30.320Z"
     }
    },
-   "lastVoteDate": "2026-11-15T23:34:14.944Z",
+   "lastVoteDate": "2026-11-16T16:57:30.320Z",
    "replies": [
     {
      "author": "Eric",
