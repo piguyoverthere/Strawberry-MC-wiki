@@ -3449,3 +3449,8 @@ body.wiki-editing .tutorial-sidebar{
     cursor:default;
     opacity:.6
 }
+/* Tutorial arrows that can't move any further */
+.tutorial-tool:disabled{
+    cursor:default;
+    opacity:.35
+}

@@ -304,11 +304,16 @@
         location.href = `new-page.html?${new URLSearchParams({ file, title, section: section.id })}`;
     }
 
-    function iconButton(text, label, onclick) {
-        return element("button", { type: "button", className: "tutorial-tool", title: label, "aria-label": label, text, onclick });
+    function iconButton(text, label, onclick, disabled = false) {
+        return element("button", { type: "button", className: "tutorial-tool", title: label, "aria-label": label, text, onclick, disabled });
     }
 
+    // The reorder arrows and other contents tools show while editing a page, or after "Edit contents"
+    const pageEditing = () => Boolean(window.wikiEditor?.isEditing());
+    const showTools = () => canEdit() && (editingContents || pageEditing());
+
     function stepLink(page, isDraft = false) {
+        const steps = data.sections.flatMap((section) => section.pages || []);
         const current = page.file === currentFile;
         const href = isDraft ? `new-page.html?${new URLSearchParams({ file: page.file, title: page.title, section: page.section || "" })}` : page.file;
         const edited = !isDraft && hasDraft(page.file);
@@ -317,9 +322,10 @@
                 page.title,
                 isDraft ? element("span", { className: "tutorial-draft-note", text: " (not committed yet)" }) : null,
                 edited ? element("span", { className: "tutorial-edited-dot", title: "Edits saved in this browser, not committed yet", "aria-label": "edited, not committed", text: " ●" }) : null),
-            editingContents && !isDraft ? element("span", { className: "tutorial-tools" },
-                iconButton("↑", `Move "${page.title}" up`, () => moveStep(page.file, -1)),
-                iconButton("↓", `Move "${page.title}" down`, () => moveStep(page.file, 1)),
+            showTools() && !isDraft && page.file !== indexFile ? element("span", { className: "tutorial-tools" },
+                // At the top or bottom of a section, a step moves into the section before or after
+                iconButton("↑", `Move "${page.title}" up`, () => moveStep(page.file, -1), steps[0]?.file === page.file),
+                iconButton("↓", `Move "${page.title}" down`, () => moveStep(page.file, 1), steps[steps.length - 1]?.file === page.file),
                 iconButton("✎", `Rename the "${page.title}" tab`, () => renameStep(page)),
                 iconButton("×", `Take "${page.title}" out of the tutorial`, () => removeStep(page))) : null);
     }
@@ -396,7 +402,7 @@
 
     function render() {
         const collapsed = readSet(collapsedKey);
-        const sections = data.sections.map((section) => {
+        const sections = data.sections.map((section, sectionIndex) => {
             const pages = section.pages || [];
             // New steps show in their section until they're committed
             const drafts = pendingSteps().filter((step) => step.section === section.id);
@@ -406,10 +412,10 @@
                     element("span", { className: "tutorial-count", text: String(pages.length) })),
                 pages.length || drafts.length ? element("ol", { className: "tutorial-steps" }, ...pages.map((page) => stepLink(page)), ...drafts.map((step) => stepLink(step, true)))
                     : element("p", { className: "tutorial-empty", text: "No steps yet." }),
-                editingContents ? element("div", { className: "tutorial-section-tools" },
+                showTools() ? element("div", { className: "tutorial-section-tools" },
                     element("button", { type: "button", className: "tutorial-add", text: "+ Page", onclick: () => addStep(section) }),
-                    iconButton("↑", `Move section "${section.title}" up`, () => moveSection(section.id, -1)),
-                    iconButton("↓", `Move section "${section.title}" down`, () => moveSection(section.id, 1)),
+                    iconButton("↑", `Move section "${section.title}" up`, () => moveSection(section.id, -1), sectionIndex === 0),
+                    iconButton("↓", `Move section "${section.title}" down`, () => moveSection(section.id, 1), sectionIndex === data.sections.length - 1),
                     iconButton("✎", `Rename section "${section.title}"`, () => renameSection(section)),
                     iconButton("×", `Remove section "${section.title}"`, () => removeSection(section))) : null);
             details.addEventListener("toggle", () => {
@@ -420,7 +426,8 @@
             });
             return details;
         });
-        sidebar.replaceChildren(
+        // Parts with nothing to show are null; leave them out (replaceChildren would print "null")
+        sidebar.replaceChildren(...[
             element("div", { className: "tutorial-sidebar-head" },
                 element("a", { className: "tutorial-title", href: indexFile, text: "ComScript Tutorial" }),
                 element("button", { type: "button", className: "tutorial-hide-button", title: "Hide the contents", "aria-label": "Hide the contents", text: "«", onclick: () => setHidden(true) })),
@@ -428,12 +435,13 @@
             ...sections,
             canEdit() && changedPages().length ? (commitButton.textContent = `Commit all changes (${changedPages().length})`, commitButton) : null,
             canEdit() ? element("div", { className: "tutorial-edit-bar" },
-                editingContents ? element("button", { type: "button", className: "tutorial-add", text: "+ Section", onclick: addSection }) : null,
-                element("button", {
+                showTools() ? element("button", { type: "button", className: "tutorial-add", text: "+ Section", onclick: addSection }) : null,
+                // While a page is being edited the tools are already showing
+                pageEditing() ? null : element("button", {
                     type: "button", className: "tutorial-edit-toggle", text: editingContents ? "Done" : "Edit contents",
                     onclick: () => { editingContents = !editingContents; render(); }
                 })) : null,
-            status);
+            status].filter(Boolean));
         renderPager();
     }
 
