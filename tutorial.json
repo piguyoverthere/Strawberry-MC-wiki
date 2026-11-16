@@ -3,7 +3,12 @@
   {
    "id": "getting-started",
    "title": "Getting Started",
-   "pages": []
+   "pages": [
+    {
+     "file": "tutorial-scripter.html",
+     "title": "Scripter"
+    }
+   ]
   }
  ]
 }
