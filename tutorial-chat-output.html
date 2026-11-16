@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Chat Output | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    </head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="Strawberry%20minecraft%20wiki%20(1).pdf" target="_blank" rel="noopener">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Chat Output</h1>
+        <p>ComScript can append messages in chat as the user "[\comscript]". Chat messages can be appended as either <span class="consolas">client</span> or <span class="consolas">server</span>. Server chat messages are visible to everyone, while client messages are only visible to yourself. The following example sends a server wide chat message:</p><pre class="code-box"><code class="consolas">server.chat.out("Hello World");<br></code></pre><p>or a client side chat message:</p><pre class="code-box"><code class="consolas">client.chat.out("Hello Myself");<br></code></pre><p>Settings of chat messages can be modified with CSON, including color, font, style, or size. The following example sends a yellow, sans-serif, bolded, large message:</p><pre class="code-box"><code class="consolas">server.chat.out("Cool text") {<br>    .color(rgb(100, 100, 0));<br>    .fontFamily{<br>        "sans-serif",<br>        "helvetica"<br>    };<br>    .styles{<br>        "bold"<br>    }<br>}</code></pre><p>Styles with the Minecraft native section syntax can also be used:</p><pre class="code-box"><code class="consolas">server.chat.out("Green text") {<br>    .server.getStyleStack(){<br>        "§a";<br>    }<br>}</code></pre><div class="wiki-raw-html"><a src="https://minecraft.fandom.com/wiki/Formatting_codes">See formatting codes</a></div><p><br></p>
+        <script src="wiki-editor.js" defer=""></script>
+    
+
+</body></html>

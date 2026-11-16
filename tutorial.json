@@ -23,7 +23,20 @@
   {
    "id": "syntax",
    "title": "Syntax",
-   "pages": []
+   "pages": [
+    {
+     "file": "tutorial-chat-output.html",
+     "title": "Chat Output"
+    },
+    {
+     "file": "tutorial-comments.html",
+     "title": "Comments"
+    },
+    {
+     "file": "tutorial-vanilla-command-integration.html",
+     "title": "Vanilla Command Integration"
+    }
+   ]
   },
   {
    "id": "header-file",
