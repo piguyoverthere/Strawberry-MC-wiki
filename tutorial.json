@@ -24,6 +24,11 @@
    "id": "syntax",
    "title": "Syntax",
    "pages": []
+  },
+  {
+   "id": "header-file",
+   "title": "Header file",
+   "pages": []
   }
  ]
 }
