@@ -5397,9 +5397,14 @@
      "name": "Theodore",
      "vote": "disapprove",
      "date": "2026-11-12T22:38:34.126Z"
+    },
+    "aadi": {
+     "name": "aadi",
+     "vote": "disapprove",
+     "date": "2026-11-16T16:58:30.890Z"
     }
    },
-   "lastVoteDate": "2026-11-12T22:38:34.126Z"
+   "lastVoteDate": "2026-11-16T16:58:30.890Z"
   },
   {
    "id": "idea-doc-216",
