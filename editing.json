@@ -41,9 +41,9 @@
   "todo.html": {
    "alex": {
     "name": "Alex",
-    "state": "editing",
-    "since": "2026-11-16T19:25:09.540Z",
-    "updated": "2026-11-16T19:25:09.540Z"
+    "state": "unsaved",
+    "since": "2026-11-16T19:25:23.506Z",
+    "updated": "2026-11-16T19:25:23.506Z"
    }
   }
  }
