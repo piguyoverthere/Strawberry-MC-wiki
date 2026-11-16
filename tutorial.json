@@ -33,6 +33,14 @@
      "title": "Comments"
     },
     {
+     "file": "tutorial-variables.html",
+     "title": "Variables"
+    },
+    {
+     "file": "tutorial-lists-arrays-and-dictionaries.html",
+     "title": "Lists, Arrays, and Dictionaries"
+    },
+    {
      "file": "tutorial-vanilla-command-integration.html",
      "title": "Vanilla Command Integration"
     }
