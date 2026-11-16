@@ -3454,3 +3454,102 @@ body.wiki-editing .tutorial-sidebar{
     cursor:default;
     opacity:.35
 }
+/* Assets page */
+.assets-gate{
+    box-sizing:border-box;
+    max-width:380px;
+    padding:20px 22px;
+    border:1px solid #a2a9b1;
+    border-radius:8px;
+    background-color:#ffffff
+}
+.assets-gate h2{
+    margin-top:0
+}
+.assets-gate label{
+    display:block;
+    font-weight:600
+}
+.assets-gate input[type="password"]{
+    box-sizing:border-box;
+    width:100%;
+    margin:4px 0 8px;
+    padding:8px;
+    border:1px solid #72777d;
+    border-radius:4px
+}
+.assets-toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:8px
+}
+.assets-crumbs{
+    font-size:1.05em
+}
+.assets-crumb-separator{
+    color:#72777d
+}
+.assets-buttons{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px
+}
+.assets-buttons button,
+.assets-actions button{
+    padding:6px 12px;
+    border:1px solid #a2a9b1;
+    border-radius:4px;
+    background-color:#ffffff;
+    color:#202122;
+    cursor:pointer;
+    font:600 14px/1.2 Arial, Helvetica, sans-serif
+}
+.assets-buttons .wiki-primary-button{
+    border-color:#0056b3;
+    background-color:#0056b3;
+    color:#ffffff
+}
+.assets-actions{
+    white-space:nowrap
+}
+.assets-actions button + button{
+    margin-left:6px
+}
+.assets-actions .assets-delete{
+    border-color:#d33;
+    color:#b3261e
+}
+.assets-status{
+    min-height:1.4em;
+    margin:4px 0;
+    color:#54595d
+}
+.assets-drop{
+    margin:8px 0 12px;
+    padding:16px;
+    border:2px dashed #a2c7d1;
+    border-radius:8px;
+    color:#54595d;
+    text-align:center
+}
+.assets-drop.is-over{
+    border-color:#0056b3;
+    background-color:#eaf3ff
+}
+.assets-name{
+    overflow-wrap:anywhere
+}
+.assets-icon{
+    display:inline-block;
+    width:1.6em
+}
+.assets-size{
+    color:#54595d;
+    white-space:nowrap
+}
+.assets-empty{
+    color:#54595d
+}

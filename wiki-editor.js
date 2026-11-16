@@ -133,7 +133,7 @@
     }
     applyLook();
     const legacyEditableSelector = "h1, h2, h3, h4, h5, h6, p, li, td, th, blockquote, figcaption, summary";
-    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list, #ideas-app, #discussions-app, #notifications-app, #documents-app, #archives-app, #todo-app, #all-pages-app, #bugs-app, #login-app, #admin-app, #profile-app";
+    const islandSelector = "form, button, input, select, textarea, iframe, video, audio, canvas, #bookmarked-pages-list, #news-list, #ideas-app, #discussions-app, #notifications-app, #documents-app, #archives-app, #todo-app, #all-pages-app, #bugs-app, #login-app, #admin-app, #profile-app, #assets-app";
     const allowedTags = new Set([
         "A", "ABBR", "B", "BLOCKQUOTE", "BR", "CAPTION", "CODE", "DEL", "DETAILS", "DIV", "EM", "FIGCAPTION",
         "FIGURE", "FOOTER", "H1", "H2", "H3", "H4", "H5", "H6", "HR", "I", "IMG", "INS", "KBD", "LI", "MARK",
@@ -887,7 +887,7 @@
     let originalNavMarkup = null;
     const navMenus = [
         ["Wiki", [["all-pages.html", "All Pages"], ["credits.html", "Credits"], ["page-bookmarked-pages.html", "Bookmarked Pages"], ["todo.html", "To Do"], ["bugs.html", "Bug Tracker"], ["changelog.html", "Changelog"], ["page-standardized-grammar-conventions-for-wiki-pages.html", "Grammar"]]],
-        ["Community", [["news.html", "News"], ["ideas.html", "Ideas"], ["discussions.html", "Threads &amp; Debates"], ["notifications.html", "Notifications"], ["archives.html", "Archives"]]]
+        ["Community", [["news.html", "News"], ["ideas.html", "Ideas"], ["discussions.html", "Threads &amp; Debates"], ["notifications.html", "Notifications"], ["archives.html", "Archives"], ["assets.html", "Assets"]]]
     ];
 
     function buildNavMenu(label, links) {
@@ -5466,6 +5466,109 @@
                 rate: limits?.resources?.core || null,
                 sizeMB: typeof repo?.size === "number" ? Math.round(repo.size / 1024) : null,
                 deploys: runs?.workflow_runs?.map((run) => ({ status: run.status, conclusion: run.conclusion, date: run.created_at, name: run.name, url: run.html_url })) || null
+            };
+        },
+        // Assets: files kept on the repository's separate "assets" branch. They're never part of the published site
+        // (so an uploaded .html or .svg can't run on the wiki's own address and reach saved logins), and uploading
+        // doesn't start a site update. Opening the page needs the wiki or review password every time.
+        // unlockAssets(password) gives an object for one visit; nothing is remembered.
+        async unlockAssets(password) {
+            const { token, kind } = await unlockEither(password);
+            const branch = "assets";
+            const who = readToken() && readAccount() ? readAccount() : kind === "review" ? "Someone with the review password" : "Someone with the wiki password";
+            const segment = /^[A-Za-z0-9][A-Za-z0-9 ._()+-]{0,99}$/;
+            const cleanPath = (path) => {
+                const parts = String(path || "").split("/").filter(Boolean);
+                if (parts.some((part) => !segment.test(part) || part === "..")) throw new Error("Names can use letters, numbers, spaces and . _ - ( ) +, and can't start with a dot.");
+                return parts.join("/");
+            };
+            const contentsPath = (path) => `contents/${path.split("/").map(encodeURIComponent).join("/")}`;
+            const toBase64 = (blob) => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+                reader.onerror = () => reject(new Error("That file could not be read."));
+                reader.readAsDataURL(blob);
+            });
+
+            // The branch is made on first use, with only a README, unrelated to the wiki's own files
+            async function ensureBranch() {
+                const head = await githubRequest(token, `git/ref/heads/${branch}`, { allowMissing: true });
+                if (head) return;
+                const tree = await githubRequest(token, "git/trees", {
+                    method: "POST",
+                    body: { tree: [{ path: "README.md", mode: "100644", type: "blob", content: "Files uploaded through the Strawberry MC wiki's Assets page.\n" }] }
+                });
+                const commit = await githubRequest(token, "git/commits", {
+                    method: "POST",
+                    body: { message: `${who} sets up the Assets branch`, tree: tree.sha, parents: [] }
+                });
+                await githubRequest(token, "git/refs", { method: "POST", body: { ref: `refs/heads/${branch}`, sha: commit.sha } });
+            }
+            await ensureBranch();
+
+            return {
+                kind,
+                who,
+                // Folders first, then files, by name; the README and folder placeholders are left out
+                async list(folder = "") {
+                    const path = cleanPath(folder);
+                    const items = await githubRequest(token, `${path ? contentsPath(path) : "contents"}?ref=${branch}`, { allowMissing: true });
+                    if (!items) return null;
+                    return (Array.isArray(items) ? items : [items])
+                        .filter((item) => item.name !== ".keep" && !(path === "" && item.name === "README.md"))
+                        .map((item) => ({ name: item.name, path: item.path, type: item.type === "dir" ? "folder" : "file", size: item.size, sha: item.sha }))
+                        .sort((a, b) => (a.type === b.type ? 0 : a.type === "folder" ? -1 : 1) || a.name.localeCompare(b.name, undefined, { numeric: true }));
+                },
+                // Git has no empty folders, so a new folder holds an empty .keep file
+                async createFolder(folder, name) {
+                    const path = cleanPath(`${folder}/${name}`);
+                    const existing = await githubRequest(token, `${contentsPath(path)}?ref=${branch}`, { allowMissing: true });
+                    if (existing) throw new Error(`There's already something called "${name}" here.`);
+                    await githubRequest(token, contentsPath(`${path}/.keep`), {
+                        method: "PUT",
+                        body: { message: `${who} creates the assets folder ${path}`, content: "", branch }
+                    });
+                },
+                // replace: overwrite a file of the same name
+                async upload(folder, file, replace = false) {
+                    if (file.size > 25 * 1024 * 1024) throw new Error(`${file.name} is over 25 MB, the most GitHub accepts this way.`);
+                    const path = cleanPath(`${folder}/${file.name}`);
+                    const existing = await githubRequest(token, `${contentsPath(path)}?ref=${branch}`, { allowMissing: true });
+                    if (existing && (Array.isArray(existing) || existing.type !== "file")) throw new Error(`There's a folder called "${file.name}" here.`);
+                    if (existing && !replace) return { exists: true };
+                    await githubRequest(token, contentsPath(path), {
+                        method: "PUT",
+                        body: { message: `${who} ${existing ? "replaces" : "uploads"} ${path} ${existing ? "in" : "to"} assets`, content: await toBase64(file), branch, ...(existing ? { sha: existing.sha } : {}) }
+                    });
+                    return { exists: false };
+                },
+                // The file's bytes, read through the API so a file uploaded a moment ago is already there
+                async download(path) {
+                    const response = await fetch(`https://api.github.com/repos/${repository.owner}/${repository.name}/${contentsPath(cleanPath(path))}?ref=${branch}`, {
+                        cache: "no-store",
+                        headers: { Accept: "application/vnd.github.raw", Authorization: `Bearer ${token}`, "X-GitHub-Api-Version": "2022-11-28" }
+                    });
+                    if (!response.ok) throw new GitHubError(response.status, "");
+                    return response.blob();
+                },
+                async remove(item) {
+                    if (kind !== "wiki") throw new Error("Deleting needs the wiki password, not the review password.");
+                    if (item.type === "folder") {
+                        const inside = await this.list(item.path);
+                        if (inside?.length) throw new Error("Only empty folders can be deleted. Delete what's inside first.");
+                        const keep = await githubRequest(token, `${contentsPath(`${item.path}/.keep`)}?ref=${branch}`, { allowMissing: true });
+                        if (!keep) return;
+                        await githubRequest(token, contentsPath(`${item.path}/.keep`), {
+                            method: "DELETE",
+                            body: { message: `${who} deletes the assets folder ${item.path}`, sha: keep.sha, branch }
+                        });
+                        return;
+                    }
+                    await githubRequest(token, contentsPath(item.path), {
+                        method: "DELETE",
+                        body: { message: `${who} deletes ${item.path} from assets`, sha: item.sha, branch }
+                    });
+                }
             };
         },
         // Commits every ComScript Tutorial page with edits saved in this browser, in one commit.
