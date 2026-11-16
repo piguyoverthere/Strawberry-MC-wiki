@@ -38,28 +38,12 @@
     "updated": "2026-11-14T17:34:59.127Z"
    }
   },
-  "tutorial-purpose.html": {
-   "eric": {
-    "name": "Eric",
+  "todo.html": {
+   "alex": {
+    "name": "Alex",
     "state": "editing",
-    "since": "2026-11-16T16:13:24.695Z",
-    "updated": "2026-11-16T16:13:24.695Z"
-   }
-  },
-  "tutorial-comments.html": {
-   "eric": {
-    "name": "Eric",
-    "state": "editing",
-    "since": "2026-11-16T16:13:40.094Z",
-    "updated": "2026-11-16T16:13:40.094Z"
-   }
-  },
-  "tutorial-chat-output.html": {
-   "eric": {
-    "name": "Eric",
-    "state": "editing",
-    "since": "2026-11-16T16:15:28.861Z",
-    "updated": "2026-11-16T16:15:28.861Z"
+    "since": "2026-11-16T19:25:09.540Z",
+    "updated": "2026-11-16T19:25:09.540Z"
    }
   }
  }
