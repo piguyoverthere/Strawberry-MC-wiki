@@ -1,4 +1,5 @@
 const newsArticles = [
+    { title: "Mushroom Distribution Thread", author: "Alex", date: "2026-11-13", href: "news-alex-mushroom-distribution-thread.html", summary: "For mushroom hunters. Yeah." },
     { title: "[informal] caleb quit. sad :( sai must be bashed", author: "Aadi A", date: "2026-11-05", href: "news-aadi-a-informal-caleb-quit-sad-sai-must-be-bashed.html", summary: "caleb was good. sai bashed. sad :(" },
     { title: "This Site No Longer Syncs to Strawberry MC Wiki", author: "Eric", date: "2026-11-12", href: "news-eric-this-site-no-longer-syncs-to-strawberry-mc-wiki.html", summary: "" },
     { title: "SITE UPDATE: Comments now take less time to sync with others, allowing real-time", author: "Eric", date: "2026-11-09", href: "news-eric-site-update-comments-now-take-less-time-to-sync-with-others-allowing-real-time.html", summary: "yee foot" },

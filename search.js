@@ -327,6 +327,7 @@ const pages = [
     { title: "Full guide to coding (Neoforge, MCreator, VSCode)", href: "page-full-guide-to-coding-neoforge-mcreator-vscode.html", keywords: "full guide to coding ( neoforge mcreator vscode )" },
     { title: "[informal] caleb quit. sad :( sai must be bashed", href: "news-aadi-a-informal-caleb-quit-sad-sai-must-be-bashed.html", keywords: "[informal] caleb quit. sad :( sai must be bashed issue civil war bashsai offense" },
     { title: "Education+ (included with strawberrymc bedrock and edu)", href: "page-education-included-with-strawberrymc-bedrock-and-edu.html", keywords: "education+ (included with strawberrymc bedrock and edu) education minecraft add-ons mods" },
+    { title: "Mushroom Distribution Thread", href: "news-alex-mushroom-distribution-thread.html", keywords: "mushroom distribution thread" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.
