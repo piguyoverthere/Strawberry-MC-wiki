@@ -3427,3 +3427,25 @@ body.wiki-editing .wiki-format-bar{
 body.wiki-editing .tutorial-sidebar{
     padding-bottom:140px
 }
+/* Tutorial: steps with edits not committed yet, and committing them all at once */
+.tutorial-edited-dot{
+    color:#c77700;
+    font-size:.8em
+}
+.tutorial-commit-all{
+    display:block;
+    box-sizing:border-box;
+    width:100%;
+    margin-top:14px;
+    padding:8px 12px;
+    border:1px solid #0056b3;
+    border-radius:5px;
+    background-color:#0056b3;
+    color:#ffffff;
+    cursor:pointer;
+    font:600 14px/1.2 Arial, Helvetica, sans-serif
+}
+.tutorial-commit-all:disabled{
+    cursor:default;
+    opacity:.6
+}

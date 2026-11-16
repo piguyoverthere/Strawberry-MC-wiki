@@ -3959,6 +3959,35 @@
         });
     }
 
+    // A whole page file from its saved source (or the blank new page) with the body content swapped for a draft.
+    // Drafts keep widgets (forms, embedded apps) as numbered placeholders, matched to the source's widgets here.
+    function pageHtmlFromDraft(sourceHtml, draftHtml) {
+        const doc = new DOMParser().parseFromString(sourceHtml, "text/html");
+        const body = doc.body;
+        const top = body.querySelector(":scope > .site-header");
+        const nodes = [];
+        for (let node = top ? top.nextSibling : body.firstChild; node && node.nodeName !== "SCRIPT"; node = node.nextSibling) nodes.push(node);
+        const old = doc.createElement("div");
+        old.append(...nodes);
+        const widgets = [...old.querySelectorAll(islandSelector)]
+            .filter((element) => !element.parentElement.closest(islandSelector) && !element.closest(".wiki-raw-html"))
+            .map((element) => element.outerHTML);
+        const fresh = doc.createElement("template");
+        fresh.innerHTML = draftHtml;
+        for (const placeholder of fresh.content.querySelectorAll("span[data-wiki-island]")) {
+            const widget = doc.createElement("template");
+            widget.innerHTML = widgets[Number(placeholder.dataset.wikiIsland)] || "";
+            placeholder.replaceWith(widget.content);
+        }
+        const firstScript = [...body.children].find((child) => child.tagName === "SCRIPT");
+        const content = doc.importNode(fresh.content, true);
+        if (firstScript) body.insertBefore(content, firstScript);
+        else body.append(content);
+        const heading = fresh.content.querySelector("h1")?.textContent.trim();
+        if (heading) doc.title = `${heading} | Strawberry MC`;
+        return `<!DOCTYPE html>\n${doc.documentElement.outerHTML}\n`;
+    }
+
     // Saves several text files in one commit, so one action (a page plus its search entry, review-queue entry and
     // so on) is one commit and one site update, and can never be left half-saved. prepare() reads what it needs and
     // returns [{ path, text }]; if someone else commits in the meantime it runs again on the fresh files.
@@ -4232,6 +4261,17 @@
         window.scrollTo(window.scrollX, scrollTop);
     });
     saveButton.addEventListener("click", saveEdits);
+
+    // For the ComScript Tutorial sidebar: save the open edits before moving to another step, and pick editing
+    // up again on the next one
+    window.wikiEditor = {
+        isEditing: () => editing,
+        hasChanges: () => editing && serializeContent() !== savedContent,
+        saveDraft: () => saveEdits(),
+        startEditing: () => {
+            if (!editing && canEditPage) editButton.click();
+        }
+    };
     cancelButton.addEventListener("click", () => {
         applyContent(savedContent);
         setEditing(false);
@@ -5404,6 +5444,75 @@
                 sizeMB: typeof repo?.size === "number" ? Math.round(repo.size / 1024) : null,
                 deploys: runs?.workflow_runs?.map((run) => ({ status: run.status, conclusion: run.conclusion, date: run.created_at, name: run.name, url: run.html_url })) || null
             };
+        },
+        // Commits every ComScript Tutorial page with edits saved in this browser, in one commit.
+        // entries: [{ file, title, section, isNew }]. New steps join tutorial.json in the same commit.
+        async commitTutorialDrafts(entries) {
+            const token = readToken();
+            const name = readAccount();
+            if (!token || !name) throw new Error("Log in first.");
+            if (!canReviewRole(await checkAccount(token))) throw new Error("Only admins and editors can commit the whole tutorial at once. Commit each page instead.");
+            const draftKey = (file) => `strawberry-wiki-draft:${deploymentPath}${file}`;
+            const readDraft = (file) => {
+                try {
+                    const draft = JSON.parse(localStorage.getItem(draftKey(file)) || "null");
+                    return typeof draft?.html === "string" ? draft.html : null;
+                } catch {
+                    return null;
+                }
+            };
+            const ready = entries.filter((entry) => /^tutorial-[a-z0-9-]+\.html$/.test(entry.file) && readDraft(entry.file) !== null);
+            if (!ready.length) throw new Error("There are no saved tutorial edits to commit.");
+            const titles = ready.map((entry) => entry.title).join(", ");
+            const message = `${name} updates ComScript Tutorial pages: ${titles}\n\nEdited-by: ${name}`;
+            const blankPage = await fetch("new-page.html", { cache: "no-cache" }).then((response) => response.text());
+            await commitTogether(token, message, async () => {
+                const files = [];
+                for (const entry of ready) {
+                    const existing = await getRepositoryFile(token, entry.file);
+                    if (entry.isNew && existing) throw new Error(`${entry.file} already exists on GitHub. Open that step and edit it there instead.`);
+                    const html = pageHtmlFromDraft(existing ? existing.text : blankPage, readDraft(entry.file));
+                    files.push({ path: entry.file, text: html.replace(/\r?\n/g, !existing || existing.text.includes("\r\n") ? "\r\n" : "\n") });
+                }
+                const added = ready.filter((entry) => entry.isNew);
+                if (added.length) {
+                    files.push(await jsonChange(token, "tutorial.json", (data) => {
+                        data.sections = data.sections || [];
+                        let changed = false;
+                        for (const entry of added) {
+                            if (data.sections.some((section) => (section.pages || []).some((page) => page.file === entry.file))) continue;
+                            let section = data.sections.find((item) => item.id === entry.section) || data.sections[data.sections.length - 1];
+                            if (!section) data.sections.push(section = { id: "steps", title: "Steps", pages: [] });
+                            (section.pages = section.pages || []).push({ file: entry.file, title: entry.title });
+                            changed = true;
+                        }
+                        return changed ? undefined : false;
+                    }));
+                }
+                // Your "editing" notes for these pages go in the same commit
+                files.push(await jsonChange(token, "editing.json", (data) => {
+                    const key = accountKey(name);
+                    let changed = false;
+                    for (const entry of ready) {
+                        const people = data.pages?.[entry.file];
+                        if (!people?.[key]) continue;
+                        delete people[key];
+                        if (!Object.keys(people).length) delete data.pages[entry.file];
+                        changed = true;
+                    }
+                    return changed ? undefined : false;
+                }));
+                return files;
+            });
+            for (const entry of ready) {
+                try {
+                    localStorage.removeItem(draftKey(entry.file));
+                } catch {
+                    // The draft just stays in this browser.
+                }
+                if (entry.isNew) saveLocalPage({ title: entry.title, file: entry.file, href: entry.file, keywords: "", published: true });
+            }
+            return ready.map((entry) => entry.file);
         },
         // Moderation: bans.json holds
         //   bans:     account key → the active ban or restraining order { type, name, until, title, message, style, icon, showEnd, showBy, by, date }

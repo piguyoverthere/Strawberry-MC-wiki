@@ -122,6 +122,8 @@
         if ((match = line.match(/^([^:]+?) sets the review password$/))) return { type: "account", who: match[1], text: " set the review password", target: "", href: null };
         if ((match = line.match(/^(.+?) restores (.+) page to the version from (.+?)(?: for (.+))?$/)))
             return { type: "page-edit", who: match[1], text: ` restored an older version (${match[3]}) of `, target: match[2], page: true, assigned: match[4] ? [match[4]] : undefined };
+        if ((match = line.match(/^([^:]+?) updates ComScript Tutorial pages: (.+)$/)))
+            return { type: "page-edit", who: match[1], text: " updated ComScript Tutorial pages: ", target: match[2], href: "tutorial-index.html" };
         if ((match = line.match(/^([^:]+?) changes the ComScript Tutorial contents$/)))
             return { type: "page-edit", who: match[1], text: " changed the contents of the ", target: "ComScript Tutorial", href: "tutorial-index.html" };
         if ((match = line.match(/^([^:]+?) appeals their (ban|restraining order)$/)))

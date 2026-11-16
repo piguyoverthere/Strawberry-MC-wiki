@@ -20,6 +20,41 @@
     let editingContents = false;
     let saving = false;
 
+    // Edits saved in this browser, per page, as wiki-editor.js stores them
+    const pagePath = decodeURIComponent(location.pathname);
+    const deploymentPath = pagePath.slice(0, pagePath.lastIndexOf("/") + 1);
+    const draftKey = (file) => `strawberry-wiki-draft:${deploymentPath}${file}`;
+    const hasDraft = (file) => {
+        try {
+            return localStorage.getItem(draftKey(file)) !== null;
+        } catch {
+            return false;
+        }
+    };
+    // New steps that aren't committed yet: { file: { title, section } }, so every one shows in the sidebar
+    const newStepsKey = `strawberry-wiki-tutorial-new:${deploymentPath}`;
+    function readNewSteps() {
+        try {
+            return JSON.parse(localStorage.getItem(newStepsKey) || "{}") || {};
+        } catch {
+            return {};
+        }
+    }
+    function writeNewSteps(steps) {
+        try {
+            localStorage.setItem(newStepsKey, JSON.stringify(steps));
+        } catch {
+            // Storage blocked; only the open step shows.
+        }
+    }
+    if (draftFile) {
+        const steps = readNewSteps();
+        steps[draftFile] = { title: params.get("title") || draftFile, section: draftSection };
+        writeNewSteps(steps);
+    }
+    // Moving between steps while editing keeps editing on the next one
+    const resumeKey = "strawberry-wiki-tutorial-resume-editing";
+
     function element(tag, options = {}, ...children) {
         const node = document.createElement(tag);
         for (const [key, value] of Object.entries(options)) {
@@ -104,21 +139,28 @@
     function askText(title, label, value = "") {
         return new Promise((resolve) => {
             const input = element("input", { type: "text", maxlength: "80", value });
+            // Finishes straight from the buttons rather than waiting for the dialog's close event
+            let done = false;
+            const finish = (answer) => {
+                if (done) return;
+                done = true;
+                if (dialog.open) dialog.close();
+                dialog.remove();
+                resolve(answer);
+            };
             const dialog = element("dialog", { className: "wiki-dialog", "data-wiki-injected": true },
                 element("form", { method: "dialog" },
                     element("h2", { text: title }),
                     element("label", {}, label, input),
                     element("div", { className: "wiki-dialog-actions" },
-                        element("button", { type: "button", text: "Cancel", onclick: () => dialog.close() }),
+                        element("button", { type: "button", text: "Cancel", onclick: () => finish(null) }),
                         element("button", { type: "submit", className: "wiki-primary", text: "OK" }))));
-            let answer = null;
-            dialog.querySelector("form").addEventListener("submit", () => {
-                answer = input.value.trim() || null;
+            dialog.querySelector("form").addEventListener("submit", (event) => {
+                event.preventDefault();
+                finish(input.value.trim() || null);
             });
-            dialog.addEventListener("close", () => {
-                dialog.remove();
-                resolve(answer);
-            });
+            dialog.addEventListener("cancel", () => finish(null));
+            dialog.addEventListener("close", () => finish(null));
             document.body.append(dialog);
             dialog.showModal();
             input.select();
@@ -256,6 +298,9 @@
         } catch {
             // Can't check from here; committing still refuses to overwrite without asking.
         }
+        // Edits open on this page are saved first, like moving to another step
+        const editor = window.wikiEditor;
+        if (editor?.hasChanges() && editor.saveDraft() === false) return;
         location.href = `new-page.html?${new URLSearchParams({ file, title, section: section.id })}`;
     }
 
@@ -265,9 +310,13 @@
 
     function stepLink(page, isDraft = false) {
         const current = page.file === currentFile;
+        const href = isDraft ? `new-page.html?${new URLSearchParams({ file: page.file, title: page.title, section: page.section || "" })}` : page.file;
+        const edited = !isDraft && hasDraft(page.file);
         return element("li", { className: `tutorial-step${current ? " is-current" : ""}${isDraft ? " is-draft" : ""}` },
-            element("a", { href: isDraft ? location.href : page.file, "aria-current": current ? "page" : null },
-                page.title, isDraft ? element("span", { className: "tutorial-draft-note", text: " (not committed yet)" }) : null),
+            element("a", { href, "aria-current": current ? "page" : null, onclick: leaveFor(href) },
+                page.title,
+                isDraft ? element("span", { className: "tutorial-draft-note", text: " (not committed yet)" }) : null,
+                edited ? element("span", { className: "tutorial-edited-dot", title: "Edits saved in this browser, not committed yet", "aria-label": "edited, not committed", text: " ●" }) : null),
             editingContents && !isDraft ? element("span", { className: "tutorial-tools" },
                 iconButton("↑", `Move "${page.title}" up`, () => moveStep(page.file, -1)),
                 iconButton("↓", `Move "${page.title}" down`, () => moveStep(page.file, 1)),
@@ -275,18 +324,87 @@
                 iconButton("×", `Take "${page.title}" out of the tutorial`, () => removeStep(page))) : null);
     }
 
+    // New steps not committed yet: dropped once they're in the contents, or once their draft is gone
+    function pendingSteps() {
+        const listed = new Set(order().map((page) => page.file));
+        const steps = readNewSteps();
+        let changed = false;
+        for (const file of Object.keys(steps)) {
+            if (listed.has(file) || (!hasDraft(file) && file !== draftFile)) {
+                delete steps[file];
+                changed = true;
+            }
+        }
+        if (changed) writeNewSteps(steps);
+        const sections = new Set(data.sections.map((section) => section.id));
+        const fallback = data.sections[data.sections.length - 1]?.id;
+        return Object.entries(steps).map(([file, step]) => ({ file, title: step.title, section: sections.has(step.section) ? step.section : fallback }));
+    }
+
+    // Every tutorial page with edits saved in this browser
+    function changedPages() {
+        return [
+            ...order().filter((page) => hasDraft(page.file)).map((page) => ({ ...page, isNew: false })),
+            ...pendingSteps().filter((step) => hasDraft(step.file)).map((step) => ({ ...step, isNew: true }))
+        ];
+    }
+
+    // Following a link while editing saves the edits first and keeps editing on the next page
+    function leaveFor(href) {
+        return (event) => {
+            const editor = window.wikiEditor;
+            if (!editor?.isEditing() || event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) return;
+            event.preventDefault();
+            if (editor.hasChanges() && editor.saveDraft() === false) return;
+            try {
+                sessionStorage.setItem(resumeKey, "1");
+            } catch {
+                // Without storage the next page just opens for reading.
+            }
+            location.href = href;
+        };
+    }
+
+    async function commitAll() {
+        const editor = window.wikiEditor;
+        if (editor?.hasChanges() && editor.saveDraft() === false) return;
+        const pages = changedPages();
+        if (!pages.length) {
+            status.textContent = "There are no saved edits to commit.";
+            render();
+            return;
+        }
+        if (!window.confirm(`Commit these ${pages.length} page${pages.length === 1 ? "" : "s"} to GitHub in one commit?\n\n${pages.map((page) => `• ${page.title}${page.isNew ? " (new)" : ""}`).join("\n")}`)) return;
+        status.textContent = "Committing…";
+        commitButton.disabled = true;
+        try {
+            await store.commitTutorialDrafts(pages);
+            try {
+                sessionStorage.setItem("strawberry-wiki-tutorial-committed", String(pages.length));
+                sessionStorage.removeItem(resumeKey);
+            } catch {
+                // Fine.
+            }
+            // A step that was being written now has its own address
+            location.href = draftFile && pages.some((page) => page.file === draftFile) ? draftFile : location.href;
+        } catch (error) {
+            status.textContent = `Could not commit: ${error.message}`;
+            commitButton.disabled = false;
+        }
+    }
+    const commitButton = element("button", { type: "button", className: "tutorial-commit-all", onclick: commitAll });
+
     function render() {
         const collapsed = readSet(collapsedKey);
-        const known = order().some((page) => page.file === currentFile);
         const sections = data.sections.map((section) => {
             const pages = section.pages || [];
-            // The step being written shows in its section until it's committed
-            const draft = draftFile && !known && draftSection === section.id ? { file: draftFile, title: document.querySelector(".wiki-content h1")?.textContent.trim() || params.get("title") || draftFile } : null;
-            const holdsCurrent = pages.some((page) => page.file === currentFile) || Boolean(draft);
+            // New steps show in their section until they're committed
+            const drafts = pendingSteps().filter((step) => step.section === section.id);
+            const holdsCurrent = pages.some((page) => page.file === currentFile) || drafts.some((step) => step.file === currentFile);
             const details = element("details", { className: "tutorial-section", open: !collapsed.has(section.id) || holdsCurrent },
                 element("summary", {}, element("span", { className: "tutorial-section-title", text: section.title }),
                     element("span", { className: "tutorial-count", text: String(pages.length) })),
-                pages.length || draft ? element("ol", { className: "tutorial-steps" }, ...pages.map((page) => stepLink(page)), draft ? stepLink(draft, true) : null)
+                pages.length || drafts.length ? element("ol", { className: "tutorial-steps" }, ...pages.map((page) => stepLink(page)), ...drafts.map((step) => stepLink(step, true)))
                     : element("p", { className: "tutorial-empty", text: "No steps yet." }),
                 editingContents ? element("div", { className: "tutorial-section-tools" },
                     element("button", { type: "button", className: "tutorial-add", text: "+ Page", onclick: () => addStep(section) }),
@@ -308,6 +426,7 @@
                 element("button", { type: "button", className: "tutorial-hide-button", title: "Hide the contents", "aria-label": "Hide the contents", text: "«", onclick: () => setHidden(true) })),
             element("ol", { className: "tutorial-steps tutorial-overview" }, stepLink({ file: indexFile, title: "Overview" })),
             ...sections,
+            canEdit() && changedPages().length ? (commitButton.textContent = `Commit all changes (${changedPages().length})`, commitButton) : null,
             canEdit() ? element("div", { className: "tutorial-edit-bar" },
                 editingContents ? element("button", { type: "button", className: "tutorial-add", text: "+ Section", onclick: addSection }) : null,
                 element("button", {
@@ -330,9 +449,9 @@
         const next = steps[index + 1];
         pager.hidden = !previous && !next;
         pager.replaceChildren(
-            previous ? element("a", { className: "tutorial-pager-link tutorial-previous", href: previous.file, rel: "prev" },
+            previous ? element("a", { className: "tutorial-pager-link tutorial-previous", href: previous.file, rel: "prev", onclick: leaveFor(previous.file) },
                 element("span", { className: "tutorial-pager-label", text: "← Previous" }), element("span", { className: "tutorial-pager-title", text: previous.title })) : element("span"),
-            next ? element("a", { className: "tutorial-pager-link tutorial-next", href: next.file, rel: "next" },
+            next ? element("a", { className: "tutorial-pager-link tutorial-next", href: next.file, rel: "next", onclick: leaveFor(next.file) },
                 element("span", { className: "tutorial-pager-label", text: "Next →" }), element("span", { className: "tutorial-pager-title", text: next.title })) : element("span"));
     }
 
@@ -342,6 +461,23 @@
     }).observe(document.body, { childList: true });
     placePager();
     render();
+    // Counts and dots follow saves, cancels and commits on this page
+    document.addEventListener("wiki-drafts-changed", () => render());
+
+    // Arrived here from another step while editing: carry on editing
+    try {
+        if (sessionStorage.getItem(resumeKey)) {
+            sessionStorage.removeItem(resumeKey);
+            window.wikiEditor?.startEditing();
+        }
+        const committed = sessionStorage.getItem("strawberry-wiki-tutorial-committed");
+        if (committed) {
+            sessionStorage.removeItem("strawberry-wiki-tutorial-committed");
+            status.textContent = `Committed ${committed} page${committed === "1" ? "" : "s"}. The live site updates in a minute or two.`;
+        }
+    } catch {
+        // Storage blocked.
+    }
 
     const receive = (json) => {
         data = { sections: Array.isArray(json?.sections) ? json.sections : [] };
