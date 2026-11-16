@@ -3959,6 +3959,33 @@
         });
     }
 
+    // Puts a new tutorial step into tutorial.json where it was placed in the sidebar: in place.section, right
+    // after place.after ("" for the top of the section; missing or gone for the end). False if it's already there.
+    function placeTutorialStep(data, file, title, place = {}) {
+        data.sections = data.sections || [];
+        if (data.sections.some((section) => (section.pages || []).some((page) => page.file === file))) return false;
+        let section = data.sections.find((item) => item.id === place.section) || data.sections[data.sections.length - 1];
+        if (!section) data.sections.push(section = { id: "steps", title: "Steps", pages: [] });
+        const pages = section.pages = section.pages || [];
+        let index = pages.length;
+        if (place.after === "") index = 0;
+        else if (place.after) {
+            const anchor = pages.findIndex((page) => page.file === place.after);
+            if (anchor >= 0) index = anchor + 1;
+        }
+        pages.splice(index, 0, { file, title });
+        return true;
+    }
+
+    // Where the sidebar placed a new step, as remembered in this browser
+    function tutorialPlace(file) {
+        try {
+            return JSON.parse(localStorage.getItem(`strawberry-wiki-tutorial-new:${deploymentPath}`) || "{}")?.[file] || null;
+        } catch {
+            return null;
+        }
+    }
+
     // A whole page file from its saved source (or the blank new page) with the body content swapped for a draft.
     // Drafts keep widgets (forms, embedded apps) as numbered placeholders, matched to the source's widgets here.
     function pageHtmlFromDraft(sourceHtml, draftHtml) {
@@ -4141,13 +4168,9 @@
                 }
                 // A new tutorial step joins the tutorial's contents instead of search
                 if (newPageFile && !existing && /^tutorial-/.test(newPageFile)) {
-                    files.push(await jsonChange(token, "tutorial.json", (data) => {
-                        data.sections = data.sections || [];
-                        if (data.sections.some((section) => (section.pages || []).some((page) => page.file === newPageFile))) return false;
-                        const section = data.sections.find((item) => item.id === params.get("section")) || data.sections[data.sections.length - 1];
-                        if (!section) data.sections.push({ id: "steps", title: "Steps", pages: [{ file: newPageFile, title }] });
-                        else (section.pages = section.pages || []).push({ file: newPageFile, title });
-                    }));
+                    const place = tutorialPlace(newPageFile) || { section: params.get("section") };
+                    files.push(await jsonChange(token, "tutorial.json", (data) =>
+                        placeTutorialStep(data, newPageFile, place.title || title, place) ? undefined : false));
                 } else if (newPageFile && !existing) {
                     try {
                         files.push(await searchIndexChange(token, title, newPageFile, keywords));
@@ -5476,15 +5499,11 @@
                 }
                 const added = ready.filter((entry) => entry.isNew);
                 if (added.length) {
+                    // In reading order, so each new step's "after" is already in place
                     files.push(await jsonChange(token, "tutorial.json", (data) => {
-                        data.sections = data.sections || [];
                         let changed = false;
                         for (const entry of added) {
-                            if (data.sections.some((section) => (section.pages || []).some((page) => page.file === entry.file))) continue;
-                            let section = data.sections.find((item) => item.id === entry.section) || data.sections[data.sections.length - 1];
-                            if (!section) data.sections.push(section = { id: "steps", title: "Steps", pages: [] });
-                            (section.pages = section.pages || []).push({ file: entry.file, title: entry.title });
-                            changed = true;
+                            if (placeTutorialStep(data, entry.file, entry.title, entry)) changed = true;
                         }
                         return changed ? undefined : false;
                     }));

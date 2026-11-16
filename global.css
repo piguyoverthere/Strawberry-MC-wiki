@@ -3148,10 +3148,10 @@ body.wiki-editing .wiki-last-edited{
 }
 @media (min-width:900px){
     html.wiki-tutorial:not(.tutorial-sidebar-hidden) body{
-        padding-left:300px
+        padding-left:360px
     }
     html.wiki-tutorial:not(.tutorial-sidebar-hidden) .site-header{
-        margin-left:-300px
+        margin-left:-360px
     }
     .tutorial-sidebar{
         position:fixed;
@@ -3159,7 +3159,7 @@ body.wiki-editing .wiki-last-edited{
         top:var(--tutorial-top, 64px);
         bottom:0;
         left:0;
-        width:280px;
+        width:340px;
         overflow-y:auto
     }
 }

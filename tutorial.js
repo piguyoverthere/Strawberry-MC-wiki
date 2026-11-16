@@ -189,27 +189,119 @@
 
     const contentsMessage = () => `${store.getAuthor()} changes the ComScript Tutorial contents`;
 
-    // Moves a step up or down; at the edge of a section it moves into the next or previous section
-    function moveStep(file, step) {
-        change((saved) => {
-            const sections = saved.sections;
-            const from = sections.findIndex((section) => (section.pages || []).some((page) => page.file === file));
-            if (from < 0) return false;
-            const list = sections[from].pages;
-            const index = list.findIndex((page) => page.file === file);
-            const target = index + step;
-            if (target >= 0 && target < list.length) {
-                [list[index], list[target]] = [list[target], list[index]];
-                return undefined;
+    // The contents as shown: committed steps from tutorial.json, with new steps (not committed yet, kept in this
+    // browser) placed among them. A new step remembers its section and the committed step it comes after
+    // ("" for the top of the section; missing for the end).
+    function layout() {
+        const pending = pendingSteps();
+        return data.sections.map((section) => {
+            const items = (section.pages || []).map((page) => ({ ...page, draft: false }));
+            for (const step of pending.filter((item) => item.section === section.id)) {
+                let index = items.length;
+                if (step.after === "") index = 0;
+                else if (step.after) {
+                    const anchor = items.findIndex((item) => !item.draft && item.file === step.after);
+                    if (anchor >= 0) index = anchor + 1;
+                }
+                // New steps with the same place keep their order
+                while (index < items.length && items[index].draft) index++;
+                items.splice(index, 0, { ...step, draft: true });
             }
-            const next = sections[from + step];
-            if (!next) return false;
-            const [page] = list.splice(index, 1);
-            next.pages = next.pages || [];
-            if (step < 0) next.pages.push(page);
-            else next.pages.unshift(page);
+            return { ...section, items };
+        });
+    }
+
+    // Saves a rearranged layout: new steps' places stay in this browser; committed steps' order is saved to
+    // tutorial.json only if it changed
+    function saveLayout(sections) {
+        const steps = {};
+        for (const section of sections) {
+            let after = "";
+            for (const item of section.items) {
+                if (item.draft) steps[item.file] = { title: item.title, section: section.id, after };
+                else after = item.file;
+            }
+        }
+        writeNewSteps(steps);
+        const wanted = sections.map((section) => [section.id, section.items.filter((item) => !item.draft).map((item) => item.file)]);
+        const same = wanted.every(([id, files]) => {
+            const current = (data.sections.find((section) => section.id === id)?.pages || []).map((page) => page.file);
+            return current.length === files.length && current.every((file, index) => file === files[index]);
+        });
+        if (same) {
+            render();
+            return;
+        }
+        change((saved) => {
+            const pages = new Map();
+            const home = new Map();
+            for (const section of saved.sections) {
+                for (const page of section.pages || []) {
+                    pages.set(page.file, page);
+                    home.set(page.file, section.id);
+                }
+            }
+            const placed = new Set();
+            for (const [id, files] of wanted) {
+                const section = saved.sections.find((item) => item.id === id);
+                if (!section) continue;
+                section.pages = files.filter((file) => pages.has(file)).map((file) => {
+                    placed.add(file);
+                    return pages.get(file);
+                });
+            }
+            // Steps someone else added meanwhile stay in their section
+            for (const [file, page] of pages) {
+                if (placed.has(file)) continue;
+                const section = saved.sections.find((item) => item.id === home.get(file));
+                if (section) section.pages.push(page);
+            }
             return undefined;
         }, contentsMessage());
+    }
+
+    // Moves a step, new or committed, up or down; at the edge of a section it moves into the next or previous one
+    function moveItem(file, step) {
+        const sections = layout();
+        const from = sections.findIndex((section) => section.items.some((item) => item.file === file));
+        if (from < 0) return;
+        const list = sections[from].items;
+        const index = list.findIndex((item) => item.file === file);
+        const [item] = list.splice(index, 1);
+        if (step < 0 && index > 0) list.splice(index - 1, 0, item);
+        else if (step > 0 && index < list.length) list.splice(index + 1, 0, item);
+        else if (sections[from + step]) {
+            if (step < 0) sections[from + step].items.push(item);
+            else sections[from + step].items.unshift(item);
+        } else return;
+        saveLayout(sections);
+    }
+
+    async function renameNewStep(step) {
+        const title = await askText("Rename this tab", "Tab name", step.title);
+        if (!title || title === step.title) return;
+        const steps = readNewSteps();
+        if (!steps[step.file]) return;
+        steps[step.file].title = title;
+        writeNewSteps(steps);
+        render();
+    }
+
+    function discardNewStep(step) {
+        if (!window.confirm(`Throw away the new step "${step.title}" and everything written in it? It was never committed, so this can't be undone.`)) return;
+        try {
+            localStorage.removeItem(draftKey(step.file));
+        } catch {
+            // Nothing saved.
+        }
+        const steps = readNewSteps();
+        delete steps[step.file];
+        writeNewSteps(steps);
+        if (step.file === currentFile) {
+            location.href = indexFile;
+            return;
+        }
+        render();
     }
 
     function moveSection(id, step) {
@@ -312,8 +404,7 @@
     const pageEditing = () => Boolean(window.wikiEditor?.isEditing());
     const showTools = () => canEdit() && (editingContents || pageEditing());
 
-    function stepLink(page, isDraft = false) {
-        const steps = data.sections.flatMap((section) => section.pages || []);
+    function stepLink(page, isDraft = false, steps = []) {
         const current = page.file === currentFile;
         const href = isDraft ? `new-page.html?${new URLSearchParams({ file: page.file, title: page.title, section: page.section || "" })}` : page.file;
         const edited = !isDraft && hasDraft(page.file);
@@ -322,12 +413,16 @@
                 page.title,
                 isDraft ? element("span", { className: "tutorial-draft-note", text: " (not committed yet)" }) : null,
                 edited ? element("span", { className: "tutorial-edited-dot", title: "Edits saved in this browser, not committed yet", "aria-label": "edited, not committed", text: " ●" }) : null),
-            showTools() && !isDraft && page.file !== indexFile ? element("span", { className: "tutorial-tools" },
+            showTools() && page.file !== indexFile ? element("span", { className: "tutorial-tools" },
                 // At the top or bottom of a section, a step moves into the section before or after
-                iconButton("↑", `Move "${page.title}" up`, () => moveStep(page.file, -1), steps[0]?.file === page.file),
-                iconButton("↓", `Move "${page.title}" down`, () => moveStep(page.file, 1), steps[steps.length - 1]?.file === page.file),
-                iconButton("✎", `Rename the "${page.title}" tab`, () => renameStep(page)),
-                iconButton("×", `Take "${page.title}" out of the tutorial`, () => removeStep(page))) : null);
+                iconButton("↑", `Move "${page.title}" up`, () => moveItem(page.file, -1), steps[0]?.file === page.file),
+                iconButton("↓", `Move "${page.title}" down`, () => moveItem(page.file, 1), steps[steps.length - 1]?.file === page.file),
+                isDraft
+                    ? iconButton("✎", `Rename the new step "${page.title}"`, () => renameNewStep(page))
+                    : iconButton("✎", `Rename the "${page.title}" tab`, () => renameStep(page)),
+                isDraft
+                    ? iconButton("×", `Throw away the new step "${page.title}"`, () => discardNewStep(page))
+                    : iconButton("×", `Take "${page.title}" out of the tutorial`, () => removeStep(page))) : null);
     }
 
     // New steps not committed yet: dropped once they're in the contents, or once their draft is gone
@@ -344,15 +439,25 @@
         if (changed) writeNewSteps(steps);
         const sections = new Set(data.sections.map((section) => section.id));
         const fallback = data.sections[data.sections.length - 1]?.id;
-        return Object.entries(steps).map(([file, step]) => ({ file, title: step.title, section: sections.has(step.section) ? step.section : fallback }));
+        return Object.entries(steps).map(([file, step]) => sections.has(step.section)
+            ? { file, title: step.title, section: step.section, after: step.after }
+            // Its section was removed: it goes to the end of the last section
+            : { file, title: step.title, section: fallback });
     }
 
-    // Every tutorial page with edits saved in this browser
+    // Every tutorial page with edits saved in this browser, in reading order. A new step says what comes just
+    // before it, so committing puts it exactly where it was placed.
     function changedPages() {
-        return [
-            ...order().filter((page) => hasDraft(page.file)).map((page) => ({ ...page, isNew: false })),
-            ...pendingSteps().filter((step) => hasDraft(step.file)).map((step) => ({ ...step, isNew: true }))
-        ];
+        const pages = hasDraft(indexFile) ? [{ file: indexFile, title: "Overview", isNew: false }] : [];
+        for (const section of layout()) {
+            let after = "";
+            for (const item of section.items) {
+                if (hasDraft(item.file)) pages.push(item.draft ? { file: item.file, title: item.title, section: section.id, after, isNew: true } : { file: item.file, title: item.title, isNew: false });
+                // Only steps that will be in the contents after the commit can be what a new step follows
+                if (!item.draft || hasDraft(item.file)) after = item.file;
+            }
+        }
+        return pages;
     }
 
     // Following a link while editing saves the edits first and keeps editing on the next page
@@ -402,15 +507,17 @@
 
     function render() {
         const collapsed = readSet(collapsedKey);
+        const arranged = layout();
+        const everyStep = arranged.flatMap((section) => section.items);
         const sections = data.sections.map((section, sectionIndex) => {
             const pages = section.pages || [];
-            // New steps show in their section until they're committed
-            const drafts = pendingSteps().filter((step) => step.section === section.id);
-            const holdsCurrent = pages.some((page) => page.file === currentFile) || drafts.some((step) => step.file === currentFile);
+            // New steps show among the others until they're committed
+            const items = arranged[sectionIndex].items;
+            const holdsCurrent = items.some((item) => item.file === currentFile);
             const details = element("details", { className: "tutorial-section", open: !collapsed.has(section.id) || holdsCurrent },
                 element("summary", {}, element("span", { className: "tutorial-section-title", text: section.title }),
-                    element("span", { className: "tutorial-count", text: String(pages.length) })),
-                pages.length || drafts.length ? element("ol", { className: "tutorial-steps" }, ...pages.map((page) => stepLink(page)), ...drafts.map((step) => stepLink(step, true)))
+                    element("span", { className: "tutorial-count", text: String(items.length) })),
+                items.length ? element("ol", { className: "tutorial-steps" }, ...items.map((item) => stepLink(item, item.draft, everyStep)))
                     : element("p", { className: "tutorial-empty", text: "No steps yet." }),
                 showTools() ? element("div", { className: "tutorial-section-tools" },
                     element("button", { type: "button", className: "tutorial-add", text: "+ Page", onclick: () => addStep(section) }),
