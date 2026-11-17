@@ -13,8 +13,9 @@
             </nav>
         </header>
         <h1>Scripter</h1>
-        <p>The Scripter is a new block that acts as a physical compiler to execute ComScript. The Scripter block cannot be obtained from the default inventory (assuming the debug tab is turned off). Instead, use /give @p strawberrymc:scripter to obtain the Scripter.</p>
+        <p>The Scripter is a new block that acts as a physical compiler to execute ComScript. The Scripter block cannot be obtained from the default inventory (assuming the debug tab is turned off). Instead, use /give @p strawberrymc:scripter to obtain the Scripter.</p><ul><li>A redstone pulse runs the script once, one tick after the signal turns on.</li><li>The <b>Run</b> button saves and runs the script, <b>Stop</b> saves it and stops its timers and event blocks, <b>Done</b> (or Esc) saves and closes the editor, <b>Cancel</b> closes the editor without saving, and <b>Clear</b> empties the terminal.</li><li>Running the script again stops the timers and event blocks the last run started.</li><li>One run (or one tick of a timer, or one event) can run at most 10000 statements, so a script can't freeze the server.</li><li>A script can be up to 32000 characters long, and the terminal keeps its last 200 lines.</li><li>Command output appears in the terminal: errors in red, warnings in yellow, everything else in white, each with the time, and with the line number when it came from a line of the script.</li></ul>
         <script src="wiki-editor.js" defer=""></script>
     
+
 
 </body></html>
