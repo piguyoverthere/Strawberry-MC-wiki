@@ -35,11 +35,12 @@
     "eric",
     "thepeacemaker44"
    ],
-   "updated": "2026-11-17T22:25:24.301Z",
+   "updated": "2026-11-17T22:25:26.757Z",
    "settings": {
     "theme": "light",
-    "updated": "2026-11-17T22:25:23.154Z",
-    "textSize": "normal"
+    "updated": "2026-11-17T22:25:26.114Z",
+    "textSize": "normal",
+    "font": "serif"
    }
   }
  }
