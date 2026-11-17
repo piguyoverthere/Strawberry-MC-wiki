@@ -1261,7 +1261,7 @@
    "author": "Alex",
    "number": null,
    "title": "Change beds to sleep during the day",
-   "description": "- Can be used to skip days as well as nights, which may help with phantom hunting ???-Sai\n- Fully heals player during use Needs cost/Convincing -Eric",
+   "description": "- Can be used to skip days as well as nights, which may help with phantom hunting\n- Fully heals player during use",
    "comments": [
     "Sai: X (Needs changing tho)",
     "Eric: Needs convincing",
@@ -1302,7 +1302,9 @@
      "text": "This is a high quality idea",
      "date": "2026-11-11T01:08:56.969Z"
     }
-   ]
+   ],
+   "edited": "2026-11-17T19:18:29.328Z",
+   "editedBy": "Alex"
   },
   {
    "id": "idea-doc-24",
