@@ -1311,7 +1311,7 @@
    "author": "Alex",
    "number": null,
    "title": "Balloon",
-   "description": "- Not to be added to Minecraft Education (Already exists)\n- No real gameplay usage but, looks nice and floats in the air and is dyeable to any of the 16 dye colors. [the player forgot about our new ones –Eric]\n- Following recipe crafts a deflated balloon, which can be inflated into an inflated balloon: Rabbit hide x5, Any dye, Leather x2, Leash (3x3 grid)\n- Balloon inflates by holding right click for 3 seconds while holding deflated balloon, and becomes an inflated balloon and can be held like a helium balloon and tied to a fence post (via right click)",
+   "description": "- Not to be added to Minecraft Education (Already exists)\n- No real gameplay usage but, looks nice and floats in the air and is dyeable to any of the 16 dye colors. [you forgot about our new ones –Eric]\n- Following recipe crafts a deflated balloon, which can be inflated into an inflated balloon: Rabbit hide x5, Any dye, Leather x2, Leash (3x3 grid)\n- Balloon inflates by holding right click for 3 seconds while holding deflated balloon, and becomes an inflated balloon and can be held like a helium balloon and tied to a fence post (via right click)",
    "comments": [
     "Sai: X",
     "Eric: X (make it show the air meter like underwater)"
@@ -1329,7 +1329,9 @@
      "vote": "approve",
      "source": "document"
     }
-   }
+   },
+   "edited": "2026-11-17T19:22:22.444Z",
+   "editedBy": "Alex"
   },
   {
    "id": "idea-doc-25",
