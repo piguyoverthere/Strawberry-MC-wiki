@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Mathematical Operators | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    </head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="Strawberry%20minecraft%20wiki%20(1).pdf" target="_blank" rel="noopener">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Mathematical Operators</h1><p>Mathematical operators can be used to add, subtract, multiply, divide, square root, power, factorial, sin, cos, tan, inverse sin, inverse cos, inverse tan, log, and inverse log valid format variables, floats, and integers. These operators are essential for variables and data structures you will learn about later.</p><table>
+                        <thead><tr><th>Operation</th><th>Syntax</th><th>Notes</th></tr></thead>
+                        <tbody>
+                            <tr><td>Addition</td><td><pre class="code-box"><code class="consolas">&lt;val1&gt; + &lt;val2&gt;</code></pre></td><td><br></td></tr>
+                            <tr><td>Subtraction</td><td><pre class="code-box"><code class="consolas">&lt;val1&gt; - &lt;val2&gt;</code></pre></td><td><br></td></tr><tr><td>Multiplication</td><td><pre class="code-box"><code class="consolas">&lt;val1&gt; * &lt;val2&gt;</code></pre></td><td><br></td></tr><tr><td>Remainderless division</td><td><pre class="code-box"><code class="consolas">&lt;val1&gt; / &lt;val2&gt;</code></pre></td><td>Division by 0 results in a output of 0.</td></tr><tr><td>Remainder fetch</td><td><pre class="code-box"><code class="consolas">&lt;val1&gt; /% &lt;val2&gt;
+&lt;val1&gt; mod &lt;val2&gt;</code></pre></td><td><br></td></tr><tr><td>Logarithm</td><td><pre class="code-box"><code class="consolas">log(&lt;val&gt;)</code></pre></td><td>Invalid operator syntax is a syntax error, and an input that isn't a number gives <span class="consolas">Error: Unexpected data type in input</span>. A number outside what the function accepts gives <span class="consolas">NaN</span> or an <span class="consolas">infinity</span>, for example <span class="consolas">sqrt(-1)</span> is <span class="consolas">NaN</span> and <span class="consolas">log(0)</span> is <span class="consolas">-Infinity</span>.</td></tr><tr><td>Inverse logarithm</td><td><pre class="code-box"><code class="consolas">log^(&lt;val&gt;)</code></pre></td><td>|</td></tr><tr><td>Sine</td><td><pre class="code-box"><code class="consolas">sin(&lt;val&gt;) //shorthand
+sine(&lt;val&gt;)<br></code></pre></td><td>|</td></tr><tr><td>Inverse sine</td><td><pre class="code-box"><code class="consolas">sin^(&lt;val&gt;) //shorthand
+sine^(&lt;val&gt;)</code></pre></td><td>|</td></tr><tr><td>Cosine</td><td><pre class="code-box"><code class="consolas">cos(&lt;val&gt;) //shorthand
+cosine(&lt;val&gt;)</code></pre></td><td>|</td></tr><tr><td>Inverse cosine</td><td><pre class="code-box"><code class="consolas">cos^(&lt;val&gt;) //shorthand
+cosine^(&lt;val&gt;)</code></pre></td><td>|</td></tr><tr><td>Tangent</td><td><pre class="code-box"><code class="consolas">tan(&lt;val&gt;) //shorthand
+tangent(&lt;val&gt;)</code></pre></td><td>|</td></tr><tr><td>Inverse tangent</td><td><pre class="code-box"><code class="consolas">tan^(&lt;val&gt;) //shorthand
+tangent^(&lt;val&gt;)</code></pre></td><td>|</td></tr><tr><td>Square root</td><td><pre class="code-box"><code class="consolas">sqrt(&lt;val&gt;) //shorthand
+sqaureroot(&lt;val&gt;)</code></pre></td><td><br></td></tr></tbody></table><h2>Extra math functions</h2><ul><li><code class="consolas">squareroot()</code> also works, as well as the spelling above.</li><li>Powers use <code class="consolas">^</code>: <code class="consolas">2 ^ 10</code>. Factorials use <code class="consolas">fact(&lt;val&gt;)</code> or <code class="consolas">factorial(&lt;val&gt;)</code>, for whole numbers from 0 to 20.</li><li>Angles are in degrees, like Minecraft's rotations. The <code class="consolas">^</code> versions are the inverses (<code class="consolas">sin^(0.5)</code> is 30) and also give degrees.</li><li><code class="consolas">log()</code> is base 10, and <code class="consolas">log^()</code> is 10 to that power.</li><li>Order: brackets, then a leading <code class="consolas">-</code>, then <code class="consolas">^</code>, then <code class="consolas">*</code> <code class="consolas">/</code> <code class="consolas">/%</code> <code class="consolas">mod</code>, then <code class="consolas">+</code> <code class="consolas">-</code>, then comparisons. This makes <code class="consolas">-2 ^ 2</code> equal to 4.</li><li>Dividing two integers gives an integer with no remainder, rounding down. Dividing by 0, including <code class="consolas">/%</code> and <code class="consolas">mod</code> by 0, gives 0.</li></ul><h2>Random value</h2><p>Random inclusive values can be generated in ComScript with the following syntax.</p><p>Integer example:</p><pre class="code-box"><code class="consolas">random.randint(&lt;min&gt;, &lt;max&gt;)</code></pre><p>Non-inclusive values can be generated using:</p><pre class="code-box"><code class="consolas">random.n.randint(&lt;min&gt;, &lt;max&gt;)</code></pre><p>Random floats with a determined fix/round can be generated using:</p><pre class="code-box"><code class="consolas">random.&lt;fix length&gt;.rand(&lt;min&gt;, &lt;max&gt;)</code></pre><h4 id="random-value-ranges">Random value ranges</h4><p><code class="consolas">random.n.randint(1, 6)</code> leaves out the maximum, so it gives 1 to 5. <code class="consolas">random.2.rand(0, 1)</code> gives a float rounded to 2 decimal places.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    
+
+</body></html>
