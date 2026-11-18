@@ -5840,6 +5840,17 @@
    "source": "site",
    "created": "2026-11-14T02:24:01.239Z",
    "votes": {}
+  },
+  {
+   "id": "idea-mwmq04ur-8hyn7",
+   "author": "Sai",
+   "title": "Crystal jellyfish (Probably won't be final name)",
+   "description": "This new mob will spawn around the crystal temple and will shoot large lasers at the player. when killed will drop an item called the crystal lens which can be crafted into a magnified spyglass which is required to complete the crystal temple by reflecting beams of light to different crystal sensors on the walls that open the unbreakable doors. can be used on non crystal mobs to light them on fire after staring at them for more than 5 seconds and will deal constant damage (1 damage per 10 ticks) to enemy after 5 seconds.",
+   "comments": [],
+   "status": "",
+   "source": "site",
+   "created": "2026-11-18T22:56:17.043Z",
+   "votes": {}
   }
  ]
 }
