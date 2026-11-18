@@ -5850,14 +5850,21 @@
    "status": "",
    "source": "site",
    "created": "2026-11-18T22:56:17.043Z",
-   "votes": {},
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "convince",
+     "date": "2026-11-18T23:15:39.068Z"
+    }
+   },
    "replies": [
     {
      "author": "Eric",
      "text": "holy hades",
      "date": "2026-11-18T23:15:30.692Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-18T23:15:39.068Z"
   }
  ]
 }
