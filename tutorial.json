@@ -45,6 +45,10 @@
      "title": "Lists, Arrays, and Dictionaries"
     },
     {
+     "file": "tutorial-log-output.html",
+     "title": "Log Output"
+    },
+    {
      "file": "tutorial-vanilla-command-integration.html",
      "title": "Vanilla Command Integration"
     }
