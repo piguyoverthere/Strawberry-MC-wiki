@@ -51,6 +51,10 @@
     {
      "file": "tutorial-vanilla-command-integration.html",
      "title": "Vanilla Command Integration"
+    },
+    {
+     "file": "tutorial-breakpoints-call-stacks-and-debugging-methods.html",
+     "title": "Breakpoints, Call Stacks, and Debugging Methods"
     }
    ]
   },

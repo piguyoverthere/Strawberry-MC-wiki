@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Breakpoints, Call Stacks, and Debugging Methods | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    </head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="Strawberry%20minecraft%20wiki%20(1).pdf" target="_blank" rel="noopener">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Breakpoints, Call Stacks, and Debugging Methods</h1>
+        <p>Other than using logs and chat messages for debugging, other tools are provided by the Scripter IDE to make ComScript less of a headache. This section details how to use these tools and basic knowledge needed for debugging</p><h2>Breakpoints</h2><p>Breakpoints are a concept that pauses a script during a debug run that allows the user to check the call stack (you will learn about later), data structure values during that moment, and other info as the script is temporarily paused during that time. Breakpoints in ComScript can be declared by inserting <span class="consolas">breakpoint(&lt;breakpoint name&gt;);</span>, or using <span class="consolas">alo breakpoint</span>&nbsp;(you will learn about Alo terminal commands later). Once a breakpoint is initiated in ComScript, the terminal outputs <span class="consolas">[&lt;time signature&gt;] \comscript &gt; [!]: Breakpoint started [&lt;breakpoint age&gt;]</span>.</p><p>You might have noticed the breakpoint name input, which is a unique value that a different breakpoint cannot have (or else errors: <span class="consolas">Breakpoint error</span>) that identifies the breakpoint, as multiple breakpoints can be in a single script. Make sure this value is something easy to remember and type, as in order to clear that breakpoint, you will need the identifier value.</p><p>After you are done debugging and want the script to continue, you can use <span class="consolas">alo breakpoint clear &lt;breakpoint name&gt;</span> to remove the breakpoint, or <span class="consolas">alo breakpoint clear --all</span> to void all breakpoints. If you the breakpoint you try to clear does not exist, it errors: <span class="consolas">Invalid breakpoint identifier used</span>.</p><h2>Fetch call stack</h2><p>The call stack in ComScript in basic terms is a queue for tasks that ComScript needs to perform for that tick, which can be used for debugging and during breakpoints. The call stack when fetched with <span class="consolas">alo fetch-callstack</span> lists all of the tasks from most priority to least priority that need to be executed.</p><p>Example:</p><pre class="code-box"><code class="consolas">alo fetch-callstack<br></code></pre><pre class="code-box"><code class="consolas"><code class="consolas">#THIS IS JUST AN EXAMPLE AND MAY NOT ACCURATELY OUTPUT CORRECT API NAMES#<br>#[example] expected output:#<br>[11-18-2026-3.21.04] \comscript &gt; [!] #RETURN call stack#<br></code>[11-18-2026-3.21.04] \comscript &gt; [!] task: get_entity_rel_key<br></code></pre><h2>Alo</h2><p>Alo is a terminal native tool similar to Git.</p>
+        <script src="wiki-editor.js" defer=""></script>
+    
+
+</body></html>
