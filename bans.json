@@ -1,19 +1,5 @@
 {
- "bans": {
-  "sai": {
-   "type": "restrain",
-   "name": "Sai",
-   "until": "2026-11-16T03:26:53.066Z",
-   "showEnd": true,
-   "title": "Restraining order",
-   "message": "stop spamming. get brain cells.",
-   "style": "dark",
-   "icon": "⚖️",
-   "showBy": true,
-   "by": "Eric",
-   "date": "2026-11-15T03:26:53.066Z"
-  }
- },
+ "bans": {},
  "warnings": {
   "aadi": [
    {
@@ -41,6 +27,20 @@
     "by": "Eric",
     "id": "warning-mwf7icc6",
     "date": "2026-11-13T16:44:10.614Z"
+   }
+  ],
+  "alex": [
+   {
+    "type": "warn",
+    "name": "Alex",
+    "title": "Warning",
+    "message": "the radiance is coming",
+    "style": "red",
+    "icon": "⚠️",
+    "showBy": false,
+    "by": "Eric",
+    "id": "warning-mwmqr3v6",
+    "date": "2026-11-18T23:17:15.474Z"
    }
   ]
  },
@@ -83,6 +83,16 @@
     "note": "test",
     "by": "Eric",
     "date": "2026-11-13T05:32:12.545Z"
+   }
+  ],
+  "alex": [
+   {
+    "type": "warn",
+    "title": "Warning",
+    "message": "the radiance is coming",
+    "note": "",
+    "by": "Eric",
+    "date": "2026-11-18T23:17:15.474Z"
    }
   ]
  }
