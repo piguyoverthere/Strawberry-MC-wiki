@@ -5880,7 +5880,13 @@
    "status": "",
    "source": "site",
    "created": "2026-11-18T23:18:25.189Z",
-   "votes": {},
+   "votes": {
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "date": "2026-11-18T23:25:05.692Z"
+    }
+   },
    "replies": [
     {
      "author": "Sai",
@@ -5907,7 +5913,8 @@
      "text": "(They look like a normal ocean monumental guardian but the spikes are replaced by different colored crystals) [Dendrite, amythest, or calcite]",
      "date": "2026-11-18T23:23:53.236Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-18T23:25:05.692Z"
   }
  ]
 }
