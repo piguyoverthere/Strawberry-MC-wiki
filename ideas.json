@@ -5839,14 +5839,21 @@
    "status": "",
    "source": "site",
    "created": "2026-11-14T02:24:01.239Z",
-   "votes": {},
+   "votes": {
+    "sai": {
+     "name": "Sai",
+     "vote": "convince",
+     "date": "2026-11-18T23:27:01.034Z"
+    }
+   },
    "replies": [
     {
      "author": "Sai",
      "text": "I dunno",
      "date": "2026-11-18T23:26:57.039Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-18T23:27:01.034Z"
   },
   {
    "id": "idea-mwmq04ur-8hyn7",
