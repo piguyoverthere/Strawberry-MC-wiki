@@ -895,7 +895,9 @@
         menu.className = "nav-menu";
         menu.dataset.wikiInjected = "";
         menu.innerHTML = `<button type="button" class="nav-menu-button" aria-haspopup="true" aria-expanded="false">${label} ▾</button>
-            <div class="nav-menu-items">${links.map(([href, text]) => `<a href="${href}"${href === currentPage ? ' aria-current="page"' : ""}>${text}</a>`).join("")}</div>`;
+            <div class="nav-menu-items">${links.map(([href, text]) => href
+                ? `<a href="${href}"${href === currentPage ? ' aria-current="page"' : ""}>${text}</a>`
+                : `<span class="nav-menu-heading">${text}</span>`).join("")}</div>`;
         const button = menu.querySelector("button");
         button.addEventListener("click", () => {
             const open = !menu.classList.contains("nav-menu-open");
@@ -937,6 +939,7 @@
             }
             // About sits on its own beside Home
             const aboutLink = document.createElement("a");
+            aboutLink.className = "wiki-about-link";
             aboutLink.href = "about.html";
             aboutLink.textContent = "About";
             aboutLink.dataset.wikiInjected = "";
@@ -948,10 +951,20 @@
             // The ComScript Tutorial is only reached from here: its pages stay out of search
             const tutorialLink = document.createElement("a");
             tutorialLink.href = "tutorial-index.html";
-            tutorialLink.textContent = "ComScript Tutorial";
+            tutorialLink.className = "wiki-tutorial-link";
+            tutorialLink.innerHTML = '<span class="nav-long">ComScript </span>Tutorial';
+            tutorialLink.title = "ComScript Tutorial";
             tutorialLink.dataset.wikiInjected = "";
             if (/^tutorial-/.test(targetFile)) tutorialLink.setAttribute("aria-current", "page");
             nav.insertBefore(tutorialLink, pdfLink);
+            // On narrow screens these links fold into one menu, so the account buttons stay on the top row
+            const allMenu = buildNavMenu('☰<span class="nav-menu-word"> Menu</span>', [
+                ["home-index.html", "Home"], ["about.html", "About"], ["tutorial-index.html", "ComScript Tutorial"],
+                [null, "Wiki"], ...navMenus[0][1], [null, "Community"], ...navMenus[1][1]
+            ]);
+            allMenu.classList.add("nav-menu-all");
+            allMenu.querySelector("button").setAttribute("aria-label", "Menu");
+            nav.prepend(allMenu);
             // Every page except the home page gets a search box in the middle of the header.
             if (!document.querySelector(".site-search")) {
                 const headerSearch = document.createElement("form");
@@ -977,7 +990,9 @@
             newPageButton.type = "button";
             newPageButton.className = "nav-button wiki-new-page-button";
             newPageButton.dataset.wikiInjected = "";
-            newPageButton.textContent = "+ New page";
+            newPageButton.innerHTML = '+<span class="nav-long"> New page</span>';
+            newPageButton.title = "Make a new page";
+            newPageButton.setAttribute("aria-label", "New page");
             newPageButton.addEventListener("click", () => openNewPageDialog());
             nav.append(newPageButton);
 
@@ -987,7 +1002,8 @@
             accountLink.dataset.wikiInjected = "";
             const accountName = readToken() && readAccount();
             accountLink.href = accountName ? `profile.html?${new URLSearchParams({ u: accountName })}` : currentPage === "login.html" ? "login.html" : `login.html?${new URLSearchParams({ next: currentPage + location.search + location.hash })}`;
-            accountLink.textContent = accountName ? `👤 ${accountName}` : "Log in";
+            accountLink.textContent = accountName ? "👤 " : "Log in";
+            if (accountName) accountLink.append(Object.assign(document.createElement("span"), { className: "wiki-account-name", textContent: accountName }));
             accountLink.title = accountName ? `Your profile and settings (signed in as ${accountName}, ${readRole()})` : "Log in or register";
             nav.append(accountLink);
             if (canReviewRole(readRole())) {
@@ -1003,7 +1019,8 @@
                 signOutButton.type = "button";
                 signOutButton.className = "nav-button wiki-sign-out-button";
                 signOutButton.dataset.wikiInjected = "";
-                signOutButton.textContent = "Sign out";
+                signOutButton.innerHTML = '<span class="nav-long">Sign out</span><span class="nav-short" aria-hidden="true">⏻</span>';
+                signOutButton.setAttribute("aria-label", "Sign out");
                 signOutButton.title = `Sign out of ${accountName} on this device`;
                 signOutButton.addEventListener("click", () => {
                     window.wikiStore.signOut();
@@ -1015,6 +1032,12 @@
             // "Open PDF" goes to the page listing every PDF and its older versions.
             if (pdfLink) {
                 pdfLink.href = "documents.html";
+                pdfLink.classList.add("wiki-pdf-link");
+                // "Open PDF" shortens to "PDF" when space is tight
+                if (/^\s*Open PDF\s*$/.test(pdfLink.textContent)) {
+                    pdfLink.innerHTML = '<span class="nav-long">Open </span>PDF';
+                    pdfLink.title = "PDF documents";
+                }
                 for (const name of ["target", "rel", "aria-haspopup", "aria-expanded"]) {
                     pdfLink.removeAttribute(name);
                 }
@@ -5029,9 +5052,11 @@
             knownTasks = tasks.length;
             header.querySelectorAll(".nav-badge").forEach((badge) => badge.remove());
             if (!tasks.length || readLook().headerBadge === false) return;
-            const link = header.querySelector('.nav-menu a[href="notifications.html"]');
-            for (const target of [link, link?.closest(".nav-menu")?.querySelector("button")]) {
-                if (target) target.append(Object.assign(document.createElement("span"), { className: "nav-badge", textContent: String(tasks.length), title: `${tasks.length} priority task${tasks.length === 1 ? "" : "s"} for you` }));
+            // Both the Community menu and the narrow-screen Menu have a Notifications link
+            for (const link of header.querySelectorAll('.nav-menu a[href="notifications.html"]')) {
+                for (const target of [link, link.closest(".nav-menu")?.querySelector("button")]) {
+                    if (target) target.append(Object.assign(document.createElement("span"), { className: "nav-badge", textContent: String(tasks.length), title: `${tasks.length} priority task${tasks.length === 1 ? "" : "s"} for you` }));
+                }
             }
         });
     }

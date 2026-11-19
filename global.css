@@ -3553,3 +3553,83 @@ body.wiki-editing .tutorial-sidebar{
 .assets-empty{
     color:#54595d
 }
+/* Compact header: shorter labels on medium screens, one Menu on narrow ones, so the account buttons stay on the top row */
+.site-header nav .nav-button{
+    margin-left:0
+}
+.nav-short,
+.nav-menu-all{
+    display:none
+}
+.site-header nav .nav-menu-heading{
+    display:block;
+    padding:8px 14px 2px;
+    color:#72777d;
+    font-size:.8em;
+    font-weight:700;
+    text-transform:uppercase;
+    text-shadow:none
+}
+.wiki-account-link{
+    max-width:160px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    vertical-align:middle
+}
+@media (min-width:701px){
+    .site-header nav{
+        flex-wrap:nowrap
+    }
+    .site-header nav > *{
+        flex-shrink:0
+    }
+    .site-header nav .wiki-header-search{
+        flex:1 1 120px;
+        min-width:120px;
+        margin:0 6px
+    }
+}
+@media (max-width:1199px){
+    .nav-long{
+        display:none
+    }
+    .nav-short{
+        display:inline
+    }
+    .site-header nav .nav-button{
+        padding:7px 10px
+    }
+}
+@media (max-width:899px){
+    .site-header nav > a[href="home-index.html"],
+    .site-header nav > .wiki-about-link,
+    .site-header nav > .wiki-tutorial-link,
+    .site-header nav > .nav-menu:not(.nav-menu-all){
+        display:none
+    }
+    .site-header nav > .nav-menu-all{
+        display:block
+    }
+    .nav-menu-all .nav-menu-items{
+        max-height:70vh;
+        overflow-y:auto
+    }
+}
+@media (max-width:700px){
+    .site-header nav{
+        gap:8px 4px
+    }
+    .site-header nav .wiki-pdf-link{
+        margin-left:auto
+    }
+}
+@media (max-width:440px){
+    .site-header nav .wiki-account-name,
+    .site-header nav .nav-menu-word{
+        display:none
+    }
+    .site-header nav .nav-button{
+        padding:6px 8px
+    }
+}
