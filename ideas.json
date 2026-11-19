@@ -5844,6 +5844,11 @@
      "name": "Sai",
      "vote": "convince",
      "date": "2026-11-18T23:27:22.733Z"
+    },
+    "eric": {
+     "name": "Eric",
+     "vote": "approve",
+     "date": "2026-11-19T06:03:08.672Z"
     }
    },
    "replies": [
@@ -5858,7 +5863,7 @@
      "date": "2026-11-18T23:27:17.821Z"
     }
    ],
-   "lastVoteDate": "2026-11-18T23:27:22.733Z"
+   "lastVoteDate": "2026-11-19T06:03:08.672Z"
   },
   {
    "id": "idea-mwmq04ur-8hyn7",
