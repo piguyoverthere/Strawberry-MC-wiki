@@ -37,6 +37,10 @@
      "title": "Mathematical Operators"
     },
     {
+     "file": "tutorial-string-operators.html",
+     "title": "String operators"
+    },
+    {
      "file": "tutorial-variables.html",
      "title": "Variables"
     },
