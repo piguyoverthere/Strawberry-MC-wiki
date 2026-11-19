@@ -1330,6 +1330,11 @@
      "name": "Eric",
      "vote": "convince",
      "date": "2026-11-11T17:41:24.228Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-19T22:37:23.223Z"
     }
    },
    "replies": [
@@ -1350,7 +1355,8 @@
     }
    ],
    "edited": "2026-11-17T19:18:29.328Z",
-   "editedBy": "Alex"
+   "editedBy": "Alex",
+   "lastVoteDate": "2026-11-19T22:37:23.223Z"
   },
   {
    "id": "idea-doc-24",
