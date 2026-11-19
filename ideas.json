@@ -873,6 +873,11 @@
      "name": "Eric",
      "vote": "disapprove",
      "source": "document"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-19T22:23:35.698Z"
     }
    },
    "replies": [
@@ -886,7 +891,8 @@
      "text": "/gamerule isQuestionable true",
      "date": "2026-11-14T21:15:17.645Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-19T22:23:35.698Z"
   },
   {
    "id": "idea-doc-14",
