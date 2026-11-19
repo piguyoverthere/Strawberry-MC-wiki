@@ -1016,8 +1016,14 @@
      "name": "Zafar",
      "vote": "approve",
      "source": "document"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-19T22:36:36.404Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-19T22:36:36.404Z"
   },
   {
    "id": "idea-doc-17",
