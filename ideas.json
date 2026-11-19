@@ -841,9 +841,14 @@
      "name": "aadi",
      "vote": "disapprove",
      "date": "2026-11-12T01:48:15.848Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "disapprove",
+     "date": "2026-11-19T22:21:02.214Z"
     }
    },
-   "lastVoteDate": "2026-11-12T01:48:15.848Z"
+   "lastVoteDate": "2026-11-19T22:21:02.214Z"
   },
   {
    "id": "idea-doc-13",
