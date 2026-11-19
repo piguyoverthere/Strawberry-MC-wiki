@@ -66,6 +66,11 @@
    "id": "header-file",
    "title": "Header file",
    "pages": []
+  },
+  {
+   "id": "configuration",
+   "title": "Configuration",
+   "pages": []
   }
  ]
 }
