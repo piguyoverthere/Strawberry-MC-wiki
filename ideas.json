@@ -1049,9 +1049,14 @@
      "name": "Eric",
      "vote": "convince",
      "date": "2026-11-12T05:01:16.751Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-19T22:36:43.052Z"
     }
    },
-   "lastVoteDate": "2026-11-12T05:01:16.751Z"
+   "lastVoteDate": "2026-11-19T22:36:43.052Z"
   },
   {
    "id": "idea-doc-18",
