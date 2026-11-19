@@ -1178,8 +1178,14 @@
      "name": "Sai",
      "vote": "disapprove",
      "date": "2026-11-10T19:16:30.270Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-19T22:36:55.477Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-19T22:36:55.477Z"
   },
   {
    "id": "idea-doc-20",
