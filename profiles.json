@@ -47,6 +47,14 @@
     "reduceMotion": false,
     "notificationsView": "changes"
    }
+  },
+  "theodore": {
+   "name": "Theodore",
+   "images": [
+    "profile-images/theodore-1795126515923-4mgg.webp"
+   ],
+   "picture": "profile-images/theodore-1795126515923-4mgg.webp",
+   "updated": "2026-11-19T22:15:18.061Z"
   }
  }
 }
