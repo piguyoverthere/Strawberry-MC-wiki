@@ -70,6 +70,26 @@
    "following": [
     "eric"
    ]
+  },
+  "rishaan": {
+   "name": "Rishaan",
+   "status": "Making Stick figures",
+   "minecraftName": "Cooldude1147105",
+   "favouritePages": [
+    {
+     "title": "Stick Figure",
+     "href": "page-stick-figure.html"
+    },
+    {
+     "title": "Sawmill",
+     "href": "page-draft-sawmill.html"
+    },
+    {
+     "title": "Parabola Mode Features",
+     "href": "page-parabola-mode-features.html"
+    }
+   ],
+   "updated": "2026-11-20T05:23:32.279Z"
   }
  }
 }
