@@ -1395,10 +1395,16 @@
      "name": "Eric",
      "vote": "approve",
      "source": "document"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-20T16:17:10.988Z"
     }
    },
    "edited": "2026-11-17T19:22:22.444Z",
-   "editedBy": "Alex"
+   "editedBy": "Alex",
+   "lastVoteDate": "2026-11-20T16:17:10.988Z"
   },
   {
    "id": "idea-doc-25",
