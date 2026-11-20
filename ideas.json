@@ -2361,9 +2361,14 @@
      "name": "Alex",
      "vote": "approve",
      "date": "2026-11-12T16:53:58.316Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-20T16:25:01.760Z"
     }
    },
-   "lastVoteDate": "2026-11-12T16:53:58.316Z"
+   "lastVoteDate": "2026-11-20T16:25:01.760Z"
   },
   {
    "id": "idea-doc-43",
