@@ -2622,8 +2622,14 @@
      "name": "Eric",
      "vote": "disapprove",
      "source": "document"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-20T16:25:48.097Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-20T16:25:48.097Z"
   },
   {
    "id": "idea-doc-51",
