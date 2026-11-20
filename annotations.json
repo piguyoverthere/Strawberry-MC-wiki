@@ -226,7 +226,15 @@
    "mentions": [
     "Alex"
    ],
-   "replies": []
+   "replies": [
+    {
+     "id": "reply-mwp72s22-403h6",
+     "author": "Eric",
+     "text": "btw look at the news article",
+     "date": "2026-11-20T16:29:46.250Z",
+     "mentions": []
+    }
+   ]
   }
  ]
 }
