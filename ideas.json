@@ -695,6 +695,11 @@
      "name": "Sai",
      "vote": "disapprove",
      "date": "2026-11-10T19:04:33.878Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "convince",
+     "date": "2026-11-20T16:15:59.652Z"
     }
    },
    "replies": [
@@ -734,7 +739,7 @@
      "date": "2026-11-12T21:45:58.599Z"
     }
    ],
-   "lastVoteDate": "2026-11-19T22:20:33.875Z"
+   "lastVoteDate": "2026-11-20T16:15:59.652Z"
   },
   {
    "id": "idea-doc-11",
