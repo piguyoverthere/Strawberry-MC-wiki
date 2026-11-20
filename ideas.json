@@ -1675,6 +1675,11 @@
      "name": "aadi",
      "vote": "disapprove",
      "date": "2026-11-09T20:45:57.109Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "convince",
+     "date": "2026-11-20T16:20:22.122Z"
     }
    },
    "replies": [
@@ -1693,7 +1698,8 @@
      "text": "LOCK IN SAI WE DONT NEED GOLDEN VERSIONS OF EVERYTHING",
      "date": "2026-11-09T20:46:04.454Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-20T16:20:22.122Z"
   },
   {
    "id": "idea-doc-31",
