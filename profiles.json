@@ -66,15 +66,16 @@
     "profile-images/alex-1795146552032-es81.webp"
    ],
    "picture": "profile-images/alex-1795146552032-es81.webp",
-   "updated": "2026-11-20T17:58:01.441Z",
+   "updated": "2026-11-20T17:58:03.852Z",
    "following": [
     "eric"
    ],
    "settings": {
     "theme": "system",
-    "updated": "2026-11-20T17:58:00.753Z",
+    "updated": "2026-11-20T17:58:03.159Z",
     "textSize": "normal",
-    "width": "normal"
+    "width": "normal",
+    "font": "serif"
    }
   },
   "rishaan": {
