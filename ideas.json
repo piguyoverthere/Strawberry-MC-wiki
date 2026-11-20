@@ -2014,9 +2014,14 @@
      "name": "Rishaan",
      "vote": "approve",
      "date": "2026-11-12T22:37:51.276Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-20T16:23:27.687Z"
     }
    },
-   "lastVoteDate": "2026-11-12T22:37:51.276Z",
+   "lastVoteDate": "2026-11-20T16:23:27.687Z",
    "replies": [
     {
      "author": "Alex",
