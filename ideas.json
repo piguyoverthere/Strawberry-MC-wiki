@@ -6184,7 +6184,17 @@
    "source": "site",
    "created": "2026-11-20T16:31:01.576Z",
    "votes": {},
-   "lastVoteDate": "2026-11-20T16:31:12.539Z"
+   "lastVoteDate": "2026-11-20T16:31:12.539Z",
+   "replies": [
+    {
+     "author": "Sai",
+     "text": "@Alex",
+     "date": "2026-11-20T16:31:32.586Z",
+     "mentions": [
+      "Alex"
+     ]
+    }
+   ]
   }
  ]
 }
