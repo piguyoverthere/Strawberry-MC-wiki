@@ -1647,8 +1647,14 @@
      "name": "Aadi",
      "vote": "approve",
      "source": "document"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-20T16:20:10.675Z"
     }
-   }
+   },
+   "lastVoteDate": "2026-11-20T16:20:10.675Z"
   },
   {
    "id": "idea-doc-30",
