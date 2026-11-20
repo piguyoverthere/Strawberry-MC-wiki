@@ -49,12 +49,12 @@
      "title": "String Operators"
     },
     {
-     "file": "tutorial-log-output.html",
-     "title": "Log Output"
-    },
-    {
      "file": "tutorial-comparers.html",
      "title": "Comparers and Logic"
+    },
+    {
+     "file": "tutorial-log-output.html",
+     "title": "Log Output"
     },
     {
      "file": "tutorial-vanilla-command-integration.html",
