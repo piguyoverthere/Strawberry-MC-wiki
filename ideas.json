@@ -1546,6 +1546,11 @@
      "name": "aadi",
      "vote": "disapprove",
      "date": "2026-11-09T20:39:57.253Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-20T16:18:46.427Z"
     }
    },
    "replies": [
@@ -1559,7 +1564,8 @@
      "text": "It gives useage to rabbit hide",
      "date": "2026-11-10T19:20:50.339Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-20T16:18:46.427Z"
   },
   {
    "id": "idea-doc-28",
