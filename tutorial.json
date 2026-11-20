@@ -37,12 +37,12 @@
      "title": "Mathematical Operators"
     },
     {
-     "file": "tutorial-string-operators.html",
-     "title": "String Operators"
-    },
-    {
      "file": "tutorial-variables.html",
      "title": "Variables"
+    },
+    {
+     "file": "tutorial-string-operators.html",
+     "title": "String Operators"
     },
     {
      "file": "tutorial-lists-arrays-and-dictionaries.html",
