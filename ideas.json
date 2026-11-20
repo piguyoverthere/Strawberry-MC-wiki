@@ -2114,9 +2114,14 @@
      "name": "Alex",
      "vote": "approve",
      "date": "2026-11-12T16:55:13.926Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-20T16:24:28.766Z"
     }
    },
-   "lastVoteDate": "2026-11-12T16:55:13.926Z",
+   "lastVoteDate": "2026-11-20T16:24:28.766Z",
    "replies": [
     {
      "author": "Eric",
