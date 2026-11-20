@@ -41,12 +41,12 @@
      "title": "Variables"
     },
     {
-     "file": "tutorial-string-operators.html",
-     "title": "String Operators"
-    },
-    {
      "file": "tutorial-lists-arrays-and-dictionaries.html",
      "title": "Lists, Arrays, and Dictionaries"
+    },
+    {
+     "file": "tutorial-string-operators.html",
+     "title": "String Operators"
     },
     {
      "file": "tutorial-log-output.html",
