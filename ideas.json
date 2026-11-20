@@ -2901,11 +2901,6 @@
      "name": "Alex",
      "vote": "approve",
      "date": "2026-11-12T19:00:26.242Z"
-    },
-    "theodore": {
-     "name": "Theodore",
-     "vote": "approve",
-     "date": "2026-11-20T16:32:37.885Z"
     }
    },
    "replies": [
@@ -2915,7 +2910,7 @@
      "date": "2026-11-12T19:00:23.894Z"
     }
    ],
-   "lastVoteDate": "2026-11-20T16:32:37.885Z"
+   "lastVoteDate": "2026-11-20T16:33:10.954Z"
   },
   {
    "id": "idea-doc-60",
