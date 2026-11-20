@@ -1859,6 +1859,11 @@
      "name": "aadi",
      "vote": "disapprove",
      "date": "2026-11-09T20:46:24.489Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "convince",
+     "date": "2026-11-20T16:22:01.910Z"
     }
    },
    "replies": [
@@ -1890,7 +1895,8 @@
      "text": "+29 crispy points",
      "date": "2026-11-12T21:53:07.525Z"
     }
-   ]
+   ],
+   "lastVoteDate": "2026-11-20T16:22:01.910Z"
   },
   {
    "id": "idea-doc-35",
