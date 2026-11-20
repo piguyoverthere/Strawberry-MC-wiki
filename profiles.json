@@ -66,7 +66,7 @@
     "profile-images/alex-1795146552032-es81.webp"
    ],
    "picture": "profile-images/alex-1795146552032-es81.webp",
-   "updated": "2026-11-20T17:58:17.260Z",
+   "updated": "2026-11-20T18:01:31.469Z",
    "following": [
     "eric"
    ],
@@ -77,7 +77,26 @@
     "width": "normal",
     "font": "sans",
     "underlineLinks": true
-   }
+   },
+   "displayName": "Alex",
+   "bio": "Currently crashing out over Sai",
+   "pronouns": "He/Him",
+   "status": "Block texture creator",
+   "minecraftName": "Hu_A",
+   "favouritePages": [
+    {
+     "title": "Phoenix",
+     "href": "page-phoenix.html"
+    },
+    {
+     "title": "Phoenix Nest",
+     "href": "page-phoenix-nest.html"
+    },
+    {
+     "title": "Phoenix Eggs",
+     "href": "page-phoenix-eggs.html"
+    }
+   ]
   },
   "rishaan": {
    "name": "Rishaan",
