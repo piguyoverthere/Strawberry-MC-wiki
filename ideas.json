@@ -1593,6 +1593,11 @@
      "name": "Rishaan",
      "vote": "disapprove",
      "date": "2026-11-12T22:35:55.505Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "disapprove",
+     "date": "2026-11-20T16:19:49.862Z"
     }
    },
    "replies": [
@@ -1622,7 +1627,7 @@
      "date": "2026-11-13T16:36:34.452Z"
     }
    ],
-   "lastVoteDate": "2026-11-12T22:35:55.505Z"
+   "lastVoteDate": "2026-11-20T16:19:49.862Z"
   },
   {
    "id": "idea-doc-29",
