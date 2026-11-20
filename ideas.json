@@ -6178,7 +6178,14 @@
    "status": "",
    "source": "site",
    "created": "2026-11-20T16:31:01.576Z",
-   "votes": {}
+   "votes": {
+    "sai": {
+     "name": "Sai",
+     "vote": "approve",
+     "date": "2026-11-20T16:31:08.230Z"
+    }
+   },
+   "lastVoteDate": "2026-11-20T16:31:08.230Z"
   }
  ]
 }
