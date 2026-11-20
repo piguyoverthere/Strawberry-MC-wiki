@@ -1308,9 +1308,14 @@
      "name": "Eric",
      "vote": "disapprove",
      "date": "2026-11-11T18:04:38.456Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-20T16:16:42.928Z"
     }
    },
-   "lastVoteDate": "2026-11-19T22:37:12.255Z"
+   "lastVoteDate": "2026-11-20T16:16:42.928Z"
   },
   {
    "id": "idea-doc-23",
