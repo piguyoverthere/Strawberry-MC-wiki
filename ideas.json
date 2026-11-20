@@ -6193,14 +6193,9 @@
      "name": "Eric",
      "vote": "approve",
      "date": "2026-11-20T16:32:07.576Z"
-    },
-    "alex": {
-     "name": "Alex",
-     "vote": "disapprove",
-     "date": "2026-11-20T16:40:58.499Z"
     }
    },
-   "lastVoteDate": "2026-11-20T16:40:58.499Z",
+   "lastVoteDate": "2026-11-20T16:41:01.447Z",
    "replies": [
     {
      "author": "Sai",
