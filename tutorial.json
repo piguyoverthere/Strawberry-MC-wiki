@@ -59,6 +59,10 @@
     {
      "file": "tutorial-breakpoints-call-stacks-and-debugging-methods.html",
      "title": "Breakpoints, Call Stacks, and Debugging Methods"
+    },
+    {
+     "file": "tutorial-comparers.html",
+     "title": "Comparers and Logic"
     }
    ]
   },
