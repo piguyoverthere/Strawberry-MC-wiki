@@ -66,10 +66,14 @@
     "profile-images/alex-1795146552032-es81.webp"
    ],
    "picture": "profile-images/alex-1795146552032-es81.webp",
-   "updated": "2026-11-20T03:49:45.728Z",
+   "updated": "2026-11-20T17:56:57.185Z",
    "following": [
     "eric"
-   ]
+   ],
+   "settings": {
+    "theme": "dark",
+    "updated": "2026-11-20T17:56:56.551Z"
+   }
   },
   "rishaan": {
    "name": "Rishaan",
