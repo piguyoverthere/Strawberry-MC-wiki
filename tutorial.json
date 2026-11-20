@@ -65,7 +65,12 @@
   {
    "id": "header-file",
    "title": "Header file",
-   "pages": []
+   "pages": [
+    {
+     "file": "tutorial-header-assignment.html",
+     "title": "Header Assignment"
+    }
+   ]
   },
   {
    "id": "configuration",

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head>
+        <meta charset="UTF-8">
+        <title>Header Assignment | Strawberry MC</title>
+        <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></head>
+    <body>
+        <header class="site-header">
+            <nav aria-label="Main navigation">
+                <a href="home-index.html">Home</a>|
+                <a href="credits.html">Credits</a>
+                <a class="nav-button" href="Strawberry%20minecraft%20wiki%20(1).pdf" target="_blank" rel="noopener">Open PDF</a>
+            </nav>
+        </header>
+        <h1>Header Assignment</h1>
+        <p>Header files in ComScript are similar to .h files in C++, that define the global properties of a ComScript file. It is good practice to assign each comscript file with a header, but it will not cause any errors and will run fine (most of the time) if you don't assign a header.</p><p>Headers can be included with the following syntax: [this would be the very start of a ComScript file]</p><pre class="code-box"><code class="consolas">#properties("my-header.h.md");</code></pre><p>All header conditions should have a <span class="consolas">.property.world(client.level);</span> property to execute within the level the client has open (this level), or <span class="consolas">.property.world(server.level);</span> for multiplayer worlds to let your scripts apply to everyone.</p><p>Header files are structured with a heading at the start defined by "#", body properties, and a ending condition:</p><pre class="code-box"><code class="consolas">//this is a header file<br>#header;<br>*conditions.header(){<br>    .property.global:executeAs($target);<br>    .property.global:executeAt(0, 0, 0);<br>    .property.oplevel(4)<br>    .property.world(client.level);<br>}</code></pre><p><br></p>
+        <script src="wiki-editor.js" defer=""></script>
+    
+
+</body></html>
