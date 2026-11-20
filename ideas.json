@@ -1801,9 +1801,14 @@
      "name": "Rishaan",
      "vote": "convince",
      "date": "2026-11-12T22:36:24.059Z"
+    },
+    "theodore": {
+     "name": "Theodore",
+     "vote": "approve",
+     "date": "2026-11-20T16:21:46.415Z"
     }
    },
-   "lastVoteDate": "2026-11-12T22:36:24.059Z",
+   "lastVoteDate": "2026-11-20T16:21:46.415Z",
    "replies": [
     {
      "author": "Rishaan",
