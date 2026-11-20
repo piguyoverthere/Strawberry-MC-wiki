@@ -6178,8 +6178,14 @@
    "status": "",
    "source": "site",
    "created": "2026-11-20T16:31:01.576Z",
-   "votes": {},
-   "lastVoteDate": "2026-11-20T16:31:12.539Z",
+   "votes": {
+    "sai": {
+     "name": "Sai",
+     "vote": "approve",
+     "date": "2026-11-20T16:31:43.241Z"
+    }
+   },
+   "lastVoteDate": "2026-11-20T16:31:43.241Z",
    "replies": [
     {
      "author": "Sai",
