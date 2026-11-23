@@ -329,6 +329,7 @@ const pages = [
     { title: "Education+ (included with strawberrymc bedrock and edu)", href: "page-education-included-with-strawberrymc-bedrock-and-edu.html", keywords: "education+ (included with strawberrymc bedrock and edu) education minecraft add-ons mods" },
     { title: "Mushroom Distribution Thread", href: "news-alex-mushroom-distribution-thread.html", keywords: "mushroom distribution thread" },
     { title: "ALEX IS DELETING RANDOM STUFFY STUFF", href: "news-sai-alex-is-deleting-random-stuffy-stuff.html", keywords: "alex is deleting random stuffy stuff" },
+    { title: "Happy News", href: "news-rishaan-happy-news.html", keywords: "happy news" },
 ];
 
 // Pages created with the "New page" button in this browser (wiki-editor.js) are searchable here right away.

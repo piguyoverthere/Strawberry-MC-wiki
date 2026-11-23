@@ -1,4 +1,5 @@
 const newsArticles = [
+    { title: "Happy News", author: "Rishaan", date: "2026-11-23", href: "news-rishaan-happy-news.html", summary: "happy news!!!!" },
     { title: "ALEX IS DELETING RANDOM STUFFY STUFF", author: "Sai", date: "2026-11-20", href: "news-sai-alex-is-deleting-random-stuffy-stuff.html", summary: "ALEX WHY ARE WE BEING CRISPY" },
     { title: "Mushroom Distribution Thread", author: "Alex", date: "2026-11-13", href: "news-alex-mushroom-distribution-thread.html", summary: "For mushroom hunters. Yeah." },
     { title: "[informal] caleb quit. sad :( sai must be bashed", author: "Aadi A", date: "2026-11-05", href: "news-aadi-a-informal-caleb-quit-sad-sai-must-be-bashed.html", summary: "caleb was good. sai bashed. sad :(" },
